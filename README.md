@@ -20,16 +20,51 @@ Com o **Praxis**, você pode:
 
 ```bash
 praxis/
+├── apps/
+│   └── demo-angular-app/           # ✅ Projeto Angular real com menus, formulários, grids
+│
 ├── backend-libs/
-│   ├── uifieldspec-core/           # Anotações, propriedades e extensões para definição de campos UI
-│   └── uifieldspec-springdoc/      # Integração com SpringDoc OpenAPI para gerar metadados `x-ui`
+│   ├── uifieldspec-core/           # Anotações, propriedades e extensões Java
+│   └── uifieldspec-springdoc/      # Integração com SpringDoc
 │
 ├── examples/
-│   └── praxis-java-api/            # Projeto de exemplo com domínio de Recursos Humanos
+│   └── praxis-java-api/            # Projeto Spring Boot com domínio RH (DTOs + endpoints)
 │
 ├── packages/
-│   ├── praxis-ui/                  # Biblioteca Angular para renderização de formulários dinâmicos
-│   └── praxis-schema-adapter/     # Parser que traduz OpenAPI + x-ui para estrutura de UI interna
+│   ├── praxis-ui/                  # Lib Angular de componentes visuais
+│   └── praxis-schema-adapter/     # Serviço de parsing e normalização de metadados
 │
-├── docs/                           # Documentação técnica e guias de uso
+├── docs/
+│   └── getting-started.md
 └── README.md
+
+praxis-ui/ – Camada de apresentação
+Contém os componentes visuais, templates, layouts e bindings.
+
+DynamicFormComponent, DynamicFieldComponent
+
+Componentes input, radio, date, select, etc.
+
+FormLayoutComponent, FormFieldRendererService
+
+Lida com reatividade, validação, exibição, eventos
+
+Usa Angular/Kendo UI/Tailwind/etc.
+
+📌 Não sabe nem se o metadado veio do Java ou de um arquivo JSON fixo.
+
+
+praxis-schema-adapter/ – Camada de transformação
+Responsável por converter schemas (ex: OpenAPI + x-ui) em objetos compatíveis com a UI.
+
+Faz o parsing de schemas OpenAPI com extensões x-ui
+
+Gera FieldMetadata[], FormLayout, Validators, etc.
+
+Pode suportar outras fontes no futuro (JSONForms, GraphQL, config YAML)
+
+Lida com complexidade de leitura, normalização, fallback, cache
+
+Permite testes unitários do parser isoladamente
+
+📌 Não depende de Angular — pode até ser usado em Node, SSR ou ferramentas CLI.
