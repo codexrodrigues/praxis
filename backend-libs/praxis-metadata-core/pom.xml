@@ -15,7 +15,14 @@
 
     <name>Praxis Metadata Core</name>
     <description>Core definitions for the Praxis UI Metadata framework, including annotations and property interfaces.</description>
+    <scm>
+        <connection>scm:git:https://github.com/your-organization/your-repository.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/your-organization/your-repository.git</developerConnection>
+        <url>https://github.com/your-organization/your-repository</url>
+        <tag>HEAD</tag>
+    </scm>
     <properties>
+        <swagger-annotations.version>2.2.22</swagger-annotations.version>
         <java.version>21</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -39,7 +46,7 @@
         <dependency>
             <groupId>io.swagger.core.v3</groupId>
             <artifactId>swagger-annotations</artifactId>
-            <version>2.2.22</version> </dependency>
+            <version>${swagger-annotations.version}</version> </dependency>
 
         <dependency>
             <groupId>org.projectlombok</groupId>
