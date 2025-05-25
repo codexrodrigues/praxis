@@ -1,0 +1,52 @@
+package com.example.praxis.hr.dto;
+
+import org.praxisplatform.meta.ui.model.annotation.UISchema;
+import java.time.LocalDate;
+
+public class DependenteDTO {
+
+    @UISchema(label = "Nome Completo")
+    private String nomeCompleto;
+
+    @UISchema(label = "Data de Nascimento")
+    private LocalDate dataNascimento;
+
+    @UISchema(label = "Parentesco")
+    private String parentesco;
+
+    @UISchema(label = "Funcionário ID")
+    private Long funcionarioId;
+
+    // Getters and Setters
+    public String getNomeCompleto() {
+        return nomeCompleto;
+    }
+
+    public void setNomeCompleto(String nomeCompleto) {
+        this.nomeCompleto = nomeCompleto;
+    }
+
+    public LocalDate getDataNascimento() {
+        return dataNascimento;
+    }
+
+    public void setDataNascimento(LocalDate dataNascimento) {
+        this.dataNascimento = dataNascimento;
+    }
+
+    public String getParentesco() {
+        return parentesco;
+    }
+
+    public void setParentesco(String parentesco) {
+        this.parentesco = parentesco;
+    }
+
+    public Long getFuncionarioId() {
+        return funcionarioId;
+    }
+
+    public void setFuncionarioId(Long funcionarioId) {
+        this.funcionarioId = funcionarioId;
+    }
+}
