@@ -2,7 +2,7 @@ package org.praxisplatform.meta.ui.openapi.extension;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.praxisplatform.meta.ui.model.annotation.PraxisUiProperties;
-import com.uifieldspec.extension.annotation.UISchema;
+import org.praxisplatform.meta.ui.model.annotation.UISchema;
 import io.swagger.v3.core.jackson.ModelResolver;
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.models.media.Schema;
@@ -29,15 +29,24 @@ public class OpenApiSchemaResolver extends ModelResolver {
     }
 
     private void resolveSchema(Schema<?> property, Annotation[] annotations) {
-        UISchema annotation = SchemaResolverUtil.getAnnotation(UISchema.class, annotations);
-        if (annotation != null) {
-            property.setDescription(annotation.description());
-            property.setExample(annotation.example());
+        UISchema uiSchemaAnnotation = SchemaResolverUtil.getAnnotation(UISchema.class, annotations);
+        io.swagger.v3.oas.annotations.media.Schema schemaAnnotation = SchemaResolverUtil.getAnnotation(io.swagger.v3.oas.annotations.media.Schema.class, annotations);
+
+        if (schemaAnnotation != null) {
+            if (schemaAnnotation.description() != null && !schemaAnnotation.description().isEmpty()) {
+                property.setDescription(schemaAnnotation.description());
+            }
+            if (schemaAnnotation.example() != null && !schemaAnnotation.example().isEmpty()) {
+                property.setExample(schemaAnnotation.example());
+            }
+        }
+
+        if (uiSchemaAnnotation != null) {
             Map<String, Object> uiExtension = getUIExtensionMap(property);
-            ExtensionProperty label = annotation.label();
+            ExtensionProperty label = uiSchemaAnnotation.label();
             uiExtension.putIfAbsent(label.name(), label.value());
-            if (annotation.metadata() != null) {
-                setProperties(annotation.metadata(), uiExtension);
+            if (uiSchemaAnnotation.metadata() != null) {
+                setProperties(uiSchemaAnnotation.metadata(), uiExtension);
             }
         }
     }

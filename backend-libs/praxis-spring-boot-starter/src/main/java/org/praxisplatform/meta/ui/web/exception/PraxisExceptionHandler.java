@@ -1,6 +1,6 @@
 package org.praxisplatform.meta.ui.web.exception;
 
-import com.uifieldspec.rest.exceptionhandler.exception.BusinessException;
+import org.praxisplatform.meta.ui.web.exception.BusinessLogicException;
 import org.praxisplatform.meta.ui.web.response.ProblemDetailExtension;
 import org.praxisplatform.meta.ui.web.response.RestApiResponse;
 import org.praxisplatform.meta.ui.web.response.ApiResponseStatus;
@@ -47,8 +47,8 @@ public class PraxisExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
-    @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<RestApiResponse<Object>> handleBusinessException(BusinessException ex, WebRequest request) {
+    @ExceptionHandler(BusinessLogicException.class)
+    public ResponseEntity<RestApiResponse<Object>> handleBusinessException(BusinessLogicException ex, WebRequest request) {
         ProblemDetailExtension customProblemDetail = new ProblemDetailExtension(ex.getMessage());
         customProblemDetail.setStatus(HttpStatus.BAD_REQUEST);
         customProblemDetail.setTitle(ex.getMessage());

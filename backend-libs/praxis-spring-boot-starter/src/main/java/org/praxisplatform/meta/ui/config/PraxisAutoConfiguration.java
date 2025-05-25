@@ -2,8 +2,8 @@ package org.praxisplatform.meta.ui.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.uifieldspec.controller.docs.OpenApiSchemaController;
-import com.uifieldspec.extension.OpenApiSchemaResolver;
+import org.praxisplatform.meta.ui.openapi.controller.OpenApiSchemaController;
+import org.praxisplatform.meta.ui.openapi.extension.OpenApiSchemaResolver;
 import org.praxisplatform.meta.ui.filter.spec.GenericSpecificationsBuilder;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
