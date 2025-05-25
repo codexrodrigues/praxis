@@ -6,7 +6,6 @@ import jakarta.persistence.criteria.*;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 
 import java.lang.reflect.Field;
 import java.time.Instant;
@@ -15,6 +14,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.domain.Specification;
 
 /**
  * Classe responsável por construir Specifications genéricas para consultas JPA, baseando-se em DTOs de filtro

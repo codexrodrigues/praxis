@@ -16,19 +16,19 @@ Com o `praxis-metadata-core`, você pode:
 ## ✨ Principais Funcionalidades
 
 * **Anotações de Metadados de UI**:
-    * `@UISchema`: Anotação principal para campos, que aplica implicitamente `@io.swagger.v3.oas.annotations.media.Schema` e serve como contêiner para metadados `x-ui`.
-    * `@UIExtension`: Define um conjunto de propriedades chave-valor (`ExtensionProperty`) que serão agrupadas sob a extensão `"x-ui"` no schema OpenAPI. Usada dentro de `@UISchema` ou como meta-anotação.
-    * **Anotações de Especialização**: Um conjunto de anotações pré-definidas (como `@UINomeProprioExtension`, `@UIDataExtension`, `@UITextInputExtension`) que são meta-anotadas com `@UIExtension` para aplicar configurações comuns de `x-ui` a tipos de campos específicos, reduzindo a verbosidade.
+  * `@UISchema`: Anotação principal para campos, que aplica implicitamente `@io.swagger.v3.oas.annotations.media.Schema` e serve como contêiner para metadados `x-ui`.
+  * `@UIExtension`: Define um conjunto de propriedades chave-valor (`ExtensionProperty`) que serão agrupadas sob a extensão `"x-ui"` no schema OpenAPI. Usada dentro de `@UISchema` ou como meta-anotação.
+  * **Anotações de Especialização**: Um conjunto de anotações pré-definidas (como `@UINomeProprioExtension`, `@UIDataExtension`, `@UITextInputExtension`) que são meta-anotadas com `@UIExtension` para aplicar configurações comuns de `x-ui` a tipos de campos específicos, reduzindo a verbosidade.
 * **Constantes de Configuração de UI**:
-    * Interfaces como `FieldConfigProperty`, `FieldControlType`, `FieldDataType`, `ValidationProperty` que definem as chaves padrão para as propriedades `x-ui`.
+  * Interfaces como `FieldConfigProperty`, `FieldControlType`, `FieldDataType`, `ValidationProperty` que definem as chaves padrão para as propriedades `x-ui`.
 * **Filtragem Dinâmica**:
-    * `@Filterable`: Anotação para marcar campos em DTOs que podem ser usados como critérios de filtro.
-    * `FilterCriteria`: Interface marcadora para DTOs de filtro.
-    * `PraxisSpecificationBuilder` e `PraxisSpecification`: Classes para construir especificações JPA dinâmicas a partir de DTOs de filtro.
+  * `@Filterable`: Anotação para marcar campos em DTOs que podem ser usados como critérios de filtro.
+  * `FilterCriteria`: Interface marcadora para DTOs de filtro.
+  * `GenericSpecificationsBuilder` e `PraxisSpecification`: Classes para construir especificações JPA dinâmicas a partir de DTOs de filtro.
 * **Abstrações de Dados**:
-    * `PraxisCrudRepository`: Interface base para repositórios CRUD.
-    * `PraxisCrudService`: Interface base para serviços CRUD.
-    * `PraxisMapper`: Interface base para mappers entre DTOs e Entidades.
+  * `PraxisCrudRepository`: Interface base para repositórios CRUD.
+  * `PraxisCrudService`: Interface base para serviços CRUD.
+  * `PraxisMapper`: Interface base para mappers entre DTOs e Entidades.
 
 ## ⚙️ Configuração (Maven)
 
@@ -38,17 +38,7 @@ Adicione a dependência `praxis-metadata-core` ao seu arquivo `pom.xml`:
 <dependency>
     <groupId>org.praxisplatform</groupId>
     <artifactId>praxis-metadata-core</artifactId>
-    <version>1.0.0-SNAPSHOT</version> </dependency>
-
-<dependency>
-    <groupId>io.swagger.core.v3</groupId>
-    <artifactId>swagger-annotations</artifactId>
-    <version>2.2.22</version> </dependency>
-<dependency>
-    <groupId>jakarta.persistence</groupId>
-    <artifactId>jakarta.persistence-api</artifactId>
-    </dependency>
-<dependency>
-    <groupId>org.springframework.data</groupId>
-    <artifactId>spring-data-commons</artifactId>
-    </dependency>
+    <version>1.0.0-SNAPSHOT</version>
+</dependency>
+```
+This module will bring in necessary transitive dependencies like Swagger Annotations, Jakarta Persistence API, and Spring Data Commons.

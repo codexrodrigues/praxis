@@ -7,6 +7,8 @@
         <option value="$PROJECT_DIR$/backend-libs/praxis-metadata-core/pom.xml" />
         <option value="$PROJECT_DIR$/backend-libs/praxis-metadata-springdoc/pom.xml" />
         <option value="$PROJECT_DIR$/backend-libs/praxis-spring-boot-starter/pom.xml" />
+        <option value="$PROJECT_DIR$/backend-libs/praxis-bom/pom.xml" />
+        <option value="$PROJECT_DIR$/backend-libs/pom.xml" />
       </list>
     </option>
   </component>

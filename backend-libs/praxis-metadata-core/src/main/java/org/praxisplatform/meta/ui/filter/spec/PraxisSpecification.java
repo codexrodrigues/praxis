@@ -1,6 +1,8 @@
 package org.praxisplatform.meta.ui.filter.spec;
 
 import org.praxisplatform.meta.ui.filter.dto.GenericFilterDTO;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 /**
  * Objeto para retornar tanto a {@link Specification} quanto o {@link Pageable} após processamento

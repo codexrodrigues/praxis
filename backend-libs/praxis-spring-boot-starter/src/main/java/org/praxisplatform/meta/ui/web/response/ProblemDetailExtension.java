@@ -1,6 +1,6 @@
 package org.praxisplatform.meta.ui.web.response;
 
-import com.uifieldspec.rest.exceptionhandler.ErrorCategory;
+import org.praxisplatform.meta.ui.web.exception.ErrorCategory;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.http.ProblemDetail;
