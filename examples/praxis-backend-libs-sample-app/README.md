@@ -87,3 +87,89 @@ Essas extensões `x-ui` são o que uma aplicação frontend compatível com Prax
 *   **Exposição de Schema:** O `praxis-metadata-springdoc` integra-se ao SpringDoc para expor os metadados enriquecidos, que podem ser consumidos por aplicações cliente.
 
 Este exemplo serve como um ponto de partida para entender como as bibliotecas backend do Praxis podem ser usadas para construir aplicações robustas e dinâmicas.
+
+## Módulo de Recursos Humanos (HR) Adicional
+
+Para expandir as demonstrações e fornecer um exemplo de domínio mais realista, um módulo de Recursos Humanos (HR) foi adicionado.
+
+### Propósito do Módulo HR
+
+Este módulo serve para:
+
+*   Demonstrar a aplicação das bibliotecas Praxis em um contexto de negócios mais complexo com múltiplas entidades e relacionamentos.
+*   Fornecer exemplos de DTOs, Entidades JPA, Repositórios Spring Data JPA e Controladores REST.
+*   Mostrar como configurar e usar um banco de dados (H2 em memória por padrão, com opção para PostgreSQL).
+
+### Principais Entidades do Módulo HR
+
+O módulo HR inclui as seguintes entidades principais:
+
+*   `Funcionario`: Representa os funcionários.
+*   `Cargo`: Define os cargos e suas faixas salariais.
+*   `Departamento`: Organiza os funcionários em departamentos.
+*   `Endereco`: Objeto embutido para endereços dos funcionários.
+*   `Dependente`: Dependentes dos funcionários.
+*   `FolhaPagamento`: Registros de folhas de pagamento.
+*   `EventoFolha`: Eventos (créditos/débitos) em uma folha de pagamento.
+*   `FeriasAfastamento`: Registros de férias e outros afastamentos.
+
+### APIs REST do Módulo HR
+
+O módulo HR expõe APIs REST para interagir com suas entidades. Os endpoints principais estão sob o prefixo `/api/hr`. Por exemplo:
+
+*   Funcionários: `/api/hr/funcionarios`
+*   Cargos: `/api/hr/cargos`
+*   Departamentos: `/api/hr/departamentos`
+
+### Configuração do Banco de Dados
+
+A aplicação é configurada para usar um banco de dados para persistir os dados do módulo HR.
+
+*   **Padrão: Banco de Dados H2 em Memória**
+    *   A aplicação utiliza um banco de dados H2 em memória por padrão.
+    *   Os dados são inicializados a partir do arquivo `src/main/resources/data.sql` quando a aplicação inicia.
+    *   Você pode acessar o console do H2 para inspecionar o banco de dados diretamente no seu navegador em: `http://localhost:8080/h2-console`
+        *   **JDBC URL**: `jdbc:h2:mem:testdb`
+        *   **User Name**: `sa`
+        *   **Password**: (deixe em branco)
+
+*   **Alternativa: Banco de Dados Externo (Exemplo com PostgreSQL)**
+    *   Para usar um banco de dados externo como o PostgreSQL, você precisará:
+        1.  Adicionar a dependência do driver JDBC apropriado ao `pom.xml` (ex: `postgresql`).
+        2.  Modificar o arquivo `src/main/resources/application.properties`. Comente as propriedades do H2 e descomente (e ajuste) a seção de exemplo para PostgreSQL:
+            ```properties
+            # === External PostgreSQL Database Configuration (Example) ===
+            # spring.datasource.url=jdbc:postgresql://localhost:5432/your_database_name
+            # spring.datasource.username=your_postgres_username
+            # spring.datasource.password=your_postgres_password
+            # spring.datasource.driverClassName=org.postgresql.Driver
+            # spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
+            # spring.jpa.hibernate.ddl-auto=update # ou 'validate'
+            ```
+        3.  Certifique-se de que o servidor de banco de dados externo esteja em execução e acessível.
+
+### Executando e Acessando o Módulo HR
+
+Após iniciar a aplicação (conforme instruções na seção "Como Executar a Aplicação"), você pode interagir com as APIs do módulo HR.
+
+**Exemplos de requisições `curl`:**
+
+*   **Listar todos os funcionários:**
+    ```bash
+    curl -X GET "http://localhost:8080/api/hr/funcionarios"
+    ```
+
+*   **Buscar funcionário pelo ID 1:**
+    ```bash
+    curl -X GET "http://localhost:8080/api/hr/funcionarios/1"
+    ```
+
+*   **Listar todos os cargos:**
+    ```bash
+    curl -X GET "http://localhost:8080/api/hr/cargos"
+    ```
+
+*   **Acessar o console H2:**
+    Abra no navegador: `http://localhost:8080/h2-console`
+
+Lembre-se que os dados iniciais são carregados a partir de `data.sql`. Você pode modificar este arquivo para testar com diferentes conjuntos de dados.
