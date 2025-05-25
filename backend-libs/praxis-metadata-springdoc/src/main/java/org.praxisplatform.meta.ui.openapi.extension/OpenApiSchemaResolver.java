@@ -15,6 +15,7 @@ import java.util.Map;
 
 @Configuration
 public class OpenApiSchemaResolver extends ModelResolver {
+
     public OpenApiSchemaResolver(ObjectMapper mapper) {
         super(mapper);
     }
@@ -43,8 +44,10 @@ public class OpenApiSchemaResolver extends ModelResolver {
 
         if (uiSchemaAnnotation != null) {
             Map<String, Object> uiExtension = getUIExtensionMap(property);
-            ExtensionProperty label = uiSchemaAnnotation.label();
-            uiExtension.putIfAbsent(label.name(), label.value());
+            String label = uiSchemaAnnotation.label();
+            if (label != null && !label.isEmpty()) {
+                uiExtension.putIfAbsent("label", label);
+            }
             if (uiSchemaAnnotation.metadata() != null) {
                 setProperties(uiSchemaAnnotation.metadata(), uiExtension);
             }
