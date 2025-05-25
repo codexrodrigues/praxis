@@ -1,42 +1,112 @@
 package com.example.praxis.hr.dto;
 
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+import org.praxisplatform.meta.ui.model.annotation.PraxisUiProperties;
 import org.praxisplatform.meta.ui.model.annotation.UISchema;
+import org.praxisplatform.meta.ui.model.property.FieldControlType;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public class FuncionarioDTO {
 
-    @UISchema(label = "Nome Completo")
+    @UISchema(label = "Nome Completo",
+            controlType = FieldControlType.INPUT,
+            metadata = @PraxisUiProperties(properties = {
+                    @ExtensionProperty(name = "readonly", value = "true"),
+                    @ExtensionProperty(name = "hidden", value = "false")
+            })
+    )
     private String nomeCompleto;
 
-    @UISchema(label = "CPF")
+    @UISchema(label = "CPF",
+            controlType = FieldControlType.INPUT,
+            metadata = @PraxisUiProperties(properties = {
+                    @ExtensionProperty(name = "readonly", value = "true"),
+                    @ExtensionProperty(name = "hidden", value = "false")
+            })
+    )
     private String cpf;
 
-    @UISchema(label = "Data de Nascimento")
+    @UISchema(label = "Data de Nascimento",
+            controlType = FieldControlType.INPUT,
+            metadata = @PraxisUiProperties(properties = {
+                    @ExtensionProperty(name = "readonly", value = "true"),
+                    @ExtensionProperty(name = "hidden", value = "false")
+            })
+    )
     private LocalDate dataNascimento;
 
-    @UISchema(label = "Email")
+    @UISchema(label = "Email",
+            controlType = FieldControlType.INPUT,
+            metadata = @PraxisUiProperties(properties = {
+                    @ExtensionProperty(name = "readonly", value = "true"),
+                    @ExtensionProperty(name = "hidden", value = "false")
+            })
+    )
     private String email;
 
-    @UISchema(label = "Telefone")
+    @UISchema(label = "Telefone",
+            controlType = FieldControlType.INPUT,
+            metadata = @PraxisUiProperties(properties = {
+                    @ExtensionProperty(name = "readonly", value = "true"),
+                    @ExtensionProperty(name = "hidden", value = "false")
+            })
+    )
     private String telefone;
 
-    @UISchema(label = "Cargo ID")
+    @UISchema(label = "Cargo ID",
+            controlType = FieldControlType.INPUT,
+            metadata = @PraxisUiProperties(properties = {
+                    @ExtensionProperty(name = "readonly", value = "true"),
+                    @ExtensionProperty(name = "hidden", value = "false")
+            })
+    )
     private Long cargoId;
 
-    @UISchema(label = "Departamento ID")
+    @UISchema(label = "Departamento ID",
+            controlType = FieldControlType.INPUT,
+            metadata = @PraxisUiProperties(properties = {
+                    @ExtensionProperty(name = "readonly", value = "true"),
+                    @ExtensionProperty(name = "hidden", value = "false")
+            })
+    )
     private Long departamentoId;
 
-    @UISchema(label = "Salário")
+    @UISchema(label = "Salário",
+            controlType = FieldControlType.INPUT,
+            metadata = @PraxisUiProperties(properties = {
+                    @ExtensionProperty(name = "readonly", value = "true"),
+                    @ExtensionProperty(name = "hidden", value = "false")
+            })
+    )
     private BigDecimal salario;
 
-    @UISchema(label = "Data de Admissão")
+    @UISchema(label = "Data de Admissão",
+            controlType = FieldControlType.INPUT,
+            metadata = @PraxisUiProperties(properties = {
+                    @ExtensionProperty(name = "readonly", value = "true"),
+                    @ExtensionProperty(name = "hidden", value = "false")
+            })
+    )
     private LocalDate dataAdmissao;
 
-    @UISchema(label = "Endereço")
+    @UISchema(label = "Endereço",
+            controlType = FieldControlType.INPUT,
+            metadata = @PraxisUiProperties(properties = {
+                    @ExtensionProperty(name = "readonly", value = "true"),
+                    @ExtensionProperty(name = "hidden", value = "false")
+            })
+    )
     private EnderecoDTO endereco;
 
-    @UISchema(label = "Ativo", defaultValue = "true")
+    @UISchema(label = "Ativo",
+            controlType = FieldControlType.INPUT,
+            metadata = @PraxisUiProperties(properties = {
+                    @ExtensionProperty(name = "readonly", value = "true"),
+                    @ExtensionProperty(name = "hidden", value = "false")
+            })
+    )
     private boolean ativo = true;
 
     // Getters and Setters

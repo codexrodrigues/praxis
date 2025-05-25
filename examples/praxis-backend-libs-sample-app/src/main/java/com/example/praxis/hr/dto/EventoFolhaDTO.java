@@ -1,23 +1,57 @@
 package com.example.praxis.hr.dto;
 
+import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+import org.praxisplatform.meta.ui.model.annotation.PraxisUiProperties;
 import org.praxisplatform.meta.ui.model.annotation.UISchema;
+import org.praxisplatform.meta.ui.model.property.FieldControlType;
+
 import java.math.BigDecimal;
 
 public class EventoFolhaDTO {
 
-    @UISchema(label = "ID")
+    @UISchema(label = "ID",
+            controlType = FieldControlType.INPUT,
+            metadata = @PraxisUiProperties(properties = {
+                    @ExtensionProperty(name = "readonly", value = "true"),
+                    @ExtensionProperty(name = "hidden", value = "false")
+            })
+    )
     private Long id;
 
-    @UISchema(label = "Folha de Pagamento ID")
+    @UISchema(label = "Folha de Pagamento ID",
+            controlType = FieldControlType.INPUT,
+            metadata = @PraxisUiProperties(properties = {
+                    @ExtensionProperty(name = "readonly", value = "true"),
+                    @ExtensionProperty(name = "hidden", value = "false")
+            })
+    )
     private Long folhaPagamentoId;
 
-    @UISchema(label = "Descrição")
+    @UISchema(label = "Descrição",
+            controlType = FieldControlType.INPUT,
+            metadata = @PraxisUiProperties(properties = {
+                    @ExtensionProperty(name = "readonly", value = "true"),
+                    @ExtensionProperty(name = "hidden", value = "false")
+            })
+    )
     private String descricao;
 
-    @UISchema(label = "Tipo")
+    @UISchema(label = "Tipo",
+            controlType = FieldControlType.INPUT,
+            metadata = @PraxisUiProperties(properties = {
+                    @ExtensionProperty(name = "readonly", value = "true"),
+                    @ExtensionProperty(name = "hidden", value = "false")
+            })
+    )
     private String tipo;
 
-    @UISchema(label = "Valor")
+    @UISchema(label = "Valor",
+            controlType = FieldControlType.INPUT,
+            metadata = @PraxisUiProperties(properties = {
+                    @ExtensionProperty(name = "readonly", value = "true"),
+                    @ExtensionProperty(name = "hidden", value = "false")
+            })
+    )
     private BigDecimal valor;
 
     // Getters and Setters
