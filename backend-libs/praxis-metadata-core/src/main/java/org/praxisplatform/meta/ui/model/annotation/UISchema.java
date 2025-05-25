@@ -42,12 +42,14 @@ import static java.lang.annotation.ElementType.*;
 @Schema // Faz com que @UISchema TAMBÉM APLIQUE @Schema da OpenAPI
 public @interface UISchema {
 
-    /**
-     * Um {@link ExtensionProperty} obrigatório definindo o label a ser exibido na UI para o elemento anotado.
-     * Este valor será adicionado às extensões x-ui.
-     * Exemplo: label = @ExtensionProperty(name = FieldConfigProperty.LABEL, value = "Nome do Cliente")
-     */
-    ExtensionProperty label();
+/**
+ * Um {@link ExtensionProperty} opcional definindo o label a ser exibido na UI para o elemento anotado.
+ * Este valor será adicionado às extensões x-ui.
+ * Exemplo: label = @ExtensionProperty(name = FieldConfigProperty.LABEL, value = "Nome do Cliente")
+ *
+ * <p><b>Default:</b> Uma {@link ExtensionProperty} vazia.</p>
+ */
+ExtensionProperty label() default @ExtensionProperty(name = "", value = "");
 
     /**
      * Metadados extras específicos do Praxis para customizar o comportamento da UI.

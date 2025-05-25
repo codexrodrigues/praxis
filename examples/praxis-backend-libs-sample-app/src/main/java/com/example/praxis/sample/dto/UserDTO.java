@@ -1,27 +1,20 @@
 package com.example.praxis.sample.dto;
 
-import org.praxisplatform.meta.ui.ExtensionProperty;
-import org.praxisplatform.meta.ui.UIExtension;
-import org.praxisplatform.meta.ui.UISchema;
-import org.praxisplatform.meta.ui.std.UIDataExtension;
-import org.praxisplatform.meta.ui.std.UINomeProprioExtension;
+
+import org.praxisplatform.meta.ui.model.annotation.PraxisUiProperties;
+import org.praxisplatform.meta.ui.model.annotation.UISchema;
 
 import java.time.LocalDate;
 
 public class UserDTO {
 
     @UISchema
-    @UINomeProprioExtension
     private String fullName;
 
     @UISchema
-    @UIDataExtension
     private LocalDate birthDate;
 
     @UISchema
-    @UIExtension(properties = {
-        @ExtensionProperty(name = "x-ui-controlType", value = "email")
-    })
     private String email;
 
     @UISchema
