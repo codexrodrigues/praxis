@@ -1,13 +1,7 @@
 package com.example.praxis.hr.entity;
 
-import javax.persistence.Entity;
-import javax.persistence.Table;
-import javax.persistence.Id;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Column;
-import javax.persistence.OneToOne;
-import javax.persistence.JoinColumn;
+
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "departamentos")
@@ -23,7 +17,7 @@ public class Departamento {
     @Column(unique = true, nullable = false)
     private String codigo;
 
-    @OneToOne
+    @ManyToOne // To this
     @JoinColumn(name = "responsavel_id", nullable = true)
     private Funcionario responsavel;
 

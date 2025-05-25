@@ -1,11 +1,8 @@
 package com.example.praxis.hr.entity;
 
-import javax.persistence.Entity;
-import javax.persistence.Table;
-import javax.persistence.Id;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Column;
+
+import jakarta.persistence.*;
+
 import java.math.BigDecimal;
 
 @Entity

@@ -1,6 +1,7 @@
 package com.example.praxis.hr.entity;
 
-import javax.persistence.Embeddable;
+
+import jakarta.persistence.*;
 
 @Embeddable
 public class Endereco {
