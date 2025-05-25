@@ -4,11 +4,14 @@ import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import org.praxisplatform.meta.ui.model.annotation.PraxisUiProperties;
 import org.praxisplatform.meta.ui.model.annotation.UISchema;
 import org.praxisplatform.meta.ui.model.property.FieldControlType;
+import org.praxisplatform.meta.ui.filter.dto.GenericFilterDTO;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-public class FuncionarioDTO {
+public class FuncionarioDTO implements GenericFilterDTO {
+
+    private Long id;
 
     @UISchema(label = "Nome Completo",
             controlType = FieldControlType.INPUT,
@@ -110,6 +113,14 @@ public class FuncionarioDTO {
     private boolean ativo = true;
 
     // Getters and Setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public String getNomeCompleto() {
         return nomeCompleto;
     }
