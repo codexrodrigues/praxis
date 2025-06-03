@@ -1,5 +1,6 @@
 package com.example.praxis.hr.service;
 
+import com.example.praxis.hr.dto.DepartamentoFilterDTO;
 import com.example.praxis.hr.entity.Departamento;
 import com.example.praxis.hr.entity.Funcionario;
 import com.example.praxis.hr.repository.DepartamentoRepository;
@@ -13,7 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class DepartamentoService implements BaseCrudService<Departamento, Long> {
+public class DepartamentoService implements BaseCrudService<Departamento, Long, DepartamentoFilterDTO> {
 
     @Autowired
     private DepartamentoRepository departamentoRepository;

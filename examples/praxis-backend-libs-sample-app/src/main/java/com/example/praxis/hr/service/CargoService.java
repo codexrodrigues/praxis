@@ -1,5 +1,6 @@
 package com.example.praxis.hr.service;
 
+import com.example.praxis.hr.dto.CargoFilterDTO;
 import com.example.praxis.hr.entity.Cargo;
 import com.example.praxis.hr.repository.CargoRepository;
 import org.praxisplatform.uischema.filter.specification.GenericSpecificationsBuilder;
@@ -9,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class CargoService implements BaseCrudService<Cargo, Long> {
+public class CargoService implements BaseCrudService<Cargo, Long, CargoFilterDTO> {
 
     @Autowired
     private CargoRepository cargoRepository;

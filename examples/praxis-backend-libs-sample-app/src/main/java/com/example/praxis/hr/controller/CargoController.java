@@ -1,6 +1,7 @@
 package com.example.praxis.hr.controller;
 
 import com.example.praxis.hr.dto.CargoDTO;
+import com.example.praxis.hr.dto.CargoFilterDTO;
 import com.example.praxis.hr.entity.Cargo;
 import com.example.praxis.hr.mapper.CargoMapper;
 import com.example.praxis.hr.service.CargoService;
@@ -11,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/hr/cargos")
-public class CargoController extends AbstractCrudController<Cargo, CargoDTO, Long> {
+public class CargoController extends AbstractCrudController<Cargo, com.example.praxis.hr.dto.CargoDTO, com.example.praxis.hr.dto.CargoFilterDTO, Long> {
 
     @Autowired
     private CargoService cargoService;
@@ -35,7 +36,7 @@ public class CargoController extends AbstractCrudController<Cargo, CargoDTO, Lon
     }
 
     @Override
-    protected Class<? extends AbstractCrudController<Cargo, CargoDTO, Long>> getControllerClass() {
+    protected Class<? extends AbstractCrudController<Cargo, com.example.praxis.hr.dto.CargoDTO, com.example.praxis.hr.dto.CargoFilterDTO, Long>> getControllerClass() {
         return CargoController.class;
     }
 
