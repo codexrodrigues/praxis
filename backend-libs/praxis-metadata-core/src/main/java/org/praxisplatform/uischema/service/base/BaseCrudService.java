@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -67,7 +68,7 @@ public interface BaseCrudService<E, ID> {
     }
 
     default Sort getDefaultSort() {
-        List<Field> sortedFields = Arrays.stream(getEntityClass().getDeclaredFields())
+        List<Field> sortedFields = getAllFields(getEntityClass()).stream()
                 .filter(field -> field.isAnnotationPresent(DefaultSortColumn.class))
                 .sorted(Comparator.comparingInt(field -> field.getAnnotation(DefaultSortColumn.class).priority()))
                 .toList();
@@ -91,5 +92,15 @@ public interface BaseCrudService<E, ID> {
 
     default EntityNotFoundException getNotFoundException() {
         return new EntityNotFoundException("Registro não encontrado");
+    }
+
+    // Helper method to get all fields from class and its superclasses
+    private List<Field> getAllFields(Class<?> clazz) {
+        List<Field> fields = new ArrayList<>();
+        while (clazz != null && clazz != Object.class) {
+            fields.addAll(Arrays.asList(clazz.getDeclaredFields()));
+            clazz = clazz.getSuperclass();
+        }
+        return fields;
     }
 }
