@@ -51,8 +51,6 @@ public abstract class AbstractCrudController<E, D extends GenericFilterDTO, ID> 
     // ------------------------------------------------------------------------
     public final String SCHEMAS_FILTERED_PATH = "/schemas/filtered";
 
-    protected final BaseCrudService<E, ID> service;
-
     /**
      * Retorna o serviço base (CRUD) que será usado internamente.
      */
@@ -88,11 +86,6 @@ public abstract class AbstractCrudController<E, D extends GenericFilterDTO, ID> 
      * (Opcional) Retorna o path base para fins de documentação ou links (se desejar).
      */
     protected abstract String getBasePath();
-
-
-    public AbstractCrudController() {
-        this.service = service;
-    }
 
     /**
      * Endpoint para filtrar entidades.

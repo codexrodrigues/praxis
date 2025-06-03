@@ -18,10 +18,6 @@ package com.example.praxis.hr.controller;
         @Autowired
         private FuncionarioMapper funcionarioMapper;
 
-        public FuncionarioController() {
-            super(getService());
-        }
-
         @Override
         protected Funcionario toEntity(FuncionarioDTO dto) {
             return funcionarioMapper.toEntity(dto);

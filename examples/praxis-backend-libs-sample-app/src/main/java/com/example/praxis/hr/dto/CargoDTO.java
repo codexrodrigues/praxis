@@ -2,10 +2,11 @@ package com.example.praxis.hr.dto;
 
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import org.praxisplatform.uischema.extension.annotation.UISchema;
+import org.praxisplatform.uischema.filter.dto.GenericFilterDTO;
 
 import java.math.BigDecimal;
 
-public class CargoDTO {
+public class CargoDTO extends GenericFilterDTO {
 
     @UISchema
     private Long id;
