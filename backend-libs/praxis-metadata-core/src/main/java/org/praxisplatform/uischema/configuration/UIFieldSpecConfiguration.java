@@ -1,0 +1,43 @@
+package org.praxisplatform.uischema.configuration;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.praxisplatform.uischema.controller.docs.ApiDocsController;
+import org.praxisplatform.uischema.extension.CustomOpenApiResolver;
+import org.praxisplatform.uischema.filter.specification.GenericSpecificationsBuilder;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.annotation.Bean;
+import org.springframework.web.client.RestTemplate;
+
+@AutoConfiguration
+public class UIFieldSpecConfiguration {
+    @Bean(name = "uiFieldSpecConfigurationRestTemplate")
+    @ConditionalOnMissingBean
+    public RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
+
+    @Bean(name = "uiFieldSpecConfigurationObjectMapper")
+    @ConditionalOnMissingBean
+    public ObjectMapper objectMapper() {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        return objectMapper;
+    }
+
+    @Bean
+    public CustomOpenApiResolver modelResolver(ObjectMapper mapper) {
+        return new CustomOpenApiResolver(mapper);
+    }
+
+    @Bean(name = "uiFieldSpecConfigurationGenericSpecificationsBuilder")
+    public <E> GenericSpecificationsBuilder<E> genericSpecificationsBuilder() {
+        return new GenericSpecificationsBuilder<>();
+    }
+
+    @Bean
+    public ApiDocsController apiDocsController() {
+        return new ApiDocsController();
+    }
+}
