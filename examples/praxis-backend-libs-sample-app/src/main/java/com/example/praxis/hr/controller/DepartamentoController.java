@@ -1,6 +1,7 @@
 package com.example.praxis.hr.controller;
 
 import com.example.praxis.hr.dto.DepartamentoDTO;
+import com.example.praxis.hr.dto.DepartamentoFilterDTO;
 import com.example.praxis.hr.entity.Departamento;
 import com.example.praxis.hr.mapper.DepartamentoMapper;
 import com.example.praxis.hr.service.DepartamentoService;
@@ -11,7 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/hr/departamentos")
-public class DepartamentoController extends AbstractCrudController<Departamento, DepartamentoDTO, Long> {
+public class DepartamentoController extends AbstractCrudController<Departamento, com.example.praxis.hr.dto.DepartamentoDTO, com.example.praxis.hr.dto.DepartamentoFilterDTO, Long> {
 
     @Autowired
     private DepartamentoService departamentoService;
@@ -37,7 +38,7 @@ public class DepartamentoController extends AbstractCrudController<Departamento,
     }
 
     @Override
-    protected Class<? extends AbstractCrudController<Departamento, DepartamentoDTO, Long>> getControllerClass() {
+    protected Class<? extends AbstractCrudController<Departamento, com.example.praxis.hr.dto.DepartamentoDTO, com.example.praxis.hr.dto.DepartamentoFilterDTO, Long>> getControllerClass() {
         return DepartamentoController.class;
     }
 
