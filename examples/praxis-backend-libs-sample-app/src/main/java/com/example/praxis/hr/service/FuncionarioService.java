@@ -8,14 +8,14 @@ import com.example.praxis.hr.repository.CargoRepository;
 import com.example.praxis.hr.repository.DepartamentoRepository;
 import com.example.praxis.hr.repository.FuncionarioRepository;
 import jakarta.persistence.EntityNotFoundException;
-import org.praxisplatform.meta.ui.data.repository.PraxisCrudRepository;
-import org.praxisplatform.meta.ui.data.service.PraxisCrudService;
-import org.praxisplatform.meta.ui.filter.spec.GenericSpecificationsBuilder;
+import org.praxisplatform.uischema.filter.specification.GenericSpecificationsBuilder;
+import org.praxisplatform.uischema.repository.base.BaseCrudRepository;
+import org.praxisplatform.uischema.service.base.BaseCrudService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class FuncionarioService implements PraxisCrudService<Funcionario, Long> {
+public class FuncionarioService implements BaseCrudService<Funcionario, Long> {
 
     @Autowired
     private FuncionarioRepository funcionarioRepository;
@@ -27,13 +27,21 @@ public class FuncionarioService implements PraxisCrudService<Funcionario, Long> 
     private DepartamentoRepository departamentoRepository;
 
     @Override
-    public PraxisCrudRepository<Funcionario, Long> getRepository() {
+    public BaseCrudRepository<Funcionario, Long> getRepository() {
         return funcionarioRepository;
     }
 
     @Override
     public GenericSpecificationsBuilder<Funcionario> getSpecificationsBuilder() {
         return new GenericSpecificationsBuilder<>();
+    }
+
+    /**
+     * @return
+     */
+    @Override
+    public Class<Funcionario> getEntityClass() {
+        return null;
     }
 
     @Override
@@ -111,7 +119,7 @@ public class FuncionarioService implements PraxisCrudService<Funcionario, Long> 
             // Similar handling for Departamento as for Cargo
             funcionario.setDepartamento(null); // Or throw validation error
         }
-        
+
         // Endereco is embedded, so it will be handled by cascading if configured, or direct save.
 
         return funcionarioRepository.save(funcionario);

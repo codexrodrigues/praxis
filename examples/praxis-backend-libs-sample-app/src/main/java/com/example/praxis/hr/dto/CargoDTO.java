@@ -1,66 +1,28 @@
 package com.example.praxis.hr.dto;
 
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
-import org.praxisplatform.meta.ui.model.annotation.PraxisUiProperties;
-import org.praxisplatform.meta.ui.model.annotation.UISchema;
-import org.praxisplatform.meta.ui.model.property.FieldControlType;
+import org.praxisplatform.uischema.extension.annotation.UISchema;
 
 import java.math.BigDecimal;
 
 public class CargoDTO {
 
-    @UISchema(label = "ID",
-            controlType = FieldControlType.INPUT,
-            metadata = @PraxisUiProperties(properties = {
-                    @ExtensionProperty(name = "readonly", value = "true"),
-                    @ExtensionProperty(name = "hidden", value = "false")
-            })
-    )
+    @UISchema
     private Long id;
 
-    @UISchema(label = "Nome",
-            controlType = FieldControlType.INPUT,
-            metadata = @PraxisUiProperties(properties = {
-                    @ExtensionProperty(name = "readonly", value = "true"),
-                    @ExtensionProperty(name = "hidden", value = "false")
-            })
-    )
+    @UISchema
     private String nome;
 
-    @UISchema(label = "Nível",
-            controlType = FieldControlType.INPUT,
-            metadata = @PraxisUiProperties(properties = {
-                    @ExtensionProperty(name = "readonly", value = "true"),
-                    @ExtensionProperty(name = "hidden", value = "false")
-            })
-    )
+    @UISchema
     private String nivel;
 
-    @UISchema(label = "Descrição",
-            controlType = FieldControlType.INPUT,
-            metadata = @PraxisUiProperties(properties = {
-                    @ExtensionProperty(name = "readonly", value = "true"),
-                    @ExtensionProperty(name = "hidden", value = "false")
-            })
-    )
+    @UISchema
     private String descricao;
 
-    @UISchema(label = "Salário Mínimo",
-            controlType = FieldControlType.INPUT,
-            metadata = @PraxisUiProperties(properties = {
-                    @ExtensionProperty(name = "readonly", value = "true"),
-                    @ExtensionProperty(name = "hidden", value = "false")
-            })
-    )
+    @UISchema
     private BigDecimal salarioMinimo;
 
-    @UISchema(label = "Salário Máximo",
-            controlType = FieldControlType.INPUT,
-            metadata = @PraxisUiProperties(properties = {
-                    @ExtensionProperty(name = "readonly", value = "true"),
-                    @ExtensionProperty(name = "hidden", value = "false")
-            })
-    )
+    @UISchema
     private BigDecimal salarioMaximo;
 
     // Getters and Setters

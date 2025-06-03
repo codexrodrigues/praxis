@@ -1,66 +1,28 @@
 package com.example.praxis.hr.dto;
 
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
-import org.praxisplatform.meta.ui.model.annotation.PraxisUiProperties;
-import org.praxisplatform.meta.ui.model.annotation.UISchema;
-import org.praxisplatform.meta.ui.model.property.FieldControlType;
+import org.praxisplatform.uischema.extension.annotation.UISchema;
 
 import java.time.LocalDate;
 
 public class FeriasAfastamentoDTO {
 
-    @UISchema(label = "ID",
-            controlType = FieldControlType.INPUT,
-            metadata = @PraxisUiProperties(properties = {
-                    @ExtensionProperty(name = "readonly", value = "true"),
-                    @ExtensionProperty(name = "hidden", value = "false")
-            })
-    )
+    @UISchema
     private Long id;
 
-    @UISchema(label = "Funcionário ID",
-            controlType = FieldControlType.INPUT,
-            metadata = @PraxisUiProperties(properties = {
-                    @ExtensionProperty(name = "readonly", value = "true"),
-                    @ExtensionProperty(name = "hidden", value = "false")
-            })
-    )
+    @UISchema
     private Long funcionarioId;
 
-    @UISchema(label = "Tipo",
-            controlType = FieldControlType.INPUT,
-            metadata = @PraxisUiProperties(properties = {
-                    @ExtensionProperty(name = "readonly", value = "true"),
-                    @ExtensionProperty(name = "hidden", value = "false")
-            })
-    )
+    @UISchema
     private String tipo; // e.g., "FÉRIAS", "LICENÇA MÉDICA"
 
-    @UISchema(label = "Data de Início",
-            controlType = FieldControlType.INPUT,
-            metadata = @PraxisUiProperties(properties = {
-                    @ExtensionProperty(name = "readonly", value = "true"),
-                    @ExtensionProperty(name = "hidden", value = "false")
-            })
-    )
+    @UISchema
     private LocalDate dataInicio;
 
-    @UISchema(label = "Data de Fim",
-            controlType = FieldControlType.INPUT,
-            metadata = @PraxisUiProperties(properties = {
-                    @ExtensionProperty(name = "readonly", value = "true"),
-                    @ExtensionProperty(name = "hidden", value = "false")
-            })
-    )
+    @UISchema
     private LocalDate dataFim;
 
-    @UISchema(label = "Observações",
-            controlType = FieldControlType.INPUT,
-            metadata = @PraxisUiProperties(properties = {
-                    @ExtensionProperty(name = "readonly", value = "true"),
-                    @ExtensionProperty(name = "hidden", value = "false")
-            })
-    )
+    @UISchema
     private String observacoes;
 
     // Getters and Setters

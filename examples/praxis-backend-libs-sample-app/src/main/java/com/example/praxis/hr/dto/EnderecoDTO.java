@@ -1,73 +1,29 @@
 package com.example.praxis.hr.dto;
 
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
-import org.praxisplatform.meta.ui.model.annotation.PraxisUiProperties;
-import org.praxisplatform.meta.ui.model.annotation.UISchema;
-import org.praxisplatform.meta.ui.model.property.FieldControlType;
+import org.praxisplatform.uischema.extension.annotation.UISchema;
 
 public class EnderecoDTO {
 
-    @UISchema(label = "Logradouro",
-            controlType = FieldControlType.INPUT,
-            metadata = @PraxisUiProperties(properties = {
-                    @ExtensionProperty(name = "readonly", value = "true"),
-                    @ExtensionProperty(name = "hidden", value = "false")
-            })
-    )
+    @UISchema
     private String logradouro;
 
-    @UISchema(label = "Número",
-            controlType = FieldControlType.INPUT,
-            metadata = @PraxisUiProperties(properties = {
-                    @ExtensionProperty(name = "readonly", value = "true"),
-                    @ExtensionProperty(name = "hidden", value = "false")
-            })
-    )
+    @UISchema
     private String numero;
 
-    @UISchema(label = "Complemento",
-            controlType = FieldControlType.INPUT,
-            metadata = @PraxisUiProperties(properties = {
-                    @ExtensionProperty(name = "readonly", value = "true"),
-                    @ExtensionProperty(name = "hidden", value = "false")
-            })
-    )
+    @UISchema
     private String complemento;
 
-    @UISchema(label = "Bairro",
-            controlType = FieldControlType.INPUT,
-            metadata = @PraxisUiProperties(properties = {
-                    @ExtensionProperty(name = "readonly", value = "true"),
-                    @ExtensionProperty(name = "hidden", value = "false")
-            })
-    )
+    @UISchema
     private String bairro;
 
-    @UISchema(label = "Cidade",
-            controlType = FieldControlType.INPUT,
-            metadata = @PraxisUiProperties(properties = {
-                    @ExtensionProperty(name = "readonly", value = "true"),
-                    @ExtensionProperty(name = "hidden", value = "false")
-            })
-    )
+    @UISchema
     private String cidade;
 
-    @UISchema(label = "Estado",
-            controlType = FieldControlType.INPUT,
-            metadata = @PraxisUiProperties(properties = {
-                    @ExtensionProperty(name = "readonly", value = "true"),
-                    @ExtensionProperty(name = "hidden", value = "false")
-            })
-    )
+    @UISchema
     private String estado;
 
-    @UISchema(label = "CEP",
-            controlType = FieldControlType.INPUT,
-            metadata = @PraxisUiProperties(properties = {
-                    @ExtensionProperty(name = "readonly", value = "true"),
-                    @ExtensionProperty(name = "hidden", value = "false")
-            })
-    )
+    @UISchema
     private String cep;
 
     // Getters and Setters

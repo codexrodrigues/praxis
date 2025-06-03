@@ -1,48 +1,22 @@
 package com.example.praxis.hr.dto;
 
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
-import org.praxisplatform.meta.ui.model.annotation.PraxisUiProperties;
-import org.praxisplatform.meta.ui.model.annotation.UISchema;
-import org.praxisplatform.meta.ui.model.property.FieldControlType;
+import org.praxisplatform.uischema.extension.annotation.UISchema;
 
 import java.time.LocalDate;
 
 public class DependenteDTO {
 
-    @UISchema(label = "Nome Completo",
-            controlType = FieldControlType.INPUT,
-            metadata = @PraxisUiProperties(properties = {
-                    @ExtensionProperty(name = "readonly", value = "true"),
-                    @ExtensionProperty(name = "hidden", value = "false")
-            })
-    )
+    @UISchema
     private String nomeCompleto;
 
-    @UISchema(label = "Data de Nascimento",
-            controlType = FieldControlType.INPUT,
-            metadata = @PraxisUiProperties(properties = {
-                    @ExtensionProperty(name = "readonly", value = "true"),
-                    @ExtensionProperty(name = "hidden", value = "false")
-            })
-    )
+    @UISchema
     private LocalDate dataNascimento;
 
-    @UISchema(label = "Parentesco",
-            controlType = FieldControlType.INPUT,
-            metadata = @PraxisUiProperties(properties = {
-                    @ExtensionProperty(name = "readonly", value = "true"),
-                    @ExtensionProperty(name = "hidden", value = "false")
-            })
-    )
+    @UISchema
     private String parentesco;
 
-    @UISchema(label = "Funcionário ID",
-            controlType = FieldControlType.INPUT,
-            metadata = @PraxisUiProperties(properties = {
-                    @ExtensionProperty(name = "readonly", value = "true"),
-                    @ExtensionProperty(name = "hidden", value = "false")
-            })
-    )
+    @UISchema
     private Long funcionarioId;
 
     // Getters and Setters

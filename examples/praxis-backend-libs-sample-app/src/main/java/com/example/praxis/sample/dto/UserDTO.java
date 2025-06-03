@@ -1,8 +1,8 @@
 package com.example.praxis.sample.dto;
 
 
-import org.praxisplatform.meta.ui.model.annotation.PraxisUiProperties;
-import org.praxisplatform.meta.ui.model.annotation.UISchema;
+
+import org.praxisplatform.uischema.extension.annotation.UISchema;
 
 import java.time.LocalDate;
 

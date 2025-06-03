@@ -2,6 +2,7 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
       <profile name="Maven default annotation processors profile" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
@@ -10,6 +11,16 @@
         <module name="praxis-metadata-core" />
         <module name="praxis-metadata-springdoc" />
       </profile>
+      <profile name="Annotation profile for praxis-sample-app" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/mapstruct/mapstruct-processor/1.5.5.Final/mapstruct-processor-1.5.5.Final.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/mapstruct/mapstruct/1.5.5.Final/mapstruct-1.5.5.Final.jar" />
+        </processorPath>
+        <module name="praxis-sample-app" />
+      </profile>
     </annotationProcessing>
   </component>
   <component name="JavacSettings">
@@ -17,6 +28,7 @@
       <module name="praxis-bom" options="-parameters" />
       <module name="praxis-metadata-core" options="-parameters" />
       <module name="praxis-metadata-springdoc" options="-parameters" />
+      <module name="praxis-sample-app" options="-parameters" />
       <module name="praxis-spring-boot-starter" options="-parameters" />
     </option>
   </component>
