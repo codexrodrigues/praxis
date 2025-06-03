@@ -2,8 +2,9 @@ package com.example.praxis.hr.dto;
 
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import org.praxisplatform.uischema.extension.annotation.UISchema;
+import org.praxisplatform.uischema.filter.dto.GenericFilterDTO;
 
-public class DepartamentoDTO {
+public class DepartamentoDTO extends GenericFilterDTO {
 
     @UISchema
     private Long id;

@@ -41,7 +41,7 @@ public class FuncionarioService implements BaseCrudService<Funcionario, Long> {
      */
     @Override
     public Class<Funcionario> getEntityClass() {
-        return null;
+        return Funcionario.class; // Changed from null
     }
 
     @Override
