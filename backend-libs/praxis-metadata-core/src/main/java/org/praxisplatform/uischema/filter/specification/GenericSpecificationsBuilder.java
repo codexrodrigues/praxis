@@ -54,14 +54,14 @@ public class GenericSpecificationsBuilder<E> {
      * @return Um GenericSpecification que armazena uma Specification genérica para ser usada em repositórios
      * Spring Data JPA e um Pageable ajustado conforme o DTO de entrada.
      */
-    public GenericSpecification<E> buildSpecification(GenericFilterDTO filter, Pageable pageable) {
+    public <FDT extends GenericFilterDTO> GenericSpecification<E> buildSpecification(FDT filter, Pageable pageable) {
         return new GenericSpecification<>(
                 processSpecification(filter),
                 processPageable(filter, pageable)
         );
     }
 
-    private Specification<E> processSpecification(GenericFilterDTO filter) {
+    private <FDT extends GenericFilterDTO> Specification<E> processSpecification(FDT filter) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -75,7 +75,7 @@ public class GenericSpecificationsBuilder<E> {
         };
     }
 
-    private Pageable processPageable(GenericFilterDTO filter, Pageable oldPageable) {
+    private <FDT extends GenericFilterDTO> Pageable processPageable(FDT filter, Pageable oldPageable) {
         Sort sort = oldPageable.getSort();
         if (!sort.isSorted()) {
             return oldPageable;
@@ -101,7 +101,7 @@ public class GenericSpecificationsBuilder<E> {
      * @param filter Instância do DTO de filtro.
      * @return Lista de campos anotados.
      */
-    private List<Field> getAnnotatedFields(GenericFilterDTO filter) {
+    private <FDT extends GenericFilterDTO> List<Field> getAnnotatedFields(FDT filter) {
         List<Field> annotatedFields = new ArrayList<>();
         for (Field field : filter.getClass().getDeclaredFields()) {
             if (field.isAnnotationPresent(Filterable.class)) {
@@ -127,7 +127,7 @@ public class GenericSpecificationsBuilder<E> {
      * @param criteriaBuilder Construtor de critérios JPA.
      * @param predicates      Lista de predicados a ser preenchida.
      */
-    private void processField(Field field, GenericFilterDTO filter, Root<E> root,
+    private <FDT extends GenericFilterDTO> void processField(Field field, FDT filter, Root<E> root,
                               CriteriaBuilder criteriaBuilder, List<Predicate> predicates) {
         try {
             field.setAccessible(true);

@@ -22,8 +22,9 @@ import java.util.List;
  *
  * @param <E>  Tipo da entidade
  * @param <ID> Tipo do identificador
+ * @param <FD> Tipo do DTO de filtro
  */
-public interface BaseCrudService<E, ID> {
+public interface BaseCrudService<E, ID, FD extends GenericFilterDTO> {
 
     BaseCrudRepository<E, ID> getRepository();
     GenericSpecificationsBuilder<E> getSpecificationsBuilder();
@@ -56,7 +57,7 @@ public interface BaseCrudService<E, ID> {
         return getRepository().findAll(sortedPageable);
     }
 
-    default Page<E> filter(GenericFilterDTO filterDTO, Pageable pageable) {
+    default Page<E> filter(FD filterDTO, Pageable pageable) {
         Pageable sortedPageable = pageable;
         if (!pageable.getSort().isSorted()) {
             sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), getDefaultSort());

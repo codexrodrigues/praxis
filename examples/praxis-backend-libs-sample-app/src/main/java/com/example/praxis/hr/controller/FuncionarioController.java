@@ -1,6 +1,7 @@
 package com.example.praxis.hr.controller;
 
     import com.example.praxis.hr.dto.FuncionarioDTO;
+    import com.example.praxis.hr.dto.FuncionarioFilterDTO;
     import com.example.praxis.hr.entity.Funcionario;
     import com.example.praxis.hr.mapper.FuncionarioMapper;
     import com.example.praxis.hr.service.FuncionarioService;
@@ -10,7 +11,7 @@ package com.example.praxis.hr.controller;
 
     @RestController
     @RequestMapping("/api/hr/funcionarios")
-    public class FuncionarioController extends AbstractCrudController<Funcionario, FuncionarioDTO, Long> {
+    public class FuncionarioController extends AbstractCrudController<Funcionario, FuncionarioDTO, FuncionarioFilterDTO, Long> {
 
         @Autowired
         private FuncionarioService funcionarioService;
@@ -34,7 +35,7 @@ package com.example.praxis.hr.controller;
         }
 
         @Override
-        protected Class<? extends AbstractCrudController<Funcionario, FuncionarioDTO, Long>> getControllerClass() {
+        protected Class<? extends AbstractCrudController<Funcionario, FuncionarioDTO, FuncionarioFilterDTO, Long>> getControllerClass() {
             return FuncionarioController.class;
         }
 

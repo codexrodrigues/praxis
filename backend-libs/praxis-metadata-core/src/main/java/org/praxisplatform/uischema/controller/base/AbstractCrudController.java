@@ -28,9 +28,10 @@ import java.util.List;
  *
  * @param <E>  Entidade (ex.: TipoTelefone)
  * @param <D>  DTO correspondente (ex.: TipoTelefoneDto)
+ * @param <FD> DTO de filtro correspondente (ex.: TipoTelefoneFilterDto)
  * @param <ID> Tipo do identificador (ex.: Long, String, etc.)
  */
-public abstract class AbstractCrudController<E, D extends GenericFilterDTO, ID> {
+public abstract class AbstractCrudController<E, D, FD extends GenericFilterDTO, ID> {
 
     // ------------------------------------------------------------------------
     // Base Path do OpenAPI
@@ -70,7 +71,7 @@ public abstract class AbstractCrudController<E, D extends GenericFilterDTO, ID> 
      * Retorna a classe concreta do controller (ex.: TipoTelefoneController.class)
      * para uso no método methodOn(...) do HATEOAS.
      */
-    protected abstract Class<? extends AbstractCrudController<E, D, ID>> getControllerClass();
+    protected abstract Class<? extends AbstractCrudController<E, D, FD, ID>> getControllerClass();
 
     /**
      * Extrai o identificador (ex.: entity.getId()) para montar links e location.
@@ -105,7 +106,7 @@ public abstract class AbstractCrudController<E, D extends GenericFilterDTO, ID> 
                             required = true,
                             content = @Content(
                                     mediaType = "application/json",
-                                    schema = @Schema(implementation = GenericFilterDTO.class) // Substituir pelo DTO genérico
+                                    schema = @Schema(implementation = FD.class) // Substituir pelo DTO genérico
                             )
                     ),
                     @Parameter(
@@ -126,7 +127,7 @@ public abstract class AbstractCrudController<E, D extends GenericFilterDTO, ID> 
             }
     )
     public ResponseEntity<RestApiResponse<Page<EntityModel<D>>>> filter(
-            @RequestBody D filterDTO,
+            @RequestBody FD filterDTO,
             Pageable pageable
     ) {
         Page<E> page = getService().filter(filterDTO, pageable);

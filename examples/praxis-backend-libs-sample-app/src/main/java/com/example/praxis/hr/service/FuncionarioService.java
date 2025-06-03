@@ -1,5 +1,6 @@
 package com.example.praxis.hr.service;
 
+import com.example.praxis.hr.dto.FuncionarioFilterDTO;
 import com.example.praxis.hr.entity.Cargo;
 import com.example.praxis.hr.entity.Departamento;
 import com.example.praxis.hr.entity.Endereco;
@@ -15,7 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class FuncionarioService implements BaseCrudService<Funcionario, Long> {
+public class FuncionarioService implements BaseCrudService<Funcionario, Long, FuncionarioFilterDTO> {
 
     @Autowired
     private FuncionarioRepository funcionarioRepository;
