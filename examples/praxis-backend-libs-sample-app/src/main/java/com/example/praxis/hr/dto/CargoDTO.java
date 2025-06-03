@@ -6,7 +6,7 @@ import org.praxisplatform.uischema.filter.dto.GenericFilterDTO;
 
 import java.math.BigDecimal;
 
-public class CargoDTO extends GenericFilterDTO {
+public class CargoDTO implements GenericFilterDTO {
 
     @UISchema
     private Long id;
