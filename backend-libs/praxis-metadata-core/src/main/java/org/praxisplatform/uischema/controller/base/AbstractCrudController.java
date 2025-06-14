@@ -106,7 +106,7 @@ public abstract class AbstractCrudController<E, D, FD extends GenericFilterDTO, 
                             required = true,
                             content = @Content(
                                     mediaType = "application/json",
-                                    schema = @Schema(implementation = FD.class) // Substituir pelo DTO genérico
+                                    schema = @Schema(implementation = GenericFilterDTO.class) // Substituir pelo DTO genérico
                             )
                     ),
                     @Parameter(
