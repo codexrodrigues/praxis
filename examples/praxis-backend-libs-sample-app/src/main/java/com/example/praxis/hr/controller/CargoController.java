@@ -6,13 +6,15 @@ import com.example.praxis.hr.dto.CargoFilterDTO;
 import com.example.praxis.hr.entity.Cargo;
 import com.example.praxis.hr.mapper.CargoMapper;
 import com.example.praxis.hr.service.CargoService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.praxisplatform.uischema.controller.base.AbstractCrudController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/hr/cargos")
+@RequestMapping(ApiRouteDefinitions.HR_CARGOS_PATH)
+@Tag(name = ApiRouteDefinitions.HR_CARGOS_TAG, description = "Operations related to HR Cargos")
 public class CargoController extends AbstractCrudController<Cargo, com.example.praxis.hr.dto.CargoDTO, com.example.praxis.hr.dto.CargoFilterDTO, Long> {
 
     @Autowired
@@ -49,6 +51,6 @@ public class CargoController extends AbstractCrudController<Cargo, com.example.p
 
     @Override
     protected String getBasePath() {
-        return "/api/hr/cargos";
+        return ApiRouteDefinitions.HR_CARGOS_PATH;
     }
 }

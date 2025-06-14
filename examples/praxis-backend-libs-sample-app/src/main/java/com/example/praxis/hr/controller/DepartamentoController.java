@@ -6,13 +6,15 @@ import com.example.praxis.hr.dto.DepartamentoFilterDTO;
 import com.example.praxis.hr.entity.Departamento;
 import com.example.praxis.hr.mapper.DepartamentoMapper;
 import com.example.praxis.hr.service.DepartamentoService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.praxisplatform.uischema.controller.base.AbstractCrudController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/hr/departamentos")
+@RequestMapping(ApiRouteDefinitions.HR_DEPARTAMENTOS_PATH)
+@Tag(name = ApiRouteDefinitions.HR_DEPARTAMENTOS_TAG, description = "Operations related to HR Departamentos")
 public class DepartamentoController extends AbstractCrudController<Departamento, com.example.praxis.hr.dto.DepartamentoDTO, com.example.praxis.hr.dto.DepartamentoFilterDTO, Long> {
 
     @Autowired
@@ -51,6 +53,6 @@ public class DepartamentoController extends AbstractCrudController<Departamento,
 
     @Override
     protected String getBasePath() {
-        return "/api/hr/departamentos";
+        return ApiRouteDefinitions.HR_DEPARTAMENTOS_PATH;
     }
 }
