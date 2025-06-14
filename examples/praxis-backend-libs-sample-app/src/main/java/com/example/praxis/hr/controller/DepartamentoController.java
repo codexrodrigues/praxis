@@ -1,5 +1,6 @@
 package com.example.praxis.hr.controller;
 
+import com.example.praxis.common.config.ApiRouteDefinitions;
 import com.example.praxis.hr.dto.DepartamentoDTO;
 import com.example.praxis.hr.dto.DepartamentoFilterDTO;
 import com.example.praxis.hr.entity.Departamento;

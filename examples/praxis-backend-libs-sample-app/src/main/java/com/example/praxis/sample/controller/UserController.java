@@ -1,5 +1,6 @@
 package com.example.praxis.sample.controller;
 
+import com.example.praxis.common.config.ApiRouteDefinitions;
 import com.example.praxis.sample.dto.UserDTO;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
