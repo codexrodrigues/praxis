@@ -1,10 +1,10 @@
 package com.example.praxis.common.config;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,11 +27,11 @@ public class OpenApiGroupsValidator implements SmartInitializingSingleton {
     @Autowired
     private RequestMappingHandlerMapping requestMappingHandlerMapping;
 
-    // Add this in a configuration class if not already present
-    @Bean
-    public RequestMappingHandlerMapping requestMappingHandlerMapping() {
-        return new RequestMappingHandlerMapping();
-    }
+    // Remova este bean que está causando conflito
+    // @Bean
+    // public RequestMappingHandlerMapping requestMappingHandlerMapping() {
+    //     return new RequestMappingHandlerMapping();
+    // }
 
     @Override
     public void afterSingletonsInstantiated() {
@@ -85,8 +85,8 @@ public class OpenApiGroupsValidator implements SmartInitializingSingleton {
 
         List<String> missingGroups = new ArrayList<>();
 
-        // Buscar todos os campos _GROUP em ApiEndpoints por reflexão
-        for (Field field : OpenApiGroupsConfig.class.getDeclaredFields()) {
+        // Corrigir para usar ApiRouteDefinitions em vez de OpenApiGroupsConfig
+        for (Field field : ApiRouteDefinitions.class.getDeclaredFields()) {
             if (field.getName().endsWith("_GROUP") && field.getType() == String.class) {
                 try {
                     String groupName = (String) field.get(null);
@@ -97,7 +97,7 @@ public class OpenApiGroupsValidator implements SmartInitializingSingleton {
                     // Verificar também se existe PATH correspondente
                     String pathFieldName = field.getName().replace("_GROUP", "_PATH");
                     try {
-                        Field pathField = OpenApiGroupsConfig.class.getDeclaredField(pathFieldName);
+                        Field pathField = ApiRouteDefinitions.class.getDeclaredField(pathFieldName);
                         // Verificar se o GROUP está coerente com o PATH
                         String pathValue = (String) pathField.get(null);
                         if (!normalizePath(pathValue).substring(1).equals(groupName)) {
@@ -108,13 +108,13 @@ public class OpenApiGroupsValidator implements SmartInitializingSingleton {
                         logger.warn("Campo PATH não encontrado para o GROUP {}: {}", groupName, pathFieldName);
                     }
                 } catch (Exception e) {
-                    logger.error("Erro ao acessar campo de ApiEndpoints", e);
+                    logger.error("Erro ao acessar campo de ApiRouteDefinitions", e);
                 }
             }
         }
 
         if (!missingGroups.isEmpty()) {
-            logger.warn("Os seguintes grupos definidos em ApiEndpoints não estão configurados em SwaggerConfig: {}",
+            logger.warn("Os seguintes grupos definidos em ApiRouteDefinitions não estão configurados: {}",
                     missingGroups);
         }
     }
