@@ -1,14 +1,5 @@
-org/praxisplatform/uischema/service/base/BaseCrudServiceTest.class
-org/praxisplatform/dummy/DummyApplication$TestController.class
-org/praxisplatform/dummy/OpenApiConfig.class
-org/praxisplatform/uischema/service/base/BaseCrudServiceTest$ChildEntity.class
-org/praxisplatform/uischema/service/base/BaseCrudServiceTest$DirectAnnotationEntity.class
-org/praxisplatform/dummy/controllers/TestAnnotationsController.class
 org/praxisplatform/dummy/DummyApplication.class
-org/praxisplatform/uischema/service/base/BaseCrudServiceTest$ParentEntity.class
-org/praxisplatform/uischema/service/base/BaseCrudServiceTest$GrandparentEntity.class
-org/praxisplatform/uischema/service/base/BaseCrudServiceTest$ChildWithSpecificAndDeepInheritedEntity.class
-org/praxisplatform/uischema/service/base/BaseCrudServiceTest$NoAnnotationEntity.class
-org/praxisplatform/uischema/service/base/BaseCrudServiceTest$1.class
-org/praxisplatform/uischema/service/base/BaseCrudServiceTest$ParentNoAnnotationEntity.class
+org/praxisplatform/dummy/DummyApplication$TestController.class
 org/praxisplatform/dummy/controllers/TestAnnotationsController$TestDTO.class
+org/praxisplatform/dummy/OpenApiConfig.class
+org/praxisplatform/dummy/controllers/TestAnnotationsController.class

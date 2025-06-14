@@ -2,13 +2,15 @@ package com.example.praxis.sample.controller;
 
 import com.example.praxis.common.config.ApiRouteDefinitions;
 import com.example.praxis.sample.dto.UserDTO;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/users")
+@RequestMapping(ApiRouteDefinitions.USERS_PATH)
+@Tag(name = ApiRouteDefinitions.USERS_TAG, description = "Operations related to Users")
 public class UserController {
 
     @PostMapping

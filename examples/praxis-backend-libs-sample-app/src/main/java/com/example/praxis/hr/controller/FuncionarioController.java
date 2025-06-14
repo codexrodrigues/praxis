@@ -6,12 +6,14 @@ import com.example.praxis.common.config.ApiRouteDefinitions;
     import com.example.praxis.hr.entity.Funcionario;
     import com.example.praxis.hr.mapper.FuncionarioMapper;
     import com.example.praxis.hr.service.FuncionarioService;
+    import io.swagger.v3.oas.annotations.tags.Tag;
     import org.praxisplatform.uischema.controller.base.AbstractCrudController;
     import org.springframework.beans.factory.annotation.Autowired;
     import org.springframework.web.bind.annotation.*;
 
     @RestController
-    @RequestMapping("/api/hr/funcionarios")
+    @RequestMapping(ApiRouteDefinitions.HR_FUNCIONARIOS_PATH)
+    @Tag(name = ApiRouteDefinitions.HR_FUNCIONARIOS_TAG, description = "Operations related to HR Funcionarios")
     public class FuncionarioController extends AbstractCrudController<Funcionario, FuncionarioDTO, FuncionarioFilterDTO, Long> {
 
         @Autowired
@@ -48,6 +50,6 @@ import com.example.praxis.common.config.ApiRouteDefinitions;
 
         @Override
         protected String getBasePath() {
-            return "/api/hr/funcionarios";
+            return ApiRouteDefinitions.HR_FUNCIONARIOS_PATH;
         }
     }
