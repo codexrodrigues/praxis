@@ -55,7 +55,7 @@ public abstract class AbstractCrudController<E, D, FD extends GenericFilterDTO, 
     /**
      * Retorna o serviço base (CRUD) que será usado internamente.
      */
-    protected abstract BaseCrudService<E, ID> getService();
+    protected abstract BaseCrudService<E, ID, FD> getService();
 
     /**
      * Converte de entidade -> DTO.
