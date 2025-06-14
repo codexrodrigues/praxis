@@ -37,10 +37,6 @@ public class DepartamentoController extends AbstractCrudController<Departamento,
         return departamentoMapper.toEntity(dto);
     }
 
-    @Override
-    protected Class<? extends AbstractCrudController<Departamento, com.example.praxis.hr.dto.DepartamentoDTO, com.example.praxis.hr.dto.DepartamentoFilterDTO, Long>> getControllerClass() {
-        return DepartamentoController.class;
-    }
 
     @Override
     protected Long getEntityId(Departamento entity) {

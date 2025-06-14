@@ -34,10 +34,6 @@ package com.example.praxis.hr.controller;
             return funcionarioService;
         }
 
-        @Override
-        protected Class<? extends AbstractCrudController<Funcionario, FuncionarioDTO, FuncionarioFilterDTO, Long>> getControllerClass() {
-            return FuncionarioController.class;
-        }
 
         @Override
         protected Long getEntityId(Funcionario entity) {

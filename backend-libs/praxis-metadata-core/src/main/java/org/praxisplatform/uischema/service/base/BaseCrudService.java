@@ -92,7 +92,7 @@ public interface BaseCrudService<E, ID, FD extends GenericFilterDTO> {
     }
 
     default EntityNotFoundException getNotFoundException() {
-        return new EntityNotFoundException("Registro não encontrado");
+        return new EntityNotFoundException("Registro não encontrado");
     }
 
     // Helper method to get all fields from class and its superclasses
