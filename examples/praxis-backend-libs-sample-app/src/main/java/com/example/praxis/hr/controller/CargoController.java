@@ -1,5 +1,6 @@
 package com.example.praxis.hr.controller;
 
+import com.example.praxis.common.config.ApiRouteDefinitions;
 import com.example.praxis.hr.dto.CargoDTO;
 import com.example.praxis.hr.dto.CargoFilterDTO;
 import com.example.praxis.hr.entity.Cargo;
