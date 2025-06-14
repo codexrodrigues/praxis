@@ -70,8 +70,15 @@ public abstract class AbstractCrudController<E, D, FD extends GenericFilterDTO, 
     /**
      * Retorna a classe concreta do controller (ex.: TipoTelefoneController.class)
      * para uso no método methodOn(...) do HATEOAS.
+     *
+     * <p>Fornece uma implementação padrão baseada em {@link #getClass()},
+     * mas pode ser sobrescrito caso o comportamento padrão não seja
+     * adequado.</p>
      */
-    protected abstract Class<? extends AbstractCrudController<E, D, FD, ID>> getControllerClass();
+    @SuppressWarnings("unchecked")
+    protected Class<? extends AbstractCrudController<E, D, FD, ID>> getControllerClass() {
+        return (Class<? extends AbstractCrudController<E, D, FD, ID>>) getClass();
+    }
 
     /**
      * Extrai o identificador (ex.: entity.getId()) para montar links e location.

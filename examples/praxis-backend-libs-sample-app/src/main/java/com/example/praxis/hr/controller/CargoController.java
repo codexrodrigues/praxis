@@ -35,10 +35,6 @@ public class CargoController extends AbstractCrudController<Cargo, com.example.p
         return cargoMapper.toEntity(dto);
     }
 
-    @Override
-    protected Class<? extends AbstractCrudController<Cargo, com.example.praxis.hr.dto.CargoDTO, com.example.praxis.hr.dto.CargoFilterDTO, Long>> getControllerClass() {
-        return CargoController.class;
-    }
 
     @Override
     protected Long getEntityId(Cargo entity) {
