@@ -80,7 +80,11 @@ public class GenericSpecificationsBuilder<E> {
         if (!sort.isSorted()) {
             return oldPageable;
         }
-        List<Sort.Order> orderList = sort.get().map(order -> {
+        // Spring Data's Sort exposes the orders through the {@code stream()} method.
+        // Using {@code get()} would fail to compile on newer versions where the
+        // method does not exist. The stream is then mapped to keep the original
+        // direction while replacing the property when a relation is configured.
+        List<Sort.Order> orderList = sort.stream().map(order -> {
             try {
                 Field field = filter.getClass().getDeclaredField(order.getProperty());
                 Filterable filterable = field.getAnnotation(Filterable.class);
