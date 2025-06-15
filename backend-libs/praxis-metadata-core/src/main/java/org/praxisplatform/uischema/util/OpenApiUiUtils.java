@@ -138,6 +138,60 @@ public class OpenApiUiUtils {
         }
     }
 
+    public static void populateUiGroup(Map<String, Object> xUiMap, String group) {
+        if (group != null && !group.isEmpty() && !xUiMap.containsKey(FieldConfigProperties.GROUP.getValue())) {
+            xUiMap.put(FieldConfigProperties.GROUP.getValue(), group);
+        }
+    }
+
+    public static void populateUiOrder(Map<String, Object> xUiMap, int order) {
+        if (order != 0 && !xUiMap.containsKey(FieldConfigProperties.ORDER.getValue())) {
+            xUiMap.put(FieldConfigProperties.ORDER.getValue(), String.valueOf(order));
+        }
+    }
+
+    public static void populateUiWidth(Map<String, Object> xUiMap, String width) {
+        if (width != null && !width.isEmpty() && !xUiMap.containsKey(FieldConfigProperties.WIDTH.getValue())) {
+            xUiMap.put(FieldConfigProperties.WIDTH.getValue(), width);
+        }
+    }
+
+    public static void populateUiIcon(Map<String, Object> xUiMap, String icon) {
+        if (icon != null && !icon.isEmpty() && !xUiMap.containsKey(FieldConfigProperties.ICON.getValue())) {
+            xUiMap.put(FieldConfigProperties.ICON.getValue(), icon);
+        }
+    }
+
+    public static void populateUiDisabled(Map<String, Object> xUiMap, boolean disabled) {
+        if (disabled && !xUiMap.containsKey(FieldConfigProperties.DISABLED.getValue())) {
+            xUiMap.put(FieldConfigProperties.DISABLED.getValue(), Boolean.TRUE);
+        }
+    }
+
+    public static void populateUiHidden(Map<String, Object> xUiMap, boolean hidden) {
+        if (hidden && !xUiMap.containsKey(FieldConfigProperties.HIDDEN.getValue())) {
+            xUiMap.put(FieldConfigProperties.HIDDEN.getValue(), Boolean.TRUE);
+        }
+    }
+
+    public static void populateUiEditable(Map<String, Object> xUiMap, boolean editable) {
+        if (!editable && !xUiMap.containsKey(FieldConfigProperties.EDITABLE.getValue())) {
+            xUiMap.put(FieldConfigProperties.EDITABLE.getValue(), Boolean.FALSE);
+        }
+    }
+
+    public static void populateUiSortable(Map<String, Object> xUiMap, boolean sortable) {
+        if (!sortable && !xUiMap.containsKey(FieldConfigProperties.SORTABLE.getValue())) {
+            xUiMap.put(FieldConfigProperties.SORTABLE.getValue(), Boolean.FALSE);
+        }
+    }
+
+    public static void populateUiFilterable(Map<String, Object> xUiMap, boolean filterable) {
+        if (filterable && !xUiMap.containsKey(FieldConfigProperties.FILTERABLE.getValue())) {
+            xUiMap.put(FieldConfigProperties.FILTERABLE.getValue(), Boolean.TRUE);
+        }
+    }
+
     public static void populateUiHelpText(Map<String, Object> xUiMap, String description) {
         if (description != null && !description.isEmpty() && !xUiMap.containsKey(FieldConfigProperties.HELP_TEXT.getValue())) {
             xUiMap.put(FieldConfigProperties.HELP_TEXT.getValue(), description);
