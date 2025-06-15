@@ -11,14 +11,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.web.client.RestTemplate;
 
 @AutoConfiguration
-public class UIFieldSpecConfiguration {
-    @Bean(name = "uiFieldSpecConfigurationRestTemplate")
+public class OpenApiUiSchemaAutoConfiguration {
+    @Bean(name = "openApiUiSchemaRestTemplate")
     @ConditionalOnMissingBean
     public RestTemplate restTemplate() {
         return new RestTemplate();
     }
 
-    @Bean(name = "uiFieldSpecConfigurationObjectMapper")
+    @Bean(name = "openApiUiSchemaObjectMapper")
     @ConditionalOnMissingBean
     public ObjectMapper objectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
@@ -31,7 +31,7 @@ public class UIFieldSpecConfiguration {
         return new CustomOpenApiResolver(mapper);
     }
 
-    @Bean(name = "uiFieldSpecConfigurationGenericSpecificationsBuilder")
+    @Bean(name = "openApiUiSchemaSpecificationsBuilder")
     public <E> GenericSpecificationsBuilder<E> genericSpecificationsBuilder() {
         return new GenericSpecificationsBuilder<>();
     }
