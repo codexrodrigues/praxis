@@ -93,10 +93,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 @Schema(description = "Nome completo do cliente.")
 @UISchema(label = "Nome do Cliente",
-          helpText = "Insira o nome completo conforme documento.",
-          controlType = FieldControlType.INPUT,
-          order = 10,
-          group = "Dados Pessoais")
+        helpText = "Insira o nome completo conforme documento.",
+        controlType = FieldControlType.INPUT,
+        order = 10,
+        group = "Dados Pessoais")
 @NotNull(message = "O nome do cliente não pode ser nulo.")
 @Size(min = 3, max = 100, message = "O nome deve ter entre 3 e 100 caracteres.")
 private String nomeCliente;
@@ -205,4 +205,123 @@ O design do `CustomOpenApiResolver` e `OpenApiUiUtils` oferece várias formas de
 ## 8. Conclusão
 
 O `CustomOpenApiResolver` é uma peça fundamental para criar uma ponte rica em informações entre o backend (onde os modelos de dados e as regras de validação são definidos) e o frontend (onde a interface do usuário é apresentada e interage com o usuário). Ao traduzir anotações Java em uma extensão `x-ui` detalhada e estruturada dentro do schema OpenAPI, ele habilita a construção de UIs de forma mais dinâmica, consistente e baseada em metadados. Isso reduz a duplicação de lógica de validação, minimiza a necessidade de configurações de UI hardcoded no frontend e promove uma arquitetura mais coesa e manutenível para aplicações web modernas.
-```
+
+---
+
+## ApiDocsController: Fornecendo Schemas OpenAPI Filtrados e Enriquecidos
+
+### 1. Introdução
+
+O `ApiDocsController` é um controlador Spring RESTful que fornece um endpoint específico para recuperar porções filtradas e processadas da documentação OpenAPI completa da aplicação. Seu principal objetivo é facilitar o acesso a schemas de DTOs específicos (especialmente schemas de resposta) de maneira simplificada, com a opção de resolver referências internas (`$ref`) e incluindo metadados `x-ui` relevantes.
+
+### 2. Propósito Principal
+
+O `ApiDocsController` serve aos seguintes propósitos:
+
+*   **Acesso Granular a Schemas:** Permitir que clientes (como geradores de UI dinâmicos) obtenham apenas o schema JSON de um DTO específico associado a um endpoint, em vez de baixar e parsear todo o documento OpenAPI.
+*   **Resolução de Referências (`$ref`):** Oferecer a funcionalidade de "embutir" schemas referenciados, simplificando a estrutura do JSON para o consumidor.
+*   **Inclusão de Metadados `x-ui`:** Garantir que os metadados `x-ui` (gerados, por exemplo, pelo `CustomOpenApiResolver`) associados à operação do endpoint sejam convenientemente incluídos no schema retornado.
+*   **Descoberta de Schema de Resposta:** Implementar uma lógica para tentar identificar automaticamente o schema de resposta principal de um endpoint.
+
+### 3. Endpoint e Parâmetros
+
+*   **Endpoint:** `GET /schemas/filtered`
+*   **Parâmetros da Requisição:**
+    *   `path` (String): **Obrigatório**. O caminho da API para o qual o schema é desejado (ex: `/api/usuarios`, `/api/produtos/{id}`). Deve ser codificado em URL se contiver caracteres especiais.
+    *   `document` (String): **Opcional**. O nome do "documento" ou **grupo OpenAPI configurado** ao qual o `path` pertence (ex: `usuarios`, `produtos`, conforme definido em sua configuração de grupos OpenAPI). Se omitido, o controller tenta extraí-lo do primeiro segmento do `path`. (Veja a nota sobre Configuração de Grupos OpenAPI na seção "Funcionamento Interno Detalhado" para mais informações).
+    *   `operation` (String): **Opcional**. A operação HTTP (verbo) do endpoint (ex: `get`, `post`, `put`). **Default:** `"get"`.
+    *   `includeInternalSchemas` (boolean): **Opcional**. Se `true`, o controller tentará resolver recursivamente todas as referências `$ref` encontradas dentro do schema principal e seus sub-schemas. Se `false`, as referências `$ref` são mantidas como estão. **Default:** `false`.
+
+### 4. Funcionamento Interno Detalhado
+
+O `ApiDocsController` executa os seguintes passos ao receber uma requisição:
+
+1.  **Determinação do Documento OpenAPI:**
+    *   Se o parâmetro `document` não for fornecido, ele é extraído do primeiro segmento do `path` (ex: de `/api/usuarios/list`, `document` se torna `api`). O método auxiliar `extractDocumentFromPath()` realiza essa tarefa.
+
+    **Nota sobre Configuração de Grupos OpenAPI:**
+    Para que o `ApiDocsController` utilize efetivamente o parâmetro `document` e acesse diferentes especificações OpenAPI dentro da mesma aplicação, é crucial que a aplicação configure explicitamente esses grupos. Isso é geralmente feito utilizando `GroupedOpenApi` da biblioteca `springdoc-openapi`. Cada `GroupedOpenApi` bean define um nome de grupo (que corresponde ao parâmetro `document`) e os caminhos que pertencem a esse grupo.
+
+    Por exemplo, uma configuração como:
+    ```java
+    @Configuration
+    public class OpenApiGroupsConfig {
+        @Bean
+        public GroupedOpenApi usersGroup() {
+            return GroupedOpenApi.builder()
+                    .group("usuarios") // Este é o valor esperado pelo parâmetro 'document'
+                    .pathsToMatch("/api/usuarios/**")
+                    .build();
+        }
+        @Bean
+        public GroupedOpenApi productsGroup() {
+            return GroupedOpenApi.builder()
+                    .group("produtos") // Outro valor para 'document'
+                    .pathsToMatch("/api/produtos/**")
+                    .build();
+        }
+    }
+    ```
+    Resultaria em dois documentos OpenAPI acessíveis em `/v3/api-docs/usuarios` e `/v3/api-docs/produtos`. O `ApiDocsController` então usaria `usuarios` ou `produtos` como o valor do parâmetro `document` para buscar a especificação correta. Sem tal configuração, apenas o grupo padrão (default) estará disponível. Consulte a classe `OpenApiGroupsConfig.java` no projeto `examples/praxis-backend-libs-sample-app` para um exemplo prático.
+
+2.  **Busca do Documento OpenAPI Completo:**
+    *   Constrói a URL para o documento OpenAPI completo do grupo especificado. Isso é feito usando o valor configurado `springdoc.api-docs.path` (default: `/v3/api-docs`) e o `document` determinado. Ex: `http://localhost:8080/v3/api-docs/meuDocumento`.
+    *   Utiliza um `RestTemplate` injetado para fazer uma requisição GET a essa URL e obter o documento OpenAPI completo como um `JsonNode`.
+3.  **Localização da Operação e Schema:**
+    *   O `path` da requisição (após decodificação de URL) e a `operation` são usados para navegar na estrutura do `JsonNode` do OpenAPI: `paths -> {decodedPath} -> {operation}`.
+4.  **Identificação do Schema de Resposta Principal (`findResponseSchema`):**
+    *   Este é um passo crucial. O método `findResponseSchema()` tenta identificar o nome do schema principal associado à resposta do endpoint:
+        *   **Prioridade 1: `x-ui.responseSchema`:** Verifica se existe uma propriedade `responseSchema` dentro da extensão `x-ui` no nó da operação. Se existir, seu valor é usado como o nome do schema.
+        *   **Prioridade 2: Schema da Resposta 200 OK:** Procura em `responses -> 200 -> content -> */* -> schema` (ou `application/json -> schema`). Se encontrar um `$ref` aqui (ex: `#/components/schemas/RestApiResponseObjetoDTO`), ele extrai o nome `RestApiResponseObjetoDTO`.
+        *   **Extração de Tipo de Wrappers (`extractRealTypeFromRestApiResponse`):** Se o schema encontrado for um tipo wrapper comum como `RestApiResponseListNomeDTO` ou `RestApiResponseNomeDTO`, este método é chamado para extrair o `NomeDTO` real de dentro do wrapper. Ele faz isso analisando o nome do schema wrapper ou, como fallback, inspecionando a propriedade `data` e seu `$ref` ou `items.$ref` (para listas).
+        *   **Prioridade 3: Inferência pelo Path:** Se as tentativas anteriores falharem, tenta inferir o nome do DTO a partir do último segmento do `path` (ex: `/entidades/list` -> `EntidadeDTO`).
+5.  **Recuperação do Schema Principal:**
+    *   Com o nome do schema de resposta identificado (ex: `MeuObjetoDTO`), o controller busca sua definição em `components -> schemas -> {nomeDoSchema}`.
+6.  **Resolução de Referências Internas (`replaceInternalSchemas`):**
+    *   Se o parâmetro `includeInternalSchemas` for `true`, o método `replaceInternalSchemas()` é invocado com o nó do schema principal e a lista completa de `allSchemas` (`components.schemas`).
+    *   Este método navega recursivamente pelas `properties` do schema.
+    *   Quando encontra um campo com `$ref` (ex: `"$ref": "#/components/schemas/OutroDTO"`):
+        *   Ele remove a chave `$ref`.
+        *   Busca `OutroDTO` em `allSchemas`.
+        *   Copia as `properties` de `OutroDTO` para o lugar onde o `$ref` estava.
+        *   Chama a si mesmo recursivamente para o caso de `OutroDTO` também conter `$ref`s ou para propriedades que são objetos.
+    *   Ele também lida com `$ref`s dentro de `items` (para campos do tipo array).
+7.  **Conversão e Adição do `x-ui` da Operação:**
+    *   O `JsonNode` do schema processado (com `$ref`s possivelmente resolvidos) é convertido para um `Map<String, Object>`.
+    *   A seção `x-ui` que estava originalmente no nó da *operação* (`paths -> {decodedPath} -> {operation} -> x-ui`) é extraída e adicionada diretamente à raiz do `Map<String, Object>` retornado. Isso garante que os metadados de UI específicos da operação fiquem disponíveis no schema filtrado.
+
+### 5. Métodos Auxiliares Chave
+
+*   **`extractDocumentFromPath(String path)`:** Extrai o nome do grupo/documento OpenAPI do primeiro segmento não vazio e sem chaves do `path`.
+*   **`findResponseSchema(JsonNode pathsNode, JsonNode rootNode, String operation, String decodedPath)`:** Lógica central para determinar qual schema de `components/schemas` representa a resposta principal do endpoint.
+*   **`extractRealTypeFromRestApiResponse(JsonNode wrapperSchema, String wrapperSchemaName)`:** Especializado em "desembrulhar" tipos de dados de classes wrapper genéricas como `RestApiResponse<T>` ou `RestApiResponseList<T>`.
+*   **`extractSchemaNameFromRef(String ref)`:** Utilitário para obter o nome simples de um schema a partir de uma string de referência (ex: de `#/components/schemas/MeuDTO` para `MeuDTO`).
+*   **`replaceInternalSchemas(ObjectNode schemaNode, JsonNode allSchemas)`:** Realiza a substituição (inlining) de referências `$ref` por seus schemas correspondentes de forma recursiva.
+
+### 6. Manipulação de `x-ui`
+
+O `ApiDocsController` não *gera* ativamente novos atributos `x-ui`. Em vez disso, ele assume que o `CustomOpenApiResolver` (ou um mecanismo similar) já populou a extensão `x-ui` no documento OpenAPI completo, especificamente no nível da operação (ex: `paths./api/usuarios.get.x-ui`).
+
+A principal contribuição do `ApiDocsController` em relação ao `x-ui` é:
+
+1.  **Preservação:** Ele localiza essa seção `x-ui` existente na operação.
+2.  **Agregação:** Ele anexa essa seção `x-ui` diretamente ao objeto JSON do schema de resposta que ele retorna.
+
+Se `includeInternalSchemas=true` for usado, e os schemas referenciados também contiverem suas próprias extensões `x-ui` (nos seus campos), essas extensões serão naturalmente preservadas como parte do processo de resolução de `$ref`.
+
+### 7. Casos de Uso
+
+*   **Geração Dinâmica de Formulários e Grids:** Um frontend pode chamar o `GET /schemas/filtered` para obter o schema de um DTO usado em um formulário de criação/edição ou para definir colunas de uma tabela. O `x-ui` fornecerá informações sobre labels, tipos de controle, validações, ordem, etc.
+*   **Ferramentas de Desenvolvimento e Documentação Interativa:** Pode ser usado para exibir informações detalhadas sobre um schema específico sem a necessidade de carregar todo o OpenAPI.
+*   **Clientes de API Genéricos:** Um cliente de API pode usar o schema para entender a estrutura esperada de uma resposta de um endpoint específico.
+*   **Simplificação para Consumidores:** Ao resolver os `$ref`s, o controller pode fornecer um schema "achatado" que é mais fácil de ser processado por algumas ferramentas ou bibliotecas que têm suporte limitado a referências complexas.
+
+### 8. Configuração
+
+O `ApiDocsController` é configurado como um bean Spring pela `UIFieldSpecConfiguration`.
+Ele depende da injeção de:
+*   `RestTemplate`: Para buscar o documento OpenAPI.
+*   `ObjectMapper`: Para manipulação de JSON.
+*   `@Value("${springdoc.api-docs.path:/v3/api-docs}")`: Para saber onde encontrar a documentação OpenAPI principal.
+
+---
