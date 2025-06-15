@@ -6,10 +6,13 @@ import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.models.media.Schema;
 import org.praxisplatform.uischema.FieldConfigProperties;
 import org.praxisplatform.uischema.FieldControlType;
+import org.praxisplatform.uischema.FieldDataType;
+import org.praxisplatform.uischema.IconPosition;
 import org.praxisplatform.uischema.ValidationProperties;
 import org.praxisplatform.uischema.extension.annotation.UISchema;
 import org.praxisplatform.uischema.numeric.NumberFormatStyle;
 import org.praxisplatform.uischema.util.OpenApiUiUtils;
+import org.praxisplatform.uischema.validation.ValidationPattern;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -80,37 +83,108 @@ public class CustomOpenApiResolver extends ModelResolver {
         for (Method method : methods) {
             String methodName = method.getName();
 
-            // Pular métodos que não são propriedades ou metadata (que é tratado separadamente)
+            // Skip methods that are not properties, or are handled elsewhere
             if (methodName.equals("metadata") || methodName.equals("description") ||
                     methodName.equals("hashCode") || methodName.equals("toString") ||
-                    methodName.equals("equals")) {
+                    methodName.equals("equals") || methodName.equals("extraProperties") ||
+                    methodName.equals("annotationType")) {
                 continue;
             }
 
             try {
                 Object value = method.invoke(annotation);
+                if (value == null) {
+                    continue; // Skip null values
+                }
 
-                // Determinar o nome da propriedade na extensão
                 String extensionPropertyName = getExtensionPropertyName(methodName);
 
-                // Processar valor baseado no tipo
-                if (value instanceof Boolean) {
-                    Boolean boolValue = (Boolean) value;
-                    // Verificar valor booleano padrão diferente (por exemplo, false para "editable")
-                    if (methodName.equals("editable") || methodName.equals("sortable")) {
-                        if (!boolValue) uiExtension.putIfAbsent(extensionPropertyName, "false");
-                    } else {
-                        if (boolValue) uiExtension.putIfAbsent(extensionPropertyName, "true");
+                // Handle specific properties with new utility methods
+                if ("group".equals(methodName)) {
+                    OpenApiUiUtils.populateUiGroup(uiExtension, (String) value);
+                } else if ("order".equals(methodName)) {
+                    OpenApiUiUtils.populateUiOrder(uiExtension, (Integer) value);
+                } else if ("width".equals(methodName)) {
+                    OpenApiUiUtils.populateUiWidth(uiExtension, (String) value);
+                } else if ("icon".equals(methodName)) {
+                    OpenApiUiUtils.populateUiIcon(uiExtension, (String) value);
+                } else if ("disabled".equals(methodName)) {
+                    OpenApiUiUtils.populateUiDisabled(uiExtension, (Boolean) value);
+                } else if ("hidden".equals(methodName)) {
+                    OpenApiUiUtils.populateUiHidden(uiExtension, (Boolean) value);
+                } else if ("editable".equals(methodName)) {
+                    OpenApiUiUtils.populateUiEditable(uiExtension, (Boolean) value);
+                } else if ("sortable".equals(methodName)) {
+                    OpenApiUiUtils.populateUiSortable(uiExtension, (Boolean) value);
+                } else if ("filterable".equals(methodName)) {
+                    OpenApiUiUtils.populateUiFilterable(uiExtension, (Boolean) value);
+                }
+                // Handle Enum types
+                else if (value instanceof FieldDataType) {
+                    // Assuming FieldDataType.TEXT is default, only add if different or not present
+                    String typeValue = ((FieldDataType) value).getValue();
+                    if (!typeValue.equals(FieldDataType.TEXT.getValue()) || !uiExtension.containsKey(extensionPropertyName)) {
+                         uiExtension.putIfAbsent(extensionPropertyName, typeValue);
+                    }
+                } else if (value instanceof FieldControlType) {
+                     // Assuming FieldControlType.INPUT is default for general cases. Add if different or not present.
+                    String controlTypeValue = ((FieldControlType) value).getValue();
+                     if (!controlTypeValue.equals(FieldControlType.INPUT.getValue()) || !uiExtension.containsKey(extensionPropertyName)) {
+                        uiExtension.putIfAbsent(extensionPropertyName, controlTypeValue);
+                    }
+                } else if (value instanceof IconPosition) {
+                    // Assuming IconPosition.LEFT is default. Add if different or not present.
+                    String iconPositionValue = ((IconPosition) value).getValue();
+                     if (!iconPositionValue.equals(IconPosition.LEFT.getValue()) || !uiExtension.containsKey(extensionPropertyName)) {
+                        uiExtension.putIfAbsent(extensionPropertyName, iconPositionValue);
+                    }
+                } else if (value instanceof NumberFormatStyle) {
+                    // Assuming NumberFormatStyle.NONE is default. Add if different or not present.
+                    String numericFormatValue = ((NumberFormatStyle) value).getValue();
+                    if (!numericFormatValue.equals(NumberFormatStyle.NONE.getValue()) || !uiExtension.containsKey(extensionPropertyName)) {
+                        uiExtension.putIfAbsent(extensionPropertyName, numericFormatValue);
+                    }
+                } else if (value instanceof ValidationPattern) {
+                    String patternValue = ((ValidationPattern) value).getValue();
+                    // For ValidationPattern, it's a specific validation, so add if present and not empty.
+                    // The default for pattern() in UISchema is ValidationPattern.NONE which has an empty value.
+                    if (patternValue != null && !patternValue.isEmpty()) {
+                        uiExtension.putIfAbsent(extensionPropertyName, patternValue);
+                    }
+                }
+                // Handle other String, Integer, Boolean properties
+                else if (value instanceof String) {
+                    String strValue = (String) value;
+                    if (!strValue.isEmpty()) {
+                        uiExtension.putIfAbsent(extensionPropertyName, strValue);
                     }
                 } else if (value instanceof Integer) {
                     Integer intValue = (Integer) value;
-                    if (intValue != 0) uiExtension.putIfAbsent(extensionPropertyName, intValue.toString());
-                } else if (value instanceof String) {
-                    String strValue = (String) value;
-                    if (!strValue.isEmpty()) uiExtension.putIfAbsent(extensionPropertyName, strValue);
+                    // General integer handling: add if not zero (assuming zero is a common default for non-specific integers)
+                    // Specific integers like 'order' are handled above.
+                    // For other integers like minLength, maxLength, min, max, validation utils handle them.
+                    // This is a fallback.
+                    if (intValue != 0) {
+                        uiExtension.putIfAbsent(extensionPropertyName, intValue.toString());
+                    }
+                } else if (value instanceof Boolean) {
+                    // General boolean handling for properties not covered by specific utils
+                    // Add if true, assuming default is false.
+                    // Specific booleans like 'disabled', 'hidden', 'editable', 'sortable', 'filterable', 'readOnly', 'required'
+                    // are handled by dedicated utils or standard processing.
+                    Boolean boolValue = (Boolean) value;
+                    if (boolValue) {
+                         uiExtension.putIfAbsent(extensionPropertyName, Boolean.TRUE); // Store as Boolean
+                    }
                 }
+                // Note: Array types for properties like 'allowedFileTypes' from UISchema are not explicitly handled here yet.
+                // UISchema.allowedFileTypes() returns String[], not a single enum.
+                // The current logic would skip it if it's not one of the above types.
+                // This would need specific handling if `allowedFileTypes` from `@UISchema` needs to be processed.
+                // For now, focusing on the defined refactoring scope.
+
             } catch (Exception e) {
-                // Log error if needed
+                LOGGER.error("Error processing UISchema annotation method {}: {}", methodName, e.getMessage(), e);
             }
         }
     }
