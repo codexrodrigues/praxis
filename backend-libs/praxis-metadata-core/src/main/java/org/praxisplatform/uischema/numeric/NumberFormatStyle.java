@@ -28,7 +28,13 @@ public enum NumberFormatStyle {
      * Formato científico (notação exponencial).
      * Exemplo: Exibe o valor como "1.23456E3".
      */
-    SCIENTIFIC("scientific");
+    SCIENTIFIC("scientific"),
+
+    /**
+     * Sem formatação especial.
+     * Exemplo: Exibe o valor como está, sem separadores, símbolos ou formatação especial.
+     */
+    NONE("none");
 
     private final String value;
 

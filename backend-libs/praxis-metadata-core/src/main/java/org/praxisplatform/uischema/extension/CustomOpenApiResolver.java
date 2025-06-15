@@ -4,15 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.core.jackson.ModelResolver;
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import io.swagger.v3.oas.models.media.Schema;
-import org.praxisplatform.uischema.FieldConfigProperties;
-import org.praxisplatform.uischema.FieldControlType;
-import org.praxisplatform.uischema.FieldDataType;
-import org.praxisplatform.uischema.IconPosition;
-import org.praxisplatform.uischema.ValidationProperties;
+import org.praxisplatform.uischema.*;
 import org.praxisplatform.uischema.extension.annotation.UISchema;
 import org.praxisplatform.uischema.numeric.NumberFormatStyle;
 import org.praxisplatform.uischema.util.OpenApiUiUtils;
-import org.praxisplatform.uischema.validation.ValidationPattern;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -145,7 +140,7 @@ public class CustomOpenApiResolver extends ModelResolver {
                         uiExtension.putIfAbsent(extensionPropertyName, numericFormatValue);
                     }
                 } else if (value instanceof ValidationPattern) {
-                    String patternValue = ((ValidationPattern) value).getValue();
+                    String patternValue = ((ValidationPattern) value).getPattern();
                     // For ValidationPattern, it's a specific validation, so add if present and not empty.
                     // The default for pattern() in UISchema is ValidationPattern.NONE which has an empty value.
                     if (patternValue != null && !patternValue.isEmpty()) {
