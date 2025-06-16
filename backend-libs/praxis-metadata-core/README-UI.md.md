@@ -22,7 +22,7 @@ O fluxo principal de funcionamento pode ser resumido da seguinte forma:
     *   O `CustomOpenApiResolver` herda da classe `io.swagger.v3.core.jackson.ModelResolver`. Isso permite que ele se integre ao pipeline de processamento de modelos do OpenAPI.
 
 2.  **Registro como Bean Spring:**
-    *   A classe `UIFieldSpecConfiguration` define um bean do tipo `CustomOpenApiResolver`. Isso garante que o resolver customizado seja utilizado pelo framework OpenAPI (ex: `springdoc-openapi`) ao invés do resolver padrão, devido à configuração do Spring.
+    *   A classe `OpenApiUiSchemaAutoConfiguration` define um bean do tipo `CustomOpenApiResolver`. Isso garante que o resolver customizado seja utilizado pelo framework OpenAPI (ex: `springdoc-openapi`) ao invés do resolver padrão, devido à configuração do Spring.
 
 3.  **Sobrescrita do Método `applyBeanValidatorAnnotations`:**
     *   Este é o método central onde a lógica customizada é injetada. Sempre que o `ModelResolver` padrão processaria anotações de validação de bean para uma propriedade, a implementação do `CustomOpenApiResolver` é invocada.
@@ -57,7 +57,7 @@ O resultado é um schema OpenAPI onde cada propriedade pode conter uma seção `
     *   **Responsabilidade:** Estende `ModelResolver` para interceptar o processamento de anotações de bean. Orquestra a leitura de anotações (`@UISchema` e padrão) e a delegação para `OpenApiUiUtils` para popular a extensão `x-ui`.
     *   **Métodos Chave:** `applyBeanValidatorAnnotations`, `resolveSchema`, `processAnnotationDynamically`, `processStandardAnnotations`, `getUIExtensionMap`.
 
-*   **`UIFieldSpecConfiguration` (`org.praxisplatform.uischema.configuration.UIFieldSpecConfiguration`):**
+*   **`OpenApiUiSchemaAutoConfiguration` (`org.praxisplatform.uischema.configuration.OpenApiUiSchemaAutoConfiguration`):**
     *   **Responsabilidade:** Classe de configuração Spring (`@AutoConfiguration`).
     *   **Métodos Chave:** Define um bean `CustomOpenApiResolver modelResolver(ObjectMapper mapper)`. Isso garante que esta implementação customizada seja usada pelo framework OpenAPI (ex: SpringDoc) no lugar da padrão. Também configura um `ObjectMapper`.
 
@@ -200,7 +200,7 @@ O design do `CustomOpenApiResolver` e `OpenApiUiUtils` oferece várias formas de
     *   **Lógica de Processamento:** A lógica nos métodos `processStandardAnnotations` ou `processAnnotationDynamically` pode ser ajustada para mudar como as anotações existentes são interpretadas.
 
 *   **Configuração de `ObjectMapper`:**
-    *   O `CustomOpenApiResolver` recebe um `ObjectMapper`. A configuração deste `ObjectMapper` (feita em `UIFieldSpecConfiguration`) pode influenciar como certos tipos de dados (ex: datas, enums) são serializados quando usados como `defaultValue` ou em `options`.
+    *   O `CustomOpenApiResolver` recebe um `ObjectMapper`. A configuração deste `ObjectMapper` (feita em `OpenApiUiSchemaAutoConfiguration`) pode influenciar como certos tipos de dados (ex: datas, enums) são serializados quando usados como `defaultValue` ou em `options`.
 
 ## 8. Conclusão
 
@@ -318,7 +318,7 @@ Se `includeInternalSchemas=true` for usado, e os schemas referenciados também c
 
 ### 8. Configuração
 
-O `ApiDocsController` é configurado como um bean Spring pela `UIFieldSpecConfiguration`.
+O `ApiDocsController` é configurado como um bean Spring pela `OpenApiUiSchemaAutoConfiguration`.
 Ele depende da injeção de:
 *   `RestTemplate`: Para buscar o documento OpenAPI.
 *   `ObjectMapper`: Para manipulação de JSON.
