@@ -25,10 +25,10 @@ This repository contains backend and frontend libraries. Documentation can be ge
 
 ```bash
 cd backend-libs/praxis-metadata-core
-./gradlew asciidoctor
+../../mvnw javadoc:javadoc
 ```
 
-The HTML files will be placed in `build/docs/asciidoc`.
+The generated Javadoc will be placed in `target/site/apidocs`.
 
 ### Generating frontend docs
 

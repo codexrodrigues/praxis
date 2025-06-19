@@ -234,7 +234,17 @@ To simplify the creation of RESTful services with UI metadata capabilities, the 
     *   This generic interface (often implemented by an abstract class or a concrete service) defines the standard contract for service-layer CRUD operations.
     *   Implementations typically interact with a `BaseCrudRepository`.
     *   It includes methods for `findAll`, `findById`, `save`, `update`, `deleteById`, and a `filter` method that takes a `@Filterable` DTO and `Pageable` information to return paginated and filtered results.
-    *   It also handles default sorting based on the `@DefaultSortColumn` annotation that can be placed on entity fields.
+*   It also handles default sorting based on the `@DefaultSortColumn` annotation that can be placed on entity fields.
+
+## Documentation
+
+Generate Javadoc for this module with Maven:
+
+```bash
+mvn -f backend-libs/praxis-metadata-core/pom.xml javadoc:javadoc
+```
+
+The HTML output will be created under `backend-libs/praxis-metadata-core/target/site/apidocs`.
 
 ## Contributing
 
