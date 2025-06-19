@@ -34,8 +34,6 @@ Você também pode executar apenas os testes com o comando:
 
 ## Como Executar a Aplicação
 
-## Como Executar a Aplicação
-
 Após construir o projeto, você pode executá-lo de duas maneiras:
 
 1.  **Usando o plugin Maven Spring Boot:**
