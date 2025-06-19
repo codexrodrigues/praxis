@@ -96,6 +96,10 @@ public class ApiDocsController {
             @RequestParam(required = false, defaultValue = "false") boolean includeInternalSchemas,
             @RequestParam(required = false, defaultValue = "response") String schemaType) {
 
+        if (!"response".equalsIgnoreCase(schemaType) && !"request".equalsIgnoreCase(schemaType)) {
+            throw new IllegalArgumentException("schemaType deve ser 'response' ou 'request'");
+        }
+
         // Verifica e define valores padrão para parâmetros opcionais
         if (document == null || document.trim().isEmpty()) {
             String resolved = openApiGroupResolver != null ? openApiGroupResolver.resolveGroup(path) : null;
@@ -253,7 +257,7 @@ public class ApiDocsController {
      * <p>
      * Caminho esperado no JSON: {@code requestBody -> content -> application/json -> schema -> $ref}
      */
-    private String findRequestSchema(JsonNode pathsNode) {
+    protected String findRequestSchema(JsonNode pathsNode) {
         JsonNode schemaNode = pathsNode
                 .path("requestBody")
                 .path("content")
