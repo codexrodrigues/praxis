@@ -20,7 +20,7 @@ public class FuncionarioFilterDTO implements GenericFilterDTO {
     private String cpf;
 
     @UISchema(controlType = FieldControlType.SELECT,
-            endpoint = "/api/hr/cargos",
+            endpoint = ApiRouteDefinitions.HR_CARGOS_PATH,
             valueField = "id",
             displayField = "nome")
     @Filterable(operation = Filterable.FilterOperation.EQUAL, relation = "cargo.id")
