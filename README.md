@@ -16,3 +16,26 @@ The `praxis-metadata-core` library offers a comprehensive set of features to acc
 *   **Pagination and Sorting:** Offers out-of-the-box support for paginated responses and default entity sorting (configurable via `@DefaultSortColumn` annotation) through Spring Data Pageable.
 *   **Extensible Design:** Built with extensibility in mind, allowing developers to easily introduce custom UI components, validation logic, and other behaviors.
 *   **Spring Boot & OpenAPI Integration:** Seamlessly integrates with Spring Boot and leverages OpenAPI for API documentation and schema exposure, facilitating clear communication between backend and frontend systems.
+
+## Documentation
+
+This repository contains backend and frontend libraries. Documentation can be generated locally or published automatically via GitHub Actions.
+
+### Generating backend docs
+
+```bash
+cd backend-libs/praxis-metadata-core
+./gradlew asciidoctor
+```
+
+The HTML files will be placed in `build/docs/asciidoc`.
+
+### Generating frontend docs
+
+```bash
+cd frontend-libs/praxis-metadata-core
+npm ci
+npx compodoc -p tsconfig.json -d documentation
+```
+
+The generated site will be available in the `documentation` folder.
