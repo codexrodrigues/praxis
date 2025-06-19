@@ -256,6 +256,10 @@ public class ApiDocsController {
      * Localiza o schema do corpo de requisição para a operação informada.
      * <p>
      * Caminho esperado no JSON: {@code requestBody -> content -> application/json -> schema -> $ref}
+     * <p>
+     * Declarado como {@code protected} para permitir que subclasses customizem a
+     * estratégia de descoberta, caso utilizem uma estrutura de documentação
+     * diferente.
      */
     protected String findRequestSchema(JsonNode pathsNode) {
         JsonNode schemaNode = pathsNode

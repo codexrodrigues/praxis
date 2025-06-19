@@ -141,7 +141,11 @@ public abstract class AbstractCrudController<E, D, FD extends GenericFilterDTO, 
 
         Page<EntityModel<D>> entityModels = page.map(entity -> toEntityModel(toDto(entity)));
 
-        Links links = Links.of(linkToAll(), linkToUiSchema("/filter", "post", "request"));
+        Links links = Links.of(
+                linkToAll(),
+                linkToUiSchema("/filter", "post", "request"),
+                linkToUiSchema("/filter", "post", "response")
+        );
 
         var response = RestApiResponse.success(entityModels, links);
         return ResponseEntity.ok(response);
