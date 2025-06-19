@@ -231,7 +231,14 @@ O `ApiDocsController` serve aos seguintes propósitos:
     *   `document` (String): **Opcional**. O nome do "documento" ou **grupo OpenAPI configurado** ao qual o `path` pertence (ex: `usuarios`, `produtos`, conforme definido em sua configuração de grupos OpenAPI). Se omitido, o controller tenta extraí-lo do primeiro segmento do `path`. (Veja a nota sobre Configuração de Grupos OpenAPI na seção "Funcionamento Interno Detalhado" para mais informações).
     *   `operation` (String): **Opcional**. A operação HTTP (verbo) do endpoint (ex: `get`, `post`, `put`). **Default:** `"get"`.
     *   `includeInternalSchemas` (boolean): **Opcional**. Se `true`, o controller tentará resolver recursivamente todas as referências `$ref` encontradas dentro do schema principal e seus sub-schemas. Se `false`, as referências `$ref` são mantidas como estão. **Default:** `false`.
+
     *   `schemaType` (String): **Opcional**. Indica se o schema retornado deve ser do tipo `response` (padrão) ou o schema do corpo de `request`.
+
+    **Exemplo:**
+
+    ```bash
+    curl -X GET "http://localhost:8080/schemas/filtered?path=/api/usuarios&operation=post&schemaType=request"
+    ```
 
 ### 4. Funcionamento Interno Detalhado
 
