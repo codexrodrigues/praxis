@@ -75,15 +75,22 @@ public class ApiDocsController {
      * @param includeInternalSchemas (Opcional) Define se referências internas (<code>$ref</code>) devem ser substituídas
      *                               pelas propriedades reais. Se <code>true</code>, faz a substituição recursiva; caso contrário,
      *                               mantém as referências originais. O valor padrão é <code>false</code>.
+     * @param schemaType            (Opcional) Define se o schema retornado deve ser o de <code>response</code> (padrão)
+     *                              ou o schema do corpo de <code>request</code>.
      * @return Um mapa (<code>Map&lt;String, Object&gt;</code>) representando o esquema filtrado do OpenAPI, incluindo
      * os metadados do <code>x-ui</code> e, se solicitado, as substituições de referências internas.
      * @throws IllegalStateException    Se não for possível recuperar a documentação OpenAPI do endpoint.
      * @throws IllegalArgumentException Se o <code>path</code> ou <code>operation</code> não existirem na documentação,
-     *                                  se o <code>responseSchema</code> não estiver definido ou se o esquema em
+     *                                  se o schema solicitado não estiver definido ou se o esquema em
      *                                  <code>components -> schemas</code> não for encontrado.
      */
     @GetMapping
-    public Map<String, Object> getFilteredSchema(@RequestParam String path, @RequestParam(required = false) String document, @RequestParam(required = false, defaultValue = DEFAULT_OPERATION) String operation, @RequestParam(required = false, defaultValue = "false") boolean includeInternalSchemas) {
+    public Map<String, Object> getFilteredSchema(
+            @RequestParam String path,
+            @RequestParam(required = false) String document,
+            @RequestParam(required = false, defaultValue = DEFAULT_OPERATION) String operation,
+            @RequestParam(required = false, defaultValue = "false") boolean includeInternalSchemas,
+            @RequestParam(required = false, defaultValue = "response") String schemaType) {
 
         // Verifica e define valores padrão para parâmetros opcionais
         document = (document == null || document.trim().isEmpty()) ? extractDocumentFromPath(path) : document;
@@ -113,16 +120,22 @@ public class ApiDocsController {
 
         LOGGER.info("Path and operation node retrieved successfully");
 
-        // Usa nosso novo método para encontrar o responseSchema
-        String responseSchema = findResponseSchema(pathsNode, rootNode, operation, decodedPath);
-        if (responseSchema == null || responseSchema.isEmpty()) {
-            throw new IllegalArgumentException("O responseSchema não foi encontrado ou não está definido para o caminho e operação especificados.");
+        // Escolhe o schema conforme o schemaType indicado
+        String schemaName;
+        if ("request".equalsIgnoreCase(schemaType)) {
+            schemaName = findRequestSchema(pathsNode);
+        } else {
+            schemaName = findResponseSchema(pathsNode, rootNode, operation, decodedPath);
         }
 
-        LOGGER.info("Response schema found: {}", responseSchema);
+        if (schemaName == null || schemaName.isEmpty()) {
+            throw new IllegalArgumentException("O schema solicitado não foi encontrado ou não está definido para o caminho e operação especificados.");
+        }
 
-        // Procura pelo esquema de componentes baseado no responseSchema
-        JsonNode schemasNode = rootNode.path(COMPONENTS).path(SCHEMAS).path(responseSchema);
+        LOGGER.info("Schema found: {}", schemaName);
+
+        // Procura pelo esquema de componentes baseado no schema selecionado
+        JsonNode schemasNode = rootNode.path(COMPONENTS).path(SCHEMAS).path(schemaName);
 
         if (schemasNode.isMissingNode()) {
             throw new IllegalArgumentException("O esquema de componentes especificado não foi encontrado na documentação.");
@@ -221,6 +234,24 @@ public class ApiDocsController {
 
     // processControlTypes method is now removed as its logic is integrated into processSpecialFields
     // and OpenApiUiUtils.determineSmartControlTypeByFieldName
+
+    /**
+     * Localiza o schema do corpo de requisição para a operação informada.
+     * <p>
+     * Caminho esperado no JSON: {@code requestBody -> content -> application/json -> schema -> $ref}
+     */
+    private String findRequestSchema(JsonNode pathsNode) {
+        JsonNode schemaNode = pathsNode
+                .path("requestBody")
+                .path("content")
+                .path("application/json")
+                .path("schema");
+
+        if (!schemaNode.isMissingNode() && schemaNode.has(REF)) {
+            return extractSchemaNameFromRef(schemaNode.path(REF).asText());
+        }
+        return null;
+    }
 
     /**
      * Localiza o responseSchema na documentação OpenAPI, tentando várias estratégias
