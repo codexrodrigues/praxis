@@ -1,1 +1,12 @@
-echo "target/" >> .gitignore
+# Build artifacts
+/target/
+
+# IntelliJ IDEA
+/.idea/
+*.iml
+
+# Logs
+*.log
+
+# macOS
+.DS_Store
