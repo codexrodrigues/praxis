@@ -8,7 +8,7 @@ public class ApiRouteDefinitions {
     public static final String USERS_TAG = "Users";
 
     // HR Cargos
-    public static final String HR_CARGOS_PATH = "/cargos";
+    public static final String HR_CARGOS_PATH = "/api/hr/cargos";
     public static final String HR_CARGOS_GROUP = "cargos";
     public static final String HR_CARGOS_TAG = "HR - Cargos";
 
