@@ -117,11 +117,11 @@ O módulo HR inclui as seguintes entidades principais:
 
 ### APIs REST do Módulo HR
 
-O módulo HR expõe APIs REST para interagir com suas entidades. Os endpoints principais estão sob o prefixo `/api/hr`. Por exemplo:
+O módulo HR expõe APIs REST para interagir com suas entidades. Os endpoints principais estão sob o prefixo `/api/human-resources`. Por exemplo:
 
-*   Funcionários: `/api/hr/funcionarios`
-*   Cargos: `/api/hr/cargos`
-*   Departamentos: `/api/hr/departamentos`
+*   Funcionários: `/api/human-resources/funcionarios`
+*   Cargos: `/api/human-resources/cargos`
+*   Departamentos: `/api/human-resources/departamentos`
 
 ### Configuração do Banco de Dados
 
@@ -158,17 +158,17 @@ Após iniciar a aplicação (conforme instruções na seção "Como Executar a A
 
 *   **Listar todos os funcionários:**
     ```bash
-    curl -X GET "http://localhost:8086/api/hr/funcionarios"
+    curl -X GET "http://localhost:8086/api/human-resources/funcionarios"
     ```
 
 *   **Buscar funcionário pelo ID 1:**
     ```bash
-    curl -X GET "http://localhost:8086/api/hr/funcionarios/1"
+    curl -X GET "http://localhost:8086/api/human-resources/funcionarios/1"
     ```
 
 *   **Listar todos os cargos:**
     ```bash
-    curl -X GET "http://localhost:8086/api/hr/cargos"
+    curl -X GET "http://localhost:8086/api/human-resources/cargos"
     ```
 
 *   **Acessar o console H2:**

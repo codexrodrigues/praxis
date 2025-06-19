@@ -13,12 +13,12 @@ public class OpenApiGroupResolverTest {
     void resolvesGroupByPrefixMatch() {
         GroupedOpenApi funcionarios = GroupedOpenApi.builder()
                 .group("funcionarios")
-                .pathsToMatch("/api/hr/funcionarios/**")
+                .pathsToMatch("/api/human-resources/funcionarios/**")
                 .build();
 
         OpenApiGroupResolver resolver = new OpenApiGroupResolver(List.of(funcionarios));
 
-        String group = resolver.resolveGroup("/api/hr/funcionarios/filter");
+        String group = resolver.resolveGroup("/api/human-resources/funcionarios/filter");
         assertEquals("funcionarios", group);
     }
 }
