@@ -40,13 +40,14 @@ class AbstractCrudControllerLinksTest {
     }
 
     @Test
-    void filterIncludesSchemaTypeRequest() throws Exception {
+    void filterIncludesSchemaTypeRequestAndResponse() throws Exception {
         Page<SimpleEntity> page = new PageImpl<>(Collections.emptyList());
         when(service.filter(any(), any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(post("/simple/filter").contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$._links.schema.href").value(org.hamcrest.Matchers.containsString("schemaType=request")));
+                .andExpect(jsonPath("$._links.schema..href", org.hamcrest.Matchers.hasItem(org.hamcrest.Matchers.containsString("schemaType=request"))))
+                .andExpect(jsonPath("$._links.schema..href", org.hamcrest.Matchers.hasItem(org.hamcrest.Matchers.containsString("schemaType=response"))));
     }
 
     // --- Support classes for the test ---
