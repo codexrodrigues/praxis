@@ -4,6 +4,7 @@ import org.praxisplatform.uischema.filter.annotation.Filterable;
 import org.praxisplatform.uischema.filter.dto.GenericFilterDTO;
 import org.praxisplatform.uischema.extension.annotation.UISchema;
 import org.praxisplatform.uischema.FieldControlType;
+import com.example.praxis.common.config.ApiRouteDefinitions;
 import java.time.LocalDate;
 import java.math.BigDecimal;
 import java.util.List;
@@ -24,6 +25,13 @@ public class FuncionarioFilterDTO implements GenericFilterDTO {
             displayField = "nome")
     @Filterable(operation = Filterable.FilterOperation.EQUAL, relation = "cargo.id")
     private Long cargoId;
+
+    @UISchema(controlType = FieldControlType.SELECT,
+            endpoint = ApiRouteDefinitions.HR_DEPARTAMENTOS_PATH,
+            valueField = "id",
+            displayField = "nome")
+    @Filterable(operation = Filterable.FilterOperation.EQUAL, relation = "departamento.id")
+    private Long departamentoId;
 
     @UISchema
     @Filterable(operation = Filterable.FilterOperation.LIKE)
@@ -73,6 +81,10 @@ public class FuncionarioFilterDTO implements GenericFilterDTO {
     @Filterable(operation = Filterable.FilterOperation.LIKE, relation = "endereco.cep")
     private String cep;
 
+    @UISchema
+    @Filterable(operation = Filterable.FilterOperation.EQUAL)
+    private Boolean ativo;
+
     // Getters and Setters
     public String getNomeCompleto() {
         return nomeCompleto;
@@ -96,6 +108,14 @@ public class FuncionarioFilterDTO implements GenericFilterDTO {
 
     public void setCargoId(Long cargoId) {
         this.cargoId = cargoId;
+    }
+
+    public Long getDepartamentoId() {
+        return departamentoId;
+    }
+
+    public void setDepartamentoId(Long departamentoId) {
+        this.departamentoId = departamentoId;
     }
 
     public String getEmail() {
@@ -192,5 +212,13 @@ public class FuncionarioFilterDTO implements GenericFilterDTO {
 
     public void setCep(String cep) {
         this.cep = cep;
+    }
+
+    public Boolean getAtivo() {
+        return ativo;
+    }
+
+    public void setAtivo(Boolean ativo) {
+        this.ativo = ativo;
     }
 }
