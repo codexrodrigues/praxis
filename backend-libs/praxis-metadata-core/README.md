@@ -11,11 +11,20 @@ The `praxis-metadata-core` library offers a comprehensive set of features to acc
 *   **Dynamic UI Schema Generation:** Define rich UI metadata directly in your Java DTOs or entities using the `@UISchema` annotation. This metadata, including details about labels, control types, layout, validation, and visibility, can be exposed via an API endpoint, allowing frontends to dynamically render interfaces.
 *   **Generic CRUD Infrastructure:** Provides abstract base classes (`AbstractCrudController`, `BaseCrudService`) to rapidly implement standardized CRUD (Create, Read, Update, Delete) operations, significantly reducing boilerplate code.
 *   **Dynamic Query Filtering:** Annotate DTO fields with `@Filterable` to easily enable them as criteria for dynamic, type-safe JPA query generation, supporting various filter operations and entity relationships.
+*   **Automatic Validation Integration:** Standard Jakarta Bean Validation annotations are interpreted and exposed through the `x-ui` extension, allowing frontends to automatically enforce and display validation rules defined on the backend.
 *   **HATEOAS Support:** Automatically includes HATEOAS links in API responses, making your APIs more discoverable and self-descriptive.
 *   **Standardized API Responses:** Utilizes a consistent `RestApiResponse` wrapper for all API endpoints, ensuring a uniform response structure for clients.
 *   **Pagination and Sorting:** Offers out-of-the-box support for paginated responses and default entity sorting (configurable via the `@DefaultSortColumn` annotation) through Spring Data Pageable.
 *   **Extensible Design:** Built with extensibility in mind, allowing developers to easily introduce custom UI components, validation logic, and other behaviors.
 *   **Spring Boot & OpenAPI Integration:** Seamlessly integrates with Spring Boot and leverages OpenAPI for API documentation and schema exposure, facilitating clear communication between backend and frontend systems.
+
+### Library Resources
+
+The main resources of this library are designed to work together and reduce boilerplate when creating data-driven applications:
+
+* **Generic CRUD** – Use `AbstractCrudController` and `BaseCrudService` as a starting point to implement standardized create, read, update and delete endpoints with minimal code.
+* **Filters** – Mark DTO fields with `@Filterable` and let the framework build type-safe JPA `Specification` queries behind the scenes, exposing a convenient `/filter` endpoint.
+* **Automatic Validation** – Bean Validation constraints (`@NotNull`, `@Size`, etc.) are merged with `@UISchema` attributes so that generated UI schemas contain the expected rules and error messages without extra configuration.
 
 ## Getting Started
 
@@ -135,6 +144,40 @@ public class Product {
 ```
 
 This example demonstrates how to apply the `@UISchema` annotation at both the class level to define overall schema properties for the `Product` entity, and at the field level to specify UI characteristics for individual properties like `name`, `description`, and `price`. These annotations can then be processed by the Praxis UI Metadata framework to dynamically generate user interfaces.
+
+### Extended Field Example
+
+Below is a small snippet demonstrating several of the available attributes on `@UISchema` for a field:
+
+```java
+@UISchema(
+    label = "Email",
+    placeholder = "user@example.com",
+    helpText = "Provide a valid email address",
+    controlType = FieldControlType.INPUT,
+    type = FieldDataType.EMAIL,
+    icon = "envelope",
+    iconPosition = IconPosition.RIGHT,
+    required = true,
+    minLength = 5,
+    maxLength = 100,
+    pattern = ValidationPattern.EMAIL
+)
+private String email;
+
+@UISchema(
+    label = "Age",
+    type = FieldDataType.NUMBER,
+    controlType = FieldControlType.INPUT,
+    numericMin = "18",
+    numericMax = "120",
+    numericStep = "1",
+    numericFormat = NumericFormat.INTEGER,
+    filterable = true,
+    required = true
+)
+private Integer age;
+```
 
 ## Core Concepts
 
