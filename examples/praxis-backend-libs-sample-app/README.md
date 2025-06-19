@@ -51,13 +51,13 @@ Após construir o projeto, você pode executá-lo de duas maneiras:
     ```
     (O nome do artefato JAR pode variar dependendo da versão definida no `pom.xml`).
 
-A aplicação será iniciada e estará acessível em `http://localhost:8080`.
+A aplicação será iniciada e estará acessível em `http://localhost:8086`.
 
 ## Acessando a UI do SpringDoc (Swagger UI)
 
 Com a aplicação em execução, abra seu navegador e acesse:
 
-[http://localhost:8080/swagger-ui.html](http://localhost:8080/swagger-ui.html)
+[http://localhost:8086/swagger-ui.html](http://localhost:8086/swagger-ui.html)
 
 Você verá a interface do Swagger UI, que documenta os endpoints da API. Explore o endpoint POST `/users`. Você notará que o schema da requisição para `UserDTO` no Swagger UI não exibirá diretamente as anotações `x-ui` do Praxis, pois estas são extensões do schema OpenAPI e são servidas por um endpoint específico do Praxis.
 
@@ -67,10 +67,10 @@ O `praxis-metadata-springdoc` expõe os metadados de UI enriquecidos através de
 
 ```bash
 # Schema do corpo de requisição
-curl -X GET "http://localhost:8080/schemas/filtered?path=/users&operation=post&schemaType=request"
+curl -X GET "http://localhost:8086/schemas/filtered?path=/users&operation=post&schemaType=request"
 
 # Schema de resposta
-curl -X GET "http://localhost:8080/schemas/filtered?path=/users&operation=post&schemaType=response"
+curl -X GET "http://localhost:8086/schemas/filtered?path=/users&operation=post&schemaType=response"
 ```
 
 **O que esperar na resposta:**
@@ -132,7 +132,7 @@ A aplicação é configurada para usar um banco de dados para persistir os dados
 *   **Padrão: Banco de Dados H2 em Memória**
     *   A aplicação utiliza um banco de dados H2 em memória por padrão.
     *   Os dados são inicializados a partir do arquivo `src/main/resources/data.sql` quando a aplicação inicia.
-    *   Você pode acessar o console do H2 para inspecionar o banco de dados diretamente no seu navegador em: `http://localhost:8080/h2-console`
+    *   Você pode acessar o console do H2 para inspecionar o banco de dados diretamente no seu navegador em: `http://localhost:8086/h2-console`
         *   **JDBC URL**: `jdbc:h2:mem:testdb`
         *   **User Name**: `sa`
         *   **Password**: (deixe em branco)
@@ -160,20 +160,20 @@ Após iniciar a aplicação (conforme instruções na seção "Como Executar a A
 
 *   **Listar todos os funcionários:**
     ```bash
-    curl -X GET "http://localhost:8080/api/hr/funcionarios"
+    curl -X GET "http://localhost:8086/api/hr/funcionarios"
     ```
 
 *   **Buscar funcionário pelo ID 1:**
     ```bash
-    curl -X GET "http://localhost:8080/api/hr/funcionarios/1"
+    curl -X GET "http://localhost:8086/api/hr/funcionarios/1"
     ```
 
 *   **Listar todos os cargos:**
     ```bash
-    curl -X GET "http://localhost:8080/api/hr/cargos"
+    curl -X GET "http://localhost:8086/api/hr/cargos"
     ```
 
 *   **Acessar o console H2:**
-    Abra no navegador: `http://localhost:8080/h2-console`
+    Abra no navegador: `http://localhost:8086/h2-console`
 
 Lembre-se que os dados iniciais são carregados a partir de `data.sql`. Você pode modificar este arquivo para testar com diferentes conjuntos de dados.
