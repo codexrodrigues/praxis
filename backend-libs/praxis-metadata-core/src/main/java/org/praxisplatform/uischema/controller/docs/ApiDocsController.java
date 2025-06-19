@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.praxisplatform.uischema.FieldConfigProperties;
+import org.praxisplatform.uischema.util.OpenApiGroupResolver;
 import org.praxisplatform.uischema.util.OpenApiUiUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,6 +59,9 @@ public class ApiDocsController {
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired(required = false)
+    private OpenApiGroupResolver openApiGroupResolver;
+
     /**
      * Recupera e filtra a documentação OpenAPI para o caminho, operação e documento especificados.
      * <p>
@@ -93,7 +97,10 @@ public class ApiDocsController {
             @RequestParam(required = false, defaultValue = "response") String schemaType) {
 
         // Verifica e define valores padrão para parâmetros opcionais
-        document = (document == null || document.trim().isEmpty()) ? extractDocumentFromPath(path) : document;
+        if (document == null || document.trim().isEmpty()) {
+            String resolved = openApiGroupResolver != null ? openApiGroupResolver.resolveGroup(path) : null;
+            document = (resolved != null && !resolved.isEmpty()) ? resolved : extractDocumentFromPath(path);
+        }
         operation = (operation == null || operation.trim().isEmpty()) ? DEFAULT_OPERATION : operation;
 
         // Monta a URL base da aplicação e o endpoint do documento
@@ -221,13 +228,19 @@ public class ApiDocsController {
      * @throws IllegalArgumentException Se não for possível determinar o nome do documento.
      */
     private String extractDocumentFromPath(String path) {
-        String[] segments = path.split("/");
+        if (openApiGroupResolver != null) {
+            String resolved = openApiGroupResolver.resolveGroup(path);
+            if (resolved != null && !resolved.isEmpty()) {
+                return resolved;
+            }
+        }
+        String[] segments = path.split("/" );
         for (String segment : segments) {
             if (!segment.isEmpty() && !segment.contains("{")) {
                 return segment;
             }
         }
-        throw new IllegalArgumentException("Não foi possível determinar o document a partir do path fornecido.");
+        throw new IllegalArgumentException("Não foi possível determinar o documento a partir do path fornecido.");
     }
 
 

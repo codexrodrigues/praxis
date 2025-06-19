@@ -238,7 +238,7 @@ O `ApiDocsController` serve aos seguintes propósitos:
 O `ApiDocsController` executa os seguintes passos ao receber uma requisição:
 
 1.  **Determinação do Documento OpenAPI:**
-    *   Se o parâmetro `document` não for fornecido, ele é extraído do primeiro segmento do `path` (ex: de `/api/usuarios/list`, `document` se torna `api`). O método auxiliar `extractDocumentFromPath()` realiza essa tarefa.
+    *   Se o parâmetro `document` não for fornecido, o `ApiDocsController` utiliza o `OpenApiGroupResolver` para tentar identificar automaticamente o grupo correspondente ao `path` com base nos `GroupedOpenApi` registrados. Caso nenhum grupo corresponda, ele extrai o primeiro segmento do `path` (comportamento anterior) através do método `extractDocumentFromPath()`.
 
     **Nota sobre Configuração de Grupos OpenAPI:**
     Para que o `ApiDocsController` utilize efetivamente o parâmetro `document` e acesse diferentes especificações OpenAPI dentro da mesma aplicação, é crucial que a aplicação configure explicitamente esses grupos. Isso é geralmente feito utilizando `GroupedOpenApi` da biblioteca `springdoc-openapi`. Cada `GroupedOpenApi` bean define um nome de grupo (que corresponde ao parâmetro `document`) e os caminhos que pertencem a esse grupo.
@@ -293,7 +293,7 @@ O `ApiDocsController` executa os seguintes passos ao receber uma requisição:
 
 ### 5. Métodos Auxiliares Chave
 
-*   **`extractDocumentFromPath(String path)`:** Extrai o nome do grupo/documento OpenAPI do primeiro segmento não vazio e sem chaves do `path`.
+*   **`extractDocumentFromPath(String path)`:** Tenta primeiro resolver o grupo através do `OpenApiGroupResolver`; caso nenhum grupo corresponda, retorna o primeiro segmento não vazio do `path`.
 *   **`findResponseSchema(JsonNode pathsNode, JsonNode rootNode, String operation, String decodedPath)`:** Lógica central para determinar qual schema de `components/schemas` representa a resposta principal do endpoint.
 *   **`extractRealTypeFromRestApiResponse(JsonNode wrapperSchema, String wrapperSchemaName)`:** Especializado em "desembrulhar" tipos de dados de classes wrapper genéricas como `RestApiResponse<T>` ou `RestApiResponseList<T>`.
 *   **`extractSchemaNameFromRef(String ref)`:** Utilitário para obter o nome simples de um schema a partir de uma string de referência (ex: de `#/components/schemas/MeuDTO` para `MeuDTO`).
