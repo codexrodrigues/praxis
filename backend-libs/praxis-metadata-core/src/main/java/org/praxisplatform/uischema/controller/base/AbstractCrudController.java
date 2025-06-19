@@ -141,7 +141,7 @@ public abstract class AbstractCrudController<E, D, FD extends GenericFilterDTO, 
 
         Page<EntityModel<D>> entityModels = page.map(entity -> toEntityModel(toDto(entity)));
 
-        Links links = Links.of(linkToAll(), linkToUiSchema("/filter", "post"));
+        Links links = Links.of(linkToAll(), linkToUiSchema("/filter", "post", "request"));
 
         var response = RestApiResponse.success(entityModels, links);
         return ResponseEntity.ok(response);
@@ -163,7 +163,7 @@ public abstract class AbstractCrudController<E, D, FD extends GenericFilterDTO, 
 
         Links links = Links.of(
                 linkToFilter(),
-                linkToUiSchema("/all", "get")
+                linkToUiSchema("/all", "get", "response")
         );
 
         var response = RestApiResponse.success(entityModels, links);
@@ -208,7 +208,7 @@ public abstract class AbstractCrudController<E, D, FD extends GenericFilterDTO, 
                 linkToFilter(),
                 linkToUpdate(id),
                 linkToDelete(id),
-                linkToUiSchema("/{id}", "get")
+                linkToUiSchema("/{id}", "get", "response")
         );
 
         var response = RestApiResponse.success(dto, links);
@@ -230,7 +230,7 @@ public abstract class AbstractCrudController<E, D, FD extends GenericFilterDTO, 
                 linkToAll(),
                 linkToFilter(),
                 linkToDelete(newId),
-                linkToUiSchema("/", "post")
+                linkToUiSchema("/", "post", "request")
         );
 
         var response = RestApiResponse.success(savedDto, links);
@@ -275,7 +275,7 @@ public abstract class AbstractCrudController<E, D, FD extends GenericFilterDTO, 
                 linkToFilter(),
                 linkToUpdate(id),
                 linkToDelete(id),
-                linkToUiSchema("/{id}", "put")
+                linkToUiSchema("/{id}", "put", "request")
         );
 
         var response = RestApiResponse.success(updatedDto, links);
@@ -338,7 +338,7 @@ public abstract class AbstractCrudController<E, D, FD extends GenericFilterDTO, 
     )
     public ResponseEntity<Void> getSchema() {
         // Constrói o link para o endpoint de metadados
-        Link metadataLink = linkToUiSchema("/filter", "post");
+        Link metadataLink = linkToUiSchema("/filter", "post", "request");
 
         // Retorna um redirecionamento HTTP para o link montado
         return ResponseEntity.status(HttpStatus.FOUND)
@@ -431,7 +431,7 @@ public abstract class AbstractCrudController<E, D, FD extends GenericFilterDTO, 
      * <p><strong>Exemplo de Uso:</strong></p>
      * <pre>{@code
      * // Gerar link para a operação GET no caminho "/dados-pessoa-fisica/all"
-     * Link docsLink = linkToUiSchema("/all", "get");
+     * Link docsLink = linkToUiSchema("/all", "get", "response");
      * }</pre>
      *
      * @param methodPath O caminho específico do método dentro da API para o qual a documentação do schema é necessária.
@@ -444,6 +444,7 @@ public abstract class AbstractCrudController<E, D, FD extends GenericFilterDTO, 
      *                   </ul>
      * @param operation  A operação HTTP associada ao caminho fornecido. Deve ser um dos métodos válidos do HTTP, como
      *                   <code>"get"</code>, <code>"post"</code>, <code>"put"</code>, <code>"delete"</code>, etc.
+     * @param schemaType Tipo de schema desejado: <code>response</code> (padrão) ou <code>request</code>.
      *                   <p><strong>Exemplos:</strong></p>
      *                   <ul>
      *                       <li><code>"get"</code> para operações de leitura.</li>
@@ -458,13 +459,16 @@ public abstract class AbstractCrudController<E, D, FD extends GenericFilterDTO, 
      * @see Link
      * @see UriComponentsBuilder
      */
-    protected Link linkToUiSchema(String methodPath, String operation) {
+    protected Link linkToUiSchema(String methodPath, String operation, String schemaType) {
         // Validação básica dos parâmetros
         if (methodPath == null || methodPath.trim().isEmpty()) {
             throw new IllegalArgumentException("O parâmetro 'methodPath' não pode ser nulo ou vazio.");
         }
         if (operation == null || operation.trim().isEmpty()) {
             throw new IllegalArgumentException("O parâmetro 'operation' não pode ser nulo ou vazio.");
+        }
+        if (schemaType == null || schemaType.trim().isEmpty()) {
+            schemaType = "response";
         }
 
         // Constrói o caminho completo combinando o path base com o método específico
@@ -480,6 +484,7 @@ public abstract class AbstractCrudController<E, D, FD extends GenericFilterDTO, 
             String docsPath = UriComponentsBuilder.fromPath(CONTEXT_PATH + SCHEMAS_FILTERED_PATH)
                     .queryParam("path", fullPath)
                     .queryParam("operation", operation.toLowerCase())
+                    .queryParam("schemaType", schemaType.toLowerCase())
                     .build()
                     .toUriString();
 
