@@ -66,7 +66,11 @@ Você verá a interface do Swagger UI, que documenta os endpoints da API. Explor
 O `praxis-metadata-springdoc` expõe os metadados de UI enriquecidos através de um endpoint específico. Para visualizar o schema do `UserDTO` com as propriedades `x-ui` injetadas pelo Praxis, faça uma requisição GET para o seguinte endpoint (por exemplo, usando `curl` ou uma ferramenta como o Postman):
 
 ```bash
+# Schema do corpo de requisição
 curl -X GET "http://localhost:8080/schemas/filtered?path=/users&operation=post&schemaType=request"
+
+# Schema de resposta
+curl -X GET "http://localhost:8080/schemas/filtered?path=/users&operation=post&schemaType=response"
 ```
 
 **O que esperar na resposta:**

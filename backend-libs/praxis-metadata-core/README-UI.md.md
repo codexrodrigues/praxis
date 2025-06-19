@@ -234,10 +234,14 @@ O `ApiDocsController` serve aos seguintes propósitos:
 
     *   `schemaType` (String): **Opcional**. Indica se o schema retornado deve ser do tipo `response` (padrão) ou o schema do corpo de `request`.
 
-    **Exemplo:**
+    **Exemplos:**
 
     ```bash
+    # Schema do corpo de requisição
     curl -X GET "http://localhost:8080/schemas/filtered?path=/api/usuarios&operation=post&schemaType=request"
+
+    # Schema de resposta
+    curl -X GET "http://localhost:8080/schemas/filtered?path=/api/usuarios&operation=post&schemaType=response"
     ```
 
 ### 4. Funcionamento Interno Detalhado
