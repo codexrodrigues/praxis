@@ -5,6 +5,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+/**
+ * Registers the OpenAPI groups for the sample application. The
+ * {@code ApiDocsController} can automatically detect the correct group
+ * for a request based on these definitions.
+ */
 public class OpenApiGroupsConfig {
 
     @Bean
