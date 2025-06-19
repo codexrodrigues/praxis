@@ -21,7 +21,7 @@ O objetivo principal é mostrar como as anotações e starters do Praxis podem s
 Para construir o projeto, execute o seguinte comando Maven na raiz deste diretório (`examples/praxis-backend-libs-sample-app`):
 
 ```bash
-mvn clean install
+./mvnw clean install
 ```
 
 Isso irá compilar o código, executar os testes e empacotar a aplicação em um arquivo JAR.
@@ -29,7 +29,7 @@ Isso irá compilar o código, executar os testes e empacotar a aplicação em um
 Você também pode executar apenas os testes com o comando:
 
 ```bash
-mvn test
+./mvnw test
 ```
 
 ## Como Executar a Aplicação
@@ -41,7 +41,7 @@ Após construir o projeto, você pode executá-lo de duas maneiras:
 1.  **Usando o plugin Maven Spring Boot:**
 
     ```bash
-    mvn spring-boot:run
+    ./mvnw spring-boot:run
     ```
 
 2.  **Executando o JAR diretamente:**
