@@ -43,4 +43,28 @@ public class OpenApiGroupsConfig {
                 .pathsToMatch(ApiRouteDefinitions.HR_FUNCIONARIOS_PATH + "/**")
                 .build();
     }
+
+    @Bean
+    public GroupedOpenApi configureHrFolhasPagamentoDocumentation() {
+        return GroupedOpenApi.builder()
+                .group(ApiRouteDefinitions.HR_FOLHAS_PAGAMENTO_GROUP)
+                .pathsToMatch(ApiRouteDefinitions.HR_FOLHAS_PAGAMENTO_PATH + "/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi configureHrEventosFolhaDocumentation() {
+        return GroupedOpenApi.builder()
+                .group(ApiRouteDefinitions.HR_EVENTOS_FOLHA_GROUP)
+                .pathsToMatch(ApiRouteDefinitions.HR_EVENTOS_FOLHA_PATH + "/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi configureHrFeriasAfastamentosDocumentation() {
+        return GroupedOpenApi.builder()
+                .group(ApiRouteDefinitions.HR_FERIAS_AFASTAMENTOS_GROUP)
+                .pathsToMatch(ApiRouteDefinitions.HR_FERIAS_AFASTAMENTOS_PATH + "/**")
+                .build();
+    }
 }
