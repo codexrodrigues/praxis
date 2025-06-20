@@ -9,7 +9,7 @@ Praxis Metadata Core (`praxis-metadata-core`) is a foundational library providin
 The `praxis-metadata-core` library offers a comprehensive set of features to accelerate backend development and enable dynamic UI rendering:
 
 *   **Dynamic UI Schema Generation:** Define rich UI metadata directly in your Java DTOs or entities using the `@UISchema` annotation. This metadata, including details about labels, control types, layout, validation, and visibility, can be exposed via an API endpoint, allowing frontends to dynamically render interfaces.
-*   **Generic CRUD Infrastructure:** Provides abstract base classes (`AbstractCrudController`, `BaseCrudService`) to rapidly implement standardized CRUD (Create, Read, Update, Delete) operations, significantly reducing boilerplate code.
+*   **Generic CRUD Infrastructure:** Provides abstract base classes (`AbstractCrudController`, `AbstractBaseCrudService`, `BaseCrudService`) to rapidly implement standardized CRUD (Create, Read, Update, Delete) operations, significantly reducing boilerplate code.
 *   **Dynamic Query Filtering:** Annotate DTO fields with `@Filterable` to easily enable them as criteria for dynamic, type-safe JPA query generation, supporting various filter operations and entity relationships.
 *   **Automatic Validation Integration:** Standard Jakarta Bean Validation annotations are interpreted and exposed through the `x-ui` extension, allowing frontends to automatically enforce and display validation rules defined on the backend.
 *   **HATEOAS Support:** Automatically includes HATEOAS links in API responses, making your APIs more discoverable and self-descriptive.
@@ -22,7 +22,7 @@ The `praxis-metadata-core` library offers a comprehensive set of features to acc
 
 The main resources of this library are designed to work together and reduce boilerplate when creating data-driven applications:
 
-* **Generic CRUD** – Use `AbstractCrudController` and `BaseCrudService` as a starting point to implement standardized create, read, update and delete endpoints with minimal code.
+* **Generic CRUD** – Use `AbstractCrudController`, `AbstractBaseCrudService` and `BaseCrudService` as a starting point to implement standardized create, read, update and delete endpoints with minimal code.
 * **Filters** – Mark DTO fields with `@Filterable` and let the framework build type-safe JPA `Specification` queries behind the scenes, exposing a convenient `/filter` endpoint.
 * **Automatic Validation** – Bean Validation constraints (`@NotNull`, `@Size`, etc.) are merged with `@UISchema` attributes so that generated UI schemas contain the expected rules and error messages without extra configuration.
 
@@ -228,7 +228,12 @@ To simplify the creation of RESTful services with UI metadata capabilities, the 
     *   This generic class serves as a foundation for creating CRUD controllers. Concrete controllers extend it, specifying their Entity (`E`), DTO (`D`), Filter DTO (`FD`), and Identifier Type (`ID`).
     *   It automatically provides standard REST endpoints for create, read (all and by ID), update, delete, and a powerful `/filter` endpoint that works with `@Filterable` DTOs.
     *   Crucially, it integrates UI schema generation by providing a `/schemas` endpoint (and a `/schemas/filtered` variant) that exposes the metadata defined by `@UISchema` annotations for the controller's entity/DTO. This allows frontends to fetch UI configurations dynamically.
-    *   It also incorporates HATEOAS link generation and standardized API responses using `RestApiResponse`.
+*   It also incorporates HATEOAS link generation and standardized API responses using `RestApiResponse`.
+
+*   **`AbstractBaseCrudService<E, ID, FD>`**:
+    *   A convenient abstract class that already implements `BaseCrudService` and wires common dependencies like the repository and specification builder.
+    *   It annotates `save`, `update` and `deleteById` with `@Transactional` to ensure consistent transaction handling.
+    *   Concrete services typically extend this class and only provide custom business logic.
 
 *   **`BaseCrudService<E, ID, FD>`**:
     *   This generic interface (often implemented by an abstract class or a concrete service) defines the standard contract for service-layer CRUD operations.

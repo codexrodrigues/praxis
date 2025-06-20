@@ -3,32 +3,16 @@ package com.example.praxis.humanresources.service;
 import com.example.praxis.humanresources.dto.CargoFilterDTO;
 import com.example.praxis.humanresources.entity.Cargo;
 import com.example.praxis.humanresources.repository.CargoRepository;
-import org.praxisplatform.uischema.filter.specification.GenericSpecificationsBuilder;
-import org.praxisplatform.uischema.repository.base.BaseCrudRepository;
-import org.praxisplatform.uischema.service.base.BaseCrudService;
+import org.praxisplatform.uischema.service.base.AbstractBaseCrudService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class CargoService implements BaseCrudService<Cargo, Long, CargoFilterDTO> {
+public class CargoService extends AbstractBaseCrudService<Cargo, Long, CargoFilterDTO> {
 
     @Autowired
-    private CargoRepository cargoRepository;
-
-    @Override
-    public BaseCrudRepository<Cargo, Long> getRepository() {
-        return cargoRepository;
-    }
-
-    @Override
-    public GenericSpecificationsBuilder<Cargo> getSpecificationsBuilder() {
-        // Assuming default behavior is sufficient for now
-        return new GenericSpecificationsBuilder<>();
-    }
-
-    @Override
-    public Class<Cargo> getEntityClass() {
-        return Cargo.class;
+    public CargoService(CargoRepository cargoRepository) {
+        super(cargoRepository, Cargo.class);
     }
 
     @Override

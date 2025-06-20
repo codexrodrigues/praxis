@@ -6,35 +6,23 @@ import com.example.praxis.humanresources.entity.FolhaPagamento;
 import com.example.praxis.humanresources.repository.EventoFolhaRepository;
 import com.example.praxis.humanresources.repository.FolhaPagamentoRepository;
 import jakarta.persistence.EntityNotFoundException;
-import org.praxisplatform.uischema.filter.specification.GenericSpecificationsBuilder;
-import org.praxisplatform.uischema.repository.base.BaseCrudRepository;
-import org.praxisplatform.uischema.service.base.BaseCrudService;
+import org.praxisplatform.uischema.service.base.AbstractBaseCrudService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class EventoFolhaService implements BaseCrudService<EventoFolha, Long, EventoFolhaFilterDTO> {
+public class EventoFolhaService extends AbstractBaseCrudService<EventoFolha, Long, EventoFolhaFilterDTO> {
+
+    private final EventoFolhaRepository eventoFolhaRepository;
+    private final FolhaPagamentoRepository folhaPagamentoRepository;
 
     @Autowired
-    private EventoFolhaRepository eventoFolhaRepository;
-
-    @Autowired
-    private FolhaPagamentoRepository folhaPagamentoRepository;
-
-    @Override
-    public BaseCrudRepository<EventoFolha, Long> getRepository() {
-        return eventoFolhaRepository;
-    }
-
-    @Override
-    public GenericSpecificationsBuilder<EventoFolha> getSpecificationsBuilder() {
-        return new GenericSpecificationsBuilder<>();
-    }
-
-    @Override
-    public Class<EventoFolha> getEntityClass() {
-        return EventoFolha.class;
+    public EventoFolhaService(EventoFolhaRepository eventoFolhaRepository,
+                              FolhaPagamentoRepository folhaPagamentoRepository) {
+        super(eventoFolhaRepository, EventoFolha.class);
+        this.eventoFolhaRepository = eventoFolhaRepository;
+        this.folhaPagamentoRepository = folhaPagamentoRepository;
     }
 
     private void resolveRelations(EventoFolha evento) {

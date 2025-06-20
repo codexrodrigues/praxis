@@ -9,40 +9,25 @@ import com.example.praxis.humanresources.repository.CargoRepository;
 import com.example.praxis.humanresources.repository.DepartamentoRepository;
 import com.example.praxis.humanresources.repository.FuncionarioRepository;
 import jakarta.persistence.EntityNotFoundException;
-import org.praxisplatform.uischema.filter.specification.GenericSpecificationsBuilder;
-import org.praxisplatform.uischema.repository.base.BaseCrudRepository;
-import org.praxisplatform.uischema.service.base.BaseCrudService;
+import org.praxisplatform.uischema.service.base.AbstractBaseCrudService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class FuncionarioService implements BaseCrudService<Funcionario, Long, FuncionarioFilterDTO> {
+public class FuncionarioService extends AbstractBaseCrudService<Funcionario, Long, FuncionarioFilterDTO> {
+
+    private final FuncionarioRepository funcionarioRepository;
+    private final CargoRepository cargoRepository;
+    private final DepartamentoRepository departamentoRepository;
 
     @Autowired
-    private FuncionarioRepository funcionarioRepository;
-
-    @Autowired
-    private CargoRepository cargoRepository;
-
-    @Autowired
-    private DepartamentoRepository departamentoRepository;
-
-    @Override
-    public BaseCrudRepository<Funcionario, Long> getRepository() {
-        return funcionarioRepository;
-    }
-
-    @Override
-    public GenericSpecificationsBuilder<Funcionario> getSpecificationsBuilder() {
-        return new GenericSpecificationsBuilder<>();
-    }
-
-    /**
-     * @return
-     */
-    @Override
-    public Class<Funcionario> getEntityClass() {
-        return Funcionario.class; // Changed from null
+    public FuncionarioService(FuncionarioRepository funcionarioRepository,
+                              CargoRepository cargoRepository,
+                              DepartamentoRepository departamentoRepository) {
+        super(funcionarioRepository, Funcionario.class);
+        this.funcionarioRepository = funcionarioRepository;
+        this.cargoRepository = cargoRepository;
+        this.departamentoRepository = departamentoRepository;
     }
 
     @Override
