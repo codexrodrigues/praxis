@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(ApiRouteDefinitions.HR_CARGOS_PATH)
 @Tag(name = ApiRouteDefinitions.HR_CARGOS_TAG, description = "Operations related to HR Cargos")
-public class CargoController extends AbstractCrudController<Cargo, com.example.praxis.humanresources.dto.CargoDTO, com.example.praxis.humanresources.dto.CargoFilterDTO, Long> {
+public class CargoController extends AbstractCrudController<Cargo, com.example.praxis.humanresources.dto.CargoDTO, Long, com.example.praxis.humanresources.dto.CargoFilterDTO> {
 
     @Autowired
     private CargoService cargoService;

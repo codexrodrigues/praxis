@@ -10,11 +10,12 @@ import org.springframework.transaction.annotation.Transactional;
  * and applies transactional semantics to write operations.
  *
  * @param <E>  Entity type
+ * @param <D>  DTO type
  * @param <ID> Identifier type
  * @param <FD> Filter DTO type
  */
-public abstract class AbstractBaseCrudService<E, ID, FD extends GenericFilterDTO>
-        implements BaseCrudService<E, ID, FD> {
+public abstract class AbstractBaseCrudService<E, D, ID, FD extends GenericFilterDTO>
+        implements BaseCrudService<E, D, ID, FD> {
 
     private final BaseCrudRepository<E, ID> repository;
     private final GenericSpecificationsBuilder<E> specificationsBuilder;

@@ -1,5 +1,6 @@
 package com.example.praxis.humanresources.service;
 
+import com.example.praxis.humanresources.dto.CargoDTO;
 import com.example.praxis.humanresources.dto.CargoFilterDTO;
 import com.example.praxis.humanresources.entity.Cargo;
 import com.example.praxis.humanresources.repository.CargoRepository;
@@ -8,7 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-public class CargoService extends AbstractBaseCrudService<Cargo, Long, CargoFilterDTO> {
+public class CargoService extends AbstractBaseCrudService<Cargo, CargoDTO, Long, CargoFilterDTO> {
 
     @Autowired
     public CargoService(CargoRepository cargoRepository) {

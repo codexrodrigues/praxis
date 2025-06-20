@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(ApiRouteDefinitions.HR_EVENTOS_FOLHA_PATH)
 @Tag(name = ApiRouteDefinitions.HR_EVENTOS_FOLHA_TAG, description = "Operations related to HR Eventos de Folha")
-public class EventoFolhaController extends AbstractCrudController<EventoFolha, EventoFolhaDTO, EventoFolhaFilterDTO, Long> {
+public class EventoFolhaController extends AbstractCrudController<EventoFolha, EventoFolhaDTO, Long, EventoFolhaFilterDTO> {
 
     @Autowired
     private EventoFolhaService eventoFolhaService;

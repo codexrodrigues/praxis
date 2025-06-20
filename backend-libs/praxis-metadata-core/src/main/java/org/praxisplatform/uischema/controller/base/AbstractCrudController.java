@@ -28,10 +28,10 @@ import java.util.List;
  *
  * @param <E>  Entidade (ex.: TipoTelefone)
  * @param <D>  DTO correspondente (ex.: TipoTelefoneDto)
- * @param <FD> DTO de filtro correspondente (ex.: TipoTelefoneFilterDto)
  * @param <ID> Tipo do identificador (ex.: Long, String, etc.)
+ * @param <FD> DTO de filtro correspondente (ex.: TipoTelefoneFilterDto)
  */
-public abstract class AbstractCrudController<E, D, FD extends GenericFilterDTO, ID> {
+public abstract class AbstractCrudController<E, D, ID, FD extends GenericFilterDTO> {
 
     // ------------------------------------------------------------------------
     // Base Path do OpenAPI
@@ -55,7 +55,7 @@ public abstract class AbstractCrudController<E, D, FD extends GenericFilterDTO, 
     /**
      * Retorna o serviço base (CRUD) que será usado internamente.
      */
-    protected abstract BaseCrudService<E, ID, FD> getService();
+    protected abstract BaseCrudService<E, D, ID, FD> getService();
 
     /**
      * Converte de entidade -> DTO.
@@ -76,8 +76,8 @@ public abstract class AbstractCrudController<E, D, FD extends GenericFilterDTO, 
      * adequado.</p>
      */
     @SuppressWarnings("unchecked")
-    protected Class<? extends AbstractCrudController<E, D, FD, ID>> getControllerClass() {
-        return (Class<? extends AbstractCrudController<E, D, FD, ID>>) getClass();
+    protected Class<? extends AbstractCrudController<E, D, ID, FD>> getControllerClass() {
+        return (Class<? extends AbstractCrudController<E, D, ID, FD>>) getClass();
     }
 
     /**

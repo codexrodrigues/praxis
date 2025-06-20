@@ -374,12 +374,12 @@ Ao herdar de `AbstractCrudController`, uma classe concreta deve especificar os s
 
 *   `E`: A classe da Entidade JPA (ex: `Usuario`, `Produto`).
 *   `D`: A classe do DTO (Data Transfer Object) correspondente (ex: `UsuarioDTO`, `ProdutoDTO`).
-*   `FD`: A classe do DTO de Filtro, que deve estender `GenericFilterDTO` (ex: `UsuarioFilterDTO`).
 *   `ID`: O tipo do identificador da entidade (ex: `Long`, `UUID`, `String`).
+*   `FD`: A classe do DTO de Filtro, que deve estender `GenericFilterDTO` (ex: `UsuarioFilterDTO`).
 
 Exemplo de assinatura de uma classe concreta:
 ```java
-public class TipoTelefoneController extends AbstractCrudController<TipoTelefone, TipoTelefoneDto, TipoTelefoneFilterDto, Long> {
+public class TipoTelefoneController extends AbstractCrudController<TipoTelefone, TipoTelefoneDto, Long, TipoTelefoneFilterDto> {
     // ... implementações dos métodos abstratos
 }
 ```
@@ -388,7 +388,7 @@ public class TipoTelefoneController extends AbstractCrudController<TipoTelefone,
 
 Para que um controller concreto funcione, é necessário implementar os seguintes métodos abstratos, que fornecem a lógica específica da entidade:
 
-1.  `protected abstract BaseCrudService<E, ID, FD> getService();`
+1.  `protected abstract BaseCrudService<E, D, ID, FD> getService();`
     *   **Propósito:** Retorna a instância do serviço de negócios (`BaseCrudService`) que lidará com a lógica de persistência (salvar, buscar, deletar) para a entidade `E`.
     *   **Exemplo:**
         ```java
@@ -396,7 +396,7 @@ Para que um controller concreto funcione, é necessário implementar os seguinte
         private TipoTelefoneService tipoTelefoneService;
 
         @Override
-        protected BaseCrudService<TipoTelefone, Long, TipoTelefoneFilterDto> getService() {
+        protected BaseCrudService<TipoTelefone, TipoTelefoneDto, Long, TipoTelefoneFilterDto> getService() {
             return tipoTelefoneService;
         }
         ```
@@ -529,7 +529,7 @@ Ao herdar do `AbstractCrudController`, os desenvolvedores obtêm uma base robust
 *   Converter Entidades para DTOs para compor a resposta.
 *   Formatar a resposta HTTP, incluindo status codes, headers e o corpo da resposta (usando `RestApiResponse` e `EntityModel` com links HATEOAS).
 
-A delegação para a camada de serviço é feita através do método abstrato `getService()`, que deve retornar uma implementação de `BaseCrudService<E, ID, FD>`. O `BaseCrudService` (ou um serviço mais específico que o estenda) é quem de fato interage com o repositório JPA, aplica regras de negócio, gerencia transações, etc.
+A delegação para a camada de serviço é feita através do método abstrato `getService()`, que deve retornar uma implementação de `BaseCrudService<E, D, ID, FD>`. O `BaseCrudService` (ou um serviço mais específico que o estenda) é quem de fato interage com o repositório JPA, aplica regras de negócio, gerencia transações, etc.
 
 Essa separação de responsabilidades é crucial para uma arquitetura bem definida:
 

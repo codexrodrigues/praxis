@@ -21,10 +21,11 @@ import java.util.List;
  * Interface base para operações CRUD e paginação com filtragem.
  *
  * @param <E>  Tipo da entidade
+ * @param <D>  Tipo do DTO
  * @param <ID> Tipo do identificador
  * @param <FD> Tipo do DTO de filtro
  */
-public interface BaseCrudService<E, ID, FD extends GenericFilterDTO> {
+public interface BaseCrudService<E, D, ID, FD extends GenericFilterDTO> {
 
     BaseCrudRepository<E, ID> getRepository();
     GenericSpecificationsBuilder<E> getSpecificationsBuilder();

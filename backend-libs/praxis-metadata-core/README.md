@@ -224,18 +224,18 @@ These components work in tandem. For instance, when you annotate a field with `@
 
 To simplify the creation of RESTful services with UI metadata capabilities, the library provides abstract base classes:
 
-*   **`AbstractCrudController<E, D, FD, ID>`**:
+*   **`AbstractCrudController<E, D, ID, FD>`**:
     *   This generic class serves as a foundation for creating CRUD controllers. Concrete controllers extend it, specifying their Entity (`E`), DTO (`D`), Filter DTO (`FD`), and Identifier Type (`ID`).
     *   It automatically provides standard REST endpoints for create, read (all and by ID), update, delete, and a powerful `/filter` endpoint that works with `@Filterable` DTOs.
     *   Crucially, it integrates UI schema generation by providing a `/schemas` endpoint (and a `/schemas/filtered` variant) that exposes the metadata defined by `@UISchema` annotations for the controller's entity/DTO. This allows frontends to fetch UI configurations dynamically.
 *   It also incorporates HATEOAS link generation and standardized API responses using `RestApiResponse`.
 
-*   **`AbstractBaseCrudService<E, ID, FD>`**:
+*   **`AbstractBaseCrudService<E, D, ID, FD>`**:
     *   A convenient abstract class that already implements `BaseCrudService` and wires common dependencies like the repository and specification builder.
     *   It annotates `save`, `update` and `deleteById` with `@Transactional` to ensure consistent transaction handling.
     *   Concrete services typically extend this class and only provide custom business logic.
 
-*   **`BaseCrudService<E, ID, FD>`**:
+*   **`BaseCrudService<E, D, ID, FD>`**:
     *   This generic interface (often implemented by an abstract class or a concrete service) defines the standard contract for service-layer CRUD operations.
     *   Implementations typically interact with a `BaseCrudRepository`.
     *   It includes methods for `findAll`, `findById`, `save`, `update`, `deleteById`, and a `filter` method that takes a `@Filterable` DTO and `Pageable` information to return paginated and filtered results.
