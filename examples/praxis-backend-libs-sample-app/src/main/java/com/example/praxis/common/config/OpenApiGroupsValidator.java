@@ -27,12 +27,6 @@ public class OpenApiGroupsValidator implements SmartInitializingSingleton {
     @Autowired
     private RequestMappingHandlerMapping requestMappingHandlerMapping;
 
-    // Remova este bean que está causando conflito
-    // @Bean
-    // public RequestMappingHandlerMapping requestMappingHandlerMapping() {
-    //     return new RequestMappingHandlerMapping();
-    // }
-
     @Override
     public void afterSingletonsInstantiated() {
         logger.info("Iniciando validação dos GroupedOpenApi...");
