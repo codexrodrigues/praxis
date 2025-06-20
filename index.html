@@ -3,11 +3,67 @@
 <head>
   <meta charset="UTF-8" />
   <title>Documentação - Praxis</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      max-width: 600px;
+      width: 90%;
+      text-align: center;
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 1rem;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      margin: 1rem 0;
+    }
+    a {
+      text-decoration: none;
+      color: #007acc;
+      font-size: 1.2rem;
+      padding: 0.5rem 1rem;
+      border: 1px solid #007acc;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+    }
+    a:hover {
+      background: #007acc;
+      color: #fff;
+    }
+    footer {
+      margin-top: 2rem;
+      font-size: 0.9rem;
+      color: #777;
+    }
+  </style>
 </head>
 <body>
-  <h1>Bem-vindo à documentação do Projeto Praxis</h1>
+<div class="container">
+  <h1>Documentação do Projeto Praxis</h1>
   <ul>
-    <li><a href="./backend/index.html">Documentação da API Java (praxis-metadata-core)</a></li>
+    <li><a href="./backend/index.html">API Java (praxis-metadata-core)</a></li>
+    <li><a href="./sample-backend/index.html">Exemplo (praxis-backend-libs-sample-app)</a></li>
+    <li><a href="./sample-backend/humanresources-controllers.html">Guia das Controllers de RH</a></li>
+    <li><a href="./sample-backend/humanresources-dtos-e-filters.html">DTOs e FilterDTOs de RH</a></li>
   </ul>
+  <footer>© 2025 Praxis. Todos os direitos reservados.</footer>
+</div>
 </body>
 </html>
