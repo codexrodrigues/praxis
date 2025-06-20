@@ -6,35 +6,23 @@ import com.example.praxis.humanresources.entity.Funcionario;
 import com.example.praxis.humanresources.repository.FeriasAfastamentoRepository;
 import com.example.praxis.humanresources.repository.FuncionarioRepository;
 import jakarta.persistence.EntityNotFoundException;
-import org.praxisplatform.uischema.filter.specification.GenericSpecificationsBuilder;
-import org.praxisplatform.uischema.repository.base.BaseCrudRepository;
-import org.praxisplatform.uischema.service.base.BaseCrudService;
+import org.praxisplatform.uischema.service.base.AbstractBaseCrudService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class FeriasAfastamentoService implements BaseCrudService<FeriasAfastamento, Long, FeriasAfastamentoFilterDTO> {
+public class FeriasAfastamentoService extends AbstractBaseCrudService<FeriasAfastamento, Long, FeriasAfastamentoFilterDTO> {
+
+    private final FeriasAfastamentoRepository feriasAfastamentoRepository;
+    private final FuncionarioRepository funcionarioRepository;
 
     @Autowired
-    private FeriasAfastamentoRepository feriasAfastamentoRepository;
-
-    @Autowired
-    private FuncionarioRepository funcionarioRepository;
-
-    @Override
-    public BaseCrudRepository<FeriasAfastamento, Long> getRepository() {
-        return feriasAfastamentoRepository;
-    }
-
-    @Override
-    public GenericSpecificationsBuilder<FeriasAfastamento> getSpecificationsBuilder() {
-        return new GenericSpecificationsBuilder<>();
-    }
-
-    @Override
-    public Class<FeriasAfastamento> getEntityClass() {
-        return FeriasAfastamento.class;
+    public FeriasAfastamentoService(FeriasAfastamentoRepository feriasAfastamentoRepository,
+                                    FuncionarioRepository funcionarioRepository) {
+        super(feriasAfastamentoRepository, FeriasAfastamento.class);
+        this.feriasAfastamentoRepository = feriasAfastamentoRepository;
+        this.funcionarioRepository = funcionarioRepository;
     }
 
     private void resolveRelations(FeriasAfastamento registro) {

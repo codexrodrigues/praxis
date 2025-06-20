@@ -6,35 +6,23 @@ import com.example.praxis.humanresources.entity.Funcionario;
 import com.example.praxis.humanresources.repository.DepartamentoRepository;
 import com.example.praxis.humanresources.repository.FuncionarioRepository;
 import jakarta.persistence.EntityNotFoundException;
-import org.praxisplatform.uischema.filter.specification.GenericSpecificationsBuilder;
-import org.praxisplatform.uischema.repository.base.BaseCrudRepository;
-import org.praxisplatform.uischema.service.base.BaseCrudService;
+import org.praxisplatform.uischema.service.base.AbstractBaseCrudService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class DepartamentoService implements BaseCrudService<Departamento, Long, DepartamentoFilterDTO> {
+public class DepartamentoService extends AbstractBaseCrudService<Departamento, Long, DepartamentoFilterDTO> {
+
+    private final DepartamentoRepository departamentoRepository;
+    private final FuncionarioRepository funcionarioRepository; // Needed to resolve responsavelId
 
     @Autowired
-    private DepartamentoRepository departamentoRepository;
-
-    @Autowired
-    private FuncionarioRepository funcionarioRepository; // Needed to resolve responsavelId
-
-    @Override
-    public BaseCrudRepository<Departamento, Long> getRepository() {
-        return departamentoRepository;
-    }
-
-    @Override
-    public GenericSpecificationsBuilder<Departamento> getSpecificationsBuilder() {
-        return new GenericSpecificationsBuilder<>();
-    }
-
-    @Override
-    public Class<Departamento> getEntityClass() {
-        return Departamento.class;
+    public DepartamentoService(DepartamentoRepository departamentoRepository,
+                               FuncionarioRepository funcionarioRepository) {
+        super(departamentoRepository, Departamento.class);
+        this.departamentoRepository = departamentoRepository;
+        this.funcionarioRepository = funcionarioRepository;
     }
 
     private void resolveRelations(Departamento departamento) {

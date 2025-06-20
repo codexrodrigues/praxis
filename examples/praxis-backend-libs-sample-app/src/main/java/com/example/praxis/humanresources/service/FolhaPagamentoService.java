@@ -6,35 +6,23 @@ import com.example.praxis.humanresources.entity.Funcionario;
 import com.example.praxis.humanresources.repository.FolhaPagamentoRepository;
 import com.example.praxis.humanresources.repository.FuncionarioRepository;
 import jakarta.persistence.EntityNotFoundException;
-import org.praxisplatform.uischema.filter.specification.GenericSpecificationsBuilder;
-import org.praxisplatform.uischema.repository.base.BaseCrudRepository;
-import org.praxisplatform.uischema.service.base.BaseCrudService;
+import org.praxisplatform.uischema.service.base.AbstractBaseCrudService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class FolhaPagamentoService implements BaseCrudService<FolhaPagamento, Long, FolhaPagamentoFilterDTO> {
+public class FolhaPagamentoService extends AbstractBaseCrudService<FolhaPagamento, Long, FolhaPagamentoFilterDTO> {
+
+    private final FolhaPagamentoRepository folhaPagamentoRepository;
+    private final FuncionarioRepository funcionarioRepository;
 
     @Autowired
-    private FolhaPagamentoRepository folhaPagamentoRepository;
-
-    @Autowired
-    private FuncionarioRepository funcionarioRepository;
-
-    @Override
-    public BaseCrudRepository<FolhaPagamento, Long> getRepository() {
-        return folhaPagamentoRepository;
-    }
-
-    @Override
-    public GenericSpecificationsBuilder<FolhaPagamento> getSpecificationsBuilder() {
-        return new GenericSpecificationsBuilder<>();
-    }
-
-    @Override
-    public Class<FolhaPagamento> getEntityClass() {
-        return FolhaPagamento.class;
+    public FolhaPagamentoService(FolhaPagamentoRepository folhaPagamentoRepository,
+                                 FuncionarioRepository funcionarioRepository) {
+        super(folhaPagamentoRepository, FolhaPagamento.class);
+        this.folhaPagamentoRepository = folhaPagamentoRepository;
+        this.funcionarioRepository = funcionarioRepository;
     }
 
     private void resolveRelations(FolhaPagamento folha) {
