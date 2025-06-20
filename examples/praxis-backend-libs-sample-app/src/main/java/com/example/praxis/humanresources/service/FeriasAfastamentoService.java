@@ -1,5 +1,6 @@
 package com.example.praxis.humanresources.service;
 
+import com.example.praxis.humanresources.dto.FeriasAfastamentoDTO;
 import com.example.praxis.humanresources.dto.FeriasAfastamentoFilterDTO;
 import com.example.praxis.humanresources.entity.FeriasAfastamento;
 import com.example.praxis.humanresources.entity.Funcionario;
@@ -12,7 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class FeriasAfastamentoService extends AbstractBaseCrudService<FeriasAfastamento, Long, FeriasAfastamentoFilterDTO> {
+public class FeriasAfastamentoService extends AbstractBaseCrudService<FeriasAfastamento, FeriasAfastamentoDTO, Long, FeriasAfastamentoFilterDTO> {
 
     private final FeriasAfastamentoRepository feriasAfastamentoRepository;
     private final FuncionarioRepository funcionarioRepository;

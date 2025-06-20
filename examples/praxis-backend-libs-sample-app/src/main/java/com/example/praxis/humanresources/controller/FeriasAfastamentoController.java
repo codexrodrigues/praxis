@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(ApiRouteDefinitions.HR_FERIAS_AFASTAMENTOS_PATH)
 @Tag(name = ApiRouteDefinitions.HR_FERIAS_AFASTAMENTOS_TAG, description = "Operations related to HR Ferias/Afastamentos")
-public class FeriasAfastamentoController extends AbstractCrudController<FeriasAfastamento, FeriasAfastamentoDTO, FeriasAfastamentoFilterDTO, Long> {
+public class FeriasAfastamentoController extends AbstractCrudController<FeriasAfastamento, FeriasAfastamentoDTO, Long, FeriasAfastamentoFilterDTO> {
 
     @Autowired
     private FeriasAfastamentoService feriasAfastamentoService;

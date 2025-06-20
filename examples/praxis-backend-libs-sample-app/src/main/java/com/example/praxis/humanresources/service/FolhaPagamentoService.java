@@ -1,5 +1,6 @@
 package com.example.praxis.humanresources.service;
 
+import com.example.praxis.humanresources.dto.FolhaPagamentoDTO;
 import com.example.praxis.humanresources.dto.FolhaPagamentoFilterDTO;
 import com.example.praxis.humanresources.entity.FolhaPagamento;
 import com.example.praxis.humanresources.entity.Funcionario;
@@ -12,7 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class FolhaPagamentoService extends AbstractBaseCrudService<FolhaPagamento, Long, FolhaPagamentoFilterDTO> {
+public class FolhaPagamentoService extends AbstractBaseCrudService<FolhaPagamento, FolhaPagamentoDTO, Long, FolhaPagamentoFilterDTO> {
 
     private final FolhaPagamentoRepository folhaPagamentoRepository;
     private final FuncionarioRepository funcionarioRepository;

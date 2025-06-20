@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(ApiRouteDefinitions.HR_DEPARTAMENTOS_PATH)
 @Tag(name = ApiRouteDefinitions.HR_DEPARTAMENTOS_TAG, description = "Operations related to HR Departamentos")
-public class DepartamentoController extends AbstractCrudController<Departamento, com.example.praxis.humanresources.dto.DepartamentoDTO, com.example.praxis.humanresources.dto.DepartamentoFilterDTO, Long> {
+public class DepartamentoController extends AbstractCrudController<Departamento, com.example.praxis.humanresources.dto.DepartamentoDTO, Long, com.example.praxis.humanresources.dto.DepartamentoFilterDTO> {
 
     @Autowired
     private DepartamentoService departamentoService;

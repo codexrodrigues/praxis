@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(ApiRouteDefinitions.HR_FOLHAS_PAGAMENTO_PATH)
 @Tag(name = ApiRouteDefinitions.HR_FOLHAS_PAGAMENTO_TAG, description = "Operations related to HR Folhas de Pagamento")
-public class FolhaPagamentoController extends AbstractCrudController<FolhaPagamento, FolhaPagamentoDTO, FolhaPagamentoFilterDTO, Long> {
+public class FolhaPagamentoController extends AbstractCrudController<FolhaPagamento, FolhaPagamentoDTO, Long, FolhaPagamentoFilterDTO> {
 
     @Autowired
     private FolhaPagamentoService folhaPagamentoService;

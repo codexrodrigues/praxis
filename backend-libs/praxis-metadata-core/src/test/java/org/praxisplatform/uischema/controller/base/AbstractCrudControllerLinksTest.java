@@ -52,7 +52,7 @@ class AbstractCrudControllerLinksTest {
 
     // --- Support classes for the test ---
 
-    interface SimpleService extends org.praxisplatform.uischema.service.base.BaseCrudService<SimpleEntity, Long, SimpleFilterDTO> {}
+    interface SimpleService extends org.praxisplatform.uischema.service.base.BaseCrudService<SimpleEntity, SimpleDto, Long, SimpleFilterDTO> {}
 
     static class SimpleEntity {
         private Long id;
@@ -74,7 +74,7 @@ class AbstractCrudControllerLinksTest {
 
     @org.springframework.web.bind.annotation.RestController
     @org.springframework.web.bind.annotation.RequestMapping("/simple")
-    static class SimpleController extends AbstractCrudController<SimpleEntity, SimpleDto, SimpleFilterDTO, Long> {
+    static class SimpleController extends AbstractCrudController<SimpleEntity, SimpleDto, Long, SimpleFilterDTO> {
         @Autowired
         SimpleService service;
         @Override

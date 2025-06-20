@@ -14,7 +14,7 @@ import com.example.praxis.common.config.ApiRouteDefinitions;
     @RestController
     @RequestMapping(ApiRouteDefinitions.HR_FUNCIONARIOS_PATH)
     @Tag(name = ApiRouteDefinitions.HR_FUNCIONARIOS_TAG, description = "Operations related to HR Funcionarios")
-    public class FuncionarioController extends AbstractCrudController<Funcionario, FuncionarioDTO, FuncionarioFilterDTO, Long> {
+    public class FuncionarioController extends AbstractCrudController<Funcionario, FuncionarioDTO, Long, FuncionarioFilterDTO> {
 
         @Autowired
         private FuncionarioService funcionarioService;
