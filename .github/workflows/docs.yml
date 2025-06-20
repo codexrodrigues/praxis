@@ -20,8 +20,8 @@ jobs:
       - name: Generate backend docs
         working-directory: backend-libs/praxis-metadata-core
         run: |
-          ./gradlew asciidoctor
-          test -d build/docs/asciidoc
+          ../../mvnw --batch-mode javadoc:javadoc
+          test -d target/site/apidocs
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
@@ -41,7 +41,7 @@ jobs:
       - name: Prepare docs folder
         run: |
           mkdir -p docs/backend docs/frontend
-          cp -r backend-libs/praxis-metadata-core/build/docs/asciidoc/. docs/backend/
+          cp -r backend-libs/praxis-metadata-core/target/site/apidocs/. docs/backend/
           cp -r frontend-libs/praxis-metadata-core/documentation/. docs/frontend/
 
       - name: Deploy to GitHub Pages
