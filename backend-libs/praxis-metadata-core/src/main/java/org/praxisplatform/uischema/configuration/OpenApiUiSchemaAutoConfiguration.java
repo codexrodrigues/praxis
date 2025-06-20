@@ -12,6 +12,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.web.client.RestTemplate;
 import org.springdoc.core.models.GroupedOpenApi;
 
+import java.util.List;
+
 @AutoConfiguration
 public class OpenApiUiSchemaAutoConfiguration {
     @Bean(name = "openApiUiSchemaRestTemplate")
