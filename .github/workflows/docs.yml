@@ -17,14 +17,12 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
+      - name: Install library modules
+        run: |
+          ./mvnw --batch-mode -f backend-libs/praxis-metadata-core/pom.xml install -DskipTests
+
       - name: Generate backend docs
         working-directory: backend-libs/praxis-metadata-core
-        run: |
-          ../../mvnw --batch-mode javadoc:javadoc
-          test -d target/site/apidocs
-
-      - name: Generate sample app docs
-        working-directory: examples/praxis-backend-libs-sample-app
         run: |
           ../../mvnw --batch-mode javadoc:javadoc
           test -d target/site/apidocs
@@ -33,8 +31,6 @@ jobs:
         run: |
           mkdir -p docs/backend
           cp -r backend-libs/praxis-metadata-core/target/site/apidocs/. docs/backend/
-          mkdir -p docs/sample-backend
-          cp -r examples/praxis-backend-libs-sample-app/target/site/apidocs/. docs/sample-backend/
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
