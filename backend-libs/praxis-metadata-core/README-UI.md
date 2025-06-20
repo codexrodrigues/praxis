@@ -570,4 +570,70 @@ Em conjunto, o `AbstractCrudController`, `CustomOpenApiResolver`, e `ApiDocsCont
     3.  Renderiza formulários, tabelas, e outros componentes de UI dinamicamente com base nesses metadados, incluindo labels, tipos de controle, validações, etc.
 
 Dessa forma, o `AbstractCrudController` não é apenas um economizador de tempo para o desenvolvimento backend, mas uma peça chave que viabiliza uma arquitetura mais desacoplada e eficiente para a construção de interfaces de usuário ricas e adaptáveis.
+### Exemplo Prático no Projeto `praxis-backend-libs-sample-app`
+
+O diretório `examples/praxis-backend-libs-sample-app` contém uma aplicação Spring Boot que utiliza as bibliotecas descritas acima. Ele demonstra na prática como estruturar controllers, serviços e configuração de grupos OpenAPI para habilitar a geração de metadados `x-ui`.
+
+#### Organização das Rotas e Grupos OpenAPI
+A classe `ApiRouteDefinitions` centraliza constantes de path e nome de grupo. Já `OpenApiGroupsConfig` registra um `GroupedOpenApi` para cada módulo da aplicação, garantindo que o `ApiDocsController` identifique corretamente o documento OpenAPI a ser consultado. Exemplo:
+
+```java
+@Bean
+public GroupedOpenApi configureHrCargosDocumentation() {
+    return GroupedOpenApi.builder()
+            .group(ApiRouteDefinitions.HR_CARGOS_GROUP)
+            .pathsToMatch(ApiRouteDefinitions.HR_CARGOS_PATH + "/**")
+            .build();
+}
 ```
+
+#### Controllers baseados em `AbstractCrudController`
+Os controllers do módulo de Recursos Humanos (como `CargoController`) estendem `AbstractCrudController`, implementando apenas a conversão entre entidade e DTO e informando o serviço. Isso reduz código boilerplate:
+
+```java
+@RestController
+@RequestMapping(ApiRouteDefinitions.HR_CARGOS_PATH)
+public class CargoController extends AbstractCrudController<
+        Cargo, CargoDTO, Long, CargoFilterDTO> {
+
+    @Autowired
+    private CargoService cargoService;
+    @Autowired
+    private CargoMapper cargoMapper;
+
+    @Override
+    protected CargoService getService() { return cargoService; }
+
+    @Override
+    protected CargoDTO toDto(Cargo entity) { return cargoMapper.toDto(entity); }
+
+    @Override
+    protected Cargo toEntity(CargoDTO dto) { return cargoMapper.toEntity(dto); }
+
+    @Override
+    protected Long getEntityId(Cargo entity) { return entity.getId(); }
+
+    @Override
+    protected Long getDtoId(CargoDTO dto) { return dto.getId(); }
+
+    @Override
+    protected String getBasePath() { return ApiRouteDefinitions.HR_CARGOS_PATH; }
+}
+```
+
+#### DTOs com `@UISchema`
+Os DTOs do exemplo são anotados com `@UISchema` para que o `CustomOpenApiResolver` enriqueça o schema de cada campo. Um trecho simplificado de `CargoDTO` demonstra a ideia:
+
+```java
+public class CargoDTO {
+    @UISchema
+    private Long id;
+
+    @UISchema
+    private String nome;
+    // ...
+}
+```
+
+A aplicação resultante disponibiliza endpoints CRUD que já retornam links para o schema enriquecido e podem ser utilizados por uma UI dinâmica.
+
