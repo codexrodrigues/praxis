@@ -23,7 +23,8 @@ import java.lang.annotation.Target;
  * <h2>Exemplo de Uso</h2>
  * <p>Considere um DTO que representa os filtros aplicáveis a uma consulta de pessoa física:</p>
  *
- * <pre>{@code
+ * <pre>
+ * {@code
  * public class PessoaFisicaFilterDTO {
  *
  *     // Filtro de igualdade em um campo direto da entidade
@@ -43,7 +44,7 @@ import java.lang.annotation.Target;
  *     @Filterable(operation = Filterable.FilterOperation.BETWEEN, relation = "dataVerificacao")
  *     private List<LocalDate> dataVerificacaoFiltro;
  * }
- * </pre>
+ * </code></pre>
  * <p>
  *  * <h2>Validação de Campos de Filtro</h2>
  *  * <p>Certifique-se de que os campos de filtro, como {@code dataVerificacao}, sejam usados apenas para consultas e, se necessário,
@@ -56,10 +57,12 @@ import java.lang.annotation.Target;
  *     <li>O caminho deve estar no formato <code>"relacao1.relacao2.campo"</code>, onde cada parte do caminho representa
  *         uma associação no modelo JPA.</li>
  *     <li>Exemplo: Para filtrar pelo campo <code>nome</code> de uma entidade <code>tipoSexo</code> relacionada à entidade principal:
- *         <pre>{@code
+ *         <pre>
+ *         {@code
  *         @Filterable(operation = FilterOperation.LIKE, relation = "tipoSexo.nome")
  *         private String tipoSexoDescricao;
- *         }</pre>
+ *         }
+ *         </code></pre>
  *     </li>
  * </ul>
  *
@@ -101,7 +104,7 @@ public @interface Filterable {
          */
         GREATER_THAN,
         /**
-         * Filtro de menor que (e.g., campo < valor).
+         * Filtro de menor que (e.g., campo &lt; valor).
          */
         LESS_THAN,
         /**
