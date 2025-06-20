@@ -19,7 +19,7 @@ The `praxis-metadata-core` library offers a comprehensive set of features to acc
 
 ## Documentation
 
-This repository contains backend and frontend libraries. Documentation can be generated locally or published automatically via GitHub Actions.
+This repository currently contains only the backend library. Documentation can be generated locally or published automatically via GitHub Actions.
 
 ### Generating backend docs
 
@@ -29,13 +29,3 @@ cd backend-libs/praxis-metadata-core
 ```
 
 The generated Javadoc will be placed in `target/site/apidocs`.
-
-### Generating frontend docs
-
-```bash
-cd frontend-libs/praxis-metadata-core
-npm ci
-npx compodoc -p tsconfig.json -d documentation
-```
-
-The generated site will be available in the `documentation` folder.
