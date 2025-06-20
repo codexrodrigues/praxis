@@ -76,6 +76,37 @@ public class DtoAnnotationTest {
         validateFilterDto(FuncionarioFilterDTO.class, expected);
     }
 
+    @Test
+    public void testFolhaPagamentoFilterDtoAnnotations() {
+        Map<String, Expectation> expected = new LinkedHashMap<>();
+        expected.put("funcionarioId", new Expectation(FilterOperation.EQUAL, "funcionario.id"));
+        expected.put("ano", new Expectation(FilterOperation.EQUAL, ""));
+        expected.put("mes", new Expectation(FilterOperation.EQUAL, ""));
+        expected.put("salarioBruto", new Expectation(FilterOperation.BETWEEN, ""));
+        expected.put("dataPagamento", new Expectation(FilterOperation.BETWEEN, ""));
+        validateFilterDto(FolhaPagamentoFilterDTO.class, expected);
+    }
+
+    @Test
+    public void testEventoFolhaFilterDtoAnnotations() {
+        Map<String, Expectation> expected = new LinkedHashMap<>();
+        expected.put("folhaPagamentoId", new Expectation(FilterOperation.EQUAL, "folhaPagamento.id"));
+        expected.put("descricao", new Expectation(FilterOperation.LIKE, ""));
+        expected.put("tipo", new Expectation(FilterOperation.LIKE, ""));
+        expected.put("valor", new Expectation(FilterOperation.BETWEEN, ""));
+        validateFilterDto(EventoFolhaFilterDTO.class, expected);
+    }
+
+    @Test
+    public void testFeriasAfastamentoFilterDtoAnnotations() {
+        Map<String, Expectation> expected = new LinkedHashMap<>();
+        expected.put("funcionarioId", new Expectation(FilterOperation.EQUAL, "funcionario.id"));
+        expected.put("tipo", new Expectation(FilterOperation.LIKE, ""));
+        expected.put("dataInicio", new Expectation(FilterOperation.BETWEEN, ""));
+        expected.put("dataFim", new Expectation(FilterOperation.BETWEEN, ""));
+        validateFilterDto(FeriasAfastamentoFilterDTO.class, expected);
+    }
+
     private void validateFilterDto(Class<?> clazz, Map<String, Expectation> expectations) {
         for (Field field : clazz.getDeclaredFields()) {
             assertTrue(clazz.getSimpleName() + "." + field.getName() + " should have @UISchema",

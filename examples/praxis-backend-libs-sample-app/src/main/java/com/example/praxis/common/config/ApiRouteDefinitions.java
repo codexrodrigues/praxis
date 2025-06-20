@@ -22,6 +22,21 @@ public class ApiRouteDefinitions {
     public static final String HR_FUNCIONARIOS_GROUP = "funcionarios";
     public static final String HR_FUNCIONARIOS_TAG = "HR - Funcionarios";
 
+    // HR Folhas de Pagamento
+    public static final String HR_FOLHAS_PAGAMENTO_PATH = "/api/human-resources/folhas-pagamento";
+    public static final String HR_FOLHAS_PAGAMENTO_GROUP = "folhas-pagamento";
+    public static final String HR_FOLHAS_PAGAMENTO_TAG = "HR - Folhas Pagamento";
+
+    // HR Eventos de Folha
+    public static final String HR_EVENTOS_FOLHA_PATH = "/api/human-resources/eventos-folha";
+    public static final String HR_EVENTOS_FOLHA_GROUP = "eventos-folha";
+    public static final String HR_EVENTOS_FOLHA_TAG = "HR - Eventos Folha";
+
+    // HR Férias/Afastamentos
+    public static final String HR_FERIAS_AFASTAMENTOS_PATH = "/api/human-resources/ferias-afastamentos";
+    public static final String HR_FERIAS_AFASTAMENTOS_GROUP = "ferias-afastamentos";
+    public static final String HR_FERIAS_AFASTAMENTOS_TAG = "HR - Ferias Afastamentos";
+
     private ApiRouteDefinitions() {
         // Prevent instantiation
     }
