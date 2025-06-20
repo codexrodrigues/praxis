@@ -111,7 +111,7 @@ public enum FieldControlType {
      * Controle para valores booleanos, exibindo uma caixa de seleção.
      *
      * Exemplo de uso: Campos como "Aceito os Termos" ou "Ativo", onde o usuário marca ou desmarca uma opção.
-     * Na camada de apresentação, pode ser exibido como um `<input type="checkbox">`.
+     * Na camada de apresentação, pode ser exibido como um {@code <input type="checkbox">}.
      */
     CHECKBOX("checkbox"),
 
@@ -159,7 +159,7 @@ public enum FieldControlType {
      * Controle para entrada de uma cor.
      *
      * Exemplo de uso: Campos como "Cor de Fundo" ou "Cor do Texto", onde o usuário escolhe uma cor.
-     * Na camada de apresentação, pode ser exibido como um seletor de cores (`<input type="color">`).
+     * Na camada de apresentação, pode ser exibido como um seletor de cores ({@code <input type="color">}).
      */
     COLOR_PICKER("colorPicker"),
 
@@ -191,7 +191,7 @@ public enum FieldControlType {
      * Controle para seleção de uma data.
      *
      * Exemplo de uso: Campos como "Data de Nascimento" ou "Data de Início".
-     * Na camada de apresentação, pode ser exibido como um controle de calendário (`<input type="date">`).
+     * Na camada de apresentação, pode ser exibido como um controle de calendário ({@code <input type="date">}).
      */
     DATE_PICKER("date"),
 
@@ -207,7 +207,7 @@ public enum FieldControlType {
      * Controle para seleção de uma data e hora.
      *
      * Exemplo de uso: Campos como "Data e Hora do Evento" ou "Data de Criação".
-     * Na camada de apresentação, pode ser exibido como um controle de calendário com opções de hora (`<input type="datetime-local">`).
+     * Na camada de apresentação, pode ser exibido como um controle de calendário com opções de hora ({@code <input type="datetime-local">}).
      */
     DATE_TIME_PICKER("dateTime"),
 
@@ -244,7 +244,7 @@ public enum FieldControlType {
     /**
      * Controle específico para entrada de email.
      * Pode incluir validações de formato de email no frontend.
-     * Na camada de apresentação, pode ser exibido como um `<input type="email">`.
+     * Na camada de apresentação, pode ser exibido como um {@code <input type="email">}.
      */
     EMAIL_INPUT("email"),
 
@@ -276,7 +276,7 @@ public enum FieldControlType {
      * Controle para upload de arquivos.
      *
      * Exemplo de uso: Campos como "Anexo de Arquivo" ou "Imagem de Perfil", onde o usuário precisa fazer upload de arquivos.
-     * Na camada de apresentação, pode ser exibido como um campo de upload (`<input type="file">`).
+     * Na camada de apresentação, pode ser exibido como um campo de upload ({@code <input type="file">}).
      */
     FILE_UPLOAD("upload"),
 
@@ -323,7 +323,7 @@ public enum FieldControlType {
      * Controle de entrada de texto simples.
      *
      * Exemplo de uso: Captura de informações textuais como nome, sobrenome ou endereço.
-     * Na camada de apresentação, pode ser exibido como um campo de input `<input type="text">`.
+     * Na camada de apresentação, pode ser exibido como um campo de input {@code <input type="text">}.
      */
     INPUT("input"),
 
@@ -417,7 +417,7 @@ public enum FieldControlType {
      * Controle para entrada de uma senha ou informação sigilosa.
      *
      * Exemplo de uso: Campos como "Senha" ou "PIN", onde o texto precisa estar mascarado.
-     * Na camada de apresentação, pode ser exibido como `<input type="password">`.
+     * Na camada de apresentação, pode ser exibido como {@code <input type="password">}.
      */
     PASSWORD("password"),
 
@@ -479,7 +479,7 @@ public enum FieldControlType {
      * Controle para escolher uma única opção entre várias opções mutuamente exclusivas.
      *
      * Exemplo de uso: Campos como "Gênero" (masculino, feminino) ou "Método de Pagamento" (cartão, boleto).
-     * Na camada de apresentação, pode ser exibido como um grupo de botões de rádio (`<input type="radio">`).
+     * Na camada de apresentação, pode ser exibido como um grupo de botões de rádio ({@code <input type="radio">}).
      */
     RADIO("radio"),
 
@@ -549,7 +549,7 @@ public enum FieldControlType {
      * Controle para valores numéricos que permite ao usuário selecionar um valor dentro de um intervalo.
      *
      * Exemplo de uso: Campos como "Classificação" ou "Idade", onde o usuário ajusta um controle deslizante para definir o valor.
-     * Na camada de apresentação, pode ser exibido como um controle deslizante (`<input type="range">` ou um `slider` de UI).
+     * Na camada de apresentação, pode ser exibido como um controle deslizante ({@code <input type="range">} ou um `slider` de UI).
      */
     SLIDER("slider"),
 
@@ -624,7 +624,7 @@ public enum FieldControlType {
      * Controle para entradas de texto de várias linhas.
      *
      * Exemplo de uso: Campos como "Descrição", "Comentários" ou "Endereço", onde o usuário precisa de mais espaço para digitar.
-     * Na camada de apresentação, pode ser exibido como uma área de texto (`<textarea>`).
+     * Na camada de apresentação, pode ser exibido como uma área de texto ({@code <textarea>}).
      */
     TEXTAREA("textarea"),
 
@@ -647,7 +647,7 @@ public enum FieldControlType {
      * Controle booleano alternativo que funciona como um botão de alternância.
      *
      * Exemplo de uso: Campos como "Modo Escuro" ou "Notificações Ativadas", onde o usuário ativa ou desativa uma configuração.
-     * Na camada de apresentação, pode ser exibido como um toggle button (`<mat-button-toggle>` ou `<input type="checkbox">` com estilo de toggle).
+     * Na camada de apresentação, pode ser exibido como um toggle button ({@code <mat-button-toggle>} ou {@code <input type="checkbox">} com estilo de toggle).
      */
     TOGGLE("toggle"),
 
@@ -684,7 +684,7 @@ public enum FieldControlType {
      * Controle para entrada de URL.
      *
      * Exemplo de uso: Campos como "Website" ou "Link do Perfil", onde o usuário insere uma URL.
-     * Na camada de apresentação, pode ser exibido como `<input type="url">`.
+     * Na camada de apresentação, pode ser exibido como {@code <input type="url">}.
      */
     URL_INPUT("url"),
 

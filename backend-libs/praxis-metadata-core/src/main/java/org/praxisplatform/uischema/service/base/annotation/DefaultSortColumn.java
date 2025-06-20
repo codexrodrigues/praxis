@@ -15,8 +15,7 @@ import java.lang.annotation.Target;
  *          <li><b>ascending</b>: Indica se a ordenação na coluna padrão é em ordem ascendente ou descendente.</li>
  *          <li><b>priority</b>: Define a prioridade da ordenação. A menor prioridade tem a maior prioridade.</li>
  *      </ul>
- * </p>
- **/
+ */
 
 
 @Target(ElementType.FIELD)
