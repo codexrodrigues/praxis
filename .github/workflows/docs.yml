@@ -17,6 +17,10 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
+      - name: Install library modules
+        run: |
+          ./mvnw --batch-mode -f backend-libs/praxis-metadata-core/pom.xml install -DskipTests
+
       - name: Generate backend docs
         working-directory: backend-libs/praxis-metadata-core
         run: |
