@@ -90,6 +90,13 @@ export class GenericCrudService<T> {
 
   // Nova propriedade para armazenar a URL do schema
   private _schemaUrl: string | null = null;
+  private configured = false;
+
+  private ensureConfigured(): void {
+    if (!this.configured) {
+      throw new Error(GenericCrudService.ERROR_MESSAGES.unconfiguredService);
+    }
+  }
 
   /**
    * Cria a instância do serviço genérico.
@@ -116,6 +123,7 @@ export class GenericCrudService<T> {
     const resource = resourcePath.replace(/^\/+/, '');
 
     this.apiUrl = `${base}/${resource}`;
+    this.configured = true;
   }
 
 /**
@@ -245,6 +253,7 @@ private getEndpointUrl(operation: keyof EndpointConfig, id?: string | number, pa
    * @returns Observable com array de FieldMetadata.
    */
   public getSchema(options?: CrudOperationOptions): Observable<FieldMetadata[]> {
+    this.ensureConfigured();
     const url = this.getEndpointUrl('schema', undefined, options?.parentPath);
     // Armazena a URL para referência posterior this._schemaUrl = url;
     this._schemaUrl = url;
@@ -258,6 +267,7 @@ private getEndpointUrl(operation: keyof EndpointConfig, id?: string | number, pa
    * Retorna a URL do último schema solicitado
    */
 public schemaUrl(): string {
+  this.ensureConfigured();
   let url: string;
 
   // Se já temos a URL do schema armazenada, usá-la
@@ -287,6 +297,42 @@ public schemaUrl(): string {
 }
 
   /**
+   * Obtém um schema filtrado diretamente do endpoint `/schemas/filtered`.
+   * Permite buscar schemas específicos para operações e tipos de documento.
+   */
+  public getFilteredSchema(params: {
+    path?: string;
+    document?: string;
+    operation?: string;
+    includeInternalSchemas?: boolean;
+    schemaType?: string;
+  }): Observable<FieldMetadata[]> {
+    this.ensureConfigured();
+
+    let httpParams = new HttpParams();
+    const path = params.path ?? this.schemaUrl().replace(/\/schemas$/, '');
+    httpParams = httpParams.set('path', path);
+    if (params.document) {
+      httpParams = httpParams.set('document', params.document);
+    }
+    if (params.operation) {
+      httpParams = httpParams.set('operation', params.operation);
+    }
+    if (params.schemaType) {
+      httpParams = httpParams.set('schemaType', params.schemaType);
+    }
+    if (params.includeInternalSchemas !== undefined) {
+      httpParams = httpParams.set('includeInternalSchemas', String(params.includeInternalSchemas));
+    }
+
+    const url = `${this.baseApiUrl}/schemas/filtered`;
+    return this.http.get<any>(url, { params: httpParams }).pipe(
+      map((response) => this.schemaNormalizer.normalizeSchema(response)),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
    * Retorna todos os registros do recurso.
    *
    * Exemplo:
@@ -305,11 +351,13 @@ public schemaUrl(): string {
    * @returns Observable com array de entidades.
    */
   public getAll(options?: CrudOperationOptions): Observable<T[]> {
+    return this.getAllResponse(options).pipe(map((r) => r.data));
+  }
+
+  public getAllResponse(options?: CrudOperationOptions): Observable<RestApiResponse<T[]>> {
+    this.ensureConfigured();
     const url = this.getEndpointUrl('getAll', undefined, options?.parentPath);
-    return this.http.get<RestApiResponse<T[]>>(url).pipe(
-      map((response) => response.data),
-      catchError(this.handleError)
-    );
+    return this.http.get<RestApiResponse<T[]>>(url).pipe(catchError(this.handleError));
   }
 
   /**
@@ -332,12 +380,14 @@ public schemaUrl(): string {
    * @returns Observable com a entidade encontrada.
    */
   public getById(id: string | number, options?: CrudOperationOptions): Observable<T> {
+    return this.getByIdResponse(id, options).pipe(map((r) => r.data));
+  }
+
+  public getByIdResponse(id: string | number, options?: CrudOperationOptions): Observable<RestApiResponse<T>> {
     if (id === undefined || id === null) throw new Error(GenericCrudService.ERROR_MESSAGES.emptyId);
+    this.ensureConfigured();
     const url = this.getEndpointUrl('getById', id, options?.parentPath);
-    return this.http.get<RestApiResponse<T>>(url).pipe(
-      map((response) => response.data),
-      catchError(this.handleError)
-    );
+    return this.http.get<RestApiResponse<T>>(url).pipe(catchError(this.handleError));
   }
 
   /**
@@ -360,12 +410,14 @@ public schemaUrl(): string {
    * @returns Observable com a entidade criada.
    */
   public create(entity: T, options?: CrudOperationOptions): Observable<T> {
+    return this.createResponse(entity, options).pipe(map((r) => r.data));
+  }
+
+  public createResponse(entity: T, options?: CrudOperationOptions): Observable<RestApiResponse<T>> {
     if (!entity) throw new Error(GenericCrudService.ERROR_MESSAGES.emptyEntity);
+    this.ensureConfigured();
     const url = this.getEndpointUrl('create', undefined, options?.parentPath);
-    return this.http.post<RestApiResponse<T>>(url, entity).pipe(
-      map((response) => response.data),
-      catchError(this.handleError)
-    );
+    return this.http.post<RestApiResponse<T>>(url, entity).pipe(catchError(this.handleError));
   }
 
   /**
@@ -389,13 +441,15 @@ public schemaUrl(): string {
    * @returns Observable com a entidade atualizada.
    */
   public update(id: string | number, entity: T, options?: CrudOperationOptions): Observable<T> {
+    return this.updateResponse(id, entity, options).pipe(map((r) => r.data));
+  }
+
+  public updateResponse(id: string | number, entity: T, options?: CrudOperationOptions): Observable<RestApiResponse<T>> {
     if (id === undefined || id === null) throw new Error(GenericCrudService.ERROR_MESSAGES.emptyId);
     if (!entity) throw new Error(GenericCrudService.ERROR_MESSAGES.emptyEntity);
+    this.ensureConfigured();
     const url = this.getEndpointUrl('update', id, options?.parentPath);
-    return this.http.put<RestApiResponse<T>>(url, entity).pipe(
-      map((response) => response.data),
-      catchError(this.handleError)
-    );
+    return this.http.put<RestApiResponse<T>>(url, entity).pipe(catchError(this.handleError));
   }
 
   /**
@@ -418,12 +472,14 @@ public schemaUrl(): string {
    * @returns Observable vazio quando a remoção for bem-sucedida.
    */
   public delete(id: string | number, options?: CrudOperationOptions): Observable<void> {
+    return this.deleteResponse(id, options).pipe(map(() => undefined));
+  }
+
+  public deleteResponse(id: string | number, options?: CrudOperationOptions): Observable<RestApiResponse<void>> {
     if (id === undefined || id === null) throw new Error(GenericCrudService.ERROR_MESSAGES.emptyId);
+    this.ensureConfigured();
     const url = this.getEndpointUrl('delete', id, options?.parentPath);
-    return this.http.delete<RestApiResponse<void>>(url).pipe(
-      map(() => undefined),
-      catchError(this.handleError)
-    );
+    return this.http.delete<RestApiResponse<void>>(url).pipe(catchError(this.handleError));
   }
 
   /**
@@ -442,6 +498,10 @@ public schemaUrl(): string {
    * @returns Observable com página de entidades.
    */
   public filter(filterCriteria: Partial<T>, pageable?: Pageable, options?: CrudOperationOptions): Observable<Page<T>> {
+    return this.filterResponse(filterCriteria, pageable, options).pipe(map((r) => r.data));
+  }
+
+  public filterResponse(filterCriteria: Partial<T>, pageable?: Pageable, options?: CrudOperationOptions): Observable<RestApiResponse<Page<T>>> {
     let params = new HttpParams();
     if (pageable) {
       params = params
@@ -452,11 +512,9 @@ public schemaUrl(): string {
       }
     }
 
+    this.ensureConfigured();
     const url = this.getEndpointUrl('filter', undefined, options?.parentPath);
-    return this.http.post<RestApiResponse<Page<T>>>(url, filterCriteria, { params }).pipe(
-      map((response) => response.data),
-      catchError(this.handleError)
-    );
+    return this.http.post<RestApiResponse<Page<T>>>(url, filterCriteria, { params }).pipe(catchError(this.handleError));
   }
 
   /**
