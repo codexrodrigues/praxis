@@ -27,6 +27,6 @@ git commit -m "chore(release): atualiza versão das libs ($VERSION_TYPE)"
 # Pega versão da lib principal
 TAG_VERSION=$(node -p "require('./projects/praxis-core/package.json').version")
 
-git tag v$TAG_VERSION
-git push origin main
-git push origin v$TAG_VERSION
+# git tag v$TAG_VERSION
+# git push origin main
+# git push origin v$TAG_VERSION
