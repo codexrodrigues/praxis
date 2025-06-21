@@ -5,7 +5,7 @@ import {catchError, map} from 'rxjs/operators';
 import {RestApiResponse} from '../models/rest-api-response.model';
 import {Page, Pageable} from '../models/page.model';
 
-import {FieldMetadata,} from '../models/field-metadata.model';
+import { FieldDefinition } from '../models/field-definition.model';
 
 import {Inject, Injectable} from '@angular/core';
 import {API_URL} from '../tokens/api-url.token';
@@ -242,9 +242,9 @@ private getEndpointUrl(operation: keyof EndpointConfig, id?: string | number, pa
    * ```
    *
    * @param options Parâmetros opcionais, incluindo parentPath para recursos aninhados.
-   * @returns Observable com array de FieldMetadata.
+   * @returns Observable com array de FieldDefinition.
    */
-  public getSchema(options?: CrudOperationOptions): Observable<FieldMetadata[]> {
+  public getSchema(options?: CrudOperationOptions): Observable<FieldDefinition[]> {
     const url = this.getEndpointUrl('schema', undefined, options?.parentPath);
     // Armazena a URL para referência posterior this._schemaUrl = url;
     this._schemaUrl = url;

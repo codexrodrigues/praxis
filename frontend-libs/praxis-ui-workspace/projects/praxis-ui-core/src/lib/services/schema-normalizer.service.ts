@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { FieldMetadata } from '../models/field-metadata.model';
+import { FieldDefinition } from '../models/field-definition.model';
 
 @Injectable({ providedIn: 'root' })
 export class SchemaNormalizerService {
@@ -112,20 +112,20 @@ export class SchemaNormalizerService {
   }
 
   /**
-   * Convert raw schema from backend into a list of FieldMetadata objects.
+   * Convert raw schema from backend into a list of FieldDefinition objects.
    * The expected schema follows the OpenAPI structure with properties and
    * optional `x-ui` metadata per property.
    */
-  normalizeSchema(schema: any): FieldMetadata[] {
+  normalizeSchema(schema: any): FieldDefinition[] {
     if (!schema || typeof schema !== 'object') {
       return [];
     }
 
     const properties: Record<string, any> = schema.properties ?? {};
-    const fields: FieldMetadata[] = [];
+    const fields: FieldDefinition[] = [];
 
     for (const [name, prop] of Object.entries(properties)) {
-      const field: FieldMetadata = { name };
+      const field: FieldDefinition = { name };
 
       const ui = prop && typeof prop === 'object' && typeof prop['x-ui'] === 'object' ? prop['x-ui'] : {};
 
