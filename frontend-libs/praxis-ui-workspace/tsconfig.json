@@ -1,0 +1,7 @@
+{
+  "files": [],
+  "references": [
+    { "path": "projects/praxis-ui-core" },
+    { "path": "apps/praxis-ui-sample-app" }
+  ]
+}

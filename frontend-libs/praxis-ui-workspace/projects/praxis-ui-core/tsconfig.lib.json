@@ -1,0 +1,15 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "../../out-tsc/lib",
+    "declaration": true,
+    "inlineSources": true,
+    "types": []
+  },
+  "files": [
+    "src/public-api.ts"
+  ],
+  "include": [
+    "src/**/*.ts"
+  ]
+}
