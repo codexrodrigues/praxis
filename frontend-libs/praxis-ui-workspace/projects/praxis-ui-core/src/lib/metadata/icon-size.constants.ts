@@ -1,0 +1,25 @@
+export const IconSize = {
+  SMALL: 'sm',
+  MEDIUM: 'md',
+  LARGE: 'lg',
+  XLARGE: 'xl',
+  XXLARGE: 'xxl',
+  XXXLARGE: 'xxxl',
+  DEFAULT: 'default',
+  AUTO: 'auto',
+  NONE: 'none',
+  FULL: 'full',
+  FIT: 'fit',
+  FILL: 'fill',
+  COVER: 'cover',
+  CONTAIN: 'contain',
+  STRETCH: 'stretch',
+  FIT_CONTENT: 'fit-content',
+  FIT_VIEWPORT: 'fit-viewport',
+  FIT_SCREEN: 'fit-screen',
+  FIT_WINDOW: 'fit-window',
+  FIT_PARENT: 'fit-parent',
+  INHERIT: 'inherit',
+} as const;
+
+export type IconSize = typeof IconSize[keyof typeof IconSize];

@@ -1,0 +1,28 @@
+export const IconPosition = {
+  LEFT: 'left',
+  RIGHT: 'right',
+  TOP: 'top',
+  BOTTOM: 'bottom',
+  TOP_LEFT: 'top-left',
+  TOP_RIGHT: 'top-right',
+  BOTTOM_LEFT: 'bottom-left',
+  BOTTOM_RIGHT: 'bottom-right',
+  TOP_START: 'top-start',
+  TOP_END: 'top-end',
+  BOTTOM_START: 'bottom-start',
+  BOTTOM_END: 'bottom-end',
+  START: 'start',
+  END: 'end',
+  CENTER: 'center',
+  INLINE: 'inline',
+  INLINE_START: 'inline-start',
+  INLINE_END: 'inline-end',
+  INLINE_TOP: 'inline-top',
+  INLINE_BOTTOM: 'inline-bottom',
+  INLINE_START_TOP: 'inline-start-top',
+  INLINE_START_BOTTOM: 'inline-start-bottom',
+  INLINE_END_TOP: 'inline-end-top',
+  NONE: 'none',
+} as const;
+
+export type IconPosition = typeof IconPosition[keyof typeof IconPosition];
