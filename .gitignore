@@ -1,12 +1,18 @@
-# Build artifacts
-/target/
+# Node.js / Angular
+node_modules/
+dist/
+.angular/
+*.tsbuildinfo
 
-# IntelliJ IDEA
+# Java / Maven / Gradle
+**/target/
+
+# IDEs
 /.idea/
 *.iml
 
 # Logs
 *.log
 
-# macOS
+# SO
 .DS_Store
