@@ -47,6 +47,16 @@
               "apps/praxis-ui-sample-app/src/styles.css"
             ],
             "scripts": []
+          },
+          "configurations": {
+            "production": {
+              "fileReplacements": [
+                {
+                  "replace": "apps/praxis-ui-sample-app/src/environments/environment.ts",
+                  "with": "apps/praxis-ui-sample-app/src/environments/environment.prod.ts"
+                }
+              ]
+            }
           }
         },
         "serve": {
@@ -70,6 +80,16 @@
               "apps/praxis-ui-sample-app/src/styles.css"
             ],
             "scripts": []
+          },
+          "configurations": {
+            "production": {
+              "fileReplacements": [
+                {
+                  "replace": "apps/praxis-ui-sample-app/src/environments/environment.ts",
+                  "with": "apps/praxis-ui-sample-app/src/environments/environment.prod.ts"
+                }
+              ]
+            }
           }
         }
       }

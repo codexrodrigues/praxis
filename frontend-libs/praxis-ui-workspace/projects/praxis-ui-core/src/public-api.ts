@@ -14,3 +14,4 @@ export * from './lib/metadata/allowed-file-types.constants';
 export * from './lib/metadata/validation-pattern.constants';
 export * from './lib/metadata/field-config-properties.constants';
 export * from './lib/metadata/operation-properties.constants';
+export * from './lib/tokens/api-url.token';
