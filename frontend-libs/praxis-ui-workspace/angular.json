@@ -3,100 +3,144 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "praxis-ui-core": {
-      "projectType": "library",
-      "root": "projects/praxis-ui-core",
-      "sourceRoot": "projects/praxis-ui-core/src",
-      "prefix": "puc",
+    "praxis-ui-workspace": {
+      "projectType": "application",
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "scss"
+        }
+      },
+      "root": "",
+      "sourceRoot": "src",
+      "prefix": "app",
       "architect": {
         "build": {
-          "builder": "@angular-devkit/build-angular:ng-packagr",
+          "builder": "@angular/build:application",
           "options": {
-            "project": "projects/praxis-ui-core/ng-package.json",
-            "tsConfig": "projects/praxis-ui-core/tsconfig.lib.json"
-          }
+            "browser": "src/main.ts",
+            "tsConfig": "tsconfig.app.json",
+            "inlineStyleLanguage": "scss",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "public"
+              }
+            ],
+            "styles": [
+              "src/styles.scss"
+            ]
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "500kB",
+                  "maximumError": "1MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
+                }
+              ],
+              "outputHashing": "all"
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "configurations": {
+            "production": {
+              "buildTarget": "praxis-ui-workspace:build:production"
+            },
+            "development": {
+              "buildTarget": "praxis-ui-workspace:build:development"
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "extract-i18n": {
+          "builder": "@angular/build:extract-i18n"
         },
         "test": {
-          "builder": "@angular-devkit/build-angular:karma",
+          "builder": "@angular/build:karma",
           "options": {
-            "tsConfig": "projects/praxis-ui-core/tsconfig.spec.json",
-            "karmaConfig": "projects/praxis-ui-core/karma.conf.js"
+            "tsConfig": "tsconfig.spec.json",
+            "inlineStyleLanguage": "scss",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "public"
+              }
+            ],
+            "styles": [
+              "src/styles.scss"
+            ]
           }
         }
       }
     },
-    "praxis-ui-sample-app": {
-      "projectType": "application",
-      "root": "apps/praxis-ui-sample-app",
-      "sourceRoot": "apps/praxis-ui-sample-app/src",
-      "prefix": "app",
+    "praxis-core": {
+      "projectType": "library",
+      "root": "projects/praxis-core",
+      "sourceRoot": "projects/praxis-core/src",
+      "prefix": "praxis",
       "architect": {
         "build": {
-          "builder": "@angular-devkit/build-angular:browser",
-          "options": {
-            "outputPath": "dist/praxis-ui-sample-app",
-            "index": "apps/praxis-ui-sample-app/src/index.html",
-            "main": "apps/praxis-ui-sample-app/src/main.ts",
-            "polyfills": "apps/praxis-ui-sample-app/src/polyfills.ts",
-            "tsConfig": "apps/praxis-ui-sample-app/tsconfig.app.json",
-            "assets": [
-              "apps/praxis-ui-sample-app/src/favicon.ico",
-              "apps/praxis-ui-sample-app/src/assets"
-            ],
-            "styles": [
-              "apps/praxis-ui-sample-app/src/styles.css"
-            ],
-            "scripts": []
-          },
+          "builder": "@angular/build:ng-packagr",
           "configurations": {
             "production": {
-              "fileReplacements": [
-                {
-                  "replace": "apps/praxis-ui-sample-app/src/environments/environment.ts",
-                  "with": "apps/praxis-ui-sample-app/src/environments/environment.prod.ts"
-                }
-              ]
+              "tsConfig": "projects/praxis-core/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/praxis-core/tsconfig.lib.json"
             }
-          }
-        },
-        "serve": {
-          "builder": "@angular-devkit/build-angular:dev-server",
-          "options": {
-            "browserTarget": "praxis-ui-sample-app:build"
-          }
+          },
+          "defaultConfiguration": "production"
         },
         "test": {
-          "builder": "@angular-devkit/build-angular:karma",
+          "builder": "@angular/build:karma",
           "options": {
-            "main": "apps/praxis-ui-sample-app/src/test.ts",
-            "polyfills": "apps/praxis-ui-sample-app/src/polyfills.ts",
-            "tsConfig": "apps/praxis-ui-sample-app/tsconfig.spec.json",
-            "karmaConfig": "apps/praxis-ui-sample-app/karma.conf.js",
-            "assets": [
-              "apps/praxis-ui-sample-app/src/favicon.ico",
-              "apps/praxis-ui-sample-app/src/assets"
-            ],
-            "styles": [
-              "apps/praxis-ui-sample-app/src/styles.css"
-            ],
-            "scripts": []
-          },
+            "tsConfig": "projects/praxis-core/tsconfig.spec.json"
+          }
+        }
+      }
+    },
+    "praxis-table": {
+      "projectType": "library",
+      "root": "projects/praxis-table",
+      "sourceRoot": "projects/praxis-table/src",
+      "prefix": "praxis",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
           "configurations": {
             "production": {
-              "fileReplacements": [
-                {
-                  "replace": "apps/praxis-ui-sample-app/src/environments/environment.ts",
-                  "with": "apps/praxis-ui-sample-app/src/environments/environment.prod.ts"
-                }
-              ]
+              "tsConfig": "projects/praxis-table/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/praxis-table/tsconfig.lib.json"
             }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular/build:karma",
+          "options": {
+            "tsConfig": "projects/praxis-table/tsconfig.spec.json"
           }
         }
       }
     }
   },
   "cli": {
-    "analytics": false
-  },
-  "defaultProject": "praxis-ui-sample-app"
+    "analytics": "34132bf8-8d01-4ec2-88aa-06f52c89d27c"
+  }
 }

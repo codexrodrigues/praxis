@@ -1,7 +1,54 @@
+/* To learn more about Typescript configuration file: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html. */
+/* To learn more about Angular compiler options: https://angular.dev/reference/configs/angular-compiler-options. */
 {
+  "compileOnSave": false,
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "experimentalDecorators": true,
+    "paths": {
+      "praxis-core": [
+        "./dist/praxis-core"
+      ],
+      "praxis-table": [
+        "./dist/praxis-table"
+      ]
+    },
+    "importHelpers": true,
+    "target": "ES2022",
+    "module": "preserve"
+  },
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "typeCheckHostBindings": true,
+    "strictTemplates": true
+  },
   "files": [],
   "references": [
-    { "path": "projects/praxis-ui-core" },
-    { "path": "apps/praxis-ui-sample-app" }
+    {
+      "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/praxis-core/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/praxis-core/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/praxis-table/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/praxis-table/tsconfig.spec.json"
+    }
   ]
 }
