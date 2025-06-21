@@ -32,6 +32,14 @@ jobs:
           mkdir -p docs/backend
           cp -r backend-libs/praxis-metadata-core/target/site/apidocs/. docs/backend/
 
+      - name: Convert Markdown to HTML
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc
+          for md in $(find docs -name '*.md'); do
+            pandoc "$md" -o "${md%.md}.html" --standalone
+          done
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
