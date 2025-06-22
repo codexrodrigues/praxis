@@ -4,15 +4,18 @@ import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/p
 import { GenericCrudService } from '@praxis/core';
 import { FieldDefinition, Page } from '@praxis/core';
 import { Pageable } from '@praxis/core';
+import {CommonModule } from "@angular/common";
 
 @Component({
   selector: 'praxis-table',
   template: `
     <table mat-table [dataSource]="data" class="mat-elevation-z8">
-      <ng-container *ngFor="let col of displayedColumns" [matColumnDef]="col">
-        <th mat-header-cell *matHeaderCellDef>{{ getLabel(col) }}</th>
-        <td mat-cell *matCellDef="let element">{{ element[col] }}</td>
-      </ng-container>
+      @for (col of displayedColumns; track col) {
+        <ng-container [matColumnDef]="col">
+          <th mat-header-cell *matHeaderCellDef>{{ getLabel(col) }}</th>
+          <td mat-cell *matCellDef="let element">{{ element[col] }}</td>
+        </ng-container>
+      }
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
     </table>
@@ -27,7 +30,7 @@ import { Pageable } from '@praxis/core';
     `table { width: 100%; }`
   ],
   standalone: true,
-  imports: [MatTableModule, MatPaginatorModule]
+  imports: [MatTableModule, MatPaginatorModule, CommonModule ]
 })
 export class PraxisTableComponent implements OnChanges {
   @Input() resourcePath = '';

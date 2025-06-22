@@ -3,6 +3,7 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
+    "baseUrl": "./",  // Garante resolução correta dos caminhos relativos
     "strict": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
@@ -12,12 +13,8 @@
     "isolatedModules": true,
     "experimentalDecorators": true,
     "paths": {
-      "praxis-core": [
-        "./dist/praxis-core"
-      ],
-      "praxis-table": [
-        "./dist/praxis-table"
-      ]
+      "@praxis/core": ["projects/praxis-core/src/public-api.ts"],
+      "@praxis/table": ["projects/praxis-table/src/public-api.ts"]
     },
     "importHelpers": true,
     "target": "ES2022",
