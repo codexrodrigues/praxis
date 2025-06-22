@@ -9,6 +9,7 @@ import { FieldDefinition } from '../models/field-definition.model';
 
 import {Inject, Injectable} from '@angular/core';
 import {API_URL, ApiUrlConfig, ApiUrlEntry, buildApiUrl, buildHeaders} from '../tokens/api-url.token';
+import { composeHeadersWithVersion } from '../helpers/version.helper';
 import {SchemaNormalizerService} from './schema-normalizer.service';
 
 /**
@@ -268,7 +269,7 @@ private getEndpointUrl(
     const url = this.getEndpointUrl('schema', undefined, options?.parentPath, options?.endpointKey);
     // Armazena a URL para referência posterior this._schemaUrl = url;
     this._schemaUrl = url;
-    return this.http.get<any>(url, { headers: buildHeaders(entry) }).pipe(
+    return this.http.get<any>(url, { headers: composeHeadersWithVersion(entry) }).pipe(
       map((response) => this.schemaNormalizer.normalizeSchema(response)),
       catchError(this.handleError)
     );
@@ -339,7 +340,7 @@ public schemaUrl(): string {
     const entry = this.resolveEndpointEntry();
     const baseUrl = buildApiUrl(entry);
     const url = `${baseUrl}/schemas/filtered`;
-    return this.http.get<any>(url, { params: httpParams, headers: buildHeaders(entry) }).pipe(
+    return this.http.get<any>(url, { params: httpParams, headers: composeHeadersWithVersion(entry) }).pipe(
       map((response) => this.schemaNormalizer.normalizeSchema(response)),
       catchError(this.handleError)
     );
@@ -371,7 +372,7 @@ public schemaUrl(): string {
     this.ensureConfigured();
     const entry = this.resolveEndpointEntry(options?.endpointKey);
     const url = this.getEndpointUrl('getAll', undefined, options?.parentPath, options?.endpointKey);
-    return this.http.get<RestApiResponse<T[]>>(url, { headers: buildHeaders(entry) }).pipe(catchError(this.handleError));
+    return this.http.get<RestApiResponse<T[]>>(url, { headers: composeHeadersWithVersion(entry) }).pipe(catchError(this.handleError));
   }
 
   /**
@@ -402,7 +403,7 @@ public schemaUrl(): string {
     this.ensureConfigured();
     const entry = this.resolveEndpointEntry(options?.endpointKey);
     const url = this.getEndpointUrl('getById', id, options?.parentPath, options?.endpointKey);
-    return this.http.get<RestApiResponse<T>>(url, { headers: buildHeaders(entry) }).pipe(catchError(this.handleError));
+    return this.http.get<RestApiResponse<T>>(url, { headers: composeHeadersWithVersion(entry) }).pipe(catchError(this.handleError));
   }
 
   /**
@@ -433,7 +434,7 @@ public schemaUrl(): string {
     this.ensureConfigured();
     const entry = this.resolveEndpointEntry(options?.endpointKey);
     const url = this.getEndpointUrl('create', undefined, options?.parentPath, options?.endpointKey);
-    return this.http.post<RestApiResponse<T>>(url, entity, { headers: buildHeaders(entry) }).pipe(catchError(this.handleError));
+    return this.http.post<RestApiResponse<T>>(url, entity, { headers: composeHeadersWithVersion(entry) }).pipe(catchError(this.handleError));
   }
 
   /**
@@ -466,7 +467,7 @@ public schemaUrl(): string {
     this.ensureConfigured();
     const entry = this.resolveEndpointEntry(options?.endpointKey);
     const url = this.getEndpointUrl('update', id, options?.parentPath, options?.endpointKey);
-    return this.http.put<RestApiResponse<T>>(url, entity, { headers: buildHeaders(entry) }).pipe(catchError(this.handleError));
+    return this.http.put<RestApiResponse<T>>(url, entity, { headers: composeHeadersWithVersion(entry) }).pipe(catchError(this.handleError));
   }
 
   /**
@@ -497,7 +498,7 @@ public schemaUrl(): string {
     this.ensureConfigured();
     const entry = this.resolveEndpointEntry(options?.endpointKey);
     const url = this.getEndpointUrl('delete', id, options?.parentPath, options?.endpointKey);
-    return this.http.delete<RestApiResponse<void>>(url, { headers: buildHeaders(entry) }).pipe(catchError(this.handleError));
+    return this.http.delete<RestApiResponse<void>>(url, { headers: composeHeadersWithVersion(entry) }).pipe(catchError(this.handleError));
   }
 
   /**
@@ -533,7 +534,7 @@ public schemaUrl(): string {
     this.ensureConfigured();
     const entry = this.resolveEndpointEntry(options?.endpointKey);
     const url = this.getEndpointUrl('filter', undefined, options?.parentPath, options?.endpointKey);
-    return this.http.post<RestApiResponse<Page<T>>>(url, filterCriteria, { params, headers: buildHeaders(entry) }).pipe(catchError(this.handleError));
+    return this.http.post<RestApiResponse<Page<T>>>(url, filterCriteria, { params, headers: composeHeadersWithVersion(entry) }).pipe(catchError(this.handleError));
   }
 
   /**
