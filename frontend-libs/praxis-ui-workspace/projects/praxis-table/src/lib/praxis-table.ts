@@ -213,20 +213,24 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
     this.rowAction.emit({ type: action, payload: { action, row } });
   }
 
-  openConfigEditor(): void {
-    this.dialog
-      .open(PraxisTableConfigEditor, {
-        data: { config: this.config }
-      })
-      .afterClosed()
-      .subscribe((result: TableConfig | undefined) => {
-        if (result) {
-          this.config = result;
-          this.setupColumns();
-          this.applyDataSourceSettings();
-        }
-      });
-  }
+openConfigEditor(): void {
+  this.dialog
+    .open(PraxisTableConfigEditor, {
+      data: { config: this.config },
+      width: '80%',
+      height: '80%',
+      maxHeight: '90vh',
+      maxWidth: '90vw'
+    })
+    .afterClosed()
+    .subscribe((result: TableConfig | undefined) => {
+      if (result) {
+        this.config = result;
+        this.setupColumns();
+        this.applyDataSourceSettings();
+      }
+    });
+}
 
   private applyDataSourceSettings(): void {
     if (this.paginator) {
