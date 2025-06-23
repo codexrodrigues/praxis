@@ -78,10 +78,10 @@ import { BehaviorSubject, take } from 'rxjs';
       <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
     </table>
     <mat-paginator *ngIf="config.gridOptions?.pagination"
-                   [length]="config.gridOptions.pagination.length ?? config.data.length"
-                   [pageSize]="config.gridOptions.pagination.pageSize"
-                   [pageSizeOptions]="config.gridOptions.pagination.pageSizeOptions"
-                   [showFirstLastButtons]="config.gridOptions.pagination.showFirstLastButtons"
+                   [length]="config.gridOptions?.pagination?.length ?? config.data.length"
+                   [pageSize]="config.gridOptions?.pagination?.pageSize"
+                   [pageSizeOptions]="config.gridOptions?.pagination?.pageSizeOptions"
+                   [showFirstLastButtons]="config.gridOptions?.pagination?.showFirstLastButtons"
                    (page)="onPageChange($event)">
     </mat-paginator>
   `,
@@ -144,7 +144,7 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
       this.showFilter = this.config.gridOptions?.filterable ?? this.showFilter;
     }
     if (this.config.gridOptions?.pagination?.pageSize) {
-      this.pageSize = this.config.gridOptions.pagination.pageSize;
+      this.pageSize = this.config.gridOptions?.pagination?.pageSize;
     }
 
     if (changes['resourcePath'] && this.resourcePath) {
@@ -195,7 +195,7 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
     if (this.paginator) {
       this.dataSource.paginator = this.paginator;
       if (this.config.gridOptions?.pagination?.length !== undefined) {
-        this.paginator.length = this.config.gridOptions.pagination.length;
+        this.paginator.length = this.config.gridOptions?.pagination?.length as number;
       } else {
         this.paginator.length = this.config.data.length;
       }
@@ -247,8 +247,9 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
       .pipe(take(1))
       .subscribe((page: Page<any>) => {
         this.dataSubject.next(page.content);
-        if (this.config.gridOptions?.pagination) {
-          this.config.gridOptions.pagination.length = page.totalElements;
+        const pagination = this.config.gridOptions?.pagination;
+        if (pagination) {
+          pagination.length = page.totalElements;
         }
         if (this.paginator) {
           this.paginator.length = page.totalElements;

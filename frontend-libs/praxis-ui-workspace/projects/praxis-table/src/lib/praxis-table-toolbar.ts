@@ -53,11 +53,11 @@ import { PraxisTableEvent } from './praxis-table-event';
           <mat-icon>download</mat-icon>
         </button>
         <mat-menu #exportMenu="matMenu">
-          <button mat-menu-item *ngIf="config?.exportOptions.excel" (click)="onExport('excel')">
+          <button mat-menu-item *ngIf="config?.exportOptions?.excel" (click)="onExport('excel')">
             <mat-icon>grid_on</mat-icon>
             Excel
           </button>
-          <button mat-menu-item *ngIf="config?.exportOptions.pdf" (click)="onExport('pdf')">
+          <button mat-menu-item *ngIf="config?.exportOptions?.pdf" (click)="onExport('pdf')">
             <mat-icon>picture_as_pdf</mat-icon>
             PDF
           </button>
