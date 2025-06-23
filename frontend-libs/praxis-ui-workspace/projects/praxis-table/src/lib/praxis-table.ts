@@ -8,7 +8,8 @@ import {
   Output,
   SimpleChanges,
   AfterContentInit,
-  ContentChild
+  ContentChild,
+  ChangeDetectorRef
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
@@ -121,7 +122,10 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
 
   filterValue = '';
 
-  constructor(private crudService: GenericCrudService<any>) {
+  constructor(
+    private crudService: GenericCrudService<any>,
+    private cdr: ChangeDetectorRef
+  ) {
     this.dataSubject.subscribe(data => (this.dataSource.data = data));
   }
 
@@ -220,6 +224,7 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
           .map(f => this.convertFieldToColumn(f));
       }
       this.setupColumns();
+      this.cdr.detectChanges();
     });
   }
 
