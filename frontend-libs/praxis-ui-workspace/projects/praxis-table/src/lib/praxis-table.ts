@@ -59,12 +59,18 @@ import { BehaviorSubject, take } from 'rxjs';
            (matSortChange)="onSortChange($event)"
            [matSortDisabled]="!config.gridOptions?.sortable"
            class="mat-elevation-z8">
-      <ng-container *ngFor="let column of config.columns" [matColumnDef]="column.field">
+      <ng-container *ngFor="let column of visibleColumns" [matColumnDef]="column.field">
         <th mat-header-cell *matHeaderCellDef mat-sort-header
-            [disabled]="!config.gridOptions?.sortable || column.sortable === false">
+            [disabled]="!config.gridOptions?.sortable || column.sortable === false"
+            [style.text-align]="column.align"
+            [style.width]="column.width"
+            [attr.style]="column.style">
           {{ column.title }}
         </th>
-        <td mat-cell *matCellDef="let element">{{ element[column.field] }}</td>
+        <td mat-cell *matCellDef="let element"
+            [style.text-align]="column.align"
+            [style.width]="column.width"
+            [attr.style]="column.style">{{ element[column.field] }}</td>
       </ng-container>
 
       <ng-container *ngIf="config.showActionsColumn" matColumnDef="actions">
@@ -124,6 +130,7 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
 
   dataSource = new MatTableDataSource<any>();
   displayedColumns: string[] = [];
+  visibleColumns: ColumnDefinition[] = [];
 
   private dataSubject = new BehaviorSubject<any[]>([]);
   private pageIndex = 0;
@@ -236,7 +243,10 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
   }
 
   private setupColumns(): void {
-    this.displayedColumns = this.config.columns.map(c => c.field);
+    this.visibleColumns = this.config.columns
+      .filter(c => c.visible !== false)
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    this.displayedColumns = this.visibleColumns.map(c => c.field);
     if (this.config.showActionsColumn) {
       this.displayedColumns.push('actions');
     }
@@ -258,7 +268,10 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
     return {
       field: field.name,
       title: field.label ?? field.name,
-      sortable: field.sortable
+      order: field.order,
+      width: (field.width as any) ?? undefined,
+      sortable: field.sortable,
+      visible: field.tableHidden ? false : true
     } as ColumnDefinition;
   }
 

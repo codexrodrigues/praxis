@@ -13,3 +13,4 @@ export * from './lib/praxis-table-toolbar-config';
 export * from './lib/praxis-table-export-config';
 export * from './lib/praxis-table-messages-config';
 export * from './lib/praxis-table-row-actions-config';
+export * from './lib/praxis-table-columns-config';
