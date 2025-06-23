@@ -42,12 +42,29 @@ Após construir o projeto, você pode executá-lo de duas maneiras:
     ./mvnw spring-boot:run
     ```
 
+
 2.  **Executando o JAR diretamente:**
 
     ```bash
     java -jar target/praxis-sample-app-1.0.0-SNAPSHOT.jar
     ```
     (O nome do artefato JAR pode variar dependendo da versão definida no `pom.xml`).
+
+### Ativando perfis Spring
+
+O comportamento de CORS varia de acordo com o perfil ativo. Utilize o parâmetro
+`--spring.profiles.active` para escolher entre `dev` ou `prod` no momento da
+execução. Exemplo para usar o perfil de desenvolvimento:
+
+```bash
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--spring.profiles.active=dev"
+```
+
+Ou, ao executar o JAR:
+
+```bash
+java -jar target/praxis-sample-app-1.0.0-SNAPSHOT.jar --spring.profiles.active=dev
+```
 
 A aplicação será iniciada e estará acessível em `http://localhost:8086`.
 
