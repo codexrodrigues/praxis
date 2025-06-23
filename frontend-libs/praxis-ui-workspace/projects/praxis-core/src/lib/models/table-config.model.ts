@@ -11,6 +11,8 @@ export interface ColumnDefinition {
   width?: string;
   /** Extra CSS style applied to the cells */
   style?: string;
+  /** Extra CSS style applied to the column header */
+  headerStyle?: string;
   /** Enable sorting for this column */
   sortable?: boolean;
 }
