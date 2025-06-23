@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { MatDialogModule } from '@angular/material/dialog';
 import { PraxisTable } from './praxis-table';
 import { TableConfig, GenericCrudService, API_URL } from '@praxis/core';
 
@@ -9,7 +10,7 @@ describe('PraxisTable', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [PraxisTable, HttpClientTestingModule],
+      imports: [PraxisTable, HttpClientTestingModule, MatDialogModule],
       providers: [GenericCrudService, { provide: API_URL, useValue: { default: {} } }]
     }).compileComponents();
 
