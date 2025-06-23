@@ -8,6 +8,7 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { TableConfig } from '@praxis/core';
 import { PraxisTableJsonConfig } from './praxis-table-json-config';
 import { PraxisTablePaginationConfig } from './praxis-table-pagination-config';
+import { mergeWithDefaults } from './table-config-defaults';
 
 @Component({
   selector: 'praxis-table-config-editor',
@@ -25,10 +26,18 @@ import { PraxisTablePaginationConfig } from './praxis-table-pagination-config';
   template: `
     <h2>Editor de Configuração da Tabela</h2>
     <mat-tab-group>
-      <mat-tab label="JSON" >
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>code</mat-icon>
+          <span>JSON</span>
+        </ng-template>
         <praxis-table-json-config [config]="workingConfig" (configChange)="onJsonChange($event.config, $event.valid)"></praxis-table-json-config>
       </mat-tab>
-      <mat-tab label="Paginação">
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>format_list_numbered</mat-icon>
+          <span>Paginação</span>
+        </ng-template>
         <praxis-table-pagination-config [config]="workingConfig" (configChange)="workingConfig = $event"></praxis-table-pagination-config>
       </mat-tab>
     </mat-tab-group>
@@ -49,7 +58,7 @@ export class PraxisTableConfigEditor {
   jsonValid = true;
 
   ngOnInit() {
-    this.workingConfig = JSON.parse(JSON.stringify(this.config));
+    this.workingConfig = mergeWithDefaults(this.config);
   }
 
   onJsonChange(cfg: TableConfig, valid: boolean) {
