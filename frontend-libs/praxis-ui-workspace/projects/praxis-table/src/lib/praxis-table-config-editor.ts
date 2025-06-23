@@ -1,10 +1,10 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
-import { MatDialogModule } from '@angular/material/dialog';
+import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { TableConfig } from '@praxis/core';
 import { PraxisTableJsonConfig } from './praxis-table-json-config';
 import { PraxisTablePaginationConfig } from './praxis-table-pagination-config';
@@ -43,8 +43,8 @@ import { mergeWithDefaults } from './table-config-defaults';
     </mat-tab-group>
     <div style="margin-top:1rem;text-align:right;">
       <span style="color:red;margin-right:auto;" *ngIf="!jsonValid">JSON inválido</span>
-      <button mat-button (click)="cancel.emit()">Cancelar</button>
-      <button mat-button color="primary" (click)="save.emit(workingConfig)" [disabled]="!jsonValid">Salvar</button>
+      <button mat-button (click)="onCancel()">Cancelar</button>
+      <button mat-button color="primary" (click)="onSave()" [disabled]="!jsonValid">Salvar</button>
     </div>
   `,
   styles:[`:host{display:block;}`]
@@ -53,6 +53,15 @@ export class PraxisTableConfigEditor {
   @Input() config: TableConfig = { columns: [], data: [] };
   @Output() save = new EventEmitter<TableConfig>();
   @Output() cancel = new EventEmitter<void>();
+
+  constructor(
+    private dialogRef: MatDialogRef<PraxisTableConfigEditor>,
+    @Inject(MAT_DIALOG_DATA) public data: { config?: TableConfig }
+  ) {
+    if (data?.config) {
+      this.config = data.config;
+    }
+  }
 
   workingConfig: TableConfig = { columns: [], data: [] };
   jsonValid = true;
@@ -64,5 +73,15 @@ export class PraxisTableConfigEditor {
   onJsonChange(cfg: TableConfig, valid: boolean) {
     this.workingConfig = cfg;
     this.jsonValid = valid;
+  }
+
+  onSave(): void {
+    this.save.emit(this.workingConfig);
+    this.dialogRef.close(this.workingConfig);
+  }
+
+  onCancel(): void {
+    this.cancel.emit();
+    this.dialogRef.close();
   }
 }
