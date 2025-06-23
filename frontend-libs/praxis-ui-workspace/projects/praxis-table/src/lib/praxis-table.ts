@@ -26,6 +26,7 @@ import { BehaviorSubject, take } from 'rxjs';
 @Component({
   selector: 'praxis-table',
   standalone: true,
+  providers: [GenericCrudService],
   imports: [
     CommonModule,
     MatTableModule,
