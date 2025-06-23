@@ -80,7 +80,7 @@ import { BehaviorSubject, take } from 'rxjs';
     <mat-paginator *ngIf="config.gridOptions?.pagination"
                    [length]="config.gridOptions?.pagination?.length ?? config.data.length"
                    [pageSize]="config.gridOptions?.pagination?.pageSize"
-                   [pageSizeOptions]="config.gridOptions?.pagination?.pageSizeOptions"
+                  [pageSizeOptions]="config.gridOptions?.pagination?.pageSizeOptions ?? []"
                    [showFirstLastButtons]="config.gridOptions?.pagination?.showFirstLastButtons"
                    (page)="onPageChange($event)">
     </mat-paginator>
