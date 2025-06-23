@@ -1,6 +1,16 @@
 export interface ColumnDefinition {
   field: string;
   title: string;
+  /** Column render order */
+  order?: number;
+  /** Column visibility */
+  visible?: boolean;
+  /** Text alignment inside the cells */
+  align?: string;
+  /** Column width */
+  width?: string;
+  /** Extra CSS style applied to the cells */
+  style?: string;
   /** Enable sorting for this column */
   sortable?: boolean;
 }

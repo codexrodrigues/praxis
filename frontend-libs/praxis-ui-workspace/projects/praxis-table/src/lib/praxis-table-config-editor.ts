@@ -13,6 +13,7 @@ import { PraxisTableToolbarConfig } from './praxis-table-toolbar-config';
 import { PraxisTableExportConfig } from './praxis-table-export-config';
 import { PraxisTableMessagesConfig } from './praxis-table-messages-config';
 import { PraxisTableRowActionsConfig } from './praxis-table-row-actions-config';
+import { PraxisTableColumnsConfig } from './praxis-table-columns-config';
 import { mergeWithDefaults } from './table-config-defaults';
 
 @Component({
@@ -31,7 +32,8 @@ import { mergeWithDefaults } from './table-config-defaults';
     PraxisTableToolbarConfig,
     PraxisTableExportConfig,
     PraxisTableMessagesConfig,
-    PraxisTableRowActionsConfig
+    PraxisTableRowActionsConfig,
+    PraxisTableColumnsConfig
   ],
   template: `
     <h2>Editor de Configuração da Tabela</h2>
@@ -77,6 +79,13 @@ import { mergeWithDefaults } from './table-config-defaults';
           <span>Mensagens</span>
         </ng-template>
         <praxis-table-messages-config [config]="workingConfig" (configChange)="workingConfig = $event"></praxis-table-messages-config>
+      </mat-tab>
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>view_column</mat-icon>
+          <span>Colunas</span>
+        </ng-template>
+        <praxis-table-columns-config [config]="workingConfig" (configChange)="workingConfig = $event"></praxis-table-columns-config>
       </mat-tab>
       <mat-tab>
         <ng-template mat-tab-label>
