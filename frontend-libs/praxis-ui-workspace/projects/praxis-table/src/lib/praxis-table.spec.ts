@@ -21,7 +21,8 @@ describe('PraxisTable', () => {
       gridOptions: {
         pagination: { pageSize: 5, pageSizeOptions: [5, 10] },
         sortable: true
-      }
+      },
+      toolbar: { visible: true, showNewButton: true }
     };
     component.config = config;
     fixture.detectChanges();
@@ -29,5 +30,11 @@ describe('PraxisTable', () => {
 
   it('should create', () => {
     expect(component).toBeTruthy();
+  });
+
+  it('should display toolbar when configured', () => {
+    fixture.detectChanges();
+    const toolbar = fixture.nativeElement.querySelector('mat-toolbar');
+    expect(toolbar).not.toBeNull();
   });
 });

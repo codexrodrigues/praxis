@@ -9,12 +9,21 @@ export interface ToolbarAction {
   label: string;
   action: string;
   icon?: string;
+  /** Material color palette */
+  color?: string;
+  /** Whether the action is currently disabled */
+  disabled?: boolean;
 }
 
 export interface ToolbarConfig {
   /** Whether the toolbar should be shown */
   visible?: boolean;
   actions?: ToolbarAction[];
+  /** Show default new record button */
+  showNewButton?: boolean;
+  newButtonText?: string;
+  newButtonIcon?: string;
+  newButtonColor?: string;
 }
 
 export interface ExportOptions {
