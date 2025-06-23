@@ -9,3 +9,5 @@ export * from './lib/services/generic-crud.service';
 export * from './lib/tokens/api-url.token';
 // Table configuration models
 export * from './lib/models/table-config.model';
+export * from './lib/models/page.model';
+export * from './lib/models/field-definition.model';
