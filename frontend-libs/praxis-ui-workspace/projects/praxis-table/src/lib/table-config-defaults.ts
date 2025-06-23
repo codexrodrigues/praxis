@@ -3,15 +3,15 @@ import { TableConfig } from '@praxis/core';
 export const DEFAULT_TABLE_CONFIG: TableConfig = {
   columns: [],
   data: [],
-  showActionsColumn: false,
+  showActionsColumn: true,
   gridOptions: {
     pagination: { pageSize: 5 },
-    sortable: false,
+    sortable: true,
     filterable: false,
     groupable: false
   },
   toolbar: {
-    visible: false,
+    visible: true,
     actions: [],
     showNewButton: true,
     newButtonText: 'Novo'
@@ -31,15 +31,15 @@ export const DEFAULT_TABLE_CONFIG: TableConfig = {
 export function mergeWithDefaults(config: TableConfig): TableConfig {
   const merged: TableConfig = JSON.parse(JSON.stringify(DEFAULT_TABLE_CONFIG));
   Object.assign(merged, config);
-  if (config.gridOptions) {
-    merged.gridOptions = { ...DEFAULT_TABLE_CONFIG.gridOptions, ...config.gridOptions };
-    if (config.gridOptions.pagination) {
-      merged.gridOptions.pagination = {
-        ...DEFAULT_TABLE_CONFIG.gridOptions.pagination,
-        ...config.gridOptions.pagination
-      };
-    }
+if (config.gridOptions) {
+  merged.gridOptions = { ...DEFAULT_TABLE_CONFIG.gridOptions, ...config.gridOptions };
+  if (config.gridOptions.pagination) {
+    merged.gridOptions.pagination = {
+      ...DEFAULT_TABLE_CONFIG.gridOptions!.pagination,
+      ...config.gridOptions.pagination
+    };
   }
+}
   if (config.toolbar) {
     merged.toolbar = { ...DEFAULT_TABLE_CONFIG.toolbar, ...config.toolbar };
   }
