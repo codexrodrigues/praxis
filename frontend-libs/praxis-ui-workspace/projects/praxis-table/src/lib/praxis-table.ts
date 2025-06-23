@@ -1,17 +1,86 @@
-import { Component, Input, OnChanges, ViewChild, AfterViewInit, EventEmitter, Output, SimpleChanges } from '@angular/core';
+import {
+  Component,
+  Input,
+  OnChanges,
+  ViewChild,
+  AfterViewInit,
+  EventEmitter,
+  Output,
+  SimpleChanges,
+  AfterContentInit,
+  ContentChild
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
 import { MatButtonModule } from '@angular/material/button';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { TableConfig, GenericCrudService, Page, Pageable, FieldDefinition, ColumnDefinition } from '@praxis/core';
 import { BehaviorSubject, take } from 'rxjs';
 
 @Component({
   selector: 'praxis-table',
   standalone: true,
-  imports: [CommonModule, MatTableModule, MatButtonModule, MatPaginatorModule, MatSortModule],
+  imports: [
+    CommonModule,
+    MatTableModule,
+    MatButtonModule,
+    MatPaginatorModule,
+    MatSortModule,
+    MatToolbarModule,
+    MatIconModule,
+    MatMenuModule,
+    MatInputModule,
+    MatFormFieldModule
+  ],
   template: `
+    <mat-toolbar *ngIf="showToolbar" class="praxis-toolbar">
+      <button *ngIf="config.toolbar?.showNewButton" mat-button
+              [color]="config.toolbar?.newButtonColor || 'primary'"
+              (click)="newRecord.emit()">
+        <mat-icon *ngIf="config.toolbar?.newButtonIcon">{{config.toolbar?.newButtonIcon}}</mat-icon>
+        {{ config.toolbar?.newButtonText || 'Novo' }}
+      </button>
+      <ng-container *ngFor="let action of config.toolbar?.actions">
+        <button mat-button
+                [color]="action.color"
+                [disabled]="action.disabled"
+                (click)="toolbarAction.emit(action.action)">
+          <mat-icon *ngIf="action.icon">{{action.icon}}</mat-icon>
+          {{ action.label }}
+        </button>
+      </ng-container>
+      <ng-container *ngIf="showFilter">
+        <span class="spacer"></span>
+        <mat-form-field appearance="outline" style="margin-right:8px;">
+          <mat-label>Filtro</mat-label>
+          <input matInput (input)="onFilterInput($any($event.target).value)" [value]="filterValue" />
+        </mat-form-field>
+      </ng-container>
+      <ng-content select="[advancedFilter]"></ng-content>
+      <ng-content select="[toolbar]"></ng-content>
+      <span class="spacer"></span>
+      <ng-container *ngIf="config.exportOptions">
+        <button mat-button [matMenuTriggerFor]="exportMenu">
+          <mat-icon>download</mat-icon>
+        </button>
+        <mat-menu #exportMenu="matMenu">
+          <button mat-menu-item *ngIf="config.exportOptions.excel" (click)="exportData.emit('excel')">
+            <mat-icon>grid_on</mat-icon>
+            Excel
+          </button>
+          <button mat-menu-item *ngIf="config.exportOptions.pdf" (click)="exportData.emit('pdf')">
+            <mat-icon>picture_as_pdf</mat-icon>
+            PDF
+          </button>
+        </mat-menu>
+      </ng-container>
+    </mat-toolbar>
     <table mat-table [dataSource]="dataSource" matSort
            (matSortChange)="onSortChange($event)"
            [matSortDisabled]="!config.gridOptions?.sortable"
@@ -44,18 +113,30 @@ import { BehaviorSubject, take } from 'rxjs';
                    (page)="onPageChange($event)">
     </mat-paginator>
   `,
-  styles: [`table{width:100%;}`]
+  styles: [`table{width:100%;}.spacer{flex:1 1 auto;}`]
 })
-export class PraxisTable implements OnChanges, AfterViewInit {
+export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
   @Input() config: TableConfig = { columns: [], data: [] };
   @Input() resourcePath?: string;
   @Input() filterCriteria: any = {};
+  /** Controls toolbar visibility */
+  @Input() showToolbar = false;
+
+  /** Show simple filter input in toolbar */
+  @Input() showFilter = false;
+
+  @Output() newRecord = new EventEmitter<void>();
+  @Output() toolbarAction = new EventEmitter<string>();
+  @Output() exportData = new EventEmitter<'excel' | 'pdf'>();
+  @Output() filterChange = new EventEmitter<any>();
 
   @Output() pageChange = new EventEmitter<PageEvent>();
   @Output() sortChange = new EventEmitter<Sort>();
 
   @ViewChild(MatPaginator) paginator?: MatPaginator;
   @ViewChild(MatSort) sort?: MatSort;
+
+  @ContentChild('advancedFilter') advancedFilterComponent?: any;
 
   dataSource = new MatTableDataSource<any>();
   displayedColumns: string[] = [];
@@ -65,11 +146,30 @@ export class PraxisTable implements OnChanges, AfterViewInit {
   private pageSize = 5;
   private sortState: Sort = { active: '', direction: '' };
 
+  filterValue = '';
+
   constructor(private crudService: GenericCrudService<any>) {
     this.dataSubject.subscribe(data => (this.dataSource.data = data));
   }
 
+  ngAfterContentInit(): void {
+    this.showToolbar = this.config.toolbar?.visible ?? this.showToolbar;
+    this.showFilter = this.config.gridOptions?.filterable ?? this.showFilter;
+
+    if (this.advancedFilterComponent && this.advancedFilterComponent.criteriaChange) {
+      this.advancedFilterComponent.criteriaChange.subscribe((criteria: any) => {
+        this.filterCriteria = criteria;
+        this.filterChange.emit(this.filterCriteria);
+        this.fetchData();
+      });
+    }
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['config']) {
+      this.showToolbar = this.config.toolbar?.visible ?? this.showToolbar;
+      this.showFilter = this.config.gridOptions?.filterable ?? this.showFilter;
+    }
     if (this.config.gridOptions?.pagination?.pageSize) {
       this.pageSize = this.config.gridOptions.pagination.pageSize;
     }
@@ -104,6 +204,13 @@ export class PraxisTable implements OnChanges, AfterViewInit {
   onSortChange(event: Sort): void {
     this.sortState = event;
     this.sortChange.emit(event);
+    this.fetchData();
+  }
+
+  onFilterInput(value: string): void {
+    this.filterValue = value;
+    this.filterCriteria = { ...this.filterCriteria, query: value };
+    this.filterChange.emit(this.filterCriteria);
     this.fetchData();
   }
 
