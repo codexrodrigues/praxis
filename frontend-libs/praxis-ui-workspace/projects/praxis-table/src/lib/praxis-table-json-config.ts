@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { TableConfig } from '@praxis/core';
+import { mergeWithDefaults } from './table-config-defaults';
 
 @Component({
   selector: 'praxis-table-json-config',
@@ -27,7 +28,8 @@ export class PraxisTableJsonConfig {
   valid = true;
 
   ngOnInit() {
-    this.jsonText = JSON.stringify(this.config, null, 2);
+    const cfg = mergeWithDefaults(this.config);
+    this.jsonText = JSON.stringify(cfg, null, 2);
   }
 
   onTextChange() {
