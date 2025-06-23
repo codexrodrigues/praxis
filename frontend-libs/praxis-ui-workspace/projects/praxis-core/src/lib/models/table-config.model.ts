@@ -26,6 +26,16 @@ export interface ToolbarConfig {
   newButtonColor?: string;
 }
 
+export interface RowAction {
+  label: string;
+  action: string;
+  icon?: string;
+  /** Material color palette */
+  color?: string;
+  /** Whether the action is currently disabled */
+  disabled?: boolean;
+}
+
 export interface ExportOptions {
   excel?: boolean;
   pdf?: boolean;
@@ -81,4 +91,7 @@ export interface TableConfig {
 
   /** Custom grid messages */
   messages?: GridMessageConfig;
+
+  /** Row level actions configuration */
+  rowActions?: RowAction[];
 }

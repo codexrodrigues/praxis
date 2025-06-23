@@ -15,12 +15,11 @@ import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
 import { MatButtonModule } from '@angular/material/button';
-import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
-import { MatInputModule } from '@angular/material/input';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { TableConfig, GenericCrudService, Page, Pageable, FieldDefinition, ColumnDefinition } from '@praxis/core';
+import { PraxisTableEvent } from './praxis-table-event';
+import { PraxisTableToolbar } from './praxis-table-toolbar';
 import { BehaviorSubject, take } from 'rxjs';
 
 @Component({
@@ -32,55 +31,22 @@ import { BehaviorSubject, take } from 'rxjs';
     MatButtonModule,
     MatPaginatorModule,
     MatSortModule,
-    MatToolbarModule,
     MatIconModule,
     MatMenuModule,
-    MatInputModule,
-    MatFormFieldModule
+    PraxisTableToolbar
   ],
   template: `
-    <mat-toolbar *ngIf="showToolbar" class="praxis-toolbar">
-      <button *ngIf="config.toolbar?.showNewButton" mat-button
-              [color]="config.toolbar?.newButtonColor || 'primary'"
-              (click)="newRecord.emit()">
-        <mat-icon *ngIf="config.toolbar?.newButtonIcon">{{config.toolbar?.newButtonIcon}}</mat-icon>
-        {{ config.toolbar?.newButtonText || 'Novo' }}
-      </button>
-      <ng-container *ngFor="let action of config.toolbar?.actions">
-        <button mat-button
-                [color]="action.color"
-                [disabled]="action.disabled"
-                (click)="toolbarAction.emit(action.action)">
-          <mat-icon *ngIf="action.icon">{{action.icon}}</mat-icon>
-          {{ action.label }}
-        </button>
-      </ng-container>
-      <ng-container *ngIf="showFilter">
-        <span class="spacer"></span>
-        <mat-form-field appearance="outline" style="margin-right:8px;">
-          <mat-label>Filtro</mat-label>
-          <input matInput (input)="onFilterInput($any($event.target).value)" [value]="filterValue" />
-        </mat-form-field>
-      </ng-container>
-      <ng-content select="[advancedFilter]"></ng-content>
-      <ng-content select="[toolbar]"></ng-content>
-      <span class="spacer"></span>
-      <ng-container *ngIf="config.exportOptions">
-        <button mat-button [matMenuTriggerFor]="exportMenu">
-          <mat-icon>download</mat-icon>
-        </button>
-        <mat-menu #exportMenu="matMenu">
-          <button mat-menu-item *ngIf="config.exportOptions.excel" (click)="exportData.emit('excel')">
-            <mat-icon>grid_on</mat-icon>
-            Excel
-          </button>
-          <button mat-menu-item *ngIf="config.exportOptions.pdf" (click)="exportData.emit('pdf')">
-            <mat-icon>picture_as_pdf</mat-icon>
-            PDF
-          </button>
-        </mat-menu>
-      </ng-container>
-    </mat-toolbar>
+    <praxis-table-toolbar *ngIf="showToolbar"
+                          [config]="config"
+                          [showFilter]="showFilter"
+                          [filterValue]="filterValue"
+                          (newRecord)="newRecord.emit($event)"
+                          (toolbarAction)="toolbarAction.emit($event)"
+                          (exportData)="exportData.emit($event)"
+                          (filterInput)="onFilterInput($event.payload)">
+      <ng-content select="[advancedFilter]"/>
+      <ng-content select="[toolbar]"/>
+    </praxis-table-toolbar>
     <table mat-table [dataSource]="dataSource" matSort
            (matSortChange)="onSortChange($event)"
            [matSortDisabled]="!config.gridOptions?.sortable"
@@ -96,9 +62,15 @@ import { BehaviorSubject, take } from 'rxjs';
       <ng-container *ngIf="config.showActionsColumn" matColumnDef="actions">
         <th mat-header-cell *matHeaderCellDef>Ações</th>
         <td mat-cell *matCellDef="let row">
-          <button mat-button color="primary">View</button>
-          <button mat-button color="accent">Edit</button>
-          <button mat-button color="warn">Delete</button>
+          <ng-container *ngFor="let action of config.rowActions">
+            <button mat-button
+                    [color]="action.color"
+                    [disabled]="action.disabled"
+                    (click)="onRowAction(action.action, row)">
+              <mat-icon *ngIf="action.icon">{{action.icon}}</mat-icon>
+              {{ action.label }}
+            </button>
+          </ng-container>
         </td>
       </ng-container>
 
@@ -125,13 +97,14 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
   /** Show simple filter input in toolbar */
   @Input() showFilter = false;
 
-  @Output() newRecord = new EventEmitter<void>();
-  @Output() toolbarAction = new EventEmitter<string>();
-  @Output() exportData = new EventEmitter<'excel' | 'pdf'>();
-  @Output() filterChange = new EventEmitter<any>();
+  @Output() newRecord = new EventEmitter<PraxisTableEvent<void>>();
+  @Output() toolbarAction = new EventEmitter<PraxisTableEvent<string>>();
+  @Output() exportData = new EventEmitter<PraxisTableEvent<'excel' | 'pdf'>>();
+  @Output() filterChange = new EventEmitter<PraxisTableEvent<any>>();
 
-  @Output() pageChange = new EventEmitter<PageEvent>();
-  @Output() sortChange = new EventEmitter<Sort>();
+  @Output() pageChange = new EventEmitter<PraxisTableEvent<PageEvent>>();
+  @Output() sortChange = new EventEmitter<PraxisTableEvent<Sort>>();
+  @Output() rowAction = new EventEmitter<PraxisTableEvent<{action: string; row: any}>>();
 
   @ViewChild(MatPaginator) paginator?: MatPaginator;
   @ViewChild(MatSort) sort?: MatSort;
@@ -159,7 +132,7 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
     if (this.advancedFilterComponent && this.advancedFilterComponent.criteriaChange) {
       this.advancedFilterComponent.criteriaChange.subscribe((criteria: any) => {
         this.filterCriteria = criteria;
-        this.filterChange.emit(this.filterCriteria);
+        this.filterChange.emit({ type: 'filterChange', payload: this.filterCriteria });
         this.fetchData();
       });
     }
@@ -197,21 +170,25 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
   onPageChange(event: PageEvent): void {
     this.pageIndex = event.pageIndex;
     this.pageSize = event.pageSize;
-    this.pageChange.emit(event);
+    this.pageChange.emit({ type: 'page', payload: event });
     this.fetchData();
   }
 
   onSortChange(event: Sort): void {
     this.sortState = event;
-    this.sortChange.emit(event);
+    this.sortChange.emit({ type: 'sort', payload: event });
     this.fetchData();
   }
 
   onFilterInput(value: string): void {
     this.filterValue = value;
     this.filterCriteria = { ...this.filterCriteria, query: value };
-    this.filterChange.emit(this.filterCriteria);
+    this.filterChange.emit({ type: 'filterChange', payload: this.filterCriteria });
     this.fetchData();
+  }
+
+  onRowAction(action: string, row: any): void {
+    this.rowAction.emit({ type: action, payload: { action, row } });
   }
 
   private applyDataSourceSettings(): void {
