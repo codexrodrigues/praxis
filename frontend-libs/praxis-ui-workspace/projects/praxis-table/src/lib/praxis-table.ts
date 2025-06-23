@@ -18,6 +18,8 @@ import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { PraxisTableConfigEditor } from './praxis-table-config-editor';
 import { TableConfig, GenericCrudService, Page, Pageable, FieldDefinition, ColumnDefinition } from '@praxis/core';
 import { PraxisTableEvent } from './praxis-table-event';
 import { PraxisTableToolbar } from './praxis-table-toolbar';
@@ -35,6 +37,7 @@ import { BehaviorSubject, take } from 'rxjs';
     MatSortModule,
     MatIconModule,
     MatMenuModule,
+    MatDialogModule,
     PraxisTableToolbar
   ],
   template: `
@@ -49,6 +52,9 @@ import { BehaviorSubject, take } from 'rxjs';
       <ng-content select="[advancedFilter]"/>
       <ng-content select="[toolbar]"/>
     </praxis-table-toolbar>
+    <button mat-icon-button *ngIf="editModeEnabled" (click)="openConfigEditor()" style="float:right;">
+      <mat-icon>settings</mat-icon>
+    </button>
     <table mat-table [dataSource]="dataSource" matSort
            (matSortChange)="onSortChange($event)"
            [matSortDisabled]="!config.gridOptions?.sortable"
@@ -99,6 +105,9 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
   /** Show simple filter input in toolbar */
   @Input() showFilter = false;
 
+  /** Enable edit mode */
+  @Input() editModeEnabled = false;
+
   @Output() newRecord = new EventEmitter<PraxisTableEvent<void>>();
   @Output() toolbarAction = new EventEmitter<PraxisTableEvent<string>>();
   @Output() exportData = new EventEmitter<PraxisTableEvent<'excel' | 'pdf'>>();
@@ -125,7 +134,8 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
 
   constructor(
     private crudService: GenericCrudService<any>,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private dialog: MatDialog
   ) {
     this.dataSubject.subscribe(data => (this.dataSource.data = data));
   }
@@ -194,6 +204,21 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
 
   onRowAction(action: string, row: any): void {
     this.rowAction.emit({ type: action, payload: { action, row } });
+  }
+
+  openConfigEditor(): void {
+    this.dialog
+      .open(PraxisTableConfigEditor, {
+        data: { config: this.config }
+      })
+      .afterClosed()
+      .subscribe((result: TableConfig | undefined) => {
+        if (result) {
+          this.config = result;
+          this.setupColumns();
+          this.applyDataSourceSettings();
+        }
+      });
   }
 
   private applyDataSourceSettings(): void {
