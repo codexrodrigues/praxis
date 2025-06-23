@@ -64,7 +64,7 @@ import { BehaviorSubject, take } from 'rxjs';
             [disabled]="!config.gridOptions?.sortable || column.sortable === false"
             [style.text-align]="column.align"
             [style.width]="column.width"
-            [attr.style]="column.style">
+            [attr.style]="column.headerStyle">
           {{ column.title }}
         </th>
         <td mat-cell *matCellDef="let element"

@@ -4,8 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatCardModule } from '@angular/material/card';
+import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { ColumnDefinition, TableConfig } from '@praxis/core';
 
 @Component({
@@ -17,45 +18,57 @@ import { ColumnDefinition, TableConfig } from '@praxis/core';
     MatFormFieldModule,
     MatInputModule,
     MatCheckboxModule,
-    MatButtonModule,
-    MatIconModule
+    MatIconModule,
+    MatCardModule,
+    DragDropModule
   ],
   template: `
-    <div *ngFor="let col of columns; let i = index" style="display:flex;align-items:center;margin-bottom:0.5rem;">
-      <mat-form-field appearance="fill" style="width:120px;margin-right:0.5rem;">
-        <mat-label>Campo</mat-label>
-        <input matInput [value]="col.field" disabled />
-      </mat-form-field>
-      <mat-form-field appearance="fill" style="flex:1;margin-right:0.5rem;">
-        <mat-label>Título</mat-label>
-        <input matInput [(ngModel)]="col.title" />
-      </mat-form-field>
-      <mat-form-field appearance="fill" style="width:70px;margin-right:0.5rem;">
-        <mat-label>Ordem</mat-label>
-        <input matInput type="number" [(ngModel)]="col.order" />
-      </mat-form-field>
-      <mat-checkbox [(ngModel)]="col.visible" style="margin-right:0.5rem;">Visível</mat-checkbox>
-      <mat-form-field appearance="fill" style="width:90px;margin-right:0.5rem;">
-        <mat-label>Alinh.</mat-label>
-        <input matInput [(ngModel)]="col.align" />
-      </mat-form-field>
-      <mat-form-field appearance="fill" style="width:90px;margin-right:0.5rem;">
-        <mat-label>Largura</mat-label>
-        <input matInput [(ngModel)]="col.width" />
-      </mat-form-field>
-      <mat-form-field appearance="fill" style="flex:1;margin-right:0.5rem;">
-        <mat-label>Estilo</mat-label>
-        <input matInput [(ngModel)]="col.style" />
-      </mat-form-field>
-      <button mat-icon-button (click)="moveUp(i)" [disabled]="i === 0">
-        <mat-icon>arrow_upward</mat-icon>
-      </button>
-      <button mat-icon-button (click)="moveDown(i)" [disabled]="i === columns.length - 1">
-        <mat-icon>arrow_downward</mat-icon>
-      </button>
+    <div cdkDropList [cdkDropListData]="columns" (cdkDropListDropped)="drop($event)">
+      <mat-card class="column-item" *ngFor="let col of columns; let i = index" cdkDrag>
+        <div class="drag-handle" cdkDragHandle>
+          <mat-icon>drag_handle</mat-icon>
+        </div>
+        <div class="fields">
+          <mat-form-field appearance="fill">
+            <mat-label>Campo</mat-label>
+            <input matInput [value]="col.field" disabled />
+          </mat-form-field>
+          <mat-form-field appearance="fill">
+            <mat-label>Título</mat-label>
+            <input matInput [(ngModel)]="col.title" />
+          </mat-form-field>
+          <mat-form-field appearance="fill">
+            <mat-label>Ordem</mat-label>
+            <input matInput type="number" [(ngModel)]="col.order" />
+          </mat-form-field>
+          <mat-checkbox [(ngModel)]="col.visible">Visível</mat-checkbox>
+          <mat-form-field appearance="fill">
+            <mat-label>Alinh.</mat-label>
+            <input matInput [(ngModel)]="col.align" />
+          </mat-form-field>
+          <mat-form-field appearance="fill">
+            <mat-label>Largura</mat-label>
+            <input matInput [(ngModel)]="col.width" />
+          </mat-form-field>
+          <mat-form-field appearance="fill">
+            <mat-label>Estilo</mat-label>
+            <input matInput [(ngModel)]="col.style" />
+          </mat-form-field>
+          <mat-form-field appearance="fill">
+            <mat-label>Estilo Cabeçalho</mat-label>
+            <input matInput [(ngModel)]="col.headerStyle" />
+          </mat-form-field>
+        </div>
+      </mat-card>
     </div>
   `,
-  styles: [`:host{display:block;}`]
+  styles: [`
+    :host{display:block;}
+    .column-item{display:flex;flex-wrap:wrap;align-items:flex-start;margin-bottom:.5rem;padding:.5rem;gap:.5rem;}
+    .fields{display:flex;flex-wrap:wrap;gap:.5rem;flex:1;}
+    .column-item mat-form-field{width:150px;flex:1 1 150px;}
+    .drag-handle{cursor:move;display:flex;align-items:center;}
+  `]
 })
 export class PraxisTableColumnsConfig {
   @Input() config: TableConfig = { columns: [], data: [] };
@@ -67,14 +80,9 @@ export class PraxisTableColumnsConfig {
     this.columns = this.config.columns.map(c => ({ visible: true, ...c }));
   }
 
-  moveUp(index: number) {
-    if (index <= 0) return;
-    [this.columns[index - 1], this.columns[index]] = [this.columns[index], this.columns[index - 1]];
-  }
-
-  moveDown(index: number) {
-    if (index >= this.columns.length - 1) return;
-    [this.columns[index + 1], this.columns[index]] = [this.columns[index], this.columns[index + 1]];
+  drop(event: CdkDragDrop<ColumnDefinition[]>) {
+    if (event.previousIndex === event.currentIndex) return;
+    moveItemInArray(this.columns, event.previousIndex, event.currentIndex);
   }
 
   ngDoCheck() {
