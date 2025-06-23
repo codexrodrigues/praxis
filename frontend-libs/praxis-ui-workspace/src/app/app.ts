@@ -1,10 +1,10 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import {PraxisTableComponent} from "@praxis/table";
+import {PraxisTable} from '@praxis/table';
 
 @Component({
   selector: 'app-root',
-    imports: [RouterOutlet, PraxisTableComponent],
+  imports: [RouterOutlet, PraxisTable],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })

@@ -5,19 +5,19 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
-    "build:libs": "ng build praxis-core && ng build praxis-table && npm start",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
   "private": true,
   "dependencies": {
+    "@angular/cdk": "^20.0.3",
     "@angular/common": "^20.0.0",
     "@angular/compiler": "^20.0.0",
     "@angular/core": "^20.0.0",
     "@angular/forms": "^20.0.0",
+    "@angular/material": "^20.0.3",
     "@angular/platform-browser": "^20.0.0",
     "@angular/router": "^20.0.0",
-    "@angular/material": "^20.0.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },

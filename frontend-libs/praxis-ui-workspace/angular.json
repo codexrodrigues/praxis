@@ -27,17 +27,12 @@
               }
             ],
             "styles": [
+              "@angular/material/prebuilt-themes/azure-blue.css",
               "src/styles.scss"
             ]
           },
           "configurations": {
             "production": {
-              "fileReplacements": [
-                {
-                  "replace": "src/environments/environment.ts",
-                  "with": "src/environments/environment.prod.ts"
-                }
-              ],
               "budgets": [
                 {
                   "type": "initial",
@@ -87,6 +82,7 @@
               }
             ],
             "styles": [
+              "@angular/material/prebuilt-themes/azure-blue.css",
               "src/styles.scss"
             ]
           }
@@ -147,6 +143,6 @@
     }
   },
   "cli": {
-    "analytics": "34132bf8-8d01-4ec2-88aa-06f52c89d27c"
+    "analytics": "dbe7c8c2-84d4-4d0e-a9ff-a919f293221c"
   }
 }
