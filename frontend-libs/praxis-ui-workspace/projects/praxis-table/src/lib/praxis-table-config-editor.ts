@@ -8,6 +8,11 @@ import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/materia
 import { TableConfig } from '@praxis/core';
 import { PraxisTableJsonConfig } from './praxis-table-json-config';
 import { PraxisTablePaginationConfig } from './praxis-table-pagination-config';
+import { PraxisTableGridOptionsConfig } from './praxis-table-grid-options-config';
+import { PraxisTableToolbarConfig } from './praxis-table-toolbar-config';
+import { PraxisTableExportConfig } from './praxis-table-export-config';
+import { PraxisTableMessagesConfig } from './praxis-table-messages-config';
+import { PraxisTableRowActionsConfig } from './praxis-table-row-actions-config';
 import { mergeWithDefaults } from './table-config-defaults';
 
 @Component({
@@ -21,7 +26,12 @@ import { mergeWithDefaults } from './table-config-defaults';
     MatTabsModule,
     MatDialogModule,
     PraxisTableJsonConfig,
-    PraxisTablePaginationConfig
+    PraxisTablePaginationConfig,
+    PraxisTableGridOptionsConfig,
+    PraxisTableToolbarConfig,
+    PraxisTableExportConfig,
+    PraxisTableMessagesConfig,
+    PraxisTableRowActionsConfig
   ],
   template: `
     <h2>Editor de Configuração da Tabela</h2>
@@ -39,6 +49,41 @@ import { mergeWithDefaults } from './table-config-defaults';
           <span>Paginação</span>
         </ng-template>
         <praxis-table-pagination-config [config]="workingConfig" (configChange)="workingConfig = $event"></praxis-table-pagination-config>
+      </mat-tab>
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>tune</mat-icon>
+          <span>Grid</span>
+        </ng-template>
+        <praxis-table-grid-options-config [config]="workingConfig" (configChange)="workingConfig = $event"></praxis-table-grid-options-config>
+      </mat-tab>
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>dashboard</mat-icon>
+          <span>Toolbar</span>
+        </ng-template>
+        <praxis-table-toolbar-config [config]="workingConfig" (configChange)="workingConfig = $event"></praxis-table-toolbar-config>
+      </mat-tab>
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>file_download</mat-icon>
+          <span>Exportar</span>
+        </ng-template>
+        <praxis-table-export-config [config]="workingConfig" (configChange)="workingConfig = $event"></praxis-table-export-config>
+      </mat-tab>
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>message</mat-icon>
+          <span>Mensagens</span>
+        </ng-template>
+        <praxis-table-messages-config [config]="workingConfig" (configChange)="workingConfig = $event"></praxis-table-messages-config>
+      </mat-tab>
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>list</mat-icon>
+          <span>Ações da linha</span>
+        </ng-template>
+        <praxis-table-row-actions-config [config]="workingConfig" (configChange)="workingConfig = $event"></praxis-table-row-actions-config>
       </mat-tab>
     </mat-tab-group>
     <div style="margin-top:1rem;text-align:right;">
