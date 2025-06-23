@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
 import { PraxisTable } from './praxis-table';
-import { TableConfig } from '@praxis/core';
+import { TableConfig, GenericCrudService, API_URL } from '@praxis/core';
 
 describe('PraxisTable', () => {
   let component: PraxisTable;
@@ -8,7 +9,8 @@ describe('PraxisTable', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [PraxisTable]
+      imports: [PraxisTable, HttpClientTestingModule],
+      providers: [GenericCrudService, { provide: API_URL, useValue: { default: {} } }]
     }).compileComponents();
 
     fixture = TestBed.createComponent(PraxisTable);
