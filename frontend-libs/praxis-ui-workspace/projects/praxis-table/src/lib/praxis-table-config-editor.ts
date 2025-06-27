@@ -43,7 +43,7 @@ import { mergeWithDefaults } from './table-config-defaults';
           <mat-icon>code</mat-icon>
           <span>JSON</span>
         </ng-template>
-        <praxis-table-json-config [config]="workingConfig" (configChange)="onJsonChange($event.config, $event.valid)"></praxis-table-json-config>
+        <praxis-table-json-config [config]="workingConfig" (configChange)="onJsonChange($event.config, $event.valid)"> </praxis-table-json-config>
       </mat-tab>
       <mat-tab>
         <ng-template mat-tab-label>
@@ -101,7 +101,10 @@ import { mergeWithDefaults } from './table-config-defaults';
       <button mat-button color="primary" (click)="onSave()" [disabled]="!jsonValid">Salvar</button>
     </div>
   `,
-  styles:[`:host{display:block;}`]
+  styles: [`
+
+  `]
+
 })
 export class PraxisTableConfigEditor {
   @Input() config: TableConfig = { columns: [], data: [] };

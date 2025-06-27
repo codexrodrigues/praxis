@@ -11,6 +11,7 @@ import {API_URL} from '@praxis/core';
 import {environment} from '../environments/environment';
 import {provideHttpClient} from '@angular/common/http';
 import {provideAnimationsAsync} from '@angular/platform-browser/animations/async';
+import {MonacoEditorModule, provideMonacoEditor} from 'ngx-monaco-editor-v2';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -20,6 +21,20 @@ export const appConfig: ApplicationConfig = {
     provideAnimationsAsync(),
     provideRouter(routes),
     { provide: API_URL, useValue: environment.apiUrl },
-    { provide: LOCALE_ID, useValue: "pt-BR" }
+    { provide: LOCALE_ID, useValue: "pt-BR" },
+    provideMonacoEditor({
+      defaultOptions: {
+        scrollBeyondLastLine: false,
+        theme: 'vs-dark',
+        language: 'json',
+        automaticLayout: true,
+        minimap: {
+          enabled: false
+        }
+      },
+      onMonacoLoad: () => {
+        console.log('Monaco Editor carregado!');
+      }
+    })
   ]
 };

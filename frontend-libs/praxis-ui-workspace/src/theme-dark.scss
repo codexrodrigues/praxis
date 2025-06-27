@@ -1,0 +1,114 @@
+@use '@angular/material' as mat;
+
+// Paletas aprimoradas para um tema dark mais harmonioso
+// Blue Grey para primária: sofisticado e neutro para o fundo escuro
+$my-primary: mat.m2-define-palette(mat.$m2-blue-grey-palette, 200, 100, 400);
+
+// Accent: Explorando um ciano ligeiramente mais suave ou opções alternativas
+// Opção 1 (Ciano mais suave): Mantém o ciano, mas com tons que se integram melhor no dark.
+// O A200 é um bom ponto de partida, mas podemos ajustar os outros para mais sutileza.
+//$my-accent: mat.m2-define-palette(mat.$m2-cyan-palette, A200, A100, A400);
+
+// Opção 2 (Alternativa - Teal): Para um contraste mais natural e elegante em temas dark.
+// Descomente e substitua $my-accent se preferir esta opção.
+// $my-accent: mat.m2-define-palette(mat.$m2-teal-palette, A400, A200, A700);
+
+// Opção 3 (Alternativa - Deep Purple): Oferece um toque de cor sem ser ofuscante.
+// Descomente e substitua $my-accent se preferir esta opção.
+//$my-accent: mat.m2-define-palette(mat.$m2-deep-purple-palette, 200, 100, 400);
+
+// Opção 4 (Alternativa - Light Blue): Tons azuis claros que complementam o Blue Grey primário
+// Descomente e substitua $my-accent se preferir esta opção.
+$my-accent: mat.m2-define-palette(mat.$m2-light-blue-palette, A200, A100, A400);
+
+// Opção 5 (Alternativa - Amber): Contraste quente que se destaca sutilmente no tema escuro
+// Descomente e substitua $my-accent se preferir esta opção.
+//$my-accent: mat.m2-define-palette(mat.$m2-amber-palette, A400, A200, A700);
+
+
+// Warn: Padrão, mas eficaz para alertas
+$my-warn: mat.m2-define-palette(mat.$m2-red-palette);
+
+// Tema dark com tipografia padrão (Roboto) e densidade padrão
+$my-dark-theme: mat.m2-define-dark-theme((
+  color: (
+    primary: $my-primary,
+    accent: $my-accent,
+    warn: $my-warn,
+  ),
+  density: 0 // 0 padrão, -1 ou -2 mais compacto
+));
+
+@include mat.theme-overrides((
+  // === Primary ===
+  // Usamos tons mais claros da paleta Blue Grey para elementos primários em um fundo escuro
+  primary: map-get($my-primary, 200), // Um tom mais claro para visibilidade
+  on-primary: #000000, // Geralmente preto ou um cinza muito escuro para texto no primário claro
+  primary-container: map-get($my-primary, 700), // Um tom mais escuro para o container
+  on-primary-container: map-get($my-primary, 100), // Um tom claro para texto no container primário
+
+  // === Secondary ===
+  // Ajustes para o acento, garantindo que seja visível e não muito brilhante
+  secondary: map-get($my-accent, A200),
+  on-secondary: #000000, // Ou um cinza muito escuro
+  secondary-container: map-get($my-accent, A700), // Um tom mais escuro para o container
+  on-secondary-container: map-get($my-accent, A100), // Um tom claro para texto no container secundário
+
+  // === Tertiary ===
+  // Geralmente menos proeminente, pode usar um tom do acento ou uma cor neutra
+  tertiary: map-get($my-accent, A400),
+  on-tertiary: #000000,
+  tertiary-container: map-get($my-accent, A700), // Um tom mais escuro
+  on-tertiary-container: map-get($my-accent, A100), // Um tom claro
+
+  // === Error ===
+  error: map-get($my-warn, 500),
+  on-error: #ffffff, // Branco ou um tom claro para texto no erro
+  error-container: map-get($my-warn, 900), // Um tom mais escuro
+  on-error-container: map-get($my-warn, 100), // Um tom claro
+
+  // === Surface ===
+  // Mantemos as suas definições, que estão boas para um tema dark
+  surface: #121212,
+  on-surface: #ffffff, // Branco puro ou um cinza muito claro
+
+  surface-dim: #0f0f0f,
+  surface-bright: #1e1e1e,
+  surface-container-lowest: #0a0a0a,
+  surface-container-low: #141414,
+  surface-container: #1e1e1e,
+  surface-container-high: #2a2a2a,
+  surface-container-highest: #333333,
+
+  // === Outline ===
+  outline: #444444,
+  outline-variant: #555555,
+
+  // === Fixed colors (opcional: são inertes, mas úteis em interações)
+  // Ajuste para usar tons que se complementam bem com o tema dark
+  primary-fixed: map-get($my-primary, 100),
+  on-primary-fixed: map-get(map-get($my-primary, contrast), 100),
+  primary-fixed-dim: map-get($my-primary, 200),
+  on-primary-fixed-dim: map-get(map-get($my-primary, contrast), 200),
+
+  secondary-fixed: map-get($my-accent, A100),
+  on-secondary-fixed: map-get(map-get($my-accent, contrast), A100),
+  secondary-fixed-dim: map-get($my-accent, A200),
+  on-secondary-fixed-dim: map-get(map-get($my-accent, contrast), 200),
+
+  tertiary-fixed: map-get($my-accent, A400),
+  on-tertiary-fixed: map-get(map-get($my-accent, contrast), A400),
+  tertiary-fixed-dim: map-get($my-accent, A700),
+  on-tertiary-fixed-dim: map-get(map-get($my-accent, contrast), A700),
+
+));
+
+mat-card {
+  --mat-card-title-color: var(--mat-sys-on-surface);
+  --mat-card-subtitle-color: var(--mat-sys-on-surface);
+}
+
+
+  @include mat.all-component-themes($my-dark-theme);
+  @include mat.color-variants-backwards-compatibility($my-dark-theme);
+

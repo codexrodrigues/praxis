@@ -18,6 +18,8 @@
     "@angular/material": "^20.0.3",
     "@angular/platform-browser": "^20.0.0",
     "@angular/router": "^20.0.0",
+    "monaco-editor": "^0.52.2",
+    "ngx-monaco-editor-v2": "^19.0.2",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },

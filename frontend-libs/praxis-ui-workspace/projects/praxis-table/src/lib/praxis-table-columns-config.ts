@@ -176,86 +176,107 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
                   :host {
                     display: block;
                   }
+
                   .columns-config-container {
                     max-width: 800px;
                     margin: 0 auto;
                   }
+
                   .column-item {
                     margin-bottom: 1rem;
                     padding: 0;
-                    border-left: 4px solid #3f51b5;
+                    border-left: 4px solid var(--mat-sys-primary); // representa ação principal
+                  background-color: var(--mat-sys-surface-container); // fundo adaptado para o item
                   }
+
                   .card-header {
                     display: flex;
                     align-items: center;
                     padding: 1rem;
-                    background-color: #f9f9f9;
+                    background-color: var(--mat-sys-surface-container-high); // cabeçalho sobressai um pouco
                   }
+
                   .drag-handle {
                     cursor: move;
                     display: flex;
                     align-items: center;
                     margin-right: 0.75rem;
-                    color: #666;
+                    color: var(--mat-sys-on-surface); // ícones sobre o background padrão
                   }
+
                   .main-info {
                     flex: 1;
                     display: flex;
                     flex-direction: column;
                     gap: 0.5rem;
                   }
+
                   .field-info {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
                     margin-bottom: 0.5rem;
                   }
+
                   .field-info strong {
                     font-size: 1.1rem;
-                    color: #3f51b5;
+                    color: var(--mat-sys-on-surface); // texto principal
                   }
+
                   .advanced-options {
                     margin: 0;
                     box-shadow: none !important;
                   }
+
                   .options-section {
                     padding: 0.5rem 0 1rem;
                   }
+
                   .options-section h4 {
                     margin: 0.5rem 0;
-                    color: #666;
-                    font-weight: 500;
+                    color: var(--mat-sys-outline); // título sutil, não dominante
+                  font-weight: 500;
                   }
+
                   .fields-row {
                     display: flex;
                     flex-wrap: wrap;
                     gap: 1rem;
                   }
+
                   .fields-row mat-form-field {
                     flex: 1 1 200px;
                   }
+
                   mat-divider {
                     margin: 0.5rem 0;
+                    background-color: var(--mat-sys-outline-variant);
                   }
+
                   .global-config-card {
                     margin-bottom: 1.5rem;
-                    border-top: 4px solid #4caf50;
+                    border-top: 4px solid var(--mat-sys-secondary); // destaca o bloco de configuração
+                    background-color: var(--mat-sys-surface-container); // mesmo fundo do item normal
                   }
+
                   .global-actions-container {
                     display: flex;
                     flex-wrap: wrap;
                     gap: 1rem;
                     align-items: flex-start;
                   }
+
                   .global-action {
                     flex: 1 1 200px;
                     min-width: 200px;
                     display: flex;
                     align-items: center;
                   }
+
                   .global-action mat-form-field {
                     width: 100%;
                   }
+
                   .quick-actions {
                     display: flex;
                     align-items: center;
@@ -263,12 +284,15 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
                     flex-wrap: wrap;
                     gap: 0.5rem;
                   }
+
                   .spacer {
                     flex: 1;
                   }
+
                   .search-field {
                     width: 250px;
                   }
+
                 `]
               })
               export class PraxisTableColumnsConfig {
