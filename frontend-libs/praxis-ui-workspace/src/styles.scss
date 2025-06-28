@@ -4,9 +4,11 @@ html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 
 body {
-  color: #f2f4f8;
   background-color: #121212;
+  color: #f2f4f8;
+  font-family: Roboto, sans-serif;
 }
+
 /* Webkit-based browsers (Chrome, Edge, Safari) */
 ::-webkit-scrollbar {
   width: 10px;
@@ -30,7 +32,7 @@ body {
 /* Firefox */
 * {
   scrollbar-width: auto;
-  scrollbar-color: #121212;
+  scrollbar-color: #1a2c50;
 }
 
 *:hover {

@@ -244,11 +244,8 @@ $my-dark-theme: mat.m2-define-dark-theme((
 ));
 
 @include mat.toolbar-overrides((
-  container-background-color: var(--mat-sys-surface-container-high), // Um fundo elevado para a toolbar
-  container-text-color: var(--mat-sys-on-surface), // O texto da toolbar usa a cor principal para legibilidade
-  // Opcional: Você pode ajustar a tipografia do título da toolbar aqui
-  // title-text-size: 1.25rem,
-  // title-text-weight: 500,
+  container-background-color: orange,
+  container-text-color: red,
 ));
 
 
@@ -261,6 +258,11 @@ $my-dark-theme: mat.m2-define-dark-theme((
   color: var(--mat-sys-on-surface); // ou outra cor de sistema
   font-size: 0.55rem; // ou ajuste se quiser menor
 }
+
+@include mat.sidenav-overrides((
+  container-background-color: var(--surface),
+  container-text-color: var(--mat-sys-on-surface),
+));
 
 //Divisores e bordas
 .mat-divider, .mat-mdc-dialog-container::before {
@@ -311,7 +313,6 @@ body, .mat-mdc-card-title, .mat-mdc-form-field-label {
 [disabled], .mat-mdc-button-disabled {
   color: #6D6D6D !important;
 }
-
 
 // Aplicando o tema a todos os componentes
 @include mat.all-component-themes($my-dark-theme);
