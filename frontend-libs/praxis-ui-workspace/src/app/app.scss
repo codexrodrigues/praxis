@@ -1,0 +1,72 @@
+.layout-container {
+  height: 100vh; // Preenche altura total
+}
+
+.side-nav {
+  width: 260px;
+  background-color: #1e1e1e;
+  color: #f2f2f2;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: auto;
+}
+
+.mat-toolbar {
+  background-color: #121212;
+  color: #ffffff;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+mat-nav-list {
+  padding-top: 8px;
+
+  h3[mat-subheader] {
+    padding-left: 16px;
+    font-size: 14px;
+    color: #b0b0b0;
+  }
+
+  a[mat-list-item] {
+    display: flex;
+    align-items: center;
+    height: 48px;
+    font-size: 14px;
+    padding-left: 16px;
+    gap: 16px;
+
+    mat-icon {
+      font-size: 20px;
+      color: #00bfff;
+      min-width: 24px;
+      display: inline-flex; // comportamento mais natural com flex
+      align-items: center;
+      justify-content: center;
+      height: 24px; // importante para o alinhamento vertical
+      line-height: 1;
+    }
+
+    .menu-text {
+      line-height: 1.2; // harmonia do texto
+    }
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.08);
+    }
+
+    &:focus {
+      background-color: rgba(0, 191, 255, 0.2);
+    }
+  }
+
+}
+
+
+.content-container {
+  padding: 16px;
+  background-color: #121212;
+  color: #f0f0f0;
+  height: 100%;
+  overflow: auto;
+}

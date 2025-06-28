@@ -1,176 +1,318 @@
 @use '@angular/material' as mat;
 
-    // Criando paletas personalizadas baseadas nas cores do Bard
-    $bard-primary-palette: (
-      50: #e8f0ff,
-      100: #d1e1ff,
-      200: #a8c7fa,
-      300: #76acff,
-      400: #5684d1,
-      500: #4a5a73,
-      600: #3b475b,
-      700: #222327,
-      800: #161c25,
-      900: #0e0e0f,
-      contrast: (
-        50: #000000,
-        100: #000000,
-        200: #000000,
-        300: #000000,
-        400: #000000,
-        500: #ffffff,
-        600: #ffffff,
-        700: #ffffff,
-        800: #ffffff,
-        900: #ffffff,
-      )
-    );
+// Criando paletas personalizadas baseadas nas cores do Bard
+$bard-primary-palette: (
+  50: #e8edf5,
+  100: #c5d3ea,
+  200: #a1b7db,
+  300: #7b9aca,
+  400: #5f83be,
+  500: #3d6bb1,
+  600: #2f5fa3,
+  700: #264f8c,
+  800: #213660, // novo tom desejado
+  900: #1a2c50,
+  contrast: (
+    50: #000000,
+    100: #000000,
+    200: #000000,
+    300: #ffffff,
+    400: #ffffff,
+    500: #ffffff,
+    600: #ffffff,
+    700: #ffffff,
+    800: #ffffff,
+    900: #ffffff,
+  )
+);
 
-    $bard-accent-palette: (
-      50: #f8f0ff,
-      100: #f0c6ff,
-      200: #c58af9,
-      300: #9168c0,
-      400: #8ab4f8,
-      500: #5684d1,
-      600: #4a4c67,
-      700: #4c2271,
-      800: #37393b,
-      900: #2a2a2a,
-      A100: #f0c6ff,
-      A200: #c58af9,
-      A400: #8ab4f8,
-      A700: #4c2271,
-      contrast: (
-        50: #000000,
-        100: #000000,
-        200: #000000,
-        300: #000000,
-        400: #000000,
-        500: #000000,
-        600: #ffffff,
-        700: #ffffff,
-        800: #ffffff,
-        900: #ffffff,
-        A100: #000000,
-        A200: #000000,
-        A400: #000000,
-        A700: #ffffff,
-      )
-    );
 
-    $bard-warn-palette: (
-      50: #ffebe0,
-      100: #ffb683,
-      200: #fa903e,
-      300: #ff7d41,
-      400: #f28b82,
-      500: #ff7d41,
-      600: #d35400,
-      700: #753403,
-      800: #5f2a02,
-      900: #4b2101,
-      contrast: (
-        50: #000000,
-        100: #000000,
-        200: #000000,
-        300: #000000,
-        400: #000000,
-        500: #000000,
-        600: #ffffff,
-        700: #ffffff,
-        800: #ffffff,
-        900: #ffffff,
-      )
-    );
+$bard-accent-palette: (
+  50:  #e4eaf5,   // Azul muito claro
+  100: #b9c9e4,   // Azul suave e leve
+  200: #8ea8d3,   // Azul claro intermediário
+  300: #6286c2,   // Azul com presença, mas ainda suave
+  400: #406fb4,   // Mais próximo do tom principal
+  500: #295fa3,   // Azul acentuado
+  600: #214f8b,   // Mais escuro
+  700: #1b4479,   // Escurecendo mais
+  800: #173c6b,   // Azul escuro, elegante
+  900: #122f56,   // Azul bem profundo
 
-    // Definindo as paletas para o tema
-    $my-primary: mat.m2-define-palette($bard-primary-palette, 300, 100, 700);
-    $my-accent: mat.m2-define-palette($bard-accent-palette, A400, A100, A700);
-    $my-warn: mat.m2-define-palette($bard-warn-palette, 500, 100, 700);
+  A100: #9cb7ff,  // Accent claro (ripple claro, hover sutil)
+  A200: #628eff,  // Accent médio (para chips ou botões)
+  A400: #295fd1,  // Destaque
+  A700: #123aa0,  // Destaque forte (hover, foco)
 
-    // Definindo o tema dark
-    $my-dark-theme: mat.m2-define-dark-theme((
-      color: (
-        primary: $my-primary,
-        accent: $my-accent,
-        warn: $my-warn,
-      ),
-      density: 0
-    ));
+  contrast: (
+    50:  #000000,
+    100: #000000,
+    200: #000000,
+    300: #ffffff,
+    400: #ffffff,
+    500: #ffffff,
+    600: #ffffff,
+    700: #ffffff,
+    800: #ffffff,
+    900: #ffffff,
+    A100: #000000,
+    A200: #ffffff,
+    A400: #ffffff,
+    A700: #ffffff,
+  )
+);
 
-    @include mat.theme-overrides((
-      // === Primary ===
-      primary: #76acff,
-      on-primary: #000000,
-      primary-container: #222327,
-      on-primary-container: #d1e1ff,
 
-      // === Secondary ===
-      secondary: #8ab4f8,
-      on-secondary: #000000,
-      secondary-container: #4a4c67,
-      on-secondary-container: #f0c6ff,
+$bard-warn-palette: (
+  50: #ffebe0,
+  100: #ffb683,
+  200: #fa903e,
+  300: #ff7d41,
+  400: #f28b82,
+  500: #ff7d41,
+  600: #d35400,
+  700: #753403,
+  800: #5f2a02,
+  900: #4b2101,
+  contrast: (
+    50: #000000,
+    100: #000000,
+    200: #000000,
+    300: #000000,
+    400: #000000,
+    500: #000000,
+    600: #ffffff,
+    700: #ffffff,
+    800: #ffffff,
+    900: #ffffff,
+  )
+);
 
-      // === Tertiary ===
-      tertiary: #1ea446,
-      on-tertiary: #ffffff,
-      tertiary-container: #00522c,
-      on-tertiary-container: #81c995,
+// Definindo as paletas para o tema
+$my-primary: mat.m2-define-palette($bard-primary-palette, 900, 700, 400);
+$my-accent: mat.m2-define-palette($bard-accent-palette, A700, A100, A700);
+$my-warn: mat.m2-define-palette($bard-warn-palette, 500, 100, 700);
 
-      // === Error ===
-      error: #ff7d41,
-      on-error: #000000,
-      error-container: #753403,
-      on-error-container: #ffb683,
+// Definindo o tema dark
+$my-dark-theme: mat.m2-define-dark-theme((
+  color: (
+    primary: $my-primary,
+    accent: $my-accent,
+    warn: $my-warn,
+  ),
+  density: 0
+));
 
-      // === Surface ===
-      surface: #0e0e0f,
-      on-surface: #ffffff,
+@include mat.theme-overrides((
+  // === Primary ===
+  primary: #76acff,
+  on-primary: #000000,
+  primary-container: #222327,
+  on-primary-container: #d1e1ff,
 
-      surface-dim: #000000,
-      surface-bright: #2a2a2a,
-      surface-container-lowest: #0e0e0f,
-      surface-container-low: #202124,
-      surface-container: #222327,
-      surface-container-high: #37393b,
-      surface-container-highest: #474747,
+  // === Secondary ===
+  secondary: #8ab4f8,
+  on-secondary: #000000,
+  secondary-container: #4a4c67,
+  on-secondary-container: #f0c6ff,
 
-      // === Outline ===
-      outline: #ababab,
-      outline-variant: #80868b,
-    ));
+  // === Tertiary ===
+  tertiary: #1ea446,
+  on-tertiary: #ffffff,
+  tertiary-container: #00522c,
+  on-tertiary-container: #81c995,
 
-    // Aplicação específica para mat-card
-    mat-card {
-      --mat-card-title-color: var(--mat-sys-on-surface);
-      --mat-card-subtitle-color: var(--mat-sys-on-surface);
-    }
+  // === Error ===
+  error: #ff7d41,
+  on-error: #000000,
+  error-container: #753403,
+  on-error-container: #ffb683,
 
-    // Aplicando o tema a todos os componentes
-    @include mat.all-component-themes($my-dark-theme);
-    @include mat.color-variants-backwards-compatibility($my-dark-theme);
+  // === Surface ===
+  surface: #0e0e0f,
+  on-surface: #ffffff,
 
-    // Definindo variáveis CSS específicas do Bard
-    :root {
-      // Cores específicas do Bard que não são definidas pelo Angular Material
-      --bard-color-neutral-90: #37393b;
-      --bard-color-neutral-95: #2a2a2a;
-      --bard-color-neutral-96: #0e0e0f;
-      --bard-color-enterprise-greeting: #474747;
-      --bard-color-custom-primary-container: #222327;
-      --bard-color-surface-tint: #d1e1ff;
-      --bard-color-tertiary-60: #1ea446;
-      --bard-color-surface-3-opacity-11: rgba(209, 225, 255, 0.1098039216);
-      --bard-color-surface-5-opacity-14: rgba(209, 225, 255, 0.1411764706);
-      --bard-color-footer-background: #202124;
-      --bard-color-draft-chip-background: #303030;
-      --bard-color-sidenav-background: #000;
-      --bard-color-code-comment: #80868b;
-      --bard-color-code-variables: #f28b82;
-      --bard-color-code-literal: #fa903e;
-      --bard-color-code-class: #fdd663;
-      --bard-color-code-string: #81c995;
-      --bard-color-code-quotes-and-meta: #8ab4f8;
-      --bard-color-code-keyword: #c58af9;
-    }
+  surface-dim: #000000,
+  surface-bright: #2a2a2a,
+  surface-container-lowest: #0e0e0f,
+  surface-container-low: #202124,
+  surface-container: #222327,
+  surface-container-high: #37393b,
+  surface-container-highest: #474747,
+
+  // === Outline ===
+  outline: #ababab,
+  outline-variant: #80868b,
+));
+
+// Aplicação específica para mat-card
+@include mat.card-overrides((
+  subtitle-text-color: var(--mat-sys-on-surface),
+  title-text-size: 1.25rem,
+  elevated-container-color: var(--mat-sys-surface-container-highest),
+));
+
+@include mat.dialog-overrides((
+  container-color: var(--mat-sys-surface-container-high), // A slightly elevated surface color from your theme
+  subhead-color: var(--mat-sys-on-surface),            // Text color for subheadings, consistent with main text
+  supporting-text-color: var(--mat-sys-on-surface),    // Text color for general content, consistent with main text
+));
+
+@include mat.table-overrides((
+  background-color: var(--mat-sys-surface), // Usa a cor de superfície base do seu tema escuro
+  header-headline-color: var(--mat-sys-on-surface), // Usa a cor de texto principal para cabeçalhos
+  row-item-label-text-color: var(--mat-sys-on-surface), // Usa a cor de texto principal para o conteúdo das linhas
+  row-item-outline-color: rgba(255, 255, 255, 0.12), // Uma linha sutil para divisores de linha
+));
+// Estilo para hover nas linhas da tabela
+.mat-mdc-row:not(.mat-mdc-header-row):hover {
+  background-color: rgba(255, 255, 255, 0.04); // Fundo sutil ao passar o mouse
+  cursor: pointer; // Indica que a linha é clicável
+}
+// Estilo para a linha clicada ou selecionada (exemplo, você pode ter uma classe 'selected-row')
+// Se você usa uma classe 'selected-row' para linhas clicadas:
+.mat-mdc-row.selected-row {
+  background-color: var(--mat-sys-primary-container) !important; // Cor de destaque do seu tema primário
+  // ou uma cor mais sutil, como rgba(0, 191, 255, 0.1) se preferir um azul translúcido
+}
+// Estilo para o cabeçalho de coluna clicável e com indicador de ordenação
+.mat-sort-header-button {
+  color: var(--mat-sys-on-surface); // Garante que o texto do cabeçalho de ordenação seja visível
+  display: flex;
+  align-items: center;
+}
+.mat-sort-header-button:hover {
+  color: var(--mat-sys-primary); // Destaca o texto do cabeçalho ao passar o mouse
+}
+// Indicador de ordenação
+.mat-sort-header-arrow {
+  color: var(--mat-sys-primary); // Cor do ícone de seta de ordenação
+  opacity: 0.8;
+}
+@include mat.tabs-overrides((
+  // Cor da linha indicadora da aba ativa quando está em foco
+  active-focus-indicator-color: var(--mat-sys-primary),
+  // Cor do texto do label da aba ativa quando está em foco
+  active-focus-label-text-color: var(--mat-sys-primary),
+
+  // Cor da linha indicadora da aba ativa ao passar o mouse
+  active-hover-indicator-color: var(--mat-sys-primary),
+  // Cor do texto do label da aba ativa ao passar o mouse
+  active-hover-label-text-color: var(--mat-sys-primary),
+
+  // Cor da linha indicadora da aba ativa (estado padrão)
+  active-indicator-color: var(--mat-sys-primary),
+  // Cor do texto do label da aba ativa (estado padrão)
+  active-label-text-color: var(--mat-sys-primary),
+
+  // Cor do ripple (efeito de clique) da aba ativa
+  active-ripple-color: rgba(var(--mat-sys-primary-rgb), 0.1), // Usando RGB para opacidade
+
+  // Cor do texto do label da aba inativa quando está em foco
+  inactive-focus-label-text-color: var(--mat-sys-on-surface), // ou um tom mais sutil se preferir, ex: rgba(255, 255, 255, 0.7)
+  // Cor do texto do label da aba inativa ao passar o mouse
+  inactive-hover-label-text-color: var(--mat-sys-on-surface), // ou um tom mais sutil
+  // Cor do texto do label da aba inativa (estado padrão)
+  inactive-label-text-color: rgba(var(--mat-sys-on-surface-rgb), 0.6), // Um tom mais sutil para inativas
+
+  // Cor do ripple (efeito de clique) da aba inativa
+  inactive-ripple-color: rgba(var(--mat-sys-on-surface-rgb), 0.05),
+
+  // Cor dos ícones de paginação (setas para rolagem de abas)
+  pagination-icon-color: var(--mat-sys-on-surface),
+
+  // Cor de fundo da área das abas
+  background-color: var(--mat-sys-surface-container), // Um fundo um pouco elevado para a barra de abas
+  // Cor de primeiro plano (geralmente sobreposto ao background, menos comum para tabs diretamente)
+  // foreground-color: var(--mat-sys-on-surface),
+
+  // Cor do divisor entre as abas (se houver)
+  divider-color: rgba(255, 255, 255, 0.12),
+
+  // Ajustes de tipografia (opcional)
+  // label-text-size: 0.9375rem, // Exemplo: 15px
+  // label-text-weight: 500, // Exemplo: Médio
+));
+
+// Para garantir que o foco tenha um outline claro se o ripple não for suficiente
+.mat-mdc-tab:focus {
+  outline: 2px solid var(--mat-sys-primary); // Adiciona um outline ao focar
+  outline-offset: -2px; // Ajusta para não aumentar o tamanho do elemento
+}
+@include mat.sort-overrides((
+  arrow-color: var(--mat-sys-primary), // A seta do sort agora usa a cor primária
+));
+
+@include mat.toolbar-overrides((
+  container-background-color: var(--mat-sys-surface-container-high), // Um fundo elevado para a toolbar
+  container-text-color: var(--mat-sys-on-surface), // O texto da toolbar usa a cor principal para legibilidade
+  // Opcional: Você pode ajustar a tipografia do título da toolbar aqui
+  // title-text-size: 1.25rem,
+  // title-text-weight: 500,
+));
+
+
+.mat-mdc-card-title {
+  color: var(--mat-sys-on-surface); // mesma usada no subtitle
+  font-size: 1.25rem; // se quiser forçar o tamanho
+}
+
+.mat-mdc-form-field-hint {
+  color: var(--mat-sys-on-surface); // ou outra cor de sistema
+  font-size: 0.55rem; // ou ajuste se quiser menor
+}
+
+//Divisores e bordas
+.mat-divider, .mat-mdc-dialog-container::before {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+.mdc-notched-outline__leading,
+.mdc-notched-outline__trailing {
+  border-color: rgba(255, 255, 255, 0.10);
+}
+
+//Botões desativados
+.mat-mdc-button-disabled {
+  background-color: #444444 !important;
+  color: #6D6D6D !important;
+}
+
+//Hover e foco com opacidade sutil
+.mat-mdc-button:hover,
+.mat-mdc-unelevated-button:hover,
+.mat-mdc-card:hover {
+  background-color: rgba(255, 255, 255, 0.04); // fundo hover sutil
+}
+
+.mat-mdc-button.mat-primary:focus {
+  box-shadow: 0 0 0 3px rgba(0, 191, 255, 0.2); // azul claro foco
+}
+
+
+//Uniformizar textos com tokens e classes
+// Reforçar legibilidade de todos os textos principais
+body, .mat-mdc-card-title, .mat-mdc-form-field-label {
+  color: var(--mat-sys-on-surface);
+}
+
+// Para textos secundários e desabilitados:
+.mat-mdc-form-field-hint,
+.mat-mdc-option .mdc-list-item__secondary-text {
+  color: #B0B0B0;
+}
+
+//Labels de campos de texto
+.mdc-text-field--outlined:not(.mdc-text-field--disabled).mdc-text-field--focused .mdc-floating-label {
+  color:var(--mat-sys-on-primary-container) !important;
+}
+//.mdc-text-field--outlined:not(.mdc-text-field--disabled).mdc-text-field--focused .mdc-floating-label {
+
+[disabled], .mat-mdc-button-disabled {
+  color: #6D6D6D !important;
+}
+
+
+// Aplicando o tema a todos os componentes
+@include mat.all-component-themes($my-dark-theme);
+@include mat.color-variants-backwards-compatibility($my-dark-theme);

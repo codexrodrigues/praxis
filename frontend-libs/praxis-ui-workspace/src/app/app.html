@@ -1,1 +1,63 @@
-<praxis-table resourcePath="funcionarios"  [editModeEnabled]="true"></praxis-table>
+<mat-toolbar>
+  <button mat-icon-button (click)="drawer.toggle()">
+    <mat-icon>menu</mat-icon>
+  </button>
+  <span>Praxis Framework </span>
+  <span class="spacer"></span>
+  <button mat-icon-button>
+    <mat-icon>favorite</mat-icon>
+  </button>
+  <button mat-icon-button>
+    <mat-icon>share</mat-icon>
+  </button>
+</mat-toolbar>
+<mat-drawer-container class="layout-container" [hasBackdrop]="false">
+  <mat-drawer #drawer mode="over" class="side-nav">
+    <mat-nav-list>
+      <h3 mat-subheader>Gestão de Recursos Humanos</h3>
+
+      <a mat-list-item routerLink="/funcionarios" (click)="closeMenu()">
+        <mat-icon matListIcon>people</mat-icon>
+        <span class="menu-text">Funcionários</span>
+      </a>
+
+      <a mat-list-item routerLink="/departamentos" (click)="closeMenu()">
+        <mat-icon matListIcon>account_tree</mat-icon>
+        <span class="menu-text">Departamentos</span>
+      </a>
+
+      <a mat-list-item routerLink="/cargos" (click)="closeMenu()">
+        <mat-icon matListIcon>badge</mat-icon>
+        <span class="menu-text">Cargos</span>
+      </a>
+
+      <a mat-list-item routerLink="/enderecos" (click)="closeMenu()">
+        <mat-icon matListIcon>location_on</mat-icon>
+        <span class="menu-text">Endereços</span>
+      </a>
+
+      <a mat-list-item routerLink="/dependentes" (click)="closeMenu()">
+        <mat-icon matListIcon>group_add</mat-icon>
+        <span class="menu-text">Dependentes</span>
+      </a>
+
+      <a mat-list-item routerLink="/ferias-afastamentos" (click)="closeMenu()">
+        <mat-icon matListIcon>event</mat-icon>
+        <span class="menu-text">Férias / Afastamentos</span>
+      </a>
+
+      <a mat-list-item routerLink="/eventos-folha" (click)="closeMenu()">
+        <mat-icon matListIcon>event_note</mat-icon>
+        <span class="menu-text">Eventos da Folha</span>
+      </a>
+
+      <a mat-list-item routerLink="/folha-pagamento" (click)="closeMenu()">
+        <mat-icon matListIcon>payments</mat-icon>
+        <span class="menu-text">Folha de Pagamento</span>
+      </a>
+    </mat-nav-list>
+  </mat-drawer>
+  <mat-drawer-content>
+    <praxis-table resourcePath="funcionarios"  [editModeEnabled]="true"></praxis-table>
+  </mat-drawer-content>
+</mat-drawer-container>
