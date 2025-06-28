@@ -65,12 +65,13 @@ import { BehaviorSubject, take } from 'rxjs';
             [style.text-align]="column.align"
             [style.width]="column.width"
             [attr.style]="column.headerStyle">
-          {{ column.title }}
+          {{ column.header }}
         </th>
         <td mat-cell *matCellDef="let element"
             [style.text-align]="column.align"
             [style.width]="column.width"
-            [attr.style]="column.style">{{ element[column.field] }}</td>
+            [attr.style]="column.style">{{ element[column.field] }}
+        </td>
       </ng-container>
 
       <ng-container *ngIf="config.showActionsColumn" matColumnDef="actions">
@@ -81,7 +82,7 @@ import { BehaviorSubject, take } from 'rxjs';
                     [color]="action.color"
                     [disabled]="action.disabled"
                     (click)="onRowAction(action.action, row)">
-              <mat-icon *ngIf="action.icon">{{action.icon}}</mat-icon>
+              <mat-icon *ngIf="action.icon">{{ action.icon }}</mat-icon>
               {{ action.label }}
             </button>
           </ng-container>
@@ -94,7 +95,7 @@ import { BehaviorSubject, take } from 'rxjs';
     <mat-paginator *ngIf="config.gridOptions?.pagination"
                    [length]="config.gridOptions?.pagination?.length ?? config.data.length"
                    [pageSize]="config.gridOptions?.pagination?.pageSize"
-                  [pageSizeOptions]="config.gridOptions?.pagination?.pageSizeOptions ?? []"
+                   [pageSizeOptions]="config.gridOptions?.pagination?.pageSizeOptions ?? []"
                    [showFirstLastButtons]="config.gridOptions?.pagination?.showFirstLastButtons"
                    (page)="onPageChange($event)">
     </mat-paginator>
@@ -271,7 +272,7 @@ openConfigEditor(): void {
   private convertFieldToColumn(field: FieldDefinition): ColumnDefinition {
     return {
       field: field.name,
-      title: field.label ?? field.name,
+      header: field.label ?? field.name,
       order: field.order,
       width: (field.width as any) ?? undefined,
       sortable: field.sortable,

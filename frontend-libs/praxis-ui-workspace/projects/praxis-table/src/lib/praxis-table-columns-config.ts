@@ -67,8 +67,10 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
                         </div>
 
                         <div class="global-action">
-                          <button mat-raised-button color="primary" (click)="applyGlobalSettings()" [disabled]="!hasGlobalChanges()">
-                            <mat-icon>check_circle</mat-icon> Aplicar a todas as colunas
+                          <button mat-raised-button color="primary" (click)="applyGlobalSettings()"
+                                  [disabled]="!hasGlobalChanges()">
+                            <mat-icon>check_circle</mat-icon>
+                            Aplicar a todas as colunas
                           </button>
                         </div>
                       </div>
@@ -78,10 +80,12 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
                   <!-- Barra de Ações Rápidas -->
                   <div class="quick-actions">
                     <button mat-button color="accent" (click)="showAllColumns()">
-                      <mat-icon>visibility</mat-icon> Mostrar todas
+                      <mat-icon>visibility</mat-icon>
+                      Mostrar todas
                     </button>
                     <button mat-button color="warn" (click)="hideAllColumns()">
-                      <mat-icon>visibility_off</mat-icon> Ocultar todas
+                      <mat-icon>visibility_off</mat-icon>
+                      Ocultar todas
                     </button>
                     <span class="spacer"></span>
                     <mat-form-field appearance="outline" class="search-field">
@@ -91,7 +95,8 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
                     </mat-form-field>
                   </div>
 
-                  <div class="columns-config-container" cdkDropList [cdkDropListData]="filteredColumns" (cdkDropListDropped)="drop($event)">
+                  <div class="columns-config-container" cdkDropList [cdkDropListData]="filteredColumns"
+                       (cdkDropListDropped)="drop($event)">
                     <mat-card class="column-item" *ngFor="let col of filteredColumns; let i = index" cdkDrag>
                       <!-- Resto do template de colunas (já existente) -->
                       <div class="card-header">
@@ -110,7 +115,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 
                           <mat-form-field appearance="outline">
                             <mat-label>Título exibido</mat-label>
-                            <input matInput [(ngModel)]="col.title" placeholder="Título da coluna">
+                            <input matInput [(ngModel)]="col.header" placeholder="Título da coluna">
                             <mat-hint>Nome que será exibido no cabeçalho</mat-hint>
                           </mat-form-field>
                         </div>
@@ -120,7 +125,8 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
                       <mat-expansion-panel class="advanced-options">
                         <mat-expansion-panel-header>
                           <mat-panel-title>
-                            <mat-icon>settings</mat-icon> Configurações avançadas
+                            <mat-icon>settings</mat-icon>
+                            Configurações avançadas
                           </mat-panel-title>
                         </mat-expansion-panel-header>
 
@@ -129,7 +135,8 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
                           <div class="fields-row">
                             <mat-form-field appearance="outline">
                               <mat-label>Ordem</mat-label>
-                              <input matInput type="number" [(ngModel)]="col.order" matTooltip="Ordem de exibição da coluna">
+                              <input matInput type="number" [(ngModel)]="col.order"
+                                     matTooltip="Ordem de exibição da coluna">
                               <mat-hint>Prioridade de exibição</mat-hint>
                             </mat-form-field>
 
@@ -163,7 +170,8 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 
                             <mat-form-field appearance="outline">
                               <mat-label>Estilo do cabeçalho</mat-label>
-                              <input matInput [(ngModel)]="col.headerStyle" placeholder="Ex: background-color: #f5f5f5;">
+                              <input matInput [(ngModel)]="col.headerStyle"
+                                     placeholder="Ex: background-color: #f5f5f5;">
                               <mat-hint>CSS aplicado ao cabeçalho</mat-hint>
                             </mat-form-field>
                           </div>
@@ -304,7 +312,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
                 searchQuery: string = '';
 
                 // Propriedades para configurações globais
-                globalAlign: string | null = null;
+                globalAlign: 'left' | 'center' | 'right' | null = null;
                 globalVisibility: boolean | null = null;
 
                 ngOnInit() {
@@ -376,7 +384,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
                   const query = this.searchQuery.toLowerCase().trim();
                   this.filteredColumns = this.columns.filter(col =>
                     col.field?.toLowerCase().includes(query) ||
-                    col.title?.toLowerCase().includes(query)
+                    col.header?.toLowerCase().includes(query)
                   );
                   return this.filteredColumns;
                 }

@@ -1,12 +1,14 @@
+export type ColumnDataType = 'string' | 'number' | 'date' | 'boolean' | 'currency' | 'percentage' | 'custom';
+
 export interface ColumnDefinition {
   field: string;
-  title: string;
+  header: string;
   /** Column render order */
   order?: number;
   /** Column visibility */
   visible?: boolean;
   /** Text alignment inside the cells */
-  align?: string;
+  align?: 'left' | 'center' | 'right';
   /** Column width */
   width?: string;
   /** Extra CSS style applied to the cells */
@@ -15,6 +17,27 @@ export interface ColumnDefinition {
   headerStyle?: string;
   /** Enable sorting for this column */
   sortable?: boolean;
+  /** Type of data expected in this column */
+  type?: ColumnDataType;
+  /** Format string specific to the column type */
+  format?: string;
+  /** Define se a coluna deve ser fixa ao rolar horizontalmente */
+  sticky?: 'start' | 'end' | boolean;
+  /** Mapeamento de valores para exibição personalizada (ex: {0: 'Inativo', 1: 'Ativo'}) */
+  valueMapping?: { [key: string | number]: string };
+  /**
+   * Estilização condicional para células desta coluna através de classes CSS.
+   * A chave é o nome da classe CSS e o valor é uma função que retorna true se a classe deve ser aplicada.
+   * Exemplo: { 'text-danger': (rowData, cellValue) => cellValue > 100 }
+   */
+  cellClassCondition?: { [className: string]: (rowData: any, cellValue: any) => boolean };
+
+  /**
+   * Estilização condicional para células desta coluna (estilos inline).
+   * A chave é a propriedade CSS e o valor é uma função que retorna o valor do estilo.
+   * Exemplo: { 'background-color': (rowData, cellValue) => cellValue > 100 ? 'red' : 'green' }
+   */
+  cellStyleCondition?: { [styleProperty: string]: (rowData: any, cellValue: any) => string };
 }
 
 export interface ToolbarAction {
@@ -74,16 +97,24 @@ export interface GridOptions {
   groupable?: boolean;
 }
 
-export interface TableConfig {
-  /**
-   * Column definitions describing how data should be displayed
-   */
-  columns: ColumnDefinition[];
+export interface SelectionOptions {
+  /** Habilita a seleção de linhas */
+  enabled: boolean;
+  /** Define o tipo de seleção permitida */
+  type: 'single' | 'multiple';
+}
 
+export interface TableConfig {
   /**
    * Data to be rendered in the table
    */
   data: any[];
+
+  /**
+   *
+   * Column definitions describing how data should be displayed
+   */
+  columns: ColumnDefinition[];
 
   /**
    * Whether an actions column should be added at the end
@@ -106,4 +137,16 @@ export interface TableConfig {
 
   /** Row level actions configuration */
   rowActions?: RowAction[];
+
+  /** Configuração para seleção de linhas */
+  selection?: SelectionOptions;
+
+  /** Habilita o redimensionamento das colunas */
+  resizableColumns?: boolean;
+
+  /** Habilita a reorganização de colunas através de drag and drop */
+  draggableColumns?: boolean;
+
+  /** Ação a ser executada quando uma linha é clicada */
+  rowClickAction?: string;
 }
