@@ -20,6 +20,7 @@ import {MatDialog, MatDialogModule} from '@angular/material/dialog';
 import {ColumnDefinition, FieldDefinition, GenericCrudService, Page, Pageable, TableConfig} from '@praxis/core';
 import {BehaviorSubject, take} from 'rxjs';
 import {PraxisTableToolbar} from './praxis-table-toolbar';
+import {PraxisTableConfigEditor} from './praxis-table-config-editor';
 
 @Component({
   selector: 'praxis-table',
@@ -163,7 +164,28 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
   }
 
   openConfigEditor(): void {
-    //Abrir o editor de configuração em um diálogo
+    const dialogRef = this.dialog.open(PraxisTableConfigEditor, {
+      data: { config: this.config },
+      width: '90%',
+      height: '90%',
+      maxWidth: '1200px',
+      maxHeight: '90vh',
+      disableClose: false,
+      autoFocus: false,
+      restoreFocus: true
+    });
+
+    dialogRef.afterClosed().subscribe((result: TableConfig | undefined) => {
+      if (result) {
+        // TODO: Aplicar as configurações retornadas
+        console.log('Configurações atualizadas:', result);
+        this.config = { ...result };
+        this.setupColumns();
+        if (this.resourcePath) {
+          this.fetchData();
+        }
+      }
+    });
   }
 
   private applyDataSourceSettings(): void {
