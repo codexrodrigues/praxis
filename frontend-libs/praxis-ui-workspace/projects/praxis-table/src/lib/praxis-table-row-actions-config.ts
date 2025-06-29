@@ -21,7 +21,7 @@ import { TableConfig, RowAction } from '@praxis/core';
   styles:[`:host{display:block;}`]
 })
 export class PraxisTableRowActionsConfig {
-  @Input() config: TableConfig = { columns: [], data: [] };
+  @Input() config: TableConfig = { columns: [] };
   @Output() configChange = new EventEmitter<TableConfig>();
 
   actions: RowAction[] = [];
@@ -39,6 +39,7 @@ export class PraxisTableRowActionsConfig {
     try {
       this.actions = JSON.parse(this.actionsJson);
       this.valid = true;
+      this.emitChange();
     } catch {
       this.valid = false;
     }
@@ -60,7 +61,7 @@ export class PraxisTableRowActionsConfig {
     document.body.removeChild(textarea);
   }
 
-  ngDoCheck() {
+  onActionsChange() {
     this.emitChange();
   }
 

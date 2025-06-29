@@ -12,21 +12,21 @@ import { TableConfig } from '@praxis/core';
   template: `
     <mat-form-field appearance="fill">
       <mat-label>Mensagem de vazio</mat-label>
-      <input matInput [(ngModel)]="empty" />
+      <input matInput [(ngModel)]="empty" (ngModelChange)="onMessageChange()" />
     </mat-form-field>
     <mat-form-field appearance="fill">
       <mat-label>Mensagem de carregamento</mat-label>
-      <input matInput [(ngModel)]="loading" />
+      <input matInput [(ngModel)]="loading" (ngModelChange)="onMessageChange()" />
     </mat-form-field>
     <mat-form-field appearance="fill">
       <mat-label>Mensagem de erro</mat-label>
-      <input matInput [(ngModel)]="error" />
+      <input matInput [(ngModel)]="error" (ngModelChange)="onMessageChange()" />
     </mat-form-field>
   `,
   styles:[`:host{display:block;}`]
 })
 export class PraxisTableMessagesConfig {
-  @Input() config: TableConfig = { columns: [], data: [] };
+  @Input() config: TableConfig = { columns: [] };
   @Output() configChange = new EventEmitter<TableConfig>();
 
   empty = '';
@@ -40,7 +40,7 @@ export class PraxisTableMessagesConfig {
     this.error = msg.error || '';
   }
 
-  ngDoCheck() { this.emitChange(); }
+  onMessageChange() { this.emitChange(); }
 
   emitChange() {
     const cfg = JSON.parse(JSON.stringify(this.config));

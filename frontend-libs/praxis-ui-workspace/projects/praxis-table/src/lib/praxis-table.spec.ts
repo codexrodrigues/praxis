@@ -18,7 +18,6 @@ describe('PraxisTable', () => {
     component = fixture.componentInstance;
     const config: TableConfig = {
       columns: [{ field: 'id', header: 'ID' }],
-      data: [],
       gridOptions: {
         pagination: { pageSize: 5, pageSizeOptions: [5, 10] },
         sortable: true

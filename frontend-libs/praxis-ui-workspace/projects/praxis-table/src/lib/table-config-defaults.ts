@@ -2,7 +2,6 @@ import { TableConfig } from '@praxis/core';
 
 export const DEFAULT_TABLE_CONFIG: TableConfig = {
   columns: [],
-  data: [],
   showActionsColumn: true,
   gridOptions: {
     pagination: { pageSize: 5 },

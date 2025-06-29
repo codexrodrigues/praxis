@@ -78,7 +78,7 @@ import { BehaviorSubject, take } from 'rxjs';
       <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
     </table>
     <mat-paginator *ngIf="config.gridOptions?.pagination"
-                   [length]="config.gridOptions?.pagination?.length ?? config.data.length"
+                   [length]="config.gridOptions?.pagination?.length ?? 0"
                    [pageSize]="config.gridOptions?.pagination?.pageSize"
                    [pageSizeOptions]="config.gridOptions?.pagination?.pageSizeOptions ?? []"
                    [showFirstLastButtons]="config.gridOptions?.pagination?.showFirstLastButtons"
@@ -88,7 +88,7 @@ import { BehaviorSubject, take } from 'rxjs';
   styles: [`table{width:100%;}.spacer{flex:1 1 auto;}`]
 })
 export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
-  @Input() config: TableConfig = { columns: [], data: [] };
+  @Input() config: TableConfig = { columns: [] };
   @Input() resourcePath?: string;
   @Input() filterCriteria: any = {};
   /** Controls toolbar visibility */
@@ -125,6 +125,7 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
 
   filterValue = '';
 
+
   constructor(
     private crudService: GenericCrudService<any>,
     private cdr: ChangeDetectorRef,
@@ -144,6 +145,12 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
         this.fetchData();
       });
     }
+
+    // Inicialização inicial dos dados e colunas
+    this.setupColumns();
+    if (this.resourcePath) {
+      this.fetchData();
+    }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -159,9 +166,11 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
       this.crudService.configure(this.resourcePath);
       this.loadSchema();
       this.fetchData();
-    } else {
+    } else if (changes['config']) {
       this.setupColumns();
-      this.dataSubject.next(this.config.data);
+      if (this.resourcePath) {
+        this.fetchData();
+      }
     }
 
     if (changes['filterCriteria'] && this.resourcePath) {
@@ -179,20 +188,26 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
     this.pageIndex = event.pageIndex;
     this.pageSize = event.pageSize;
     this.pageChange.emit({ type: 'page', payload: event });
-    this.fetchData();
+    if (this.resourcePath) {
+      this.fetchData();
+    }
   }
 
   onSortChange(event: Sort): void {
     this.sortState = event;
     this.sortChange.emit({ type: 'sort', payload: event });
-    this.fetchData();
+    if (this.resourcePath) {
+      this.fetchData();
+    }
   }
 
   onFilterInput(value: string): void {
     this.filterValue = value;
     this.filterCriteria = { ...this.filterCriteria, query: value };
     this.filterChange.emit({ type: 'filterChange', payload: this.filterCriteria });
-    this.fetchData();
+    if (this.resourcePath) {
+      this.fetchData();
+    }
   }
 
   onRowAction(action: string, row: any): void {
@@ -211,9 +226,15 @@ openConfigEditor(): void {
     .afterClosed()
     .subscribe((result: TableConfig | undefined) => {
       if (result) {
-        this.config = result;
-        this.setupColumns();
+        this.config = { ...result };
+
         this.applyDataSourceSettings();
+        this.setupColumns();
+        // Recarrega os dados após atualizar a configuração
+        if (this.resourcePath) {
+          this.fetchData();
+        }
+        ///this.cdr.detectChanges();
       }
     });
 }
@@ -221,11 +242,7 @@ openConfigEditor(): void {
   private applyDataSourceSettings(): void {
     if (this.paginator) {
       this.dataSource.paginator = this.paginator;
-      if (this.config.gridOptions?.pagination?.length !== undefined) {
-        this.paginator.length = this.config.gridOptions?.pagination?.length as number;
-      } else {
-        this.paginator.length = this.config.data.length;
-      }
+      this.paginator.length = this.config.gridOptions?.pagination?.length ?? 0;
     }
     if (this.sort) {
       this.dataSource.sort = this.sort;
@@ -237,9 +254,6 @@ openConfigEditor(): void {
       .filter(c => c.visible !== false)
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     this.displayedColumns = this.visibleColumns.map(c => c.field);
-    if (this.config.showActionsColumn) {
-      this.displayedColumns.push('actions');
-    }
   }
 
   private loadSchema(): void {

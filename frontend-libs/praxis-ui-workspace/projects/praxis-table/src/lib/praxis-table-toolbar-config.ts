@@ -21,22 +21,22 @@ import { TableConfig, ToolbarAction } from '@praxis/core';
     MatIconModule
   ],
   template: `
-    <mat-slide-toggle [(ngModel)]="visible">Toolbar visível</mat-slide-toggle>
+    <mat-slide-toggle [(ngModel)]="visible" (ngModelChange)="onToolbarChange()">Toolbar visível</mat-slide-toggle>
     <div style="margin-top:0.5rem;">
-      <mat-slide-toggle [(ngModel)]="showNewButton">Botão Novo</mat-slide-toggle>
+      <mat-slide-toggle [(ngModel)]="showNewButton" (ngModelChange)="onToolbarChange()">Botão Novo</mat-slide-toggle>
     </div>
     <div *ngIf="showNewButton" style="margin-top:0.5rem;">
       <mat-form-field appearance="fill">
         <mat-label>Texto do botão</mat-label>
-        <input matInput [(ngModel)]="newButtonText" />
+        <input matInput [(ngModel)]="newButtonText" (ngModelChange)="onToolbarChange()" />
       </mat-form-field>
       <mat-form-field appearance="fill">
         <mat-label>Ícone</mat-label>
-        <input matInput [(ngModel)]="newButtonIcon" />
+        <input matInput [(ngModel)]="newButtonIcon" (ngModelChange)="onToolbarChange()" />
       </mat-form-field>
       <mat-form-field appearance="fill">
         <mat-label>Cor</mat-label>
-        <input matInput [(ngModel)]="newButtonColor" />
+        <input matInput [(ngModel)]="newButtonColor" (ngModelChange)="onToolbarChange()" />
       </mat-form-field>
     </div>
     <div style="margin-top:0.5rem;">
@@ -48,7 +48,7 @@ import { TableConfig, ToolbarAction } from '@praxis/core';
   styles: [`:host{display:block;}`]
 })
 export class PraxisTableToolbarConfig {
-  @Input() config: TableConfig = { columns: [], data: [] };
+  @Input() config: TableConfig = { columns: [] };
   @Output() configChange = new EventEmitter<TableConfig>();
 
   visible = false;
@@ -78,12 +78,13 @@ export class PraxisTableToolbarConfig {
     try {
       this.actions = JSON.parse(this.actionsJson);
       this.actionsValid = true;
+      this.emitChange();
     } catch {
       this.actionsValid = false;
     }
   }
 
-  ngDoCheck() {
+  onToolbarChange() {
     this.emitChange();
   }
 

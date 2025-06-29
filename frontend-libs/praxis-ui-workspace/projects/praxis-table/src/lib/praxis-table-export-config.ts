@@ -9,13 +9,13 @@ import { TableConfig } from '@praxis/core';
   standalone: true,
   imports: [CommonModule, FormsModule, MatSlideToggleModule],
   template: `
-    <mat-slide-toggle [(ngModel)]="excel">Excel</mat-slide-toggle>
-    <mat-slide-toggle [(ngModel)]="pdf">PDF</mat-slide-toggle>
+    <mat-slide-toggle [(ngModel)]="excel" (ngModelChange)="onExcelChange()">Excel</mat-slide-toggle>
+    <mat-slide-toggle [(ngModel)]="pdf" (ngModelChange)="onPdfChange()">PDF</mat-slide-toggle>
   `,
   styles: [`:host{display:block;}`]
 })
 export class PraxisTableExportConfig {
-  @Input() config: TableConfig = { columns: [], data: [] };
+  @Input() config: TableConfig = { columns: [] };
   @Output() configChange = new EventEmitter<TableConfig>();
 
   excel = false;
@@ -27,7 +27,11 @@ export class PraxisTableExportConfig {
     this.pdf = exp.pdf ?? false;
   }
 
-  ngDoCheck() {
+  onExcelChange() {
+    this.emitChange();
+  }
+  
+  onPdfChange() {
     this.emitChange();
   }
 

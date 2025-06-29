@@ -9,14 +9,14 @@ import { TableConfig } from '@praxis/core';
   standalone: true,
   imports: [CommonModule, FormsModule, MatSlideToggleModule],
   template: `
-    <mat-slide-toggle [(ngModel)]="sortable">Ordenação</mat-slide-toggle>
-    <mat-slide-toggle [(ngModel)]="filterable">Filtro</mat-slide-toggle>
-    <mat-slide-toggle [(ngModel)]="groupable">Agrupamento</mat-slide-toggle>
+    <mat-slide-toggle [(ngModel)]="sortable" (ngModelChange)="onSortableChange()">Ordenação</mat-slide-toggle>
+    <mat-slide-toggle [(ngModel)]="filterable" (ngModelChange)="onFilterableChange()">Filtro</mat-slide-toggle>
+    <mat-slide-toggle [(ngModel)]="groupable" (ngModelChange)="onGroupableChange()">Agrupamento</mat-slide-toggle>
   `,
   styles: [`:host{display:block;}`]
 })
 export class PraxisTableGridOptionsConfig {
-  @Input() config: TableConfig = { columns: [], data: [] };
+  @Input() config: TableConfig = { columns: [] };
   @Output() configChange = new EventEmitter<TableConfig>();
 
   sortable = true;
@@ -30,7 +30,15 @@ export class PraxisTableGridOptionsConfig {
     this.groupable = opts.groupable ?? false;
   }
 
-  ngDoCheck() {
+  onSortableChange() {
+    this.emitChange();
+  }
+  
+  onFilterableChange() {
+    this.emitChange();
+  }
+  
+  onGroupableChange() {
     this.emitChange();
   }
 

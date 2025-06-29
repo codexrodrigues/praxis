@@ -17,18 +17,18 @@ import { TableConfig } from '@praxis/core';
     MatSlideToggleModule
   ],
   template: `
-    <mat-slide-toggle [(ngModel)]="enabled">Paginação</mat-slide-toggle>
+    <mat-slide-toggle [(ngModel)]="enabled" (ngModelChange)="onEnabledChange()">Paginação</mat-slide-toggle>
     <div *ngIf="enabled" style="margin-top:0.5rem;">
       <mat-form-field appearance="fill">
         <mat-label>Tamanho da página</mat-label>
-        <input matInput type="number" [(ngModel)]="pageSize" />
+        <input matInput type="number" [(ngModel)]="pageSize" (ngModelChange)="onPageSizeChange()" />
       </mat-form-field>
     </div>
   `,
   styles:[`:host{display:block;}`]
 })
 export class PraxisTablePaginationConfig {
-  @Input() config: TableConfig = { columns: [], data: [] };
+  @Input() config: TableConfig = { columns: [] };
   @Output() configChange = new EventEmitter<TableConfig>();
 
   enabled = false;
@@ -43,7 +43,7 @@ export class PraxisTablePaginationConfig {
   }
 
   ngOnChanges() {
-    this.emitChange();
+    // Remove emissão automática no ngOnChanges
   }
 
   emitChange() {
@@ -57,8 +57,12 @@ export class PraxisTablePaginationConfig {
     this.configChange.emit(cfg);
   }
 
-  // watch for changes
-  ngDoCheck() {
+  // Métodos para detectar mudanças do usuário
+  onEnabledChange() {
+    this.emitChange();
+  }
+  
+  onPageSizeChange() {
     this.emitChange();
   }
 }
