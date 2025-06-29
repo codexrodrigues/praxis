@@ -1,9 +1,12 @@
 import {
   Component,
   Inject,
-  OnInit
+  OnInit,
+  ChangeDetectorRef,
+  OnDestroy
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -11,6 +14,8 @@ import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/materia
 import { MatCardModule } from '@angular/material/card';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { TableConfig } from '@praxis/core';
+import { JsonConfigEditorComponent, JsonValidationResult, JsonEditorEvent } from './json-config-editor/json-config-editor.component';
+import { ColumnsConfigEditorComponent, ColumnChange } from './columns-config-editor/columns-config-editor.component';
 
 @Component({
   selector: 'praxis-table-config-editor',
@@ -22,7 +27,9 @@ import { TableConfig } from '@praxis/core';
     MatTabsModule,
     MatDialogModule,
     MatCardModule,
-    MatToolbarModule
+    MatToolbarModule,
+    JsonConfigEditorComponent,
+    ColumnsConfigEditorComponent
   ],
   template: `
     <div class="config-editor-container">
@@ -70,21 +77,11 @@ import { TableConfig } from '@praxis/core';
               <span>Colunas</span>
             </ng-template>
             <div class="tab-content">
-              <mat-card class="educational-card">
-                <mat-card-header>
-                  <mat-icon mat-card-avatar class="card-icon">table_chart</mat-icon>
-                  <mat-card-title>Personalização de Colunas</mat-card-title>
-                </mat-card-header>
-                <mat-card-content>
-                  <p>Personalize cada coluna da tabela individualmente. Defina visibilidade, cabeçalhos, largura, 
-                     tipo de dado, formatação e estilos condicionais para uma exibição perfeita.</p>
-                </mat-card-content>
-              </mat-card>
-              
-              <!-- Placeholder para conteúdo futuro -->
-              <div class="content-placeholder">
-                <p class="placeholder-text">Editor de colunas será implementado em próximas etapas</p>
-              </div>
+              <columns-config-editor 
+                [config]="editedConfig"
+                (configChange)="onColumnsConfigChange($event)"
+                (columnChange)="onColumnChange($event)">
+              </columns-config-editor>
             </div>
           </mat-tab>
 
@@ -145,22 +142,12 @@ import { TableConfig } from '@praxis/core';
               <span>Edição de Código JSON</span>
             </ng-template>
             <div class="tab-content">
-              <mat-card class="educational-card">
-                <mat-card-header>
-                  <mat-icon mat-card-avatar class="card-icon">data_object</mat-icon>
-                  <mat-card-title>Edição Avançada JSON</mat-card-title>
-                </mat-card-header>
-                <mat-card-content>
-                  <p><strong>Para usuários avançados:</strong> Esta aba permite ajustar todas as configurações da tabela 
-                     diretamente via JSON. <strong>Atenção:</strong> Alterações aqui podem sobrescrever configurações 
-                     visuais nas outras abas.</p>
-                </mat-card-content>
-              </mat-card>
-              
-              <!-- Placeholder para conteúdo futuro -->
-              <div class="content-placeholder">
-                <p class="placeholder-text">Editor JSON será implementado em próximas etapas</p>
-              </div>
+              <json-config-editor 
+                [config]="editedConfig"
+                (configChange)="onJsonConfigChange($event)"
+                (validationChange)="onJsonValidationChange($event)"
+                (editorEvent)="onJsonEditorEvent($event)">
+              </json-config-editor>
             </div>
           </mat-tab>
 
@@ -359,22 +346,132 @@ import { TableConfig } from '@praxis/core';
     }
   `]
 })
-export class PraxisTableConfigEditor implements OnInit {
+export class PraxisTableConfigEditor implements OnInit, OnDestroy {
+  
+  // Configurações
+  private originalConfig: TableConfig;
+  editedConfig: TableConfig;
   
   // Estado do componente
-  canSave = false; // Será habilitado quando detectar alterações
+  canSave = false;
   hasErrors = false;
   hasSuccess = false;
   statusMessage = '';
+  private isValidJson = true;
 
   constructor(
     private dialogRef: MatDialogRef<PraxisTableConfigEditor>,
-    @Inject(MAT_DIALOG_DATA) public data: { config?: TableConfig }
-  ) {}
+    @Inject(MAT_DIALOG_DATA) public data: { config?: TableConfig },
+    private cdr: ChangeDetectorRef
+  ) {
+    // Inicializar configurações
+    this.originalConfig = data?.config || { columns: [] };
+    this.editedConfig = JSON.parse(JSON.stringify(this.originalConfig));
+  }
 
   ngOnInit(): void {
-    // Inicialização do componente
     this.statusMessage = 'Pronto para configurar';
+    this.updateCanSaveState();
+  }
+
+  ngOnDestroy(): void {
+    // Cleanup if needed
+  }
+
+  // Event handlers para o JsonConfigEditorComponent
+  onJsonConfigChange(newConfig: TableConfig): void {
+    this.editedConfig = newConfig;
+    this.updateCanSaveState();
+  }
+
+  onJsonValidationChange(result: JsonValidationResult): void {
+    this.isValidJson = result.isValid;
+    this.updateCanSaveState();
+  }
+
+  onJsonEditorEvent(event: JsonEditorEvent): void {
+    switch (event.type) {
+      case 'apply':
+        if (event.payload.isValid && event.payload.config) {
+          this.showSuccess('Configuração JSON aplicada com sucesso!');
+        } else {
+          this.showError(event.payload.error || 'Erro ao aplicar configuração JSON');
+        }
+        break;
+      case 'format':
+        if (event.payload.isValid) {
+          this.showSuccess('JSON formatado!');
+        } else {
+          this.showError(event.payload.error || 'Erro ao formatar JSON');
+        }
+        break;
+    }
+  }
+
+  // Event handlers para o ColumnsConfigEditorComponent
+  onColumnsConfigChange(newConfig: TableConfig): void {
+    this.editedConfig = newConfig;
+    this.updateCanSaveState();
+  }
+
+  onColumnChange(change: ColumnChange): void {
+    // Update can save state when columns change
+    this.updateCanSaveState();
+
+    // Show feedback based on column change type
+    switch (change.type) {
+      case 'add':
+        this.showSuccess('Nova coluna adicionada');
+        break;
+      case 'remove':
+        this.showSuccess('Coluna removida');
+        break;
+      case 'reorder':
+        this.showSuccess('Colunas reordenadas');
+        break;
+      case 'global':
+        this.showSuccess('Configurações globais aplicadas');
+        break;
+      case 'update':
+        // Don't show message for every property update to avoid spam
+        break;
+    }
+  }
+
+  private updateCanSaveState(): void {
+    // Verificar se há alterações válidas
+    const hasChanges = JSON.stringify(this.originalConfig) !== JSON.stringify(this.editedConfig);
+    this.canSave = hasChanges && this.isValidJson;
+    this.cdr.markForCheck();
+  }
+
+  private showSuccess(message: string): void {
+    this.statusMessage = message;
+    this.hasSuccess = true;
+    this.hasErrors = false;
+    this.cdr.markForCheck();
+    
+    setTimeout(() => {
+      this.clearMessages();
+    }, 3000);
+  }
+
+  private showError(message: string): void {
+    this.statusMessage = message;
+    this.hasErrors = true;
+    this.hasSuccess = false;
+    this.cdr.markForCheck();
+    
+    setTimeout(() => {
+      this.clearMessages();
+    }, 5000);
+  }
+
+  private clearMessages(): void {
+    this.statusMessage = '';
+    this.hasSuccess = false;
+    this.hasErrors = false;
+    this.cdr.markForCheck();
   }
 
   onCancel(): void {
@@ -382,29 +479,50 @@ export class PraxisTableConfigEditor implements OnInit {
   }
 
   onResetToDefaults(): void {
-    // TODO: Implementar reset para configurações padrão
-    this.statusMessage = 'Configurações resetadas para padrão';
-    this.hasSuccess = true;
-    this.hasErrors = false;
-    
-    // Limpar mensagem após 3 segundos
-    setTimeout(() => {
-      this.statusMessage = '';
-      this.hasSuccess = false;
-    }, 3000);
+    // Reset para configuração padrão (vazia com colunas básicas)
+    const defaultConfig: TableConfig = {
+      columns: [],
+      gridOptions: {
+        sortable: true,
+        filterable: false,
+        pagination: {
+          pageSize: 10,
+          pageSizeOptions: [5, 10, 25, 50],
+          showFirstLastButtons: true
+        }
+      },
+      toolbar: {
+        visible: false
+      }
+    };
+
+    this.editedConfig = defaultConfig;
+    this.updateCanSaveState();
+    this.showSuccess('Configurações resetadas para padrão');
   }
 
   onSave(): void {
-    // TODO: Implementar salvamento das configurações
-    if (this.canSave) {
-      this.statusMessage = 'Configurações salvas com sucesso!';
-      this.hasSuccess = true;
-      this.hasErrors = false;
+    if (!this.canSave) {
+      this.showError('Não há alterações válidas para salvar');
+      return;
+    }
+
+    // Validação final
+    try {
+      // Garantir que a configuração editada é válida
+      if (!this.editedConfig || !Array.isArray(this.editedConfig.columns)) {
+        throw new Error('Configuração inválida');
+      }
+
+      this.showSuccess('Configurações salvas com sucesso!');
       
-      // Fechar modal após 1 segundo
+      // Fechar modal após 1 segundo retornando a configuração editada
       setTimeout(() => {
-        this.dialogRef.close(this.data.config);
+        this.dialogRef.close(this.editedConfig);
       }, 1000);
+      
+    } catch (error) {
+      this.showError('Configuração inválida. Verifique os campos.');
     }
   }
 }

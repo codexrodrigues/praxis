@@ -164,8 +164,11 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
   }
 
   openConfigEditor(): void {
+    // Criar cópia profunda da configuração para evitar alterações acidentais
+    const configCopy = JSON.parse(JSON.stringify(this.config)) as TableConfig;
+    
     const dialogRef = this.dialog.open(PraxisTableConfigEditor, {
-      data: { config: this.config },
+      data: { config: configCopy },
       width: '90%',
       height: '90%',
       maxWidth: '1200px',
@@ -177,13 +180,16 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
 
     dialogRef.afterClosed().subscribe((result: TableConfig | undefined) => {
       if (result) {
-        // TODO: Aplicar as configurações retornadas
+        // Aplicar as configurações retornadas
         console.log('Configurações atualizadas:', result);
         this.config = { ...result };
         this.setupColumns();
+        this.applyDataSourceSettings();
         if (this.resourcePath) {
           this.fetchData();
         }
+        // Forçar detecção de mudanças
+        this.cdr.detectChanges();
       }
     });
   }
