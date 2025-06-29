@@ -10,7 +10,8 @@ import {
   OnDestroy,
   signal,
   computed,
-  effect
+  effect,
+  OnInit
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -52,14 +53,14 @@ import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
   ],
   template: `
     <h2>Editor de Configuração da Tabela</h2>
-    <mat-tab-group>
+    <mat-tab-group animationDuration="0ms"> <!-- Desabilitar animações pode ajudar em alguns cenários de detecção de mudança -->
 
       <mat-tab>
         <ng-template mat-tab-label>
           <mat-icon>view_column</mat-icon>
           <span>Colunas</span>
         </ng-template>
-        <praxis-table-columns-config [config]="workingConfig()" (configChange)="onConfigChange($event, 'columns')"></praxis-table-columns-config>
+        <praxis-table-columns-config [config]="workingConfig()" (configChange)="onConfigChange($event)"></praxis-table-columns-config>
       </mat-tab>
 
       <mat-tab>
@@ -67,53 +68,53 @@ import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
           <mat-icon>code</mat-icon>
           <span>JSON</span>
         </ng-template>
-        <praxis-table-json-config [config]="workingConfig()" (configChange)="onJsonChange($event.config, $event.valid)"> </praxis-table-json-config>
+        <praxis-table-json-config #jsonEditor [config]="workingConfig()" (configChange)="onJsonChange($event.config, $event.valid)"> </praxis-table-json-config>
       </mat-tab>
       <mat-tab>
         <ng-template mat-tab-label>
           <mat-icon>format_list_numbered</mat-icon>
           <span>Paginação</span>
         </ng-template>
-        <praxis-table-pagination-config [config]="workingConfig()" (configChange)="onConfigChange($event, 'pagination')"></praxis-table-pagination-config>
+        <praxis-table-pagination-config [config]="workingConfig()" (configChange)="onConfigChange($event)"></praxis-table-pagination-config>
       </mat-tab>
       <mat-tab>
         <ng-template mat-tab-label>
           <mat-icon>tune</mat-icon>
           <span>Grid</span>
         </ng-template>
-        <praxis-table-grid-options-config [config]="workingConfig()" (configChange)="onConfigChange($event, 'grid')"></praxis-table-grid-options-config>
+        <praxis-table-grid-options-config [config]="workingConfig()" (configChange)="onConfigChange($event)"></praxis-table-grid-options-config>
       </mat-tab>
       <mat-tab>
         <ng-template mat-tab-label>
           <mat-icon>dashboard</mat-icon>
           <span>Toolbar</span>
         </ng-template>
-        <praxis-table-toolbar-config [config]="workingConfig()" (configChange)="onConfigChange($event, 'toolbar')"></praxis-table-toolbar-config>
+        <praxis-table-toolbar-config [config]="workingConfig()" (configChange)="onConfigChange($event)"></praxis-table-toolbar-config>
       </mat-tab>
       <mat-tab>
         <ng-template mat-tab-label>
           <mat-icon>file_download</mat-icon>
           <span>Exportar</span>
         </ng-template>
-        <praxis-table-export-config [config]="workingConfig()" (configChange)="onConfigChange($event, 'export')"></praxis-table-export-config>
+        <praxis-table-export-config [config]="workingConfig()" (configChange)="onConfigChange($event)"></praxis-table-export-config>
       </mat-tab>
       <mat-tab>
         <ng-template mat-tab-label>
           <mat-icon>message</mat-icon>
           <span>Mensagens</span>
         </ng-template>
-        <praxis-table-messages-config [config]="workingConfig()" (configChange)="onConfigChange($event, 'messages')"></praxis-table-messages-config>
+        <praxis-table-messages-config [config]="workingConfig()" (configChange)="onConfigChange($event)"></praxis-table-messages-config>
       </mat-tab>
       <mat-tab>
         <ng-template mat-tab-label>
           <mat-icon>list</mat-icon>
           <span>Ações da linha</span>
         </ng-template>
-        <praxis-table-row-actions-config [config]="workingConfig()" (configChange)="onConfigChange($event, 'actions')"></praxis-table-row-actions-config>
+        <praxis-table-row-actions-config [config]="workingConfig()" (configChange)="onConfigChange($event)"></praxis-table-row-actions-config>
       </mat-tab>
     </mat-tab-group>
     <div style="margin-top:1rem;text-align:right;">
-      <span style="color:red;margin-right:auto;" *ngIf="!jsonValid()">JSON inválido</span>
+      <span style="color:red;margin-right:auto; font-size: 0.9em;" *ngIf="!jsonValid()">JSON inválido</span>
       <button mat-button (click)="onCancel()">Cancelar</button>
       <button mat-button color="primary" (click)="onSave()" [disabled]="!canSave()">Salvar</button>
     </div>
@@ -127,52 +128,63 @@ export class PraxisTableConfigEditor implements OnDestroy {
   @Input({ required: true }) config: TableConfig = { columns: [] };
   @Output() save = new EventEmitter<TableConfig>();
   @Output() cancel = new EventEmitter<void>();
-  @ViewChild(PraxisTableJsonConfig) jsonEditor: PraxisTableJsonConfig | undefined;
+  @ViewChild('jsonEditor') jsonEditorRef!: PraxisTableJsonConfig; // Usando definite assignment
 
   // Signals para gerenciamento reativo de estado
   private readonly configSignal = signal<TableConfig>({ columns: [] });
   private readonly jsonValidSignal = signal<boolean>(true);
-  private readonly configHashSignal = signal<string>('');
+  private readonly currentConfigHashSignal = signal<string>(''); // Hash da configuração atual em configSignal
+  private readonly initialConfigHashSignal = signal<string>(''); // Hash da configuração inicial (para hasChanges)
 
   // Computed values
   readonly workingConfig = computed(() => this.configSignal());
   readonly jsonValid = computed(() => this.jsonValidSignal());
+  readonly hasChanges = computed(() => this.currentConfigHashSignal() !== this.initialConfigHashSignal());
   readonly canSave = computed(() => this.jsonValid() && this.hasChanges());
 
   // Subject para cleanup
   private readonly destroy$ = new Subject<void>();
-  private readonly configChanges$ = new Subject<{config: TableConfig, source: string}>();
-
-  // Estado para prevenir loops
-  private isUpdating = false;
-  private lastUpdateSource = '';
+  // Stream para todas as mudanças de configuração (de abas de formulário ou JSON)
+  private readonly configUpdates$ = new Subject<TableConfig>();
 
   constructor(
     private dialogRef: MatDialogRef<PraxisTableConfigEditor>,
     @Inject(MAT_DIALOG_DATA) public data: { config?: TableConfig },
     private cdr: ChangeDetectorRef
   ) {
-    const initialConfig = data?.config || this.config;
-    this.configSignal.set(mergeWithDefaults(initialConfig));
-    this.updateConfigHash(this.configSignal());
+    const initialDialogConfig = mergeWithDefaults(this.data?.config || this.config);
+    this.configSignal.set(initialDialogConfig);
 
-    // Setup da stream de mudanças com debounce e distinct
-    this.configChanges$
-      .pipe(
-        debounceTime(50),
-        distinctUntilChanged((prev, curr) =>
-          this.getConfigHash(prev.config) === this.getConfigHash(curr.config)
-        ),
-        takeUntil(this.destroy$)
-      )
-      .subscribe(({ config, source }) => {
-        this.handleConfigChange(config, source);
-      });
+    const initialHash = this.calculateConfigHash(initialDialogConfig);
+    this.initialConfigHashSignal.set(initialHash);
+    this.currentConfigHashSignal.set(initialHash);
 
-    // Effect para reagir a mudanças no sinal
+    // Processa todas as atualizações de configuração
+    this.configUpdates$.pipe(
+      debounceTime(75), // Aumentado ligeiramente o debounce
+      distinctUntilChanged((prevConfig, currConfig) =>
+        this.calculateConfigHash(prevConfig) === this.calculateConfigHash(currConfig)
+      ),
+      takeUntil(this.destroy$)
+    ).subscribe(newConfig => {
+      this.configSignal.set(newConfig); // Atualiza o signal central
+      this.cdr.markForCheck(); // Garante que a UI reaja se a mudança vier de fora do ciclo Angular
+    });
+
+    // Effect para reagir a mudanças no configSignal
     effect(() => {
-      const config = this.configSignal();
-      this.updateJsonEditor(config);
+      const currentConfig = this.configSignal();
+      this.currentConfigHashSignal.set(this.calculateConfigHash(currentConfig));
+
+      // Atualiza o editor JSON, se existir e se a configuração for diferente
+      // A lógica interna do jsonEditor (lastEmittedHash) previne loops de re-emissão.
+      // A verificação this.jsonEditorRef?.configHashSignal() !== this.currentConfigHashSignal()
+      // é uma otimização adicional se o jsonEditor expor seu hash.
+      // Por agora, confiamos que updateJsonFromConfig é seguro/idempotente ou tem suas guardas.
+      if (this.jsonEditorRef) {
+         this.jsonEditorRef.updateJsonFromConfig(currentConfig);
+      }
+      this.cdr.markForCheck();
     });
   }
 
@@ -181,67 +193,37 @@ export class PraxisTableConfigEditor implements OnDestroy {
     this.destroy$.complete();
   }
 
-  onJsonChange(cfg: TableConfig, valid: boolean): void {
-    this.jsonValidSignal.set(valid);
-    if (valid) {
-      this.onConfigChange(cfg, 'json');
+  // Chamado pela aba JSON quando sua configuração muda
+  onJsonChange(newConfigFromEditor: TableConfig, isValid: boolean): void {
+    this.jsonValidSignal.set(isValid);
+    if (isValid) {
+      // Não precisamos clonar aqui, pois o editor JSON já deve fornecer um novo objeto
+      // ou um objeto que será clonado pelo distinctUntilChanged/structuredClone na stream.
+      this.configUpdates$.next(newConfigFromEditor);
     }
   }
 
-  onConfigChange(cfg: TableConfig, source: string = 'unknown'): void {
-    if (this.isUpdating || this.lastUpdateSource === source) {
-      return;
+  // Chamado pelas abas de formulário quando sua configuração muda
+  onConfigChange(newConfigFromTab: TableConfig): void {
+    // Os componentes filhos já emitem a configuração completa e clonada.
+    this.configUpdates$.next(newConfigFromTab);
+  }
+
+  private calculateConfigHash(config: TableConfig): string {
+    try {
+      // Serialização estável pode ser importante se a ordem das chaves variar,
+      // mas para TableConfig geralmente não é um problema.
+      return btoa(JSON.stringify(config)).slice(0, 32);
+    } catch (e) {
+      console.error("Erro ao calcular hash da configuração:", e);
+      // Retorna um hash único para tratar como diferente em caso de erro
+      return `error-${Date.now()}-${Math.random()}`;
     }
-
-    this.configChanges$.next({ config: cfg, source });
-  }
-
-  private handleConfigChange(cfg: TableConfig, source: string): void {
-    const newHash = this.getConfigHash(cfg);
-    const currentHash = this.configHashSignal();
-
-    if (newHash === currentHash) {
-      return; // Sem mudanças reais
-    }
-
-    this.isUpdating = true;
-    this.lastUpdateSource = source;
-
-    this.configSignal.set(structuredClone(cfg));
-    this.updateConfigHash(cfg);
-
-    // Reset state after update
-    setTimeout(() => {
-      this.isUpdating = false;
-      this.lastUpdateSource = '';
-      this.cdr.markForCheck();
-    }, 100);
-  }
-
-  private updateJsonEditor(config: TableConfig): void {
-    if (this.jsonEditor && !this.isUpdating && this.lastUpdateSource !== 'json') {
-      this.jsonEditor.updateJsonFromConfig(config);
-    }
-  }
-
-  private getConfigHash(config: TableConfig): string {
-    // Usar uma estratégia de hash eficiente
-    return btoa(JSON.stringify(config)).slice(0, 32);
-  }
-
-  private updateConfigHash(config: TableConfig): void {
-    this.configHashSignal.set(this.getConfigHash(config));
-  }
-
-  private hasChanges(): boolean {
-    const originalHash = this.getConfigHash(mergeWithDefaults(this.config));
-    return this.configHashSignal() !== originalHash;
   }
 
   onSave(): void {
-    if (this.canSave()) {
-      const finalConfig = this.workingConfig();
-      console.log('Salvando configuração:', JSON.stringify(finalConfig, null, 2));
+    if (this.canSave()) { // canSave já verifica jsonValid e hasChanges
+      const finalConfig = this.workingConfig(); // workingConfig é o configSignal()
       this.save.emit(finalConfig);
       this.dialogRef.close(finalConfig);
     }
