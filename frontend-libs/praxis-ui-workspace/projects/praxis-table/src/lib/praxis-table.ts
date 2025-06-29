@@ -215,28 +215,28 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
   }
 
 openConfigEditor(): void {
-  this.dialog
-    .open(PraxisTableConfigEditor, {
-      data: { config: this.config },
-      width: '80%',
-      height: '80%',
-      maxHeight: '90vh',
-      maxWidth: '90vw'
-    })
-    .afterClosed()
-    .subscribe((result: TableConfig | undefined) => {
-      if (result) {
-        this.config = { ...result };
+  const dialogRef = this.dialog.open(PraxisTableConfigEditor, {
+    width: '80%',
+    height: '80%',
+    maxHeight: '90vh',
+    maxWidth: '90vw'
+  });
 
-        this.applyDataSourceSettings();
-        this.setupColumns();
-        // Recarrega os dados após atualizar a configuração
-        if (this.resourcePath) {
-          this.fetchData();
-        }
-        ///this.cdr.detectChanges();
+  // Defina o input diretamente na instância do componente
+  dialogRef.componentInstance.config = { ...this.config };
+  // Força a atualização do componente do diálogo
+  dialogRef.componentInstance.cdr.detectChanges();
+
+  dialogRef.afterClosed().subscribe((result: TableConfig | undefined) => {
+    if (result) {
+      this.config = { ...result };
+      this.applyDataSourceSettings();
+      this.setupColumns();
+      if (this.resourcePath) {
+        this.fetchData();
       }
-    });
+    }
+  });
 }
 
   private applyDataSourceSettings(): void {

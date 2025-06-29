@@ -124,7 +124,7 @@ import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
   `]
 
 })
-export class PraxisTableConfigEditor implements OnDestroy {
+export class PraxisTableConfigEditor implements OnDestroy  {
   @Input({ required: true }) config: TableConfig = { columns: [] };
   @Output() save = new EventEmitter<TableConfig>();
   @Output() cancel = new EventEmitter<void>();
@@ -149,10 +149,13 @@ export class PraxisTableConfigEditor implements OnDestroy {
 
   constructor(
     private dialogRef: MatDialogRef<PraxisTableConfigEditor>,
-    @Inject(MAT_DIALOG_DATA) public data: { config?: TableConfig },
-    private cdr: ChangeDetectorRef
+    public cdr: ChangeDetectorRef
   ) {
-    const initialDialogConfig = mergeWithDefaults(this.data?.config || this.config);
+
+  }
+
+  ngOnInit (): void {
+    const initialDialogConfig = mergeWithDefaults(this.config);
     this.configSignal.set(initialDialogConfig);
 
     const initialHash = this.calculateConfigHash(initialDialogConfig);
@@ -182,7 +185,7 @@ export class PraxisTableConfigEditor implements OnDestroy {
       // é uma otimização adicional se o jsonEditor expor seu hash.
       // Por agora, confiamos que updateJsonFromConfig é seguro/idempotente ou tem suas guardas.
       if (this.jsonEditorRef) {
-         this.jsonEditorRef.updateJsonFromConfig(currentConfig);
+        this.jsonEditorRef.config = this.config;
       }
       this.cdr.markForCheck();
     });
