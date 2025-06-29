@@ -11,7 +11,9 @@ import {
   signal,
   computed,
   effect,
-  OnInit
+  OnInit,
+  runInInjectionContext,
+  Injector
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -149,7 +151,8 @@ export class PraxisTableConfigEditor implements OnDestroy  {
 
   constructor(
     private dialogRef: MatDialogRef<PraxisTableConfigEditor>,
-    public cdr: ChangeDetectorRef
+    public cdr: ChangeDetectorRef,
+    private injector: Injector
   ) {
 
   }
@@ -175,9 +178,23 @@ export class PraxisTableConfigEditor implements OnDestroy  {
     });
 
     // Effect para reagir a mudanças no configSignal
-    effect(() => {
-      const currentConfig = this.configSignal();
-      this.currentConfigHashSignal.set(this.calculateConfigHash(currentConfig));
+    runInInjectionContext(this.injector, () => {
+      effect(() => {
+        const currentConfig = this.configSignal();
+        this.currentConfigHashSignal.set(this.calculateConfigHash(currentConfig));
+
+        // Atualiza o editor JSON, se existir e se a configuração for diferente
+        // A lógica interna do jsonEditor (lastEmittedHash) previne loops de re-emissão.
+        // A verificação this.jsonEditorRef?.configHashSignal() !== this.currentConfigHashSignal()
+        // é uma otimização adicional se o jsonEditor expor seu hash.
+        // Por agora, confiamos que updateJsonFromConfig é seguro/idempotente ou tem suas guardas.
+        if (this.jsonEditorRef) {
+          this.jsonEditorRef.config = this.config;
+        }
+        this.cdr.markForCheck();
+      });
+    });
+  }
 
       // Atualiza o editor JSON, se existir e se a configuração for diferente
       // A lógica interna do jsonEditor (lastEmittedHash) previne loops de re-emissão.
