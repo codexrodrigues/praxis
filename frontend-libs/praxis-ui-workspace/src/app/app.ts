@@ -9,6 +9,23 @@ import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatSelectModule} from '@angular/material/select';
 import {PraxisTable} from '@praxis/table';
 
+
+
+// After
+declare global {
+  interface Window {
+    MonacoEnvironment: {
+      getWorkerUrl: (moduleId: string, label: string) => string;
+    };
+  }
+}
+
+window.MonacoEnvironment = {
+  getWorkerUrl: function (moduleId: string, label: string): string {
+    return '/assets/monaco/min/vs/base/worker/workerMain.js';
+  }
+}
+
 @Component({
   selector: 'app-root',
   imports: [MatSidenavModule, MatFormFieldModule, MatSelectModule, MatButtonModule, MatIcon, MatToolbar, PraxisTable, MatNavList, MatListSubheaderCssMatStyler, MatListItem, RouterLink, RouterOutlet, RouterLinkActive],
@@ -54,4 +71,8 @@ export class App {
   onResize(event: any): void {
     this.isMenuOpen = window.innerWidth > 768;
   }
+
+
+
+
 }

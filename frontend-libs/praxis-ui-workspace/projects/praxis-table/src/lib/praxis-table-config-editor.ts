@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, Inject } from '@angular/core';
+import {Component, EventEmitter, Input, Output, Inject, ViewChild} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -38,6 +38,13 @@ import { mergeWithDefaults } from './table-config-defaults';
   template: `
     <h2>Editor de Configuração da Tabela</h2>
     <mat-tab-group>
+      <mat-tab>
+        <ng-template mat-tab-label>
+          <mat-icon>view_column</mat-icon>
+          <span>Colunas</span>
+        </ng-template>
+        <praxis-table-columns-config [config]="workingConfig" (configChange)="workingConfig = $event"></praxis-table-columns-config>
+      </mat-tab>
       <mat-tab>
         <ng-template mat-tab-label>
           <mat-icon>code</mat-icon>
@@ -82,13 +89,6 @@ import { mergeWithDefaults } from './table-config-defaults';
       </mat-tab>
       <mat-tab>
         <ng-template mat-tab-label>
-          <mat-icon>view_column</mat-icon>
-          <span>Colunas</span>
-        </ng-template>
-        <praxis-table-columns-config [config]="workingConfig" (configChange)="workingConfig = $event"></praxis-table-columns-config>
-      </mat-tab>
-      <mat-tab>
-        <ng-template mat-tab-label>
           <mat-icon>list</mat-icon>
           <span>Ações da linha</span>
         </ng-template>
@@ -110,6 +110,8 @@ export class PraxisTableConfigEditor {
   @Input() config: TableConfig = { columns: [], data: [] };
   @Output() save = new EventEmitter<TableConfig>();
   @Output() cancel = new EventEmitter<void>();
+  // Adiciona referência ao componente JSON
+  @ViewChild(PraxisTableJsonConfig) jsonEditor: PraxisTableJsonConfig | undefined;
 
   constructor(
     private dialogRef: MatDialogRef<PraxisTableConfigEditor>,
@@ -133,6 +135,18 @@ export class PraxisTableConfigEditor {
   }
 
   onSave(): void {
+    // Garante que temos a versão mais atual do JSON
+    if (this.jsonValid) {
+      try {
+        // Tenta obter a versão mais recente do editor JSON
+        const jsonConfig = JSON.parse(this.jsonEditor?.jsonText || '{}');
+        this.workingConfig = jsonConfig;
+      } catch (e) {
+        console.error('Erro ao processar JSON mais recente', e);
+      }
+    }
+
+    console.log(JSON.stringify(this.workingConfig, null, 2));
     this.save.emit(this.workingConfig);
     this.dialogRef.close(this.workingConfig);
   }

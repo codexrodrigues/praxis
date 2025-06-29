@@ -74,21 +74,6 @@ import { BehaviorSubject, take } from 'rxjs';
         </td>
       </ng-container>
 
-      <ng-container *ngIf="config.showActionsColumn" matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef>Ações</th>
-        <td mat-cell *matCellDef="let row">
-          <ng-container *ngFor="let action of config.rowActions">
-            <button mat-button
-                    [color]="action.color"
-                    [disabled]="action.disabled"
-                    (click)="onRowAction(action.action, row)">
-              <mat-icon *ngIf="action.icon">{{ action.icon }}</mat-icon>
-              {{ action.label }}
-            </button>
-          </ng-container>
-        </td>
-      </ng-container>
-
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
     </table>

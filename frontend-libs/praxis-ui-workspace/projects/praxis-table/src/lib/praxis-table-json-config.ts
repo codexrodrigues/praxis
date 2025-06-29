@@ -1,4 +1,4 @@
-import {Component, EventEmitter, importProvidersFrom, Input, Output} from '@angular/core';
+import {Component, EventEmitter, importProvidersFrom, Input, Output, SimpleChanges} from '@angular/core';
   import { CommonModule } from '@angular/common';
   import { FormsModule } from '@angular/forms';
   import { MatButtonModule } from '@angular/material/button';
@@ -64,7 +64,7 @@ import {Component, EventEmitter, importProvidersFrom, Input, Output} from '@angu
       language: 'json',
       automaticLayout: true,
       minimap: {
-        enabled: true
+        enabled: false
       },
       scrollBeyondLastLine: false,
       formatOnPaste: true,
