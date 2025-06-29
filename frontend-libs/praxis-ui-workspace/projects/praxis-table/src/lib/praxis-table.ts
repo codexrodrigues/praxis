@@ -1,54 +1,36 @@
 import {
+  AfterContentInit,
+  AfterViewInit,
+  ChangeDetectorRef,
   Component,
+  ContentChild,
   Input,
   OnChanges,
-  ViewChild,
-  AfterViewInit,
-  EventEmitter,
-  Output,
   SimpleChanges,
-  AfterContentInit,
-  ContentChild,
-  ChangeDetectorRef
+  ViewChild
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { MatTableModule, MatTableDataSource } from '@angular/material/table';
-import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
-import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { PraxisTableConfigEditor } from './praxis-table-config-editor';
-import { TableConfig, GenericCrudService, Page, Pageable, FieldDefinition, ColumnDefinition } from '@praxis/core';
-import { PraxisTableEvent } from './praxis-table-event';
-import { PraxisTableToolbar } from './praxis-table-toolbar';
-import { BehaviorSubject, take } from 'rxjs';
+import {CommonModule} from '@angular/common';
+import {MatTableDataSource, MatTableModule} from '@angular/material/table';
+import {MatPaginator, MatPaginatorModule, PageEvent} from '@angular/material/paginator';
+import {MatSort, MatSortModule, Sort} from '@angular/material/sort';
+import {MatButtonModule} from '@angular/material/button';
+import {MatIconModule} from '@angular/material/icon';
+import {MatMenuModule} from '@angular/material/menu';
+import {MatDialog, MatDialogModule} from '@angular/material/dialog';
+import {ColumnDefinition, FieldDefinition, GenericCrudService, Page, Pageable, TableConfig} from '@praxis/core';
+import {BehaviorSubject, take} from 'rxjs';
+import {PraxisTableToolbar} from './praxis-table-toolbar';
 
 @Component({
   selector: 'praxis-table',
   standalone: true,
   providers: [GenericCrudService],
-  imports: [
-    CommonModule,
-    MatTableModule,
-    MatButtonModule,
-    MatPaginatorModule,
-    MatSortModule,
-    MatIconModule,
-    MatMenuModule,
-    MatDialogModule,
-    PraxisTableToolbar
-  ],
+  imports: [CommonModule, MatTableModule, MatButtonModule, MatPaginatorModule, MatSortModule, MatIconModule, MatMenuModule, MatDialogModule, PraxisTableToolbar,],
   template: `
     <praxis-table-toolbar *ngIf="showToolbar"
                           [config]="config"
                           [showFilter]="showFilter"
-                          [filterValue]="filterValue"
-                          (newRecord)="newRecord.emit($event)"
-                          (toolbarAction)="toolbarAction.emit($event)"
-                          (exportData)="exportData.emit($event)"
-                          (filterInput)="onFilterInput($event.payload)">
+                          [filterValue]="filterValue">
       <ng-content select="[advancedFilter]"/>
       <ng-content select="[toolbar]"/>
     </praxis-table-toolbar>
@@ -85,10 +67,16 @@ import { BehaviorSubject, take } from 'rxjs';
                    (page)="onPageChange($event)">
     </mat-paginator>
   `,
-  styles: [`table{width:100%;}.spacer{flex:1 1 auto;}`]
+  styles: [`table {
+    width: 100%;
+  }
+
+  .spacer {
+    flex: 1 1 auto;
+  }`]
 })
 export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
-  @Input() config: TableConfig = { columns: [] };
+  @Input() config: TableConfig = {columns: []};
   @Input() resourcePath?: string;
   @Input() filterCriteria: any = {};
   /** Controls toolbar visibility */
@@ -100,15 +88,6 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
   /** Enable edit mode */
   @Input() editModeEnabled = false;
 
-  @Output() newRecord = new EventEmitter<PraxisTableEvent<void>>();
-  @Output() toolbarAction = new EventEmitter<PraxisTableEvent<string>>();
-  @Output() exportData = new EventEmitter<PraxisTableEvent<'excel' | 'pdf'>>();
-  @Output() filterChange = new EventEmitter<PraxisTableEvent<any>>();
-
-  @Output() pageChange = new EventEmitter<PraxisTableEvent<PageEvent>>();
-  @Output() sortChange = new EventEmitter<PraxisTableEvent<Sort>>();
-  @Output() rowAction = new EventEmitter<PraxisTableEvent<{action: string; row: any}>>();
-
   @ViewChild(MatPaginator) paginator?: MatPaginator;
   @ViewChild(MatSort) sort?: MatSort;
 
@@ -117,34 +96,18 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
   dataSource = new MatTableDataSource<any>();
   displayedColumns: string[] = [];
   visibleColumns: ColumnDefinition[] = [];
-
+  filterValue = '';
   private dataSubject = new BehaviorSubject<any[]>([]);
   private pageIndex = 0;
   private pageSize = 5;
-  private sortState: Sort = { active: '', direction: '' };
+  private sortState: Sort = {active: '', direction: ''};
 
-  filterValue = '';
-
-
-  constructor(
-    private crudService: GenericCrudService<any>,
-    private cdr: ChangeDetectorRef,
-    private dialog: MatDialog
-  ) {
+  constructor(private crudService: GenericCrudService<any>, private cdr: ChangeDetectorRef, private dialog: MatDialog) {
     this.dataSubject.subscribe(data => (this.dataSource.data = data));
   }
 
   ngAfterContentInit(): void {
     this.showToolbar = this.config.toolbar?.visible ?? this.showToolbar;
-    this.showFilter = this.config.gridOptions?.filterable ?? this.showFilter;
-
-    if (this.advancedFilterComponent && this.advancedFilterComponent.criteriaChange) {
-      this.advancedFilterComponent.criteriaChange.subscribe((criteria: any) => {
-        this.filterCriteria = criteria;
-        this.filterChange.emit({ type: 'filterChange', payload: this.filterCriteria });
-        this.fetchData();
-      });
-    }
 
     // Inicialização inicial dos dados e colunas
     this.setupColumns();
@@ -187,7 +150,6 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
   onPageChange(event: PageEvent): void {
     this.pageIndex = event.pageIndex;
     this.pageSize = event.pageSize;
-    this.pageChange.emit({ type: 'page', payload: event });
     if (this.resourcePath) {
       this.fetchData();
     }
@@ -195,49 +157,14 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
 
   onSortChange(event: Sort): void {
     this.sortState = event;
-    this.sortChange.emit({ type: 'sort', payload: event });
     if (this.resourcePath) {
       this.fetchData();
     }
   }
 
-  onFilterInput(value: string): void {
-    this.filterValue = value;
-    this.filterCriteria = { ...this.filterCriteria, query: value };
-    this.filterChange.emit({ type: 'filterChange', payload: this.filterCriteria });
-    if (this.resourcePath) {
-      this.fetchData();
-    }
+  openConfigEditor(): void {
+    //Abrir o editor de configuração em um diálogo
   }
-
-  onRowAction(action: string, row: any): void {
-    this.rowAction.emit({ type: action, payload: { action, row } });
-  }
-
-openConfigEditor(): void {
-  const dialogRef = this.dialog.open(PraxisTableConfigEditor, {
-    width: '80%',
-    height: '80%',
-    maxHeight: '90vh',
-    maxWidth: '90vw'
-  });
-
-  // Defina o input diretamente na instância do componente
-  dialogRef.componentInstance.config = { ...this.config };
-  // Força a atualização do componente do diálogo
-  dialogRef.componentInstance.cdr.detectChanges();
-
-  dialogRef.afterClosed().subscribe((result: TableConfig | undefined) => {
-    if (result) {
-      this.config = { ...result };
-      this.applyDataSourceSettings();
-      this.setupColumns();
-      if (this.resourcePath) {
-        this.fetchData();
-      }
-    }
-  });
-}
 
   private applyDataSourceSettings(): void {
     if (this.paginator) {
@@ -284,8 +211,7 @@ openConfigEditor(): void {
       return;
     }
     const pageable: Pageable = {
-      pageNumber: this.pageIndex,
-      pageSize: this.pageSize
+      pageNumber: this.pageIndex, pageSize: this.pageSize
     };
     if (this.sortState.active && this.sortState.direction) {
       pageable.sort = `${this.sortState.active},${this.sortState.direction}`;
