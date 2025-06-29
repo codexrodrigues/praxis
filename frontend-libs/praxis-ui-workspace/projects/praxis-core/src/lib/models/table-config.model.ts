@@ -106,12 +106,6 @@ export interface SelectionOptions {
 
 export interface TableConfig {
   /**
-   * Data to be rendered in the table
-   */
-  data: any[];
-
-  /**
-   *
    * Column definitions describing how data should be displayed
    */
   columns: ColumnDefinition[];
