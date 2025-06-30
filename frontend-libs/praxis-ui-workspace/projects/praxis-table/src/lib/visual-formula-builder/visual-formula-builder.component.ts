@@ -22,6 +22,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import {
   FormulaDefinition,
   FieldSchema,
@@ -49,7 +50,8 @@ import { FormulaGeneratorService } from './formula-generator.service';
     MatChipsModule,
     MatTooltipModule,
     MatExpansionModule,
-    MatDividerModule
+    MatDividerModule,
+    MatButtonToggleModule
   ],
   template: `
     <div class="visual-formula-builder">
@@ -160,6 +162,80 @@ import { FormulaGeneratorService } from './formula-generator.service';
                 </mat-select>
                 <mat-hint>{{ paramSchema.hint }}</mat-hint>
               </mat-form-field>
+
+              <!-- Value Input - Field or Literal -->
+              <div *ngIf="paramSchema.type === 'value_input'" class="value-input-container">
+                <div class="value-input-selector">
+                  <mat-button-toggle-group 
+                    [value]="getValueInputMode(paramSchema.key)" 
+                    (change)="onValueInputModeChange(paramSchema.key, $event.value)"
+                    class="input-mode-toggle">
+                    <mat-button-toggle value="field">
+                      <mat-icon>data_object</mat-icon>
+                      Campo
+                    </mat-button-toggle>
+                    <mat-button-toggle value="literal">
+                      <mat-icon>edit</mat-icon>
+                      Literal
+                    </mat-button-toggle>
+                  </mat-button-toggle-group>
+                </div>
+
+                <!-- Field Selection Mode -->
+                <mat-form-field *ngIf="getValueInputMode(paramSchema.key) === 'field'" appearance="outline" class="full-width">
+                  <mat-label>{{ paramSchema.label }}</mat-label>
+                  <mat-select
+                    [value]="getValueInputValue(paramSchema.key)"
+                    (selectionChange)="onValueInputFieldChange(paramSchema.key, $event.value)">
+                    <mat-option *ngFor="let field of availableDataSchema" [value]="field.name">
+                      <div class="field-option">
+                        <mat-icon class="field-type-icon">{{ getFieldTypeIcon(field.type) }}</mat-icon>
+                        <div class="field-info">
+                          <span class="field-label">{{ field.label }}</span>
+                          <span class="field-name">{{ field.name }}</span>
+                        </div>
+                      </div>
+                    </mat-option>
+                  </mat-select>
+                  <mat-hint>{{ paramSchema.hint }}</mat-hint>
+                </mat-form-field>
+
+                <!-- Literal Value Mode -->
+                <div *ngIf="getValueInputMode(paramSchema.key) === 'literal'" class="literal-input-container">
+                  <!-- String Input -->
+                  <mat-form-field *ngIf="paramSchema.valueType === 'string' || paramSchema.valueType === 'any'" appearance="outline" class="full-width">
+                    <mat-label>{{ paramSchema.label }}</mat-label>
+                    <input
+                      matInput
+                      [value]="getValueInputValue(paramSchema.key)"
+                      (input)="onValueInputLiteralChange(paramSchema.key, $event)"
+                      [placeholder]="paramSchema.placeholder || ''">
+                    <mat-hint>{{ paramSchema.hint }}</mat-hint>
+                  </mat-form-field>
+
+                  <!-- Number Input -->
+                  <mat-form-field *ngIf="paramSchema.valueType === 'number'" appearance="outline" class="full-width">
+                    <mat-label>{{ paramSchema.label }}</mat-label>
+                    <input
+                      matInput
+                      type="number"
+                      [value]="getValueInputValue(paramSchema.key)"
+                      (input)="onValueInputLiteralChange(paramSchema.key, $event)"
+                      [placeholder]="paramSchema.placeholder || ''">
+                    <mat-hint>{{ paramSchema.hint }}</mat-hint>
+                  </mat-form-field>
+
+                  <!-- Boolean Input -->
+                  <div *ngIf="paramSchema.valueType === 'boolean'" class="checkbox-field">
+                    <mat-checkbox
+                      [checked]="getValueInputValue(paramSchema.key)"
+                      (change)="onValueInputBooleanChange(paramSchema.key, $event.checked)">
+                      {{ paramSchema.label }}
+                    </mat-checkbox>
+                    <div class="checkbox-hint">{{ paramSchema.hint }}</div>
+                  </div>
+                </div>
+              </div>
 
             </div>
           </form>
@@ -441,6 +517,34 @@ import { FormulaGeneratorService } from './formula-generator.service';
       color: var(--mat-sys-on-error-container);
     }
 
+    /* Value Input Styles */
+    .value-input-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .value-input-selector {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .input-mode-toggle {
+      font-size: 0.875rem;
+    }
+
+    .input-mode-toggle .mat-button-toggle {
+      height: 36px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .literal-input-container {
+      width: 100%;
+    }
+
     /* Responsive Design */
     @media (max-width: 768px) {
       .test-actions {
@@ -468,6 +572,9 @@ export class VisualFormulaBuilderComponent implements OnInit, OnChanges {
   currentParams: any = {};
   generatedExpressionValue = '';
   validationErrors: string[] = [];
+  
+  // Value input tracking: maps parameter key to input mode and value
+  valueInputStates: { [key: string]: { mode: 'field' | 'literal'; value: any } } = {};
 
   // Testing
   showSampleData = false;
@@ -511,6 +618,7 @@ export class VisualFormulaBuilderComponent implements OnInit, OnChanges {
 
   private updateSelectedTemplate(): void {
     this.selectedTemplate = this.formulaTemplates.find(t => t.type === this.selectedFormulaType);
+    this.initializeValueInputStates();
     this.cdr.markForCheck();
   }
 
@@ -582,5 +690,96 @@ export class VisualFormulaBuilderComponent implements OnInit, OnChanges {
       return `"${result}"`;
     }
     return String(result);
+  }
+
+  // Value Input Management Methods
+  getValueInputMode(paramKey: string): 'field' | 'literal' {
+    return this.valueInputStates[paramKey]?.mode || 'field';
+  }
+
+  getValueInputValue(paramKey: string): any {
+    return this.valueInputStates[paramKey]?.value || '';
+  }
+
+  onValueInputModeChange(paramKey: string, mode: 'field' | 'literal'): void {
+    if (!this.valueInputStates[paramKey]) {
+      this.valueInputStates[paramKey] = { mode, value: '' };
+    } else {
+      this.valueInputStates[paramKey].mode = mode;
+      // Reset value when switching modes
+      this.valueInputStates[paramKey].value = mode === 'field' ? '' : '';
+    }
+    
+    // Update the actual parameter value
+    this.updateParameterFromValueInput(paramKey);
+  }
+
+  onValueInputFieldChange(paramKey: string, fieldName: string): void {
+    if (!this.valueInputStates[paramKey]) {
+      this.valueInputStates[paramKey] = { mode: 'field', value: fieldName };
+    } else {
+      this.valueInputStates[paramKey].value = fieldName;
+    }
+    
+    this.updateParameterFromValueInput(paramKey);
+  }
+
+  onValueInputLiteralChange(paramKey: string, event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const value = target.type === 'number' ? parseFloat(target.value) : target.value;
+    
+    if (!this.valueInputStates[paramKey]) {
+      this.valueInputStates[paramKey] = { mode: 'literal', value };
+    } else {
+      this.valueInputStates[paramKey].value = value;
+    }
+    
+    this.updateParameterFromValueInput(paramKey);
+  }
+
+  onValueInputBooleanChange(paramKey: string, checked: boolean): void {
+    if (!this.valueInputStates[paramKey]) {
+      this.valueInputStates[paramKey] = { mode: 'literal', value: checked };
+    } else {
+      this.valueInputStates[paramKey].value = checked;
+    }
+    
+    this.updateParameterFromValueInput(paramKey);
+  }
+
+  private updateParameterFromValueInput(paramKey: string): void {
+    const state = this.valueInputStates[paramKey];
+    if (state) {
+      // Store the value directly - the formula generator will handle field vs literal detection
+      this.currentParams[paramKey] = state.value;
+      this.generateAndEmitExpression();
+    }
+  }
+
+  private initializeValueInputStates(): void {
+    if (!this.selectedTemplate) return;
+    
+    // Initialize value input states for value_input parameters
+    this.selectedTemplate.parameterSchema.forEach(schema => {
+      if (schema.type === 'value_input') {
+        const currentValue = this.currentParams[schema.key];
+        
+        if (currentValue !== undefined) {
+          // Try to determine if it's a field name or literal value
+          const isFieldName = this.availableDataSchema.some(field => field.name === currentValue);
+          
+          this.valueInputStates[schema.key] = {
+            mode: isFieldName ? 'field' : 'literal',
+            value: currentValue
+          };
+        } else {
+          // Default to field mode
+          this.valueInputStates[schema.key] = {
+            mode: 'field',
+            value: ''
+          };
+        }
+      }
+    });
   }
 }

@@ -72,11 +72,12 @@ export interface FormulaTemplate {
 export interface FormulaParameterSchema {
   key: string;
   label: string;
-  type: 'field' | 'text' | 'number' | 'boolean' | 'select';
+  type: 'field' | 'text' | 'number' | 'boolean' | 'select' | 'value_input';
   required: boolean;
   options?: { value: any; label: string }[];
   placeholder?: string;
   hint?: string;
+  valueType?: 'string' | 'number' | 'boolean' | 'any'; // For value_input type
 }
 
 // Default formula templates
@@ -127,7 +128,8 @@ export const FORMULA_TEMPLATES: FormulaTemplate[] = [
       {
         key: 'operand1',
         label: 'Primeiro operando',
-        type: 'field',
+        type: 'value_input',
+        valueType: 'number',
         required: true,
         hint: 'Campo numérico ou valor constante'
       },
@@ -146,7 +148,8 @@ export const FORMULA_TEMPLATES: FormulaTemplate[] = [
       {
         key: 'operand2',
         label: 'Segundo operando',
-        type: 'field',
+        type: 'value_input',
+        valueType: 'number',
         required: true,
         hint: 'Campo numérico ou valor constante'
       }
@@ -206,21 +209,24 @@ export const FORMULA_TEMPLATES: FormulaTemplate[] = [
       {
         key: 'comparisonValue',
         label: 'Valor de comparação',
-        type: 'text',
+        type: 'value_input',
+        valueType: 'any',
         required: true,
         hint: 'Valor para comparar com o campo'
       },
       {
         key: 'trueValue',
         label: 'Valor se verdadeiro',
-        type: 'text',
+        type: 'value_input',
+        valueType: 'any',
         required: true,
         hint: 'Valor retornado quando a condição é verdadeira'
       },
       {
         key: 'falseValue',
         label: 'Valor se falso',
-        type: 'text',
+        type: 'value_input',
+        valueType: 'any',
         required: true,
         hint: 'Valor retornado quando a condição é falsa'
       }
@@ -242,7 +248,8 @@ export const FORMULA_TEMPLATES: FormulaTemplate[] = [
       {
         key: 'defaultValue',
         label: 'Valor padrão',
-        type: 'text',
+        type: 'value_input',
+        valueType: 'any',
         required: true,
         placeholder: 'N/A',
         hint: 'Valor usado quando o campo estiver vazio'

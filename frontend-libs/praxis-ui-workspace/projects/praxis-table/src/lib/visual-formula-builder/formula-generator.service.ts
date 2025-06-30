@@ -71,19 +71,17 @@ export class FormulaGeneratorService {
     }
 
     const separator = this.sanitizeStringValue(params.separator || ' ');
+    const fieldExpressions = params.fields.map(field => 
+      `(rowData.${this.sanitizeFieldName(field)} || '')`
+    );
     
     if (params.ignoreEmpty) {
-      // Filter out empty values
-      const fieldExpressions = params.fields.map(field => 
-        `(rowData.${this.sanitizeFieldName(field)} || '')`
-      );
-      return `[${fieldExpressions.join(', ')}].filter(v => v.trim() !== '').join('${separator}')`;
+      // Filter out empty values (null, undefined, empty string, whitespace-only)
+      return `[${fieldExpressions.join(', ')}].filter(v => v && String(v).trim() !== '').join('${separator}')`;
     } else {
-      // Simple concatenation
-      const fieldExpressions = params.fields.map(field => 
-        `(rowData.${this.sanitizeFieldName(field)} || '')`
-      );
-      return fieldExpressions.join(` + '${separator}' + `);
+      // Include empty values but convert them to empty strings (preserves field positions)
+      // However, use smart joining to avoid unwanted separators
+      return `[${fieldExpressions.join(', ')}].map(v => v || '').filter(v => v !== '').join('${separator}')`;
     }
   }
 
@@ -108,17 +106,17 @@ export class FormulaGeneratorService {
     const fieldAccess = `rowData.${this.sanitizeFieldName(params.conditionField)}`;
     const operator = this.sanitizeOperator(params.operator || '===');
     const comparisonValue = this.sanitizeValue(params.comparisonValue);
-    const trueValue = this.sanitizeStringValue(params.trueValue);
-    const falseValue = this.sanitizeStringValue(params.falseValue);
+    const trueValueFormatted = this.sanitizeValue(params.trueValue);
+    const falseValueFormatted = this.sanitizeValue(params.falseValue);
 
-    return `(${fieldAccess} ${operator} ${comparisonValue} ? '${trueValue}' : '${falseValue}')`;
+    return `(${fieldAccess} ${operator} ${comparisonValue} ? ${trueValueFormatted} : ${falseValueFormatted})`;
   }
 
   private generateDefaultValueExpression(params: DefaultValueParams): string {
     const fieldAccess = `rowData.${this.sanitizeFieldName(params.originalField)}`;
-    const defaultValue = this.sanitizeStringValue(params.defaultValue);
+    const defaultValueFormatted = this.sanitizeValue(params.defaultValue);
 
-    return `(${fieldAccess} || '${defaultValue}')`;
+    return `(${fieldAccess} || ${defaultValueFormatted})`;
   }
 
   // Private validation methods
