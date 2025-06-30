@@ -21,11 +21,14 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatListModule } from '@angular/material/list';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatBadgeModule } from '@angular/material/badge';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { TableConfig, ColumnDefinition } from '@praxis/core';
 import { Subject } from 'rxjs';
 import { VisualFormulaBuilderComponent } from '../visual-formula-builder/visual-formula-builder.component';
 import { FieldSchema, FormulaDefinition } from '../visual-formula-builder/formula-types';
+import { ValueMappingEditorComponent } from '../value-mapping-editor/value-mapping-editor.component';
 
 export interface ColumnChange {
   type: 'add' | 'remove' | 'update' | 'reorder' | 'global';
@@ -52,8 +55,11 @@ export interface ColumnChange {
     MatListModule,
     MatDividerModule,
     MatTooltipModule,
+    MatExpansionModule,
+    MatBadgeModule,
     DragDropModule,
-    VisualFormulaBuilderComponent
+    VisualFormulaBuilderComponent,
+    ValueMappingEditorComponent
   ],
   template: `
     <div class="columns-config-editor">
@@ -155,6 +161,14 @@ export interface ColumnChange {
                         <mat-icon class="column-type-icon"
                                   [matTooltip]="isCalculatedColumn(column) ? 'Coluna Calculada' : 'Campo da API'">
                           {{ isCalculatedColumn(column) ? 'functions' : 'data_object' }}
+                        </mat-icon>
+                        <mat-icon class="mapping-indicator-icon"
+                                  [matBadge]="getMappingCount(column)"
+                                  [matBadgeHidden]="getMappingCount(column) === 0"
+                                  matBadgeColor="accent"
+                                  matBadgeSize="small"
+                                  [matTooltip]="getMappingTooltip(column)">
+                          swap_horiz
                         </mat-icon>
                         <mat-checkbox [(ngModel)]="column.visible"
                                     (ngModelChange)="onColumnPropertyChange()"
@@ -289,6 +303,32 @@ export interface ColumnChange {
                     (generatedExpressionChange)="onGeneratedExpressionChange($event)">
                   </visual-formula-builder>
                 </div>
+              </div>
+
+              <!-- Value Mapping Editor -->
+              <div class="form-section">
+                <mat-divider></mat-divider>
+                <mat-expansion-panel class="mapping-expansion-panel">
+                  <mat-expansion-panel-header>
+                    <mat-panel-title>
+                      <mat-icon>swap_horiz</mat-icon>
+                      Mapeamento de Valores
+                    </mat-panel-title>
+                    <mat-panel-description>
+                      {{ getMappingPanelDescription(selectedColumn) }}
+                    </mat-panel-description>
+                  </mat-expansion-panel-header>
+
+                  <div class="mapping-panel-content">
+                    <value-mapping-editor
+                      [currentMapping]="getColumnMapping(selectedColumn)"
+                      [keyInputType]="getColumnKeyInputType(selectedColumn)"
+                      [labelKey]="'Valor Original'"
+                      [labelValue]="'Valor Exibido'"
+                      (mappingChange)="onMappingChange($event)">
+                    </value-mapping-editor>
+                  </div>
+                </mat-expansion-panel>
               </div>
             </form>
           </div>
@@ -533,6 +573,16 @@ export interface ColumnChange {
       color: var(--mat-sys-outline);
     }
 
+    .mapping-indicator-icon {
+      font-size: 16px;
+      color: var(--mat-sys-outline);
+      transition: color 0.2s;
+    }
+
+    .mapping-indicator-icon:has([matBadge]:not([matBadgeHidden])) {
+      color: var(--mat-sys-secondary);
+    }
+
     .visibility-checkbox {
       transform: scale(0.9);
     }
@@ -674,6 +724,14 @@ export interface ColumnChange {
 
     .formula-builder-section {
       margin-top: 16px;
+    }
+
+    .mapping-expansion-panel {
+      margin-top: 16px;
+    }
+
+    .mapping-panel-content {
+      padding: 16px 0;
     }
 
     /* Responsive Design */
@@ -993,6 +1051,71 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
     if (this.selectedColumn) {
       const extendedColumn = this.selectedColumn as any;
       extendedColumn._generatedValueGetter = expression;
+      this.onColumnPropertyChange();
+    }
+  }
+
+  // Value Mapping Management
+  getMappingCount(column: ColumnDefinition): number {
+    const extendedColumn = column as any;
+    return extendedColumn.valueMapping ? Object.keys(extendedColumn.valueMapping).length : 0;
+  }
+
+  getMappingTooltip(column: ColumnDefinition): string {
+    const count = this.getMappingCount(column);
+    if (count === 0) {
+      return 'Sem mapeamentos definidos';
+    } else if (count === 1) {
+      return '1 mapeamento definido';
+    } else {
+      return `${count} mapeamentos definidos`;
+    }
+  }
+
+  getMappingPanelDescription(column: ColumnDefinition | null): string {
+    if (!column) return 'Nenhuma coluna selecionada';
+    
+    const count = this.getMappingCount(column);
+    if (count === 0) {
+      return 'Converter valores brutos em texto amigável';
+    } else if (count === 1) {
+      return '1 mapeamento definido';
+    } else {
+      return `${count} mapeamentos definidos`;
+    }
+  }
+
+  getColumnMapping(column: ColumnDefinition | null): { [key: string | number]: string } {
+    if (!column) return {};
+    
+    const extendedColumn = column as any;
+    return extendedColumn.valueMapping || {};
+  }
+
+  getColumnKeyInputType(column: ColumnDefinition | null): 'text' | 'number' | 'boolean' {
+    if (!column) return 'text';
+    
+    // Try to infer from column field name
+    const fieldName = column.field.toLowerCase();
+    
+    if (fieldName.includes('id') || fieldName.includes('count') || 
+        fieldName.includes('price') || fieldName.includes('quantity') ||
+        fieldName.includes('amount') || fieldName.includes('number')) {
+      return 'number';
+    }
+    
+    if (fieldName.includes('active') || fieldName.includes('enabled') ||
+        fieldName.includes('visible') || fieldName.includes('is')) {
+      return 'boolean';
+    }
+    
+    return 'text';
+  }
+
+  onMappingChange(mapping: { [key: string | number]: string }): void {
+    if (this.selectedColumn) {
+      const extendedColumn = this.selectedColumn as any;
+      extendedColumn.valueMapping = mapping;
       this.onColumnPropertyChange();
     }
   }

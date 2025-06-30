@@ -166,7 +166,7 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
   openConfigEditor(): void {
     // Criar cópia profunda da configuração para evitar alterações acidentais
     const configCopy = JSON.parse(JSON.stringify(this.config)) as TableConfig;
-    
+
     const dialogRef = this.dialog.open(PraxisTableConfigEditor, {
       data: { config: configCopy },
       width: '90%',
@@ -261,25 +261,83 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
 
   /**
    * Get the cell value for a given row and column
-   * Handles both regular fields and calculated columns with formulas
+   * Handles the complete transformation pipeline:
+   * 1. _generatedValueGetter (calculated columns) or regular field access
+   * 2. valueMapping (convert values to display text)
+   * 3. format (future: formatting like dates, numbers)
    */
   getCellValue(rowData: any, column: ColumnDefinition): any {
     const extendedColumn = column as any;
-    
-    // Check if this is a calculated column with a generated expression
+    let value: any;
+
+    // Step 1: Get raw value (calculated or direct field access)
     if (extendedColumn._generatedValueGetter && extendedColumn._generatedValueGetter.trim()) {
       try {
         // Safely evaluate the generated expression
         const evaluationFunction = new Function('rowData', `return ${extendedColumn._generatedValueGetter}`);
-        return evaluationFunction(rowData);
+        value = evaluationFunction(rowData);
       } catch (error) {
         console.warn(`Error evaluating formula for column ${column.field}:`, error);
         return `[Formula Error]`;
       }
+    } else {
+      // Fallback to regular field access
+      value = this.getNestedPropertyValue(rowData, column.field);
     }
-    
-    // Fallback to regular field access
-    return this.getNestedPropertyValue(rowData, column.field);
+
+    // Step 2: Apply value mapping if defined
+    if (extendedColumn.valueMapping && Object.keys(extendedColumn.valueMapping).length > 0) {
+      value = this.applyValueMapping(value, extendedColumn.valueMapping);
+    }
+
+    // Step 3: Apply formatting (future implementation)
+    // if (extendedColumn.format) {
+    //   value = this.applyFormatting(value, extendedColumn.format);
+    // }
+
+    return value;
+  }
+
+  /**
+   * Apply value mapping to transform raw values into display-friendly text
+   */
+  private applyValueMapping(value: any, mapping: { [key: string | number]: string }): any {
+    if (value === null || value === undefined) {
+      return value;
+    }
+
+    // Try to find mapping by exact match
+    if (mapping.hasOwnProperty(value)) {
+      return mapping[value];
+    }
+
+    // Try string conversion for number/boolean values
+    const stringValue = String(value);
+    if (mapping.hasOwnProperty(stringValue)) {
+      return mapping[stringValue];
+    }
+
+    // Try number conversion for string values that represent numbers
+    if (typeof value === 'string') {
+      const numValue = parseFloat(value);
+      if (!isNaN(numValue) && isFinite(numValue) && mapping.hasOwnProperty(numValue)) {
+        return mapping[numValue];
+      }
+    }
+
+    // Try boolean conversion for string values
+    if (typeof value === 'string') {
+      const lowerValue = value.toLowerCase();
+      if (lowerValue === 'true' && mapping.hasOwnProperty('true')) {
+        return mapping['true'];
+      }
+      if (lowerValue === 'false' && mapping.hasOwnProperty('false')) {
+        return mapping['false'];
+      }
+    }
+
+    // Return original value if no mapping found
+    return value;
   }
 
   /**
