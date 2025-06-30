@@ -12,6 +12,15 @@ import {environment} from '../environments/environment';
 import {provideHttpClient} from '@angular/common/http';
 import {provideAnimationsAsync} from '@angular/platform-browser/animations/async';
 import {MonacoEditorModule, provideMonacoEditor} from 'ngx-monaco-editor-v2';
+import {
+  CurrencyPipe,
+  DatePipe,
+  DecimalPipe,
+  LowerCasePipe,
+  PercentPipe,
+  TitleCasePipe,
+  UpperCasePipe
+} from '@angular/common';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -22,6 +31,7 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     { provide: API_URL, useValue: environment.apiUrl },
     { provide: LOCALE_ID, useValue: "pt-BR" },
+    DatePipe,UpperCasePipe,DecimalPipe,CurrencyPipe,PercentPipe,LowerCasePipe,TitleCasePipe,
     provideMonacoEditor({
       defaultOptions: {
         scrollBeyondLastLine: false,

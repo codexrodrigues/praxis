@@ -21,6 +21,8 @@ import {ColumnDefinition, FieldDefinition, GenericCrudService, Page, Pageable, T
 import {BehaviorSubject, take} from 'rxjs';
 import {PraxisTableToolbar} from './praxis-table-toolbar';
 import {PraxisTableConfigEditor} from './praxis-table-config-editor';
+import {DataFormattingService} from './data-formatter/data-formatting.service';
+import {ColumnDataType} from './data-formatter/data-formatter-types';
 
 @Component({
   selector: 'praxis-table',
@@ -103,7 +105,12 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
   private pageSize = 5;
   private sortState: Sort = {active: '', direction: ''};
 
-  constructor(private crudService: GenericCrudService<any>, private cdr: ChangeDetectorRef, private dialog: MatDialog) {
+  constructor(
+    private crudService: GenericCrudService<any>, 
+    private cdr: ChangeDetectorRef, 
+    private dialog: MatDialog,
+    private formattingService: DataFormattingService
+  ) {
     this.dataSubject.subscribe(data => (this.dataSource.data = data));
   }
 
@@ -264,7 +271,7 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
    * Handles the complete transformation pipeline:
    * 1. _generatedValueGetter (calculated columns) or regular field access
    * 2. valueMapping (convert values to display text)
-   * 3. format (future: formatting like dates, numbers)
+   * 3. format (data formatting like dates, numbers, currency)
    */
   getCellValue(rowData: any, column: ColumnDefinition): any {
     const extendedColumn = column as any;
@@ -290,10 +297,15 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
       value = this.applyValueMapping(value, extendedColumn.valueMapping);
     }
 
-    // Step 3: Apply formatting (future implementation)
-    // if (extendedColumn.format) {
-    //   value = this.applyFormatting(value, extendedColumn.format);
-    // }
+    // Step 3: Apply data formatting if defined
+    if (extendedColumn.dataType && extendedColumn.format && 
+        this.formattingService.needsFormatting(extendedColumn.dataType, extendedColumn.format)) {
+      try {
+        value = this.formattingService.formatValue(value, extendedColumn.dataType, extendedColumn.format);
+      } catch (error) {
+        console.warn(`Error formatting value for column ${column.field}:`, error);
+      }
+    }
 
     return value;
   }

@@ -29,6 +29,8 @@ import { Subject } from 'rxjs';
 import { VisualFormulaBuilderComponent } from '../visual-formula-builder/visual-formula-builder.component';
 import { FieldSchema, FormulaDefinition } from '../visual-formula-builder/formula-types';
 import { ValueMappingEditorComponent } from '../value-mapping-editor/value-mapping-editor.component';
+import { DataFormatterComponent } from '../data-formatter/data-formatter.component';
+import { ColumnDataType } from '../data-formatter/data-formatter-types';
 
 export interface ColumnChange {
   type: 'add' | 'remove' | 'update' | 'reorder' | 'global';
@@ -59,7 +61,8 @@ export interface ColumnChange {
     MatBadgeModule,
     DragDropModule,
     VisualFormulaBuilderComponent,
-    ValueMappingEditorComponent
+    ValueMappingEditorComponent,
+    DataFormatterComponent
   ],
   template: `
     <div class="columns-config-editor">
@@ -278,6 +281,42 @@ export interface ColumnChange {
                 </div>
               </div>
 
+              <!-- Data Type Row -->
+              <div class="form-row">
+                <mat-form-field appearance="outline" class="data-type-input">
+                  <mat-label>Tipo de Dados</mat-label>
+                  <mat-select [(ngModel)]="selectedColumnDataType"
+                              (ngModelChange)="onDataTypeChange($event)"
+                              name="dataType">
+                    <mat-option value="string">
+                      <mat-icon>text_fields</mat-icon>
+                      Texto
+                    </mat-option>
+                    <mat-option value="number">
+                      <mat-icon>numbers</mat-icon>
+                      Número
+                    </mat-option>
+                    <mat-option value="currency">
+                      <mat-icon>attach_money</mat-icon>
+                      Moeda
+                    </mat-option>
+                    <mat-option value="percentage">
+                      <mat-icon>percent</mat-icon>
+                      Percentual
+                    </mat-option>
+                    <mat-option value="date">
+                      <mat-icon>calendar_today</mat-icon>
+                      Data
+                    </mat-option>
+                    <mat-option value="boolean">
+                      <mat-icon>toggle_on</mat-icon>
+                      Booleano
+                    </mat-option>
+                  </mat-select>
+                  <mat-hint>Define como os dados serão formatados</mat-hint>
+                </mat-form-field>
+              </div>
+
               <!-- Sticky Position Row -->
               <div class="form-row">
                 <div class="sticky-group">
@@ -327,6 +366,30 @@ export interface ColumnChange {
                       [labelValue]="'Valor Exibido'"
                       (mappingChange)="onMappingChange($event)">
                     </value-mapping-editor>
+                  </div>
+                </mat-expansion-panel>
+              </div>
+
+              <!-- Data Formatting Editor -->
+              <div class="form-section" *ngIf="showDataFormatter(selectedColumn)">
+                <mat-divider></mat-divider>
+                <mat-expansion-panel class="formatter-expansion-panel">
+                  <mat-expansion-panel-header>
+                    <mat-panel-title>
+                      <mat-icon>{{ getFormatterIcon(selectedColumn) }}</mat-icon>
+                      Formatação de Exibição
+                    </mat-panel-title>
+                    <mat-panel-description>
+                      {{ getFormatterPanelDescription(selectedColumn) }}
+                    </mat-panel-description>
+                  </mat-expansion-panel-header>
+
+                  <div class="formatter-panel-content">
+                    <data-formatter
+                      [columnType]="getColumnDataType(selectedColumn)"
+                      [currentFormat]="getColumnFormat(selectedColumn)"
+                      (formatChange)="onFormatChange($event)">
+                    </data-formatter>
                   </div>
                 </mat-expansion-panel>
               </div>
@@ -670,6 +733,11 @@ export interface ColumnChange {
       flex: 1;
     }
 
+    .data-type-input {
+      flex: 1;
+      min-width: 200px;
+    }
+
     .checkbox-group {
       display: flex;
       align-items: center;
@@ -726,11 +794,13 @@ export interface ColumnChange {
       margin-top: 16px;
     }
 
-    .mapping-expansion-panel {
+    .mapping-expansion-panel,
+    .formatter-expansion-panel {
       margin-top: 16px;
     }
 
-    .mapping-panel-content {
+    .mapping-panel-content,
+    .formatter-panel-content {
       padding: 16px 0;
     }
 
@@ -1074,7 +1144,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
 
   getMappingPanelDescription(column: ColumnDefinition | null): string {
     if (!column) return 'Nenhuma coluna selecionada';
-    
+
     const count = this.getMappingCount(column);
     if (count === 0) {
       return 'Converter valores brutos em texto amigável';
@@ -1087,28 +1157,28 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
 
   getColumnMapping(column: ColumnDefinition | null): { [key: string | number]: string } {
     if (!column) return {};
-    
+
     const extendedColumn = column as any;
     return extendedColumn.valueMapping || {};
   }
 
   getColumnKeyInputType(column: ColumnDefinition | null): 'text' | 'number' | 'boolean' {
     if (!column) return 'text';
-    
+
     // Try to infer from column field name
     const fieldName = column.field.toLowerCase();
-    
-    if (fieldName.includes('id') || fieldName.includes('count') || 
+
+    if (fieldName.includes('id') || fieldName.includes('count') ||
         fieldName.includes('price') || fieldName.includes('quantity') ||
         fieldName.includes('amount') || fieldName.includes('number')) {
       return 'number';
     }
-    
+
     if (fieldName.includes('active') || fieldName.includes('enabled') ||
         fieldName.includes('visible') || fieldName.includes('is')) {
       return 'boolean';
     }
-    
+
     return 'text';
   }
 
@@ -1116,6 +1186,126 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
     if (this.selectedColumn) {
       const extendedColumn = this.selectedColumn as any;
       extendedColumn.valueMapping = mapping;
+      this.onColumnPropertyChange();
+    }
+  }
+
+  get selectedColumnDataType(): ColumnDataType {
+    return this.getColumnDataType(this.selectedColumn);
+  }
+  set selectedColumnDataType(value: ColumnDataType) {
+    this.onDataTypeChange(value);
+  }
+
+  // Data Formatting Management
+  getColumnDataType(column: ColumnDefinition | null): ColumnDataType {
+    if (!column) return 'string';
+
+    const extendedColumn = column as any;
+    if (extendedColumn.dataType) {
+      return extendedColumn.dataType;
+    }
+
+    // Try to infer from column field name
+    const fieldName = column.field.toLowerCase();
+
+    if (fieldName.includes('date') || fieldName.includes('time') ||
+        fieldName.includes('created') || fieldName.includes('updated')) {
+      return 'date';
+    }
+
+    if (fieldName.includes('price') || fieldName.includes('amount') ||
+        fieldName.includes('cost') || fieldName.includes('value')) {
+      return 'currency';
+    }
+
+    if (fieldName.includes('percent') || fieldName.includes('rate') ||
+        fieldName.includes('ratio')) {
+      return 'percentage';
+    }
+
+    if (fieldName.includes('id') || fieldName.includes('count') ||
+        fieldName.includes('quantity') || fieldName.includes('number')) {
+      return 'number';
+    }
+
+    if (fieldName.includes('active') || fieldName.includes('enabled') ||
+        fieldName.includes('visible') || fieldName.includes('is')) {
+      return 'boolean';
+    }
+
+    return 'string';
+  }
+
+  onDataTypeChange(dataType: ColumnDataType): void {
+    if (this.selectedColumn) {
+      const extendedColumn = this.selectedColumn as any;
+      extendedColumn.dataType = dataType;
+
+      // Clear existing format when changing data type
+      extendedColumn.format = '';
+
+      this.onColumnPropertyChange();
+    }
+  }
+
+  showDataFormatter(column: ColumnDefinition | null): boolean {
+    if (!column) return false;
+
+    // Don't show formatter for calculated columns (they can use custom formatting)
+    if (this.isCalculatedColumn(column)) {
+      return false;
+    }
+
+    const dataType = this.getColumnDataType(column);
+    return dataType !== 'custom';
+  }
+
+  getFormatterIcon(column: ColumnDefinition | null): string {
+    const dataType = this.getColumnDataType(column);
+    switch (dataType) {
+      case 'date': return 'calendar_today';
+      case 'number': return 'numbers';
+      case 'currency': return 'attach_money';
+      case 'percentage': return 'percent';
+      case 'string': return 'text_fields';
+      case 'boolean': return 'toggle_on';
+      default: return 'format_shapes';
+    }
+  }
+
+  getFormatterPanelDescription(column: ColumnDefinition | null): string {
+    if (!column) return 'Nenhuma coluna selecionada';
+
+    const dataType = this.getColumnDataType(column);
+    const hasFormat = this.getColumnFormat(column).length > 0;
+
+    if (hasFormat) {
+      return 'Formatação personalizada aplicada';
+    }
+
+    switch (dataType) {
+      case 'date': return 'Configure como as datas são exibidas';
+      case 'number': return 'Defina a formatação de números';
+      case 'currency': return 'Configure valores monetários';
+      case 'percentage': return 'Formate percentuais';
+      case 'string': return 'Transforme a apresentação de texto';
+      case 'boolean': return 'Escolha exibição de verdadeiro/falso';
+      default: return 'Configure a formatação dos dados';
+    }
+  }
+
+  getColumnFormat(column: ColumnDefinition | null): string {
+    if (!column) return '';
+
+    const extendedColumn = column as any;
+    return extendedColumn.format || '';
+  }
+
+  onFormatChange(format: string): void {
+    if (this.selectedColumn) {
+      const extendedColumn = this.selectedColumn as any;
+      extendedColumn.format = format;
       this.onColumnPropertyChange();
     }
   }
