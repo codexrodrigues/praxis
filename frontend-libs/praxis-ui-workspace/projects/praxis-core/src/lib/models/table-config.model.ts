@@ -17,7 +17,7 @@ export interface ColumnDefinition {
   headerStyle?: string;
   /** Enable sorting for this column */
   sortable?: boolean;
-  /** Type of data expected in this column */
+  /** Type of data expected in this column (user-configurable) */
   type?: ColumnDataType;
   /** Format string specific to the column type */
   format?: string;
@@ -39,6 +39,10 @@ export interface ColumnDefinition {
    */
   cellStyleCondition?: { [styleProperty: string]: (rowData: any, cellValue: any) => string };
 
+  /** Original API field type for reference (read-only) */
+  _originalApiType?: ColumnDataType;
+  /** Indicates if this column originated from the API schema */
+  _isApiField?: boolean;
 
   valueGetter?: string;
 }

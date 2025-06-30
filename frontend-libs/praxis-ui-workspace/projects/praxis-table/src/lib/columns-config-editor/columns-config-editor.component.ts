@@ -955,6 +955,8 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
       align: 'left',
       sortable: true,
       order: this.columns.length,
+      type: 'string', // Default type for calculated columns
+      _isApiField: false, // Explicitly mark as not from API
       calculationType: 'none', // Initialize with no formula
       calculationParams: {},
       _generatedValueGetter: ''
@@ -1016,15 +1018,17 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
   }
 
   isExistingColumn(column: ColumnDefinition): boolean {
-    // Columns are considered existing (from API/schema) if they don't have valueGetter
-    // or don't start with calculated field patterns
-    return !this.isCalculatedColumn(column);
+    // Columns are considered existing (from API/schema) if they have the _isApiField flag
+    // This provides a more robust way to identify API columns vs calculated columns
+    return column._isApiField === true;
   }
 
   isCalculatedColumn(column: ColumnDefinition): boolean {
-    // Column is calculated if it has calculationType or starts with calculated field pattern
+    // Column is calculated if it's NOT from the API (_isApiField is false or undefined)
+    // or if it has specific calculation properties
     const extendedColumn = column as any;
-    return !!(extendedColumn.calculationType && extendedColumn.calculationType !== 'none') ||
+    return column._isApiField !== true || 
+           !!(extendedColumn.calculationType && extendedColumn.calculationType !== 'none') ||
            !!(extendedColumn._generatedValueGetter) ||
            column.field.startsWith('calculatedField') ||
            column.field.startsWith('customField');
@@ -1048,31 +1052,48 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
 
   // Formula Builder Integration
   private generateAvailableDataSchema(): void {
-    // Generate schema from existing columns (excluding calculated ones)
+    // Generate schema from API fields only
     this.availableDataSchema = this.columns
-      .filter(col => !this.isCalculatedColumn(col))
+      .filter(col => col._isApiField === true) // Only use columns from API schema
       .map(col => ({
         name: col.field,
         label: col.header || col.field,
-        type: this.inferFieldType(col),
+        type: this.mapColumnTypeToFieldType(col._originalApiType || col.type || 'string'),
         path: col.field
       }));
 
-    // Add some common nested properties as examples
-    this.availableDataSchema.push(
-      { name: 'id', label: 'ID', type: 'number', path: 'id' },
-      { name: 'name', label: 'Nome', type: 'string', path: 'name' },
-      { name: 'firstName', label: 'Primeiro Nome', type: 'string', path: 'firstName' },
-      { name: 'lastName', label: 'Sobrenome', type: 'string', path: 'lastName' },
-      { name: 'email', label: 'Email', type: 'string', path: 'email' },
-      { name: 'status', label: 'Status', type: 'string', path: 'status' },
-      { name: 'isActive', label: 'Ativo', type: 'boolean', path: 'isActive' },
-      { name: 'createdAt', label: 'Data de Criação', type: 'date', path: 'createdAt' },
-      { name: 'address.city', label: 'Cidade', type: 'string', path: 'address.city' },
-      { name: 'address.state', label: 'Estado', type: 'string', path: 'address.state' },
-      { name: 'price', label: 'Preço', type: 'number', path: 'price' },
-      { name: 'quantity', label: 'Quantidade', type: 'number', path: 'quantity' }
-    );
+    // If no API fields are available yet, add some common examples for the formula builder
+    if (this.availableDataSchema.length === 0) {
+      this.availableDataSchema.push(
+        { name: 'id', label: 'ID', type: 'number', path: 'id' },
+        { name: 'name', label: 'Nome', type: 'string', path: 'name' },
+        { name: 'email', label: 'Email', type: 'string', path: 'email' },
+        { name: 'status', label: 'Status', type: 'string', path: 'status' },
+        { name: 'isActive', label: 'Ativo', type: 'boolean', path: 'isActive' },
+        { name: 'createdAt', label: 'Data de Criação', type: 'date', path: 'createdAt' },
+        { name: 'price', label: 'Preço', type: 'number', path: 'price' }
+      );
+    }
+  }
+
+  /**
+   * Map ColumnDataType to FieldSchema type
+   */
+  private mapColumnTypeToFieldType(columnType: ColumnDataType): 'string' | 'number' | 'boolean' | 'date' | 'object' | 'array' {
+    switch (columnType) {
+      case 'number':
+      case 'currency':
+      case 'percentage':
+        return 'number';
+      case 'date':
+        return 'date';
+      case 'boolean':
+        return 'boolean';
+      case 'string':
+      case 'custom':
+      default:
+        return 'string';
+    }
   }
 
   private inferFieldType(column: ColumnDefinition): 'string' | 'number' | 'boolean' | 'date' | 'object' | 'array' {
@@ -1202,11 +1223,23 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
     if (!column) return 'string';
 
     const extendedColumn = column as any;
+    
+    // Use the user-defined type if available
     if (extendedColumn.dataType) {
       return extendedColumn.dataType;
     }
+    
+    // Use the user-configurable type property if available
+    if (column.type) {
+      return column.type;
+    }
 
-    // Try to infer from column field name
+    // For API fields, use the original API type as fallback
+    if (column._isApiField && column._originalApiType) {
+      return column._originalApiType;
+    }
+
+    // Try to infer from column field name (fallback)
     const fieldName = column.field.toLowerCase();
 
     if (fieldName.includes('date') || fieldName.includes('time') ||
@@ -1239,10 +1272,11 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
 
   onDataTypeChange(dataType: ColumnDataType): void {
     if (this.selectedColumn) {
-      const extendedColumn = this.selectedColumn as any;
-      extendedColumn.dataType = dataType;
+      // Store the user-selected type in the standard 'type' property
+      this.selectedColumn.type = dataType;
 
       // Clear existing format when changing data type
+      const extendedColumn = this.selectedColumn as any;
       extendedColumn.format = '';
 
       this.onColumnPropertyChange();

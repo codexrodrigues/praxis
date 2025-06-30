@@ -231,14 +231,70 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
   }
 
   private convertFieldToColumn(field: FieldDefinition): ColumnDefinition {
+    const inferredType = this.inferFieldTypeFromFieldName(field.name);
+    const apiType = (field.type as ColumnDataType) || inferredType;
+    
     return {
       field: field.name,
       header: field.label ?? field.name,
       order: field.order,
       width: (field.width as any) ?? undefined,
       sortable: field.sortable,
-      visible: field.tableHidden ? false : true
+      visible: field.tableHidden ? false : true,
+      type: apiType,
+      _originalApiType: apiType,
+      _isApiField: true
     } as ColumnDefinition;
+  }
+
+  /**
+   * Infer column data type from field name patterns when API type is not available
+   */
+  private inferFieldTypeFromFieldName(fieldName: string): ColumnDataType {
+    const lowercaseName = fieldName.toLowerCase();
+
+    // Date/time patterns
+    if (lowercaseName.includes('date') || lowercaseName.includes('time') ||
+        lowercaseName.includes('created') || lowercaseName.includes('updated') ||
+        lowercaseName.includes('modified') || lowercaseName.endsWith('at')) {
+      return 'date';
+    }
+
+    // Currency/money patterns
+    if (lowercaseName.includes('price') || lowercaseName.includes('amount') ||
+        lowercaseName.includes('cost') || lowercaseName.includes('salary') ||
+        lowercaseName.includes('wage') || lowercaseName.includes('fee') ||
+        lowercaseName.includes('value') && !lowercaseName.includes('id')) {
+      return 'currency';
+    }
+
+    // Percentage patterns
+    if (lowercaseName.includes('percent') || lowercaseName.includes('rate') ||
+        lowercaseName.includes('ratio') || lowercaseName.includes('score') ||
+        lowercaseName.endsWith('pct')) {
+      return 'percentage';
+    }
+
+    // Number patterns
+    if (lowercaseName.includes('id') || lowercaseName.includes('count') ||
+        lowercaseName.includes('quantity') || lowercaseName.includes('number') ||
+        lowercaseName.includes('total') || lowercaseName.includes('sum') ||
+        lowercaseName.includes('age') || lowercaseName.includes('weight') ||
+        lowercaseName.includes('height') || lowercaseName.includes('size')) {
+      return 'number';
+    }
+
+    // Boolean patterns
+    if (lowercaseName.includes('active') || lowercaseName.includes('enabled') ||
+        lowercaseName.includes('visible') || lowercaseName.includes('deleted') ||
+        lowercaseName.includes('archived') || lowercaseName.startsWith('is') ||
+        lowercaseName.startsWith('has') || lowercaseName.startsWith('can') ||
+        lowercaseName.startsWith('should')) {
+      return 'boolean';
+    }
+
+    // Default to string
+    return 'string';
   }
 
   private fetchData(): void {
@@ -298,10 +354,10 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
     }
 
     // Step 3: Apply data formatting if defined
-    if (extendedColumn.dataType && extendedColumn.format && 
-        this.formattingService.needsFormatting(extendedColumn.dataType, extendedColumn.format)) {
+    if (column.type && extendedColumn.format && 
+        this.formattingService.needsFormatting(column.type, extendedColumn.format)) {
       try {
-        value = this.formattingService.formatValue(value, extendedColumn.dataType, extendedColumn.format);
+        value = this.formattingService.formatValue(value, column.type, extendedColumn.format);
       } catch (error) {
         console.warn(`Error formatting value for column ${column.field}:`, error);
       }
