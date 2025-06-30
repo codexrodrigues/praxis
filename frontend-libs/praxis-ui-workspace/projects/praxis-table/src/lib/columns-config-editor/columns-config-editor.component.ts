@@ -1024,14 +1024,19 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
   }
 
   isCalculatedColumn(column: ColumnDefinition): boolean {
-    // Column is calculated if it's NOT from the API (_isApiField is false or undefined)
-    // or if it has specific calculation properties
+    // Simplified logic: A column is calculated if:
+    // 1. It was created manually in the editor (_isApiField === false), OR
+    // 2. It's an API field but has a formula applied to it
+    
+    if (column._isApiField !== true) {
+      // Column created manually in editor - always calculated
+      return true;
+    }
+    
+    // API field with applied formula/calculation
     const extendedColumn = column as any;
-    return column._isApiField !== true || 
-           !!(extendedColumn.calculationType && extendedColumn.calculationType !== 'none') ||
-           !!(extendedColumn._generatedValueGetter) ||
-           column.field.startsWith('calculatedField') ||
-           column.field.startsWith('customField');
+    return !!(extendedColumn.calculationType && extendedColumn.calculationType !== 'none') ||
+           !!(column._generatedValueGetter && column._generatedValueGetter.trim());
   }
 
   hasValueGetterError(column: ColumnDefinition): boolean {
@@ -1096,28 +1101,6 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
     }
   }
 
-  private inferFieldType(column: ColumnDefinition): 'string' | 'number' | 'boolean' | 'date' | 'object' | 'array' {
-    // Basic type inference based on field name patterns
-    const fieldName = column.field.toLowerCase();
-
-    if (fieldName.includes('id') || fieldName.includes('count') ||
-        fieldName.includes('price') || fieldName.includes('quantity') ||
-        fieldName.includes('amount') || fieldName.includes('total')) {
-      return 'number';
-    }
-
-    if (fieldName.includes('date') || fieldName.includes('time') ||
-        fieldName.includes('created') || fieldName.includes('updated')) {
-      return 'date';
-    }
-
-    if (fieldName.includes('active') || fieldName.includes('enabled') ||
-        fieldName.includes('visible') || fieldName.includes('is')) {
-      return 'boolean';
-    }
-
-    return 'string'; // Default to string
-  }
 
   getColumnFormula(column: ColumnDefinition | null): FormulaDefinition | undefined {
     if (!column) return undefined;
@@ -1222,51 +1205,75 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
   getColumnDataType(column: ColumnDefinition | null): ColumnDataType {
     if (!column) return 'string';
 
-    const extendedColumn = column as any;
+    // Priority order: user-configured type > original API type > field name inference
     
-    // Use the user-defined type if available
-    if (extendedColumn.dataType) {
-      return extendedColumn.dataType;
-    }
-    
-    // Use the user-configurable type property if available
+    // 1. Use the user-configured type if available (highest priority)
     if (column.type) {
       return column.type;
     }
 
-    // For API fields, use the original API type as fallback
+    // 2. For API fields, use the original API type as fallback
     if (column._isApiField && column._originalApiType) {
       return column._originalApiType;
     }
 
-    // Try to infer from column field name (fallback)
-    const fieldName = column.field.toLowerCase();
+    // 3. Try to infer from column field name (last resort)
+    return this.inferFieldTypeFromFieldName(column.field);
+  }
 
-    if (fieldName.includes('date') || fieldName.includes('time') ||
-        fieldName.includes('created') || fieldName.includes('updated')) {
+  /**
+   * Infer column data type from field name patterns (shared logic with PraxisTable)
+   */
+  private inferFieldTypeFromFieldName(fieldName: string): ColumnDataType {
+    const lowercaseName = fieldName.toLowerCase();
+
+    // Date/time patterns - more specific patterns first
+    if (lowercaseName.endsWith('date') || lowercaseName.endsWith('time') ||
+        lowercaseName.endsWith('at') || lowercaseName.startsWith('date') ||
+        lowercaseName === 'created' || lowercaseName === 'updated' ||
+        lowercaseName === 'modified' || lowercaseName.includes('timestamp')) {
       return 'date';
     }
 
-    if (fieldName.includes('price') || fieldName.includes('amount') ||
-        fieldName.includes('cost') || fieldName.includes('value')) {
-      return 'currency';
-    }
-
-    if (fieldName.includes('percent') || fieldName.includes('rate') ||
-        fieldName.includes('ratio')) {
-      return 'percentage';
-    }
-
-    if (fieldName.includes('id') || fieldName.includes('count') ||
-        fieldName.includes('quantity') || fieldName.includes('number')) {
-      return 'number';
-    }
-
-    if (fieldName.includes('active') || fieldName.includes('enabled') ||
-        fieldName.includes('visible') || fieldName.includes('is')) {
+    // Boolean patterns - most specific first to avoid conflicts
+    if (lowercaseName.startsWith('is_') || lowercaseName.startsWith('has_') ||
+        lowercaseName.startsWith('can_') || lowercaseName.startsWith('should_') ||
+        lowercaseName === 'active' || lowercaseName === 'enabled' ||
+        lowercaseName === 'visible' || lowercaseName === 'deleted' ||
+        lowercaseName === 'archived' || lowercaseName.endsWith('_flag') ||
+        lowercaseName.endsWith('_enabled') || lowercaseName.endsWith('_active')) {
       return 'boolean';
     }
 
+    // Currency/money patterns - exclude common false positives
+    if ((lowercaseName.includes('price') || lowercaseName.includes('amount') ||
+         lowercaseName.includes('cost') || lowercaseName.includes('salary') ||
+         lowercaseName.includes('wage') || lowercaseName.includes('fee') ||
+         (lowercaseName.includes('value') && !lowercaseName.includes('id') && !lowercaseName.includes('key'))) &&
+        !lowercaseName.includes('count') && !lowercaseName.includes('type')) {
+      return 'currency';
+    }
+
+    // Percentage patterns - be more specific
+    if (lowercaseName.includes('percent') || lowercaseName.endsWith('_rate') ||
+        lowercaseName.endsWith('_ratio') || lowercaseName.endsWith('_pct') ||
+        (lowercaseName.includes('rate') && !lowercaseName.includes('created') && !lowercaseName.includes('updated')) ||
+        lowercaseName.endsWith('_score')) {
+      return 'percentage';
+    }
+
+    // Number patterns - exclude common false positives like string IDs
+    if ((lowercaseName.endsWith('_id') && lowercaseName !== 'id') || // composite IDs might be strings
+        lowercaseName === 'id' || lowercaseName.includes('count') ||
+        lowercaseName.includes('quantity') || lowercaseName.includes('number') ||
+        lowercaseName.includes('total') || lowercaseName.includes('sum') ||
+        lowercaseName.includes('age') || lowercaseName.includes('weight') ||
+        lowercaseName.includes('height') || lowercaseName.includes('size') ||
+        lowercaseName.endsWith('_num') || lowercaseName.endsWith('_number')) {
+      return 'number';
+    }
+
+    // Default to string for ambiguous cases
     return 'string';
   }
 

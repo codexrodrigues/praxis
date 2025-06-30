@@ -176,13 +176,16 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
 
     const dialogRef = this.dialog.open(PraxisTableConfigEditor, {
       data: { config: configCopy },
-      width: '90%',
-      height: '90%',
+      width: '90vw',
+      height: '90vh',
       maxWidth: '1200px',
       maxHeight: '90vh',
+      minWidth: '320px',
+      minHeight: '600px',
       disableClose: false,
       autoFocus: false,
-      restoreFocus: true
+      restoreFocus: true,
+      panelClass: 'config-editor-dialog'
     });
 
     dialogRef.afterClosed().subscribe((result: TableConfig | undefined) => {
@@ -231,8 +234,16 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
   }
 
   private convertFieldToColumn(field: FieldDefinition): ColumnDefinition {
-    const inferredType = this.inferFieldTypeFromFieldName(field.name);
-    const apiType = (field.type as ColumnDataType) || inferredType;
+    // Prioritize API type over inference - only use inference as last resort
+    let apiType: ColumnDataType;
+    
+    if (field.type && this.isValidColumnDataType(field.type)) {
+      // Use API type if it's valid
+      apiType = field.type as ColumnDataType;
+    } else {
+      // Fall back to inference only if API type is not available or invalid
+      apiType = this.inferFieldTypeFromFieldName(field.name);
+    }
     
     return {
       field: field.name,
@@ -248,52 +259,67 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
   }
 
   /**
+   * Check if a value is a valid ColumnDataType
+   */
+  private isValidColumnDataType(type: any): boolean {
+    const validTypes: ColumnDataType[] = ['string', 'number', 'date', 'boolean', 'currency', 'percentage', 'custom'];
+    return validTypes.includes(type);
+  }
+
+  /**
    * Infer column data type from field name patterns when API type is not available
+   * Refined logic to reduce false positives
    */
   private inferFieldTypeFromFieldName(fieldName: string): ColumnDataType {
     const lowercaseName = fieldName.toLowerCase();
 
-    // Date/time patterns
-    if (lowercaseName.includes('date') || lowercaseName.includes('time') ||
-        lowercaseName.includes('created') || lowercaseName.includes('updated') ||
-        lowercaseName.includes('modified') || lowercaseName.endsWith('at')) {
+    // Date/time patterns - more specific patterns first
+    if (lowercaseName.endsWith('date') || lowercaseName.endsWith('time') ||
+        lowercaseName.endsWith('at') || lowercaseName.startsWith('date') ||
+        lowercaseName === 'created' || lowercaseName === 'updated' ||
+        lowercaseName === 'modified' || lowercaseName.includes('timestamp')) {
       return 'date';
     }
 
-    // Currency/money patterns
-    if (lowercaseName.includes('price') || lowercaseName.includes('amount') ||
-        lowercaseName.includes('cost') || lowercaseName.includes('salary') ||
-        lowercaseName.includes('wage') || lowercaseName.includes('fee') ||
-        lowercaseName.includes('value') && !lowercaseName.includes('id')) {
-      return 'currency';
-    }
-
-    // Percentage patterns
-    if (lowercaseName.includes('percent') || lowercaseName.includes('rate') ||
-        lowercaseName.includes('ratio') || lowercaseName.includes('score') ||
-        lowercaseName.endsWith('pct')) {
-      return 'percentage';
-    }
-
-    // Number patterns
-    if (lowercaseName.includes('id') || lowercaseName.includes('count') ||
-        lowercaseName.includes('quantity') || lowercaseName.includes('number') ||
-        lowercaseName.includes('total') || lowercaseName.includes('sum') ||
-        lowercaseName.includes('age') || lowercaseName.includes('weight') ||
-        lowercaseName.includes('height') || lowercaseName.includes('size')) {
-      return 'number';
-    }
-
-    // Boolean patterns
-    if (lowercaseName.includes('active') || lowercaseName.includes('enabled') ||
-        lowercaseName.includes('visible') || lowercaseName.includes('deleted') ||
-        lowercaseName.includes('archived') || lowercaseName.startsWith('is') ||
-        lowercaseName.startsWith('has') || lowercaseName.startsWith('can') ||
-        lowercaseName.startsWith('should')) {
+    // Boolean patterns - most specific first to avoid conflicts
+    if (lowercaseName.startsWith('is_') || lowercaseName.startsWith('has_') ||
+        lowercaseName.startsWith('can_') || lowercaseName.startsWith('should_') ||
+        lowercaseName === 'active' || lowercaseName === 'enabled' ||
+        lowercaseName === 'visible' || lowercaseName === 'deleted' ||
+        lowercaseName === 'archived' || lowercaseName.endsWith('_flag') ||
+        lowercaseName.endsWith('_enabled') || lowercaseName.endsWith('_active')) {
       return 'boolean';
     }
 
-    // Default to string
+    // Currency/money patterns - exclude common false positives
+    if ((lowercaseName.includes('price') || lowercaseName.includes('amount') ||
+         lowercaseName.includes('cost') || lowercaseName.includes('salary') ||
+         lowercaseName.includes('wage') || lowercaseName.includes('fee') ||
+         (lowercaseName.includes('value') && !lowercaseName.includes('id') && !lowercaseName.includes('key'))) &&
+        !lowercaseName.includes('count') && !lowercaseName.includes('type')) {
+      return 'currency';
+    }
+
+    // Percentage patterns - be more specific
+    if (lowercaseName.includes('percent') || lowercaseName.endsWith('_rate') ||
+        lowercaseName.endsWith('_ratio') || lowercaseName.endsWith('_pct') ||
+        (lowercaseName.includes('rate') && !lowercaseName.includes('created') && !lowercaseName.includes('updated')) ||
+        lowercaseName.endsWith('_score')) {
+      return 'percentage';
+    }
+
+    // Number patterns - exclude common false positives like string IDs
+    if ((lowercaseName.endsWith('_id') && lowercaseName !== 'id') || // composite IDs might be strings
+        lowercaseName === 'id' || lowercaseName.includes('count') ||
+        lowercaseName.includes('quantity') || lowercaseName.includes('number') ||
+        lowercaseName.includes('total') || lowercaseName.includes('sum') ||
+        lowercaseName.includes('age') || lowercaseName.includes('weight') ||
+        lowercaseName.includes('height') || lowercaseName.includes('size') ||
+        lowercaseName.endsWith('_num') || lowercaseName.endsWith('_number')) {
+      return 'number';
+    }
+
+    // Default to string for ambiguous cases
     return 'string';
   }
 
@@ -330,14 +356,13 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
    * 3. format (data formatting like dates, numbers, currency)
    */
   getCellValue(rowData: any, column: ColumnDefinition): any {
-    const extendedColumn = column as any;
     let value: any;
 
     // Step 1: Get raw value (calculated or direct field access)
-    if (extendedColumn._generatedValueGetter && extendedColumn._generatedValueGetter.trim()) {
+    if (column._generatedValueGetter && column._generatedValueGetter.trim()) {
       try {
         // Safely evaluate the generated expression
-        const evaluationFunction = new Function('rowData', `return ${extendedColumn._generatedValueGetter}`);
+        const evaluationFunction = new Function('rowData', `return ${column._generatedValueGetter}`);
         value = evaluationFunction(rowData);
       } catch (error) {
         console.warn(`Error evaluating formula for column ${column.field}:`, error);
@@ -349,15 +374,15 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
     }
 
     // Step 2: Apply value mapping if defined
-    if (extendedColumn.valueMapping && Object.keys(extendedColumn.valueMapping).length > 0) {
-      value = this.applyValueMapping(value, extendedColumn.valueMapping);
+    if (column.valueMapping && Object.keys(column.valueMapping).length > 0) {
+      value = this.applyValueMapping(value, column.valueMapping);
     }
 
     // Step 3: Apply data formatting if defined
-    if (column.type && extendedColumn.format && 
-        this.formattingService.needsFormatting(column.type, extendedColumn.format)) {
+    if (column.type && column.format && 
+        this.formattingService.needsFormatting(column.type, column.format)) {
       try {
-        value = this.formattingService.formatValue(value, column.type, extendedColumn.format);
+        value = this.formattingService.formatValue(value, column.type, column.format);
       } catch (error) {
         console.warn(`Error formatting value for column ${column.field}:`, error);
       }

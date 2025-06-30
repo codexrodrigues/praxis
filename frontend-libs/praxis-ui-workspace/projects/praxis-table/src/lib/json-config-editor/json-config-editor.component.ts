@@ -151,10 +151,12 @@ export interface JsonEditorEvent {
       font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace !important;
       font-size: 13px !important;
       line-height: 1.4 !important;
-      min-height: 400px !important;
+      height: 100% !important;
+      min-height: 300px !important;
       white-space: pre !important;
       overflow-wrap: normal !important;
       overflow-x: auto !important;
+      resize: none !important;
     }
 
     .valid-hint {

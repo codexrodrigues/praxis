@@ -13,3 +13,6 @@ export * from './lib/value-mapping-editor/value-mapping-editor.component';
 export * from './lib/data-formatter/data-formatter.component';
 export * from './lib/data-formatter/data-formatter-types';
 export * from './lib/data-formatter/data-formatting.service';
+export * from './lib/components/educational-card/educational-card.component';
+export * from './lib/components/help-button/help-button.component';
+export * from './lib/services/educational-cards.service';

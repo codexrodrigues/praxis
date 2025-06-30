@@ -43,6 +43,8 @@ export interface ColumnDefinition {
   _originalApiType?: ColumnDataType;
   /** Indicates if this column originated from the API schema */
   _isApiField?: boolean;
+  /** Generated value getter expression for calculated columns */
+  _generatedValueGetter?: string;
 
   valueGetter?: string;
 }

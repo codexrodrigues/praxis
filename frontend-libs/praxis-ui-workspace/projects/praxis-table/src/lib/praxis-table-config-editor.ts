@@ -16,6 +16,9 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { TableConfig } from '@praxis/core';
 import { JsonConfigEditorComponent, JsonValidationResult, JsonEditorEvent } from './json-config-editor/json-config-editor.component';
 import { ColumnsConfigEditorComponent, ColumnChange } from './columns-config-editor/columns-config-editor.component';
+import { EducationalCardComponent } from './components/educational-card/educational-card.component';
+import { HelpButtonComponent } from './components/help-button/help-button.component';
+import { EducationalCardsService, TabCardKey } from './services/educational-cards.service';
 
 @Component({
   selector: 'praxis-table-config-editor',
@@ -29,7 +32,9 @@ import { ColumnsConfigEditorComponent, ColumnChange } from './columns-config-edi
     MatCardModule,
     MatToolbarModule,
     JsonConfigEditorComponent,
-    ColumnsConfigEditorComponent
+    ColumnsConfigEditorComponent,
+    EducationalCardComponent,
+    HelpButtonComponent
   ],
   template: `
     <div class="config-editor-container">
@@ -43,8 +48,8 @@ import { ColumnsConfigEditorComponent, ColumnChange } from './columns-config-edi
 
       <!-- Content -->
       <div class="config-editor-content" mat-dialog-content>
-        <mat-tab-group class="config-tabs" [dynamicHeight]="true">
-          
+        <mat-tab-group class="config-tabs">
+
           <!-- Visão Geral & Comportamento -->
           <mat-tab>
             <ng-template mat-tab-label>
@@ -52,17 +57,32 @@ import { ColumnsConfigEditorComponent, ColumnChange } from './columns-config-edi
               <span>Visão Geral & Comportamento</span>
             </ng-template>
             <div class="tab-content">
-              <mat-card class="educational-card">
-                <mat-card-header>
-                  <mat-icon mat-card-avatar class="card-icon">settings</mat-icon>
-                  <mat-card-title>Comportamento Geral da Tabela</mat-card-title>
-                </mat-card-header>
-                <mat-card-content>
-                  <p>Configure o comportamento geral da tabela, como paginação, ordenação, filtragem e seleção de linhas. 
-                     Estas opções afetam a funcionalidade global da tabela.</p>
-                </mat-card-content>
-              </mat-card>
-              
+              <div class="tab-header">
+                <help-button
+                  tabKey="overview"
+                  tooltipText="Mostrar informações sobre configurações gerais"
+                  (helpRequested)="onHelpRequested($event)">
+                </help-button>
+              </div>
+
+              <educational-card
+                tabKey="overview"
+                icon="settings"
+                title="Comportamento Geral da Tabela"
+                description="Configure o comportamento essencial da sua tabela dinâmica para criar uma experiência de usuário otimizada."
+                [benefits]="[
+                  'Ativar paginação inteligente para grandes volumes de dados',
+                  'Configurar ordenação automática por colunas',
+                  'Habilitar filtros dinâmicos para facilitar a busca',
+                  'Definir seleção de linhas para ações em lote'
+                ]"
+                [tips]="[
+                  'Use paginação para tabelas com mais de 50 registros',
+                  'A ordenação por ID ou data costuma ser mais útil como padrão'
+                ]"
+                (cardHidden)="onCardHidden($event)">
+              </educational-card>
+
               <!-- Placeholder para conteúdo futuro -->
               <div class="content-placeholder">
                 <p class="placeholder-text">Formulários de configuração serão implementados em próximas etapas</p>
@@ -77,7 +97,35 @@ import { ColumnsConfigEditorComponent, ColumnChange } from './columns-config-edi
               <span>Colunas</span>
             </ng-template>
             <div class="tab-content">
-              <columns-config-editor 
+              <div class="tab-header">
+                <help-button
+                  tabKey="columns"
+                  tooltipText="Mostrar informações sobre configuração de colunas"
+                  (helpRequested)="onHelpRequested($event)">
+                </help-button>
+              </div>
+
+              <educational-card
+                tabKey="columns"
+                icon="table_chart"
+                title="Personalização Avançada de Colunas"
+                description="Transforme dados brutos em informações elegantes e compreensíveis com ferramentas poderosas de personalização."
+                [benefits]="[
+                  'Criar colunas calculadas com fórmulas personalizadas',
+                  'Mapear códigos técnicos para textos amigáveis (ex: 1 → Ativo)',
+                  'Aplicar formatação automática para datas, moedas e percentuais',
+                  'Controlar visibilidade, largura e alinhamento de cada coluna',
+                  'Reordenar colunas com arrastar e soltar'
+                ]"
+                [tips]="[
+                  'Use mapeamento de valores para status e códigos',
+                  'Formatação de data e moeda melhora muito a legibilidade',
+                  'Colunas calculadas são úteis para concatenar nome + sobrenome'
+                ]"
+                (cardHidden)="onCardHidden($event)">
+              </educational-card>
+
+              <columns-config-editor
                 [config]="editedConfig"
                 (configChange)="onColumnsConfigChange($event)"
                 (columnChange)="onColumnChange($event)">
@@ -92,17 +140,34 @@ import { ColumnsConfigEditorComponent, ColumnChange } from './columns-config-edi
               <span>Barra de Ferramentas & Ações</span>
             </ng-template>
             <div class="tab-content">
-              <mat-card class="educational-card">
-                <mat-card-header>
-                  <mat-icon mat-card-avatar class="card-icon">handyman</mat-icon>
-                  <mat-card-title>Ferramentas e Ações</mat-card-title>
-                </mat-card-header>
-                <mat-card-content>
-                  <p>Gerencie as opções da barra de ferramentas superior da tabela e as ações disponíveis para cada linha. 
-                     Adicione botões personalizados e controle a exibição de funcionalidades.</p>
-                </mat-card-content>
-              </mat-card>
-              
+              <div class="tab-header">
+                <help-button
+                  tabKey="toolbar"
+                  tooltipText="Mostrar informações sobre barra de ferramentas"
+                  (helpRequested)="onHelpRequested($event)">
+                </help-button>
+              </div>
+
+              <educational-card
+                tabKey="toolbar"
+                icon="handyman"
+                title="Ferramentas e Ações Personalizadas"
+                description="Adicione poder e praticidade à sua tabela com uma barra de ferramentas personalizada e ações específicas por linha."
+                [benefits]="[
+                  'Criar botões personalizados na barra superior',
+                  'Configurar ações rápidas para cada linha (editar, excluir, etc.)',
+                  'Ativar exportação para Excel e PDF',
+                  'Adicionar botão Novo registro personalizado',
+                  'Controlar visibilidade da barra de ferramentas'
+                ]"
+                [tips]="[
+                  'Limite a 3-5 ações principais para evitar sobrecarga visual',
+                  'Use ícones intuitivos para ações comuns',
+                  'Ações destrutivas (excluir) devem ter confirmação'
+                ]"
+                (cardHidden)="onCardHidden($event)">
+              </educational-card>
+
               <!-- Placeholder para conteúdo futuro -->
               <div class="content-placeholder">
                 <p class="placeholder-text">Configurações de toolbar serão implementadas em próximas etapas</p>
@@ -117,17 +182,34 @@ import { ColumnsConfigEditorComponent, ColumnChange } from './columns-config-edi
               <span>Mensagens & Localização</span>
             </ng-template>
             <div class="tab-content">
-              <mat-card class="educational-card">
-                <mat-card-header>
-                  <mat-icon mat-card-avatar class="card-icon">language</mat-icon>
-                  <mat-card-title>Mensagens e Textos</mat-card-title>
-                </mat-card-header>
-                <mat-card-content>
-                  <p>Edite as mensagens exibidas em diferentes estados da tabela, como 'dados vazios', 'carregando' ou 'erro'. 
-                     Garanta uma comunicação clara com o usuário.</p>
-                </mat-card-content>
-              </mat-card>
-              
+              <div class="tab-header">
+                <help-button
+                  tabKey="messages"
+                  tooltipText="Mostrar informações sobre mensagens e textos"
+                  (helpRequested)="onHelpRequested($event)">
+                </help-button>
+              </div>
+
+              <educational-card
+                tabKey="messages"
+                icon="language"
+                title="Comunicação Clara com o Usuário"
+                description="Personalize todas as mensagens da tabela para criar uma experiência de usuário consistente e profissional."
+                [benefits]="[
+                  'Personalizar mensagem de Nenhum dado encontrado',
+                  'Configurar textos de carregamento e estados de erro',
+                  'Adaptar mensagens para diferentes idiomas',
+                  'Definir labels dos botões de paginação',
+                  'Customizar tooltips e mensagens de ajuda'
+                ]"
+                [tips]="[
+                  'Use mensagens positivas: Ainda não há dados ao invés de Vazio',
+                  'Mantenha consistência no tom da comunicação',
+                  'Considere o contexto do seu público-alvo'
+                ]"
+                (cardHidden)="onCardHidden($event)">
+              </educational-card>
+
               <!-- Placeholder para conteúdo futuro -->
               <div class="content-placeholder">
                 <p class="placeholder-text">Editor de mensagens será implementado em próximas etapas</p>
@@ -142,7 +224,35 @@ import { ColumnsConfigEditorComponent, ColumnChange } from './columns-config-edi
               <span>Edição de Código JSON</span>
             </ng-template>
             <div class="tab-content">
-              <json-config-editor 
+              <div class="tab-header">
+                <help-button
+                  tabKey="json"
+                  tooltipText="Mostrar informações sobre edição JSON"
+                  (helpRequested)="onHelpRequested($event)">
+                </help-button>
+              </div>
+
+              <educational-card
+                tabKey="json"
+                icon="code"
+                title="Edição Avançada por Código"
+                description="Para usuários técnicos: edite diretamente a configuração JSON para controle total e configurações avançadas."
+                [benefits]="[
+                  'Acesso a todas as opções de configuração avançada',
+                  'Copiar e colar configurações entre projetos',
+                  'Fazer alterações em lote rapidamente',
+                  'Backup e versionamento de configurações',
+                  'Integração com ferramentas de desenvolvimento'
+                ]"
+                [tips]="[
+                  'Use o botão Formatar para organizar o código',
+                  'Sempre valide antes de aplicar as mudanças',
+                  'Mantenha backup das configurações que funcionam'
+                ]"
+                (cardHidden)="onCardHidden($event)">
+              </educational-card>
+
+              <json-config-editor
                 [config]="editedConfig"
                 (configChange)="onJsonConfigChange($event)"
                 (validationChange)="onJsonValidationChange($event)"
@@ -161,7 +271,7 @@ import { ColumnsConfigEditorComponent, ColumnChange } from './columns-config-edi
             {{ statusMessage }}
           </span>
         </div>
-        
+
         <div class="action-buttons">
           <button mat-button (click)="onCancel()">
             Cancelar
@@ -180,8 +290,11 @@ import { ColumnsConfigEditorComponent, ColumnChange } from './columns-config-edi
     .config-editor-container {
       display: flex;
       flex-direction: column;
-      height: 100%;
+      height: 90vh;
       max-height: 90vh;
+      min-height: 600px;
+      width: 90vw;
+      max-width: 1200px;
     }
 
     .config-editor-header {
@@ -191,6 +304,7 @@ import { ColumnsConfigEditorComponent, ColumnChange } from './columns-config-edi
       padding: 16px 24px;
       border-bottom: 1px solid rgba(0, 0, 0, 0.12);
       background-color: var(--mat-sys-surface-container);
+      flex-shrink: 0;
     }
 
     .config-editor-header h2 {
@@ -208,24 +322,64 @@ import { ColumnsConfigEditorComponent, ColumnChange } from './columns-config-edi
       flex: 1;
       overflow: hidden;
       padding: 0;
+      display: flex;
+      flex-direction: column;
     }
 
     .config-tabs {
       height: 100%;
+      display: flex;
+      flex-direction: column;
     }
 
     .config-tabs ::ng-deep .mat-mdc-tab-group {
       height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .config-tabs ::ng-deep .mat-mdc-tab-header {
+      flex-shrink: 0;
     }
 
     .config-tabs ::ng-deep .mat-mdc-tab-body-wrapper {
       flex: 1;
-      overflow: auto;
+      overflow: hidden;
+      display: flex;
+    }
+
+    .config-tabs ::ng-deep .mat-mdc-tab-body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .config-tabs ::ng-deep .mat-mdc-tab-body-content {
+      height: 100%;
+      overflow-y: auto;
+      padding: 0;
     }
 
     .tab-content {
       padding: 24px;
-      min-height: 400px;
+      min-height: 100%;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tab-header {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      padding: 8px 0;
+      flex-shrink: 0;
+    }
+
+    .tab-content columns-config-editor,
+    .tab-content json-config-editor {
+      flex: 1;
+      height: 100%;
+      min-height: 0;
     }
 
     .tab-icon {
@@ -239,6 +393,7 @@ import { ColumnsConfigEditorComponent, ColumnChange } from './columns-config-edi
       margin-bottom: 24px;
       background-color: var(--mat-sys-surface-container-low);
       border-left: 4px solid var(--mat-sys-primary);
+      flex-shrink: 0;
     }
 
     .educational-card .mat-mdc-card-header {
@@ -273,6 +428,11 @@ import { ColumnsConfigEditorComponent, ColumnChange } from './columns-config-edi
       background-color: var(--mat-sys-surface-variant);
       border-radius: 8px;
       border: 2px dashed var(--mat-sys-outline-variant);
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 200px;
     }
 
     .placeholder-text {
@@ -289,6 +449,9 @@ import { ColumnsConfigEditorComponent, ColumnChange } from './columns-config-edi
       border-top: 1px solid rgba(0, 0, 0, 0.12);
       background-color: var(--mat-sys-surface-container);
       flex-shrink: 0;
+      position: sticky;
+      bottom: 0;
+      z-index: 10;
     }
 
     .status-messages {
@@ -299,11 +462,11 @@ import { ColumnsConfigEditorComponent, ColumnChange } from './columns-config-edi
     .status-text {
       font-size: 0.875rem;
       line-height: 1.2;
-      
+
       &.error {
         color: var(--mat-sys-error);
       }
-      
+
       &.success {
         color: var(--mat-sys-primary);
       }
@@ -322,36 +485,74 @@ import { ColumnsConfigEditorComponent, ColumnChange } from './columns-config-edi
 
     /* Responsividade */
     @media (max-width: 768px) {
+      .config-editor-container {
+        height: 100vh;
+        max-height: 100vh;
+        min-height: 100vh;
+        width: 100vw;
+        max-width: 100vw;
+      }
+
+      .config-editor-header {
+        padding: 12px 16px;
+      }
+
       .config-editor-header h2 {
         font-size: 1.25rem;
       }
-      
+
       .tab-content {
         padding: 16px;
       }
-      
+
       .config-editor-actions {
         flex-direction: column;
-        gap: 16px;
+        gap: 12px;
         align-items: stretch;
+        padding: 12px 16px;
       }
-      
+
       .status-messages {
         text-align: center;
+        order: 1;
       }
-      
+
       .action-buttons {
         justify-content: center;
+        order: 2;
       }
+    }
+
+    @media (max-width: 480px) {
+      .action-buttons {
+        flex-direction: column;
+        width: 100%;
+      }
+
+      .action-buttons button {
+        width: 100%;
+      }
+    }
+
+    /* Global dialog overrides */
+    :host-context(.config-editor-dialog) .mat-mdc-dialog-container {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    :host-context(.config-editor-dialog) .mat-mdc-dialog-surface {
+      padding: 0;
+      overflow: hidden;
+      border-radius: 12px;
     }
   `]
 })
 export class PraxisTableConfigEditor implements OnInit, OnDestroy {
-  
+
   // Configurações
   private originalConfig: TableConfig;
   editedConfig: TableConfig;
-  
+
   // Estado do componente
   canSave = false;
   hasErrors = false;
@@ -362,7 +563,8 @@ export class PraxisTableConfigEditor implements OnInit, OnDestroy {
   constructor(
     private dialogRef: MatDialogRef<PraxisTableConfigEditor>,
     @Inject(MAT_DIALOG_DATA) public data: { config?: TableConfig },
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private cardsService: EducationalCardsService
   ) {
     // Inicializar configurações
     this.originalConfig = data?.config || { columns: [] };
@@ -450,7 +652,7 @@ export class PraxisTableConfigEditor implements OnInit, OnDestroy {
     this.hasSuccess = true;
     this.hasErrors = false;
     this.cdr.markForCheck();
-    
+
     setTimeout(() => {
       this.clearMessages();
     }, 3000);
@@ -461,7 +663,7 @@ export class PraxisTableConfigEditor implements OnInit, OnDestroy {
     this.hasErrors = true;
     this.hasSuccess = false;
     this.cdr.markForCheck();
-    
+
     setTimeout(() => {
       this.clearMessages();
     }, 5000);
@@ -515,14 +717,27 @@ export class PraxisTableConfigEditor implements OnInit, OnDestroy {
       }
 
       this.showSuccess('Configurações salvas com sucesso!');
-      
+
       // Fechar modal após 1 segundo retornando a configuração editada
       setTimeout(() => {
         this.dialogRef.close(this.editedConfig);
       }, 1000);
-      
+
     } catch (error) {
       this.showError('Configuração inválida. Verifique os campos.');
     }
+  }
+
+  // Event handlers para Educational Cards
+  onHelpRequested(tabKey: TabCardKey): void {
+    // O card já foi reexibido pelo HelpButtonComponent
+    // Apenas forçar detecção de mudanças se necessário
+    this.cdr.markForCheck();
+  }
+
+  onCardHidden(tabKey: TabCardKey): void {
+    // O card já foi ocultado pelo EducationalCardComponent
+    // Apenas forçar detecção de mudanças se necessário
+    this.cdr.markForCheck();
   }
 }

@@ -32,6 +32,7 @@ import {
   BOOLEAN_PRESETS,
   FormatPreset
 } from './data-formatter-types';
+import { DataFormattingService } from './data-formatting.service';
 
 @Component({
   selector: 'data-formatter',
@@ -174,12 +175,6 @@ import {
             </mat-select>
           </mat-form-field>
 
-          <mat-checkbox [(ngModel)]="percentageSymbol" 
-                        (ngModelChange)="onFormatOptionChange()"
-                        class="format-checkbox"
-                        [disabled]="true">
-            Exibir símbolo %
-          </mat-checkbox>
         </div>
 
         <mat-checkbox [(ngModel)]="percentageMultiplier" 
@@ -499,7 +494,6 @@ export class DataFormatterComponent implements OnInit, OnChanges {
 
   // Percentage formatting state
   percentageDecimals = '1';
-  percentageSymbol = true;
   percentageMultiplier = true;
 
   // String formatting state
@@ -516,7 +510,10 @@ export class DataFormatterComponent implements OnInit, OnChanges {
   // Preview
   previewValue = '';
 
-  constructor(private cdr: ChangeDetectorRef) {}
+  constructor(
+    private cdr: ChangeDetectorRef,
+    private formattingService: DataFormattingService
+  ) {}
 
   ngOnInit(): void {
     this.parseCurrentFormat();
@@ -767,123 +764,78 @@ export class DataFormatterComponent implements OnInit, OnChanges {
   }
 
   private generatePreview(): void {
-    // Generate a preview based on the current settings and column type
+    // Generate a preview using the actual DataFormattingService for accuracy
+    const formatString = this.getCurrentFormatString();
+    if (!formatString) {
+      this.previewValue = '';
+      return;
+    }
+
+    const sampleValue = this.getSampleValue();
+    try {
+      this.previewValue = this.formattingService.formatValue(sampleValue, this.columnType, formatString);
+    } catch (error) {
+      this.previewValue = 'Erro na formatação';
+      console.warn('Preview generation error:', error);
+    }
+  }
+
+  /**
+   * Get appropriate sample value for each data type
+   */
+  private getSampleValue(): any {
     switch (this.columnType) {
       case 'date':
-        this.previewValue = this.getDatePreview();
-        break;
+        return new Date(); // Current date and time
       case 'number':
-        this.previewValue = this.getNumberPreview();
-        break;
+        return 1234.5678;
       case 'currency':
-        this.previewValue = this.getCurrencyPreview();
-        break;
+        return 1234.56;
       case 'percentage':
-        this.previewValue = this.getPercentagePreview();
-        break;
+        return this.percentageMultiplier ? 0.12345 : 12.345; // Depends on multiplier setting
       case 'string':
-        this.previewValue = this.getStringPreview();
-        break;
+        return 'Exemplo de Texto Longo Para Demonstrar Formatação';
       case 'boolean':
-        this.previewValue = this.getBooleanPreview();
-        break;
+        return true;
       default:
-        this.previewValue = '';
+        return null;
     }
   }
 
-  private getDatePreview(): string {
-    const now = new Date();
-    const preset = this.selectedPreset === 'custom' ? this.customFormat : this.selectedPreset;
-    
-    // Simplified preview generation (real implementation would use Angular DatePipe)
-    const examples: { [key: string]: string } = {
-      'shortDate': '01/12/2023',
-      'mediumDate': '01 dez 2023',
-      'longDate': '01 de dezembro de 2023',
-      'fullDate': 'sexta-feira, 01 de dezembro de 2023',
-      'shortTime': '14:30',
-      'short': '01/12/2023 14:30',
-      'MMM/yyyy': 'dez/2023',
-      'yyyy-MM-dd': '2023-12-01'
-    };
-    
-    return examples[preset] || this.customFormat || 'dd/MM/yyyy';
-  }
-
-  private getNumberPreview(): string {
-    const sample = 1234.5678;
-    let decimals = 2;
-    
-    if (this.decimalMode === 'variable') {
-      const [, max] = this.variableRange.split('-');
-      decimals = parseInt(max);
-    } else {
-      decimals = parseInt(this.decimalMode);
+  /**
+   * Get the current format string based on component state
+   */
+  private getCurrentFormatString(): string {
+    switch (this.columnType) {
+      case 'date':
+        return this.selectedPreset === 'custom' ? this.customFormat : this.selectedPreset;
+      case 'number':
+        if (this.decimalMode === 'variable') {
+          const [min, max] = this.variableRange.split('-');
+          return `1.${min}-${max}${!this.thousandsSeparator ? '|nosep' : ''}`;
+        } else {
+          return `1.${this.decimalMode}-${this.decimalMode}${!this.thousandsSeparator ? '|nosep' : ''}`;
+        }
+      case 'currency':
+        const symbolType = this.currencySymbol ? 'symbol' : 'code';
+        return `${this.currencyCode}|${symbolType}|${this.currencyDecimals}`;
+      case 'percentage':
+        return `1.${this.percentageDecimals}-${this.percentageDecimals}`;
+      case 'string':
+        let format = this.stringTransform;
+        if (this.enableTruncate) {
+          format += `|truncate|${this.truncateLength}|${this.truncateSuffix}`;
+        }
+        return format;
+      case 'boolean':
+        if (this.booleanDisplay === 'custom') {
+          return `custom|${this.customTrueValue}|${this.customFalseValue}`;
+        } else {
+          return this.booleanDisplay;
+        }
+      default:
+        return '';
     }
-    
-    const formatted = sample.toFixed(decimals);
-    return this.thousandsSeparator ? '1.234,57' : '1234.57';
   }
 
-  private getCurrencyPreview(): string {
-    const symbols: { [key: string]: string } = {
-      'BRL': 'R$',
-      'USD': 'US$',
-      'EUR': '€',
-      'GBP': '£'
-    };
-    
-    const symbol = symbols[this.currencyCode] || 'R$';
-    const value = '1.234,56';
-    
-    return this.currencySymbol ? `${symbol} ${value}` : `${value} ${this.currencyCode}`;
-  }
-
-  private getPercentagePreview(): string {
-    const decimals = parseInt(this.percentageDecimals);
-    const value = (12.345).toFixed(decimals);
-    return `${value}%`;
-  }
-
-  private getStringPreview(): string {
-    let sample = 'Exemplo de Texto';
-    
-    switch (this.stringTransform) {
-      case 'uppercase':
-        sample = sample.toUpperCase();
-        break;
-      case 'lowercase':
-        sample = sample.toLowerCase();
-        break;
-      case 'titlecase':
-        sample = 'Exemplo De Texto';
-        break;
-      case 'capitalize':
-        sample = 'Exemplo de texto';
-        break;
-    }
-    
-    if (this.enableTruncate && sample.length > this.truncateLength) {
-      sample = sample.substring(0, this.truncateLength) + this.truncateSuffix;
-    }
-    
-    return sample;
-  }
-
-  private getBooleanPreview(): string {
-    const displays: { [key: string]: string } = {
-      'true-false': 'Verdadeiro / Falso',
-      'yes-no': 'Sim / Não',
-      'active-inactive': 'Ativo / Inativo',
-      'on-off': 'Ligado / Desligado',
-      'enabled-disabled': 'Habilitado / Desabilitado'
-    };
-    
-    if (this.booleanDisplay === 'custom') {
-      return `${this.customTrueValue} / ${this.customFalseValue}`;
-    }
-    
-    return displays[this.booleanDisplay] || 'Verdadeiro / Falso';
-  }
 }
