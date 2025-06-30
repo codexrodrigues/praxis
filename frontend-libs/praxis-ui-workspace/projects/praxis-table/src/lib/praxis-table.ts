@@ -53,7 +53,7 @@ import {PraxisTableConfigEditor} from './praxis-table-config-editor';
         <td mat-cell *matCellDef="let element"
             [style.text-align]="column.align"
             [style.width]="column.width"
-            [attr.style]="column.style">{{ element[column.field] }}
+            [attr.style]="column.style">{{ getCellValue(element, column) }}
         </td>
       </ng-container>
 
@@ -257,5 +257,46 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
           this.paginator.length = page.totalElements;
         }
       });
+  }
+
+  /**
+   * Get the cell value for a given row and column
+   * Handles both regular fields and calculated columns with formulas
+   */
+  getCellValue(rowData: any, column: ColumnDefinition): any {
+    const extendedColumn = column as any;
+    
+    // Check if this is a calculated column with a generated expression
+    if (extendedColumn._generatedValueGetter && extendedColumn._generatedValueGetter.trim()) {
+      try {
+        // Safely evaluate the generated expression
+        const evaluationFunction = new Function('rowData', `return ${extendedColumn._generatedValueGetter}`);
+        return evaluationFunction(rowData);
+      } catch (error) {
+        console.warn(`Error evaluating formula for column ${column.field}:`, error);
+        return `[Formula Error]`;
+      }
+    }
+    
+    // Fallback to regular field access
+    return this.getNestedPropertyValue(rowData, column.field);
+  }
+
+  /**
+   * Safely access nested properties using dot notation
+   */
+  private getNestedPropertyValue(obj: any, path: string): any {
+    if (!obj || !path) {
+      return null;
+    }
+
+    try {
+      return path.split('.').reduce((current, key) => {
+        return current && current[key] !== undefined ? current[key] : null;
+      }, obj);
+    } catch (error) {
+      console.warn(`Error accessing property ${path}:`, error);
+      return null;
+    }
   }
 }

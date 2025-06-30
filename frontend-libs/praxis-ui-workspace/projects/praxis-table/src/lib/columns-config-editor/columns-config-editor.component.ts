@@ -24,6 +24,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { TableConfig, ColumnDefinition } from '@praxis/core';
 import { Subject } from 'rxjs';
+import { VisualFormulaBuilderComponent } from '../visual-formula-builder/visual-formula-builder.component';
+import { FieldSchema, FormulaDefinition } from '../visual-formula-builder/formula-types';
 
 export interface ColumnChange {
   type: 'add' | 'remove' | 'update' | 'reorder' | 'global';
@@ -50,44 +52,41 @@ export interface ColumnChange {
     MatListModule,
     MatDividerModule,
     MatTooltipModule,
-    DragDropModule
+    DragDropModule,
+    VisualFormulaBuilderComponent
   ],
   template: `
     <div class="columns-config-editor">
-      <!-- Educational Card -->
-      <mat-card class="educational-card">
-        <mat-card-header>
-          <mat-icon mat-card-avatar class="card-icon">table_chart</mat-icon>
-          <mat-card-title>Personalização de Colunas</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <p>Personalize cada coluna da tabela individualmente. Defina visibilidade, cabeçalhos, largura, 
-             tipo de dado, formatação e estilos condicionais para uma exibição perfeita.</p>
+      <!-- Educational Card - Compact -->
+      <mat-card class="educational-card compact">
+        <mat-card-content class="compact-content">
+          <div class="compact-header">
+            <mat-icon class="inline-icon">table_chart</mat-icon>
+            <h4>Personalização de Colunas</h4>
+          </div>
+          <p>Configure visibilidade, cabeçalhos, largura e propriedades de cada coluna.</p>
         </mat-card-content>
       </mat-card>
 
-      <!-- Global Actions Panel -->
-      <mat-card class="global-actions-card">
-        <mat-card-header>
-          <mat-card-title>
-            <mat-icon>tune</mat-icon>
-            Configurações Globais
-          </mat-card-title>
-          <mat-card-subtitle>Aplicar configurações a todas as colunas de uma vez</mat-card-subtitle>
-        </mat-card-header>
-        <mat-card-content>
-          <div class="global-actions-grid">
+      <!-- Global Actions Panel - Compact -->
+      <mat-card class="global-actions-card compact">
+        <mat-card-content class="compact-global-content">
+          <div class="global-header">
+            <mat-icon class="inline-icon">tune</mat-icon>
+            <h4>Configurações Globais</h4>
+          </div>
+          <div class="global-actions-grid compact">
             <!-- Visibility Actions -->
             <div class="global-action-group">
               <label class="group-label">Visibilidade</label>
-              <mat-button-toggle-group class="visibility-toggle-group">
+              <mat-button-toggle-group class="compact-toggle-group">
                 <mat-button-toggle value="show" (click)="showAllColumns()">
                   <mat-icon>visibility</mat-icon>
-                  Mostrar Todas
+                  <span class="toggle-text">Todas</span>
                 </mat-button-toggle>
                 <mat-button-toggle value="hide" (click)="hideAllColumns()">
                   <mat-icon>visibility_off</mat-icon>
-                  Ocultar Todas
+                  <span class="toggle-text">Nenhuma</span>
                 </mat-button-toggle>
               </mat-button-toggle-group>
             </div>
@@ -95,26 +94,23 @@ export interface ColumnChange {
             <!-- Sortable Global -->
             <div class="global-action-group">
               <label class="group-label">Ordenação</label>
-              <mat-checkbox [(ngModel)]="globalSortableEnabled" (ngModelChange)="applyGlobalSortable($event)">
-                Habilitar Ordenação Padrão para Colunas
+              <mat-checkbox [(ngModel)]="globalSortableEnabled" (ngModelChange)="applyGlobalSortable($event)" class="compact-checkbox">
+                Habilitar para todas
               </mat-checkbox>
             </div>
 
             <!-- Alignment Default -->
             <div class="global-action-group">
-              <label class="group-label">Alinhamento Padrão</label>
-              <mat-button-toggle-group [(ngModel)]="globalAlignment" (ngModelChange)="applyGlobalAlignment($event)">
+              <label class="group-label">Alinhamento</label>
+              <mat-button-toggle-group [(ngModel)]="globalAlignment" (ngModelChange)="applyGlobalAlignment($event)" class="compact-toggle-group">
                 <mat-button-toggle value="left">
                   <mat-icon>format_align_left</mat-icon>
-                  Esquerda
                 </mat-button-toggle>
                 <mat-button-toggle value="center">
                   <mat-icon>format_align_center</mat-icon>
-                  Centro
                 </mat-button-toggle>
                 <mat-button-toggle value="right">
                   <mat-icon>format_align_right</mat-icon>
-                  Direita
                 </mat-button-toggle>
               </mat-button-toggle-group>
             </div>
@@ -128,35 +124,50 @@ export interface ColumnChange {
         <div class="master-panel">
           <div class="list-header">
             <h3>Colunas ({{ columns.length }})</h3>
-            <button mat-fab color="primary" class="add-column-fab" (click)="addNewColumn()" 
-                    matTooltip="Adicionar Nova Coluna">
-              <mat-icon>add</mat-icon>
+            <button mat-fab color="primary" class="add-column-fab" (click)="addNewColumn()"
+                    matTooltip="Adicionar Coluna Calculada">
+              <mat-icon>functions</mat-icon>
             </button>
           </div>
 
           <div class="columns-list-container" cdkDropList (cdkDropListDropped)="onColumnReorder($event)">
             <mat-list class="columns-list">
-              <mat-list-item 
-                *ngFor="let column of columns; let i = index" 
+              <mat-list-item
+                *ngFor="let column of columns; let i = index"
                 [class.selected]="selectedColumnIndex === i"
                 (click)="selectColumn(i)"
                 cdkDrag
                 class="column-item">
-                
+
                 <div class="column-item-content" cdkDragHandle>
                   <div class="column-main-info">
                     <div class="column-header">
                       <mat-icon class="drag-handle">drag_handle</mat-icon>
-                      <span class="column-title">{{ column.header || column.field }}</span>
-                      <mat-icon class="visibility-icon" [class.visible]="column.visible">
-                        {{ column.visible ? 'visibility' : 'visibility_off' }}
-                      </mat-icon>
+                      <div class="column-text-info">
+                        <span class="column-title"
+                              [matTooltip]="column.field"
+                              matTooltipPosition="below">
+                          {{ column.header || column.field }}
+                        </span>
+                        <span class="column-field">{{ column.field }}</span>
+                      </div>
+                      <div class="column-indicators">
+                        <mat-icon class="column-type-icon"
+                                  [matTooltip]="isCalculatedColumn(column) ? 'Coluna Calculada' : 'Campo da API'">
+                          {{ isCalculatedColumn(column) ? 'functions' : 'data_object' }}
+                        </mat-icon>
+                        <mat-checkbox [(ngModel)]="column.visible"
+                                    (ngModelChange)="onColumnPropertyChange()"
+                                    (click)="$event.stopPropagation()"
+                                    class="visibility-checkbox"
+                                    matTooltip="Visível na tabela">
+                        </mat-checkbox>
+                      </div>
                     </div>
-                    <span class="column-field">{{ column.field }}</span>
                   </div>
-                  
-                  <button mat-icon-button color="warn" class="remove-button" 
-                          (click)="removeColumn(i, $event)" 
+
+                  <button mat-icon-button color="warn" class="remove-button"
+                          (click)="removeColumn(i, $event)"
                           matTooltip="Remover Coluna">
                     <mat-icon>delete</mat-icon>
                   </button>
@@ -186,8 +197,8 @@ export interface ColumnChange {
               <div class="form-row">
                 <mat-form-field appearance="outline" class="field-input">
                   <mat-label>Campo (field)</mat-label>
-                  <input matInput 
-                         [(ngModel)]="selectedColumn.field" 
+                  <input matInput
+                         [(ngModel)]="selectedColumn.field"
                          name="field"
                          [readonly]="isExistingColumn(selectedColumn)"
                          (ngModelChange)="onColumnPropertyChange()">
@@ -196,8 +207,8 @@ export interface ColumnChange {
 
                 <mat-form-field appearance="outline" class="header-input">
                   <mat-label>Cabeçalho (header)</mat-label>
-                  <input matInput 
-                         [(ngModel)]="selectedColumn.header" 
+                  <input matInput
+                         [(ngModel)]="selectedColumn.header"
                          name="header"
                          (ngModelChange)="onColumnPropertyChange()">
                   <mat-hint>Texto exibido no cabeçalho</mat-hint>
@@ -207,7 +218,7 @@ export interface ColumnChange {
               <!-- Visibility and Alignment Row -->
               <div class="form-row">
                 <div class="checkbox-group">
-                  <mat-checkbox [(ngModel)]="selectedColumn.visible" 
+                  <mat-checkbox [(ngModel)]="selectedColumn.visible"
                                name="visible"
                                (ngModelChange)="onColumnPropertyChange()">
                     Coluna Visível
@@ -216,7 +227,7 @@ export interface ColumnChange {
 
                 <div class="alignment-group">
                   <label class="control-label">Alinhamento</label>
-                  <mat-button-toggle-group [(ngModel)]="selectedColumn.align" 
+                  <mat-button-toggle-group [(ngModel)]="selectedColumn.align"
                                           name="align"
                                           (ngModelChange)="onColumnPropertyChange()">
                     <mat-button-toggle value="left">
@@ -236,8 +247,8 @@ export interface ColumnChange {
               <div class="form-row">
                 <mat-form-field appearance="outline" class="width-input">
                   <mat-label>Largura</mat-label>
-                  <input matInput 
-                         [(ngModel)]="selectedColumn.width" 
+                  <input matInput
+                         [(ngModel)]="selectedColumn.width"
                          name="width"
                          placeholder="auto"
                          (ngModelChange)="onColumnPropertyChange()">
@@ -245,7 +256,7 @@ export interface ColumnChange {
                 </mat-form-field>
 
                 <div class="checkbox-group">
-                  <mat-checkbox [(ngModel)]="selectedColumn.sortable" 
+                  <mat-checkbox [(ngModel)]="selectedColumn.sortable"
                                name="sortable"
                                (ngModelChange)="onColumnPropertyChange()">
                     Ordenável
@@ -257,13 +268,26 @@ export interface ColumnChange {
               <div class="form-row">
                 <div class="sticky-group">
                   <label class="control-label">Posição Fixa</label>
-                  <mat-button-toggle-group [(ngModel)]="selectedColumn.sticky" 
+                  <mat-button-toggle-group [(ngModel)]="selectedColumn.sticky"
                                           name="sticky"
                                           (ngModelChange)="onColumnPropertyChange()">
                     <mat-button-toggle [value]="null">Nenhum</mat-button-toggle>
                     <mat-button-toggle value="start">Início</mat-button-toggle>
                     <mat-button-toggle value="end">Fim</mat-button-toggle>
                   </mat-button-toggle-group>
+                </div>
+              </div>
+
+              <!-- Visual Formula Builder for Calculated Columns -->
+              <div class="form-section" *ngIf="isCalculatedColumn(selectedColumn)">
+                <mat-divider></mat-divider>
+                <div class="formula-builder-section">
+                  <visual-formula-builder
+                    [availableDataSchema]="availableDataSchema"
+                    [currentFormula]="getColumnFormula(selectedColumn)"
+                    (formulaChange)="onFormulaChange($event)"
+                    (generatedExpressionChange)="onGeneratedExpressionChange($event)">
+                  </visual-formula-builder>
                 </div>
               </div>
             </form>
@@ -283,45 +307,104 @@ export interface ColumnChange {
     .educational-card {
       background-color: var(--mat-sys-surface-container-low);
       border-left: 4px solid var(--mat-sys-primary);
+      margin-bottom: 12px;
     }
 
-    .card-icon {
-      background-color: var(--mat-sys-primary-container);
-      color: var(--mat-sys-on-primary-container);
-      font-size: 20px;
-      width: 40px;
-      height: 40px;
+    .educational-card.compact {
+      margin-bottom: 8px;
+    }
+
+    .compact-content {
+      padding: 12px 16px !important;
+    }
+
+    .compact-header {
       display: flex;
       align-items: center;
-      justify-content: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .inline-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: var(--mat-sys-primary);
+    }
+
+    .compact-content h4 {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--mat-sys-on-surface);
+    }
+
+    .compact-content p {
+      margin: 0;
+      font-size: 0.875rem;
+      line-height: 1.3;
+      color: var(--mat-sys-on-surface-variant);
     }
 
     .global-actions-card {
       background-color: var(--mat-sys-surface-container);
       border-left: 4px solid var(--mat-sys-secondary);
+      margin-bottom: 12px;
+    }
+
+    .global-actions-card.compact {
+      margin-bottom: 8px;
+    }
+
+    .compact-global-content {
+      padding: 12px 16px !important;
+    }
+
+    .global-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
     }
 
     .global-actions-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 24px;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
       align-items: start;
+    }
+
+    .global-actions-grid.compact {
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     }
 
     .global-action-group {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
     }
 
     .group-label {
       font-weight: 500;
       color: var(--mat-sys-on-surface);
+      font-size: 0.8rem;
+    }
+
+    .compact-toggle-group {
       font-size: 0.875rem;
     }
 
-    .visibility-toggle-group {
-      width: 100%;
+    .compact-toggle-group .mat-button-toggle {
+      height: 36px;
+    }
+
+    .toggle-text {
+      font-size: 0.75rem;
+    }
+
+    .compact-checkbox {
+      font-size: 0.875rem;
     }
 
     .master-detail-layout {
@@ -402,32 +485,56 @@ export interface ColumnChange {
       display: flex;
       align-items: center;
       gap: 8px;
+      width: 100%;
     }
 
     .drag-handle {
       cursor: grab;
       color: var(--mat-sys-outline);
       font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .column-text-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
     }
 
     .column-title {
-      font-weight: 500;
+      font-weight: 600;
       font-size: 0.9rem;
+      color: var(--mat-sys-on-surface);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
-    .visibility-icon {
+    .column-field {
+      font-size: 0.75rem;
+      color: var(--mat-sys-on-surface-variant);
+      font-family: monospace;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .column-indicators {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .column-type-icon {
       font-size: 16px;
       color: var(--mat-sys-outline);
     }
 
-    .visibility-icon.visible {
-      color: var(--mat-sys-primary);
-    }
-
-    .column-field {
-      font-size: 0.8rem;
-      color: var(--mat-sys-on-surface-variant);
-      margin-left: 26px;
+    .visibility-checkbox {
+      transform: scale(0.9);
     }
 
     .remove-button {
@@ -532,6 +639,43 @@ export interface ColumnChange {
       color: var(--mat-sys-on-surface);
     }
 
+    .value-getter-input {
+      flex: 1;
+    }
+
+    .examples-section {
+      width: 100%;
+    }
+
+    .examples-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .example-button {
+      font-size: 0.8rem;
+      padding: 4px 8px;
+      min-width: auto;
+      height: 32px;
+    }
+
+    .example-button mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      margin-right: 4px;
+    }
+
+    .form-section {
+      margin-top: 24px;
+    }
+
+    .formula-builder-section {
+      margin-top: 16px;
+    }
+
     /* Responsive Design */
     @media (max-width: 768px) {
       .master-detail-layout {
@@ -587,7 +731,7 @@ export interface ColumnChange {
   `]
 })
 export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
-  
+
   @Input() config: TableConfig | null = null;
   @Output() configChange = new EventEmitter<TableConfig>();
   @Output() columnChange = new EventEmitter<ColumnChange>();
@@ -596,6 +740,9 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
   columns: ColumnDefinition[] = [];
   selectedColumnIndex = -1;
   selectedColumn: ColumnDefinition | null = null;
+
+  // Formula builder data
+  availableDataSchema: FieldSchema[] = [];
 
   // Global settings
   globalSortableEnabled = true;
@@ -610,6 +757,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
     if (this.config?.columns) {
       this.columns = [...this.config.columns];
       this.updateGlobalSettings();
+      this.generateAvailableDataSchema();
     }
   }
 
@@ -621,7 +769,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
   private updateGlobalSettings(): void {
     // Check if all columns have sortable enabled
     this.globalSortableEnabled = this.columns.every(col => col.sortable !== false);
-    
+
     // Check if all columns have the same alignment
     const alignments = this.columns.map(col => col.align).filter(Boolean);
     const uniqueAlignments = [...new Set(alignments)];
@@ -672,13 +820,16 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
 
   // Column Management
   addNewColumn(): void {
-    const newColumn: ColumnDefinition = {
-      field: `newColumn${this.columns.length + 1}`,
-      header: `Nova Coluna ${this.columns.length + 1}`,
+    const newColumn: any = {
+      field: `calculatedField${this.columns.length + 1}`,
+      header: `Nova Coluna Calculada ${this.columns.length + 1}`,
       visible: true,
       align: 'left',
       sortable: true,
-      order: this.columns.length
+      order: this.columns.length,
+      calculationType: 'none', // Initialize with no formula
+      calculationParams: {},
+      _generatedValueGetter: ''
     };
 
     this.columns.push(newColumn);
@@ -688,13 +839,13 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
 
   removeColumn(index: number, event: Event): void {
     event.stopPropagation();
-    
+
     if (index >= 0 && index < this.columns.length) {
       this.columns.splice(index, 1);
-      
+
       // Update orders
       this.updateColumnOrders();
-      
+
       // Adjust selection
       if (this.selectedColumnIndex === index) {
         this.selectColumn(-1);
@@ -702,7 +853,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
         this.selectedColumnIndex--;
         this.selectedColumn = this.selectedColumnIndex >= 0 ? this.columns[this.selectedColumnIndex] : null;
       }
-      
+
       this.emitConfigChange('remove');
     }
   }
@@ -711,7 +862,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
     if (event.previousIndex !== event.currentIndex) {
       moveItemInArray(this.columns, event.previousIndex, event.currentIndex);
       this.updateColumnOrders();
-      
+
       // Update selection index if needed
       if (this.selectedColumnIndex === event.previousIndex) {
         this.selectedColumnIndex = event.currentIndex;
@@ -720,7 +871,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
       } else if (this.selectedColumnIndex < event.previousIndex && this.selectedColumnIndex >= event.currentIndex) {
         this.selectedColumnIndex++;
       }
-      
+
       this.emitConfigChange('reorder');
     }
   }
@@ -737,9 +888,113 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
   }
 
   isExistingColumn(column: ColumnDefinition): boolean {
-    // In a real implementation, you might track which columns come from schema
-    // For now, we'll assume columns with certain naming patterns are new
-    return !column.field.startsWith('newColumn');
+    // Columns are considered existing (from API/schema) if they don't have valueGetter
+    // or don't start with calculated field patterns
+    return !this.isCalculatedColumn(column);
+  }
+
+  isCalculatedColumn(column: ColumnDefinition): boolean {
+    // Column is calculated if it has calculationType or starts with calculated field pattern
+    const extendedColumn = column as any;
+    return !!(extendedColumn.calculationType && extendedColumn.calculationType !== 'none') ||
+           !!(extendedColumn._generatedValueGetter) ||
+           column.field.startsWith('calculatedField') ||
+           column.field.startsWith('customField');
+  }
+
+  hasValueGetterError(column: ColumnDefinition): boolean {
+    const valueGetter = (column as any).valueGetter;
+    if (!valueGetter || typeof valueGetter !== 'string') {
+      return false;
+    }
+
+    // Basic JavaScript syntax validation
+    try {
+      // Create a function to test syntax without executing
+      new Function('rowData', `return ${valueGetter}`);
+      return false;
+    } catch {
+      return true;
+    }
+  }
+
+  // Formula Builder Integration
+  private generateAvailableDataSchema(): void {
+    // Generate schema from existing columns (excluding calculated ones)
+    this.availableDataSchema = this.columns
+      .filter(col => !this.isCalculatedColumn(col))
+      .map(col => ({
+        name: col.field,
+        label: col.header || col.field,
+        type: this.inferFieldType(col),
+        path: col.field
+      }));
+
+    // Add some common nested properties as examples
+    this.availableDataSchema.push(
+      { name: 'id', label: 'ID', type: 'number', path: 'id' },
+      { name: 'name', label: 'Nome', type: 'string', path: 'name' },
+      { name: 'firstName', label: 'Primeiro Nome', type: 'string', path: 'firstName' },
+      { name: 'lastName', label: 'Sobrenome', type: 'string', path: 'lastName' },
+      { name: 'email', label: 'Email', type: 'string', path: 'email' },
+      { name: 'status', label: 'Status', type: 'string', path: 'status' },
+      { name: 'isActive', label: 'Ativo', type: 'boolean', path: 'isActive' },
+      { name: 'createdAt', label: 'Data de Criação', type: 'date', path: 'createdAt' },
+      { name: 'address.city', label: 'Cidade', type: 'string', path: 'address.city' },
+      { name: 'address.state', label: 'Estado', type: 'string', path: 'address.state' },
+      { name: 'price', label: 'Preço', type: 'number', path: 'price' },
+      { name: 'quantity', label: 'Quantidade', type: 'number', path: 'quantity' }
+    );
+  }
+
+  private inferFieldType(column: ColumnDefinition): 'string' | 'number' | 'boolean' | 'date' | 'object' | 'array' {
+    // Basic type inference based on field name patterns
+    const fieldName = column.field.toLowerCase();
+
+    if (fieldName.includes('id') || fieldName.includes('count') ||
+        fieldName.includes('price') || fieldName.includes('quantity') ||
+        fieldName.includes('amount') || fieldName.includes('total')) {
+      return 'number';
+    }
+
+    if (fieldName.includes('date') || fieldName.includes('time') ||
+        fieldName.includes('created') || fieldName.includes('updated')) {
+      return 'date';
+    }
+
+    if (fieldName.includes('active') || fieldName.includes('enabled') ||
+        fieldName.includes('visible') || fieldName.includes('is')) {
+      return 'boolean';
+    }
+
+    return 'string'; // Default to string
+  }
+
+  getColumnFormula(column: ColumnDefinition | null): FormulaDefinition | undefined {
+    if (!column) return undefined;
+
+    const extendedColumn = column as any;
+    return {
+      type: extendedColumn.calculationType || 'none',
+      params: extendedColumn.calculationParams || {}
+    };
+  }
+
+  onFormulaChange(formula: FormulaDefinition): void {
+    if (this.selectedColumn) {
+      const extendedColumn = this.selectedColumn as any;
+      extendedColumn.calculationType = formula.type;
+      extendedColumn.calculationParams = formula.params;
+      this.onColumnPropertyChange();
+    }
+  }
+
+  onGeneratedExpressionChange(expression: string): void {
+    if (this.selectedColumn) {
+      const extendedColumn = this.selectedColumn as any;
+      extendedColumn._generatedValueGetter = expression;
+      this.onColumnPropertyChange();
+    }
   }
 
   // Data Synchronization
@@ -751,7 +1006,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
       };
 
       this.configChange.emit(updatedConfig);
-      
+
       this.columnChange.emit({
         type: changeType,
         columns: [...this.columns],
@@ -759,7 +1014,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
         column: this.selectedColumn || undefined
       });
     }
-    
+
     this.cdr.markForCheck();
   }
 
@@ -770,14 +1025,14 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
     if (config?.columns) {
       this.columns = [...config.columns];
       this.updateGlobalSettings();
-      
+
       // Reset selection if current selection is invalid
       if (this.selectedColumnIndex >= this.columns.length) {
         this.selectColumn(-1);
       } else if (this.selectedColumnIndex >= 0) {
         this.selectedColumn = this.columns[this.selectedColumnIndex];
       }
-      
+
       this.cdr.markForCheck();
     }
   }

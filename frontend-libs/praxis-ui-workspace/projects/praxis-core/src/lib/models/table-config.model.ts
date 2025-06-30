@@ -38,6 +38,9 @@ export interface ColumnDefinition {
    * Exemplo: { 'background-color': (rowData, cellValue) => cellValue > 100 ? 'red' : 'green' }
    */
   cellStyleCondition?: { [styleProperty: string]: (rowData: any, cellValue: any) => string };
+
+
+  valueGetter?: string;
 }
 
 export interface ToolbarAction {
