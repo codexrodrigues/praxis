@@ -148,6 +148,58 @@
           }
         }
       }
+    },
+    "praxis-specification": {
+      "projectType": "library",
+      "root": "projects/praxis-specification",
+      "sourceRoot": "projects/praxis-specification/src",
+      "prefix": "praxis",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/praxis-specification/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/praxis-specification/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular/build:karma",
+          "options": {
+            "tsConfig": "projects/praxis-specification/tsconfig.spec.json"
+          }
+        }
+      }
+    },
+    "praxis-visual-builder": {
+      "projectType": "library",
+      "root": "projects/praxis-visual-builder",
+      "sourceRoot": "projects/praxis-visual-builder/src",
+      "prefix": "praxis",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/praxis-visual-builder/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/praxis-visual-builder/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular/build:karma",
+          "options": {
+            "tsConfig": "projects/praxis-visual-builder/tsconfig.spec.json"
+          }
+        }
+      }
     }
   },
   "cli": {
