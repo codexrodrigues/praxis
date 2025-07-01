@@ -31,6 +31,10 @@ import { FieldSchema, FormulaDefinition } from '../visual-formula-builder/formul
 import { ValueMappingEditorComponent } from '../value-mapping-editor/value-mapping-editor.component';
 import { DataFormatterComponent } from '../data-formatter/data-formatter.component';
 import { ColumnDataType } from '../data-formatter/data-formatter-types';
+import { StyleRuleBuilderComponent } from '../integration/style-rule-builder.component';
+import { StylePreviewComponent } from '../integration/style-preview.component';
+import { TableRuleEngineService, ConditionalStyle, ValidationResult } from '../integration/table-rule-engine.service';
+import { FieldSchemaAdapter } from '../integration/field-schema-adapter.service';
 
 export interface ColumnChange {
   type: 'add' | 'remove' | 'update' | 'reorder' | 'global';
@@ -800,8 +804,13 @@ export interface ColumnChange {
     }
 
     .mapping-panel-content,
-    .formatter-panel-content {
+    .formatter-panel-content,
+    .style-rules-panel-content {
       padding: 16px 0;
+    }
+
+    .style-rules-expansion-panel {
+      margin-top: 16px;
     }
 
     /* Responsive Design */
@@ -872,6 +881,10 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
   // Formula builder data
   availableDataSchema: FieldSchema[] = [];
 
+  // Style rules integration
+  currentFieldSchemas: FieldSchema[] = [];
+  sampleTableData: any[] = [];
+
   // Global settings
   globalSortableEnabled = true;
   globalAlignment: 'left' | 'center' | 'right' | null = null;
@@ -879,13 +892,18 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
   // Cleanup
   private destroy$ = new Subject<void>();
 
-  constructor(private cdr: ChangeDetectorRef) {}
+  constructor(
+    private cdr: ChangeDetectorRef,
+    private tableRuleEngine: TableRuleEngineService,
+    private fieldSchemaAdapter: FieldSchemaAdapter
+  ) {}
 
   ngOnInit(): void {
     if (this.config?.columns) {
       this.columns = [...this.config.columns];
       this.updateGlobalSettings();
       this.generateAvailableDataSchema();
+      this.initializeStyleRules();
     }
   }
 
@@ -1015,6 +1033,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
   // Column Property Changes
   onColumnPropertyChange(): void {
     this.emitConfigChange('update');
+    this.updateFieldSchemasForStyleRules();
   }
 
   isExistingColumn(column: ColumnDefinition): boolean {
@@ -1396,5 +1415,116 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
    */
   getCurrentColumns(): ColumnDefinition[] {
     return [...this.columns];
+  }
+
+  // Style Rules Integration Methods
+  private initializeStyleRules(): void {
+    // Convert table config to field schemas for the rule builder
+    this.currentFieldSchemas = this.fieldSchemaAdapter.adaptTableConfigToFieldSchema(this.config || { columns: this.columns });
+    
+    // Generate sample data for preview (in real app, this would come from actual data)
+    this.generateSampleData();
+  }
+
+  private generateSampleData(): void {
+    // Generate realistic sample data based on columns
+    this.sampleTableData = [];
+    
+    for (let i = 0; i < 5; i++) {
+      const sampleRow: any = {};
+      
+      this.columns.forEach(column => {
+        const fieldName = column.field;
+        const dataType = this.getColumnDataType(column);
+        
+        // Generate sample values based on data type and field name
+        switch (dataType) {
+          case 'number':
+            if (fieldName.toLowerCase().includes('id')) {
+              sampleRow[fieldName] = i + 1;
+            } else if (fieldName.toLowerCase().includes('age')) {
+              sampleRow[fieldName] = 25 + Math.floor(Math.random() * 40);
+            } else {
+              sampleRow[fieldName] = Math.floor(Math.random() * 1000);
+            }
+            break;
+            
+          case 'currency':
+            sampleRow[fieldName] = (Math.random() * 10000).toFixed(2);
+            break;
+            
+          case 'percentage':
+            sampleRow[fieldName] = (Math.random() * 100).toFixed(1);
+            break;
+            
+          case 'date':
+            const date = new Date();
+            date.setDate(date.getDate() - Math.floor(Math.random() * 365));
+            sampleRow[fieldName] = date.toISOString().split('T')[0];
+            break;
+            
+          case 'boolean':
+            sampleRow[fieldName] = Math.random() > 0.5;
+            break;
+            
+          default: // string
+            if (fieldName.toLowerCase().includes('name')) {
+              sampleRow[fieldName] = `Nome ${i + 1}`;
+            } else if (fieldName.toLowerCase().includes('status')) {
+              const statuses = ['Ativo', 'Inativo', 'Pendente', 'Cancelado'];
+              sampleRow[fieldName] = statuses[Math.floor(Math.random() * statuses.length)];
+            } else if (fieldName.toLowerCase().includes('email')) {
+              sampleRow[fieldName] = `usuario${i + 1}@exemplo.com`;
+            } else {
+              sampleRow[fieldName] = `Valor ${i + 1}`;
+            }
+            break;
+        }
+      });
+      
+      this.sampleTableData.push(sampleRow);
+    }
+  }
+
+  getStyleRulesPanelDescription(column: ColumnDefinition | null): string {
+    if (!column) return 'Nenhuma coluna selecionada';
+    
+    const extendedColumn = column as any;
+    const rulesCount = extendedColumn.conditionalStyles ? extendedColumn.conditionalStyles.length : 0;
+    
+    if (rulesCount === 0) {
+      return 'Configure formatação condicional baseada em regras';
+    } else if (rulesCount === 1) {
+      return '1 regra de estilo definida';
+    } else {
+      return `${rulesCount} regras de estilo definidas`;
+    }
+  }
+
+  onConditionalStylesChanged(styles: ConditionalStyle[]): void {
+    if (this.selectedColumn) {
+      const extendedColumn = this.selectedColumn as any;
+      extendedColumn.conditionalStyles = styles;
+      
+      // Compile rules for execution in the table
+      if (styles.length > 0) {
+        extendedColumn.cellClassCondition = this.tableRuleEngine.compileConditionalStyles(styles);
+      } else {
+        delete extendedColumn.cellClassCondition;
+      }
+      
+      this.onColumnPropertyChange();
+    }
+  }
+
+  onRuleValidated(event: { ruleId: string; result: ValidationResult }): void {
+    // Handle rule validation results - could show feedback to user
+    console.log('Rule validated:', event);
+  }
+
+  // Update field schemas when columns change
+  private updateFieldSchemasForStyleRules(): void {
+    this.currentFieldSchemas = this.fieldSchemaAdapter.adaptTableConfigToFieldSchema({ columns: this.columns });
+    this.generateSampleData();
   }
 }
