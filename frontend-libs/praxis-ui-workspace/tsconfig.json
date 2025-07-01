@@ -14,7 +14,15 @@
     "experimentalDecorators": true,
     "paths": {
       "@praxis/core": ["projects/praxis-core/src/public-api.ts"],
-      "@praxis/table": ["projects/praxis-table/src/public-api.ts"]
+      "@praxis/table": [
+        "projects/praxis-table/src/public-api.ts"
+      ],
+      "praxis-specification": [
+        "./dist/praxis-specification"
+      ],
+      "praxis-visual-builder": [
+        "./dist/praxis-visual-builder"
+      ]
     },
     "importHelpers": true,
     "target": "ES2022",
@@ -46,6 +54,18 @@
     },
     {
       "path": "./projects/praxis-table/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/praxis-specification/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/praxis-specification/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/praxis-visual-builder/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/praxis-visual-builder/tsconfig.spec.json"
     }
   ]
 }
