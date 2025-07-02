@@ -470,7 +470,8 @@ public class OpenApiUiUtils {
                 normalizedFieldName.contains("description") || normalizedFieldName.contains("comment")) {
             return FieldControlType.TEXTAREA.getValue();
         } else if (normalizedFieldName.contains("valor") || normalizedFieldName.contains("preco") ||
-                normalizedFieldName.contains("price") || normalizedFieldName.contains("amount")) {
+                normalizedFieldName.contains("price") || normalizedFieldName.contains("amount") ||
+                normalizedFieldName.contains("salario") || normalizedFieldName.contains("salary")) {
             return FieldControlType.CURRENCY_INPUT.getValue();
         } else if (normalizedFieldName.contains("url") || normalizedFieldName.contains("link") ||
                 normalizedFieldName.contains("website") || normalizedFieldName.contains("site")) {

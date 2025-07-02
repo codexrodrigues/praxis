@@ -106,7 +106,7 @@ public @interface UISchema {
     int maxLength() default 0;
     String min() default "";
     String max() default "";
-    ValidationPattern pattern() default ValidationPattern.EMAIL;
+    ValidationPattern pattern() default ValidationPattern.CUSTOM;
     String requiredMessage() default "";
     String minLengthMessage() default "";
     String maxLengthMessage() default "";

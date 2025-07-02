@@ -1,6 +1,7 @@
 package com.example.praxis.humanresources.dto;
 
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.praxisplatform.uischema.extension.annotation.UISchema;
 import org.praxisplatform.uischema.filter.dto.GenericFilterDTO;
 
@@ -15,15 +16,19 @@ public class FuncionarioDTO implements GenericFilterDTO {
     private String nomeCompleto;
 
     @UISchema
+    @Schema(type = "string", format = "cpf", description = "CPF do funcionário")
     private String cpf;
 
     @UISchema
+    @Schema(type = "string", format = "date", description = "Data de nascimento do funcionário")
     private LocalDate dataNascimento;
 
     @UISchema()
+    @Schema(type = "string", format = "email", description = "Email do funcionário")
     private String email;
 
     @UISchema()
+    @Schema(type = "string", format = "phone", description = "Telefone do funcionário")
     private String telefone;
 
     @UISchema()
@@ -33,15 +38,19 @@ public class FuncionarioDTO implements GenericFilterDTO {
     private Long departamentoId;
 
     @UISchema()
+    @Schema(type = "number", format = "decimal", description = "Salário do funcionário")
     private BigDecimal salario;
 
     @UISchema()
+    @Schema(type = "string", format = "date", description = "Data de admissão do funcionário")
     private LocalDate dataAdmissao;
 
     @UISchema()
+    @Schema(description = "Endereço do funcionário")
     private EnderecoDTO endereco;
 
     @UISchema()
+    @Schema(description = "Indica se o funcionário está ativo", defaultValue = "true")
     private boolean ativo = true;
 
     // Getters and Setters

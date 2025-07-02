@@ -42,147 +42,51 @@ public class CustomOpenApiResolver extends ModelResolver {
         super.applyBeanValidatorAnnotations(property, annotations, parent, applyNotNullAnnotations);
 
         if (annotations != null && ResolverUtils.getAnnotation(UISchema.class, annotations) != null) {
-            // Primeiro processa as anotações UISchema e UIExtension (código existente)
-            resolveSchema(property, annotations);
-            resolveExtension(property, annotations);
-
-            // Processa anotações padrão do OpenAPI e Jakarta Validation
-            processStandardAnnotations(property, annotations);
+            // NOVA ORDEM DE PRECEDÊNCIA (do menor para o maior):
+            // 1. Valores padrão da anotação @UISchema (base)
+            // 2. Detecção automática baseada no OpenAPI Schema (sobrescreve padrões)
+            // 3. Valores explícitos da anotação @UISchema (sobrescreve detecção automática)
+            // 4. extraProperties (sobrescreve tudo)
+            
+            resolveSchemaWithPrecedence(property, annotations);
 
             // Centralized validation message population
             OpenApiUiUtils.populateDefaultValidationMessages(getUIExtensionMap(property));
         }
     }
 
-    private void resolveSchema(Schema<?> property, Annotation[] annotations) {
+    /**
+     * Resolve UI Schema com ordem de precedência clara e bem definida
+     */
+    private void resolveSchemaWithPrecedence(Schema<?> property, Annotation[] annotations) {
         UISchema annotation = ResolverUtils.getAnnotation(UISchema.class, annotations);
-        if (annotation != null) {
-            Map<String, Object> uiExtension = getUIExtensionMap(property);
+        if (annotation == null) return;
+        
+        Map<String, Object> uiExtension = getUIExtensionMap(property);
+        String fieldName = property.getName(); // Nome do campo para detecção inteligente
 
-            // Processar campos dinâmicamente usando reflexão
-            processAnnotationDynamically(annotation, uiExtension);
+        // === ETAPA 1: Valores PADRÃO da anotação @UISchema ===
+        // Aplica apenas valores padrão (não explícitos) da anotação
+        applyUISchemaDefaults(annotation, uiExtension);
 
-            // Adicionar metadata personalizada, que tem precedência
-            if (annotation.extraProperties() != null && annotation.extraProperties().length > 0) {
-                for (ExtensionProperty p : annotation.extraProperties()) {
-                    uiExtension.putIfAbsent(p.name(), p.value());
-                }
-            }
+        // === ETAPA 2: Detecção AUTOMÁTICA baseada no OpenAPI Schema ===
+        // Sobrescreve padrões com detecção inteligente baseada em type/format
+        applySchemaBasedDetection(property, uiExtension, fieldName);
 
-        }
+        // === ETAPA 3: Valores EXPLÍCITOS da anotação @UISchema ===
+        // Sobrescreve detecção automática com valores explicitamente definidos
+        applyUISchemaExplicitValues(annotation, uiExtension);
+
+        // === ETAPA 4: Anotações Jakarta Validation ===
+        // Adiciona validações baseadas em @NotNull, @Size, etc.
+        processJakartaValidationAnnotations(property, annotations, uiExtension);
+
+        // === ETAPA 5: extraProperties (precedência MÁXIMA) ===
+        // Sobrescreve tudo com propriedades customizadas
+        applyExtraProperties(annotation, uiExtension);
     }
 
-    private void processAnnotationDynamically(UISchema annotation, Map<String, Object> uiExtension) {
-        Method[] methods = UISchema.class.getDeclaredMethods();
 
-        for (Method method : methods) {
-            String methodName = method.getName();
-
-            // Skip methods that are not properties, or are handled elsewhere
-            if (methodName.equals("metadata") || methodName.equals("description") ||
-                    methodName.equals("hashCode") || methodName.equals("toString") ||
-                    methodName.equals("equals") || methodName.equals("extraProperties") ||
-                    methodName.equals("annotationType")) {
-                continue;
-            }
-
-            try {
-                Object value = method.invoke(annotation);
-                if (value == null) {
-                    continue; // Skip null values
-                }
-
-                String extensionPropertyName = getExtensionPropertyName(methodName);
-
-                // Handle specific properties with new utility methods
-                if ("group".equals(methodName)) {
-                    OpenApiUiUtils.populateUiGroup(uiExtension, (String) value);
-                } else if ("order".equals(methodName)) {
-                    OpenApiUiUtils.populateUiOrder(uiExtension, (Integer) value);
-                } else if ("width".equals(methodName)) {
-                    OpenApiUiUtils.populateUiWidth(uiExtension, (String) value);
-                } else if ("icon".equals(methodName)) {
-                    OpenApiUiUtils.populateUiIcon(uiExtension, (String) value);
-                } else if ("disabled".equals(methodName)) {
-                    OpenApiUiUtils.populateUiDisabled(uiExtension, (Boolean) value);
-                } else if ("hidden".equals(methodName)) {
-                    OpenApiUiUtils.populateUiHidden(uiExtension, (Boolean) value);
-                } else if ("editable".equals(methodName)) {
-                    OpenApiUiUtils.populateUiEditable(uiExtension, (Boolean) value);
-                } else if ("sortable".equals(methodName)) {
-                    OpenApiUiUtils.populateUiSortable(uiExtension, (Boolean) value);
-                } else if ("filterable".equals(methodName)) {
-                    OpenApiUiUtils.populateUiFilterable(uiExtension, (Boolean) value);
-                }
-                // Handle Enum types
-                else if (value instanceof FieldDataType) {
-                    // Assuming FieldDataType.TEXT is default, only add if different or not present
-                    String typeValue = ((FieldDataType) value).getValue();
-                    if (!typeValue.equals(FieldDataType.TEXT.getValue()) || !uiExtension.containsKey(extensionPropertyName)) {
-                         uiExtension.putIfAbsent(extensionPropertyName, typeValue);
-                    }
-                } else if (value instanceof FieldControlType) {
-                     // Assuming FieldControlType.INPUT is default for general cases. Add if different or not present.
-                    String controlTypeValue = ((FieldControlType) value).getValue();
-                     if (!controlTypeValue.equals(FieldControlType.INPUT.getValue()) || !uiExtension.containsKey(extensionPropertyName)) {
-                        uiExtension.putIfAbsent(extensionPropertyName, controlTypeValue);
-                    }
-                } else if (value instanceof IconPosition) {
-                    // Assuming IconPosition.LEFT is default. Add if different or not present.
-                    String iconPositionValue = ((IconPosition) value).getValue();
-                     if (!iconPositionValue.equals(IconPosition.LEFT.getValue()) || !uiExtension.containsKey(extensionPropertyName)) {
-                        uiExtension.putIfAbsent(extensionPropertyName, iconPositionValue);
-                    }
-                } else if (value instanceof NumberFormatStyle) {
-                    // Assuming NumberFormatStyle.NONE is default. Add if different or not present.
-                    String numericFormatValue = ((NumberFormatStyle) value).getValue();
-                    if (!numericFormatValue.equals(NumberFormatStyle.NONE.getValue()) || !uiExtension.containsKey(extensionPropertyName)) {
-                        uiExtension.putIfAbsent(extensionPropertyName, numericFormatValue);
-                    }
-                } else if (value instanceof ValidationPattern) {
-                    String patternValue = ((ValidationPattern) value).getPattern();
-                    // For ValidationPattern, it's a specific validation, so add if present and not empty.
-                    // The default for pattern() in UISchema is ValidationPattern.NONE which has an empty value.
-                    if (patternValue != null && !patternValue.isEmpty()) {
-                        uiExtension.putIfAbsent(extensionPropertyName, patternValue);
-                    }
-                }
-                // Handle other String, Integer, Boolean properties
-                else if (value instanceof String) {
-                    String strValue = (String) value;
-                    if (!strValue.isEmpty()) {
-                        uiExtension.putIfAbsent(extensionPropertyName, strValue);
-                    }
-                } else if (value instanceof Integer) {
-                    Integer intValue = (Integer) value;
-                    // General integer handling: add if not zero (assuming zero is a common default for non-specific integers)
-                    // Specific integers like 'order' are handled above.
-                    // For other integers like minLength, maxLength, min, max, validation utils handle them.
-                    // This is a fallback.
-                    if (intValue != 0) {
-                        uiExtension.putIfAbsent(extensionPropertyName, intValue.toString());
-                    }
-                } else if (value instanceof Boolean) {
-                    // General boolean handling for properties not covered by specific utils
-                    // Add if true, assuming default is false.
-                    // Specific booleans like 'disabled', 'hidden', 'editable', 'sortable', 'filterable', 'readOnly', 'required'
-                    // are handled by dedicated utils or standard processing.
-                    Boolean boolValue = (Boolean) value;
-                    if (boolValue) {
-                         uiExtension.putIfAbsent(extensionPropertyName, Boolean.TRUE); // Store as Boolean
-                    }
-                }
-                // Note: Array types for properties like 'allowedFileTypes' from UISchema are not explicitly handled here yet.
-                // UISchema.allowedFileTypes() returns String[], not a single enum.
-                // The current logic would skip it if it's not one of the above types.
-                // This would need specific handling if `allowedFileTypes` from `@UISchema` needs to be processed.
-                // For now, focusing on the defined refactoring scope.
-
-            } catch (Exception e) {
-                LOGGER.error("Error processing UISchema annotation method {}: {}", methodName, e.getMessage(), e);
-            }
-        }
-    }
 
     private String getExtensionPropertyName(String methodName) {
         // Primeiro verificar se o método corresponde a uma propriedade em FieldConfigProperties
@@ -301,35 +205,127 @@ public class CustomOpenApiResolver extends ModelResolver {
             OpenApiUiUtils.populateUiDefaultValue(uiExtension, property.getExample()); // Already uses util, ensures it uses updated one
             OpenApiUiUtils.populateUiReadOnly(uiExtension, property.getReadOnly()); // Already uses util, ensures it uses updated one
 
-            // ControlType baseado no tipo e formato
-            if (!uiExtension.containsKey(FieldConfigProperties.CONTROL_TYPE.getValue())) {
-                String openApiType = property.getType();
-                String openApiFormat = property.getFormat();
-                boolean hasEnum = property.getEnum() != null && !property.getEnum().isEmpty();
-                Integer maxLengthSchema = property.getMaxLength();
-                boolean isArrayType = "array".equals(openApiType);
-                String itemType = null;
-                String itemFormat = null;
-                boolean isArrayItemsHaveEnum = false;
-
-                if (isArrayType && property.getItems() != null) {
-                    Schema<?> itemsSchema = property.getItems();
-                    itemType = itemsSchema.getType();
-                    itemFormat = itemsSchema.getFormat();
-                    if (itemsSchema.getEnum() != null && !itemsSchema.getEnum().isEmpty()) {
-                        isArrayItemsHaveEnum = true;
-                    }
+            // ControlType e DataType baseados no OpenAPI Schema - priorizar sobre valores padrão da anotação
+            String openApiType = property.getType();
+            String openApiFormat = property.getFormat();
+            boolean hasEnum = property.getEnum() != null && !property.getEnum().isEmpty();
+            
+            // Priorizar OpenAPI Schema para determinar controlType e dataType corretos
+            String schemaBasedControlType = null;
+            String schemaBasedDataType = null;
+            
+            if (openApiType != null) {
+                switch (openApiType) {
+                    case "string":
+                        schemaBasedDataType = FieldDataType.TEXT.getValue();
+                        schemaBasedControlType = FieldControlType.INPUT.getValue();
+                        
+                        if (hasEnum) {
+                            schemaBasedControlType = FieldControlType.SELECT.getValue();
+                        } else if (openApiFormat != null) {
+                            switch (openApiFormat) {
+                                case "date":
+                                    schemaBasedControlType = FieldControlType.DATE_PICKER.getValue();
+                                    schemaBasedDataType = FieldDataType.DATE.getValue();
+                                    break;
+                                case "date-time":
+                                    schemaBasedControlType = FieldControlType.DATE_TIME_PICKER.getValue();
+                                    schemaBasedDataType = FieldDataType.DATE.getValue();
+                                    break;
+                                case "time":
+                                    schemaBasedControlType = FieldControlType.TIME_PICKER.getValue();
+                                    schemaBasedDataType = FieldDataType.DATE.getValue();
+                                    break;
+                                case "email":
+                                    schemaBasedControlType = FieldControlType.EMAIL_INPUT.getValue();
+                                    schemaBasedDataType = FieldDataType.EMAIL.getValue();
+                                    break;
+                                case "password":
+                                    schemaBasedControlType = FieldControlType.PASSWORD.getValue();
+                                    schemaBasedDataType = FieldDataType.PASSWORD.getValue();
+                                    break;
+                                case "uri":
+                                case "url":
+                                    schemaBasedControlType = FieldControlType.URL_INPUT.getValue();
+                                    schemaBasedDataType = FieldDataType.URL.getValue();
+                                    break;
+                                case "binary":
+                                case "byte":
+                                    schemaBasedControlType = FieldControlType.FILE_UPLOAD.getValue();
+                                    schemaBasedDataType = FieldDataType.FILE.getValue();
+                                    break;
+                                case "color":
+                                    schemaBasedControlType = FieldControlType.COLOR_PICKER.getValue();
+                                    break;
+                                case "phone":
+                                    schemaBasedControlType = FieldControlType.PHONE.getValue();
+                                    break;
+                                case "json":
+                                    schemaBasedDataType = FieldDataType.JSON.getValue();
+                                    break;
+                            }
+                        }
+                        
+                        // Verificar maxLength para textarea
+                        Integer maxLength = property.getMaxLength();
+                        if (maxLength != null && maxLength > 100 && 
+                            FieldControlType.INPUT.getValue().equals(schemaBasedControlType)) {
+                            schemaBasedControlType = FieldControlType.TEXTAREA.getValue();
+                        }
+                        break;
+                        
+                    case "number":
+                    case "integer":
+                        schemaBasedDataType = FieldDataType.NUMBER.getValue();
+                        schemaBasedControlType = FieldControlType.NUMERIC_TEXT_BOX.getValue();
+                        
+                        if (hasEnum) {
+                            schemaBasedControlType = FieldControlType.SELECT.getValue();
+                        } else if (openApiFormat != null) {
+                            switch (openApiFormat) {
+                                case "currency":
+                                    schemaBasedControlType = FieldControlType.CURRENCY_INPUT.getValue();
+                                    break;
+                            }
+                        }
+                        break;
+                        
+                    case "boolean":
+                        schemaBasedDataType = FieldDataType.BOOLEAN.getValue();
+                        schemaBasedControlType = hasEnum ? FieldControlType.SELECT.getValue() : FieldControlType.CHECKBOX.getValue();
+                        break;
+                        
+                    case "array":
+                        // Verificar se items têm enum para multi-select
+                        if (property.getItems() != null && property.getItems().getEnum() != null && 
+                            !property.getItems().getEnum().isEmpty()) {
+                            schemaBasedControlType = FieldControlType.MULTI_SELECT.getValue();
+                        } else {
+                            schemaBasedControlType = FieldControlType.ARRAY_INPUT.getValue();
+                        }
+                        break;
+                        
+                    case "object":
+                        schemaBasedControlType = FieldControlType.EXPANSION_PANEL.getValue();
+                        break;
                 }
-
-                // fieldName foi obtido anteriormente no método
-                String controlType = OpenApiUiUtils.determineEffectiveControlType(
-                        openApiType, openApiFormat, hasEnum, maxLengthSchema,
-                        isArrayType, itemType, itemFormat, isArrayItemsHaveEnum,
-                        fieldName // fieldName was obtained earlier in the method
-                );
-
-                if (controlType != null) {
-                    uiExtension.put(FieldConfigProperties.CONTROL_TYPE.getValue(), controlType);
+                
+                // Aplicar controlType baseado no schema (sobrescreve valor padrão da anotação)
+                if (schemaBasedControlType != null) {
+                    uiExtension.put(FieldConfigProperties.CONTROL_TYPE.getValue(), schemaBasedControlType);
+                }
+                
+                // Aplicar dataType baseado no schema (sobrescreve valor padrão da anotação)
+                if (schemaBasedDataType != null) {
+                    uiExtension.put(FieldConfigProperties.TYPE.getValue(), schemaBasedDataType);
+                }
+            }
+            
+            // Fallback: usar lógica de detecção inteligente baseada no nome do campo se ainda não definido
+            if (!uiExtension.containsKey(FieldConfigProperties.CONTROL_TYPE.getValue())) {
+                String smartControlType = OpenApiUiUtils.determineSmartControlTypeByFieldName(fieldName);
+                if (smartControlType != null) {
+                    uiExtension.put(FieldConfigProperties.CONTROL_TYPE.getValue(), smartControlType);
                 }
             }
             // Adicionar NUMERIC_FORMAT se o formato for "percent"
@@ -651,6 +647,372 @@ public class CustomOpenApiResolver extends ModelResolver {
 
         } catch (Exception e) {
             // Ignorar erros de reflexão
+        }
+    }
+
+    // ============================================================================
+    // NOVOS MÉTODOS PARA PRECEDÊNCIA CLARA
+    // ============================================================================
+
+    /**
+     * ETAPA 1: Aplica apenas valores PADRÃO da anotação @UISchema
+     * (não valores explicitamente definidos pelo desenvolvedor)
+     */
+    private void applyUISchemaDefaults(UISchema annotation, Map<String, Object> uiExtension) {
+        // Aplicar apenas os valores padrão que são "genéricos"
+        // Valores específicos serão aplicados na ETAPA 3
+        
+        // Valores padrão seguros que podem ser sobrescritos
+        if (annotation.controlType() == FieldControlType.INPUT) {
+            uiExtension.put(FieldConfigProperties.CONTROL_TYPE.getValue(), FieldControlType.INPUT.getValue());
+        }
+        
+        if (annotation.type() == FieldDataType.TEXT) {
+            uiExtension.put(FieldConfigProperties.TYPE.getValue(), FieldDataType.TEXT.getValue());
+        }
+        
+        // Outros valores padrão seguros
+        if (annotation.iconPosition() == IconPosition.LEFT) {
+            uiExtension.put(FieldConfigProperties.ICON_POSITION.getValue(), IconPosition.LEFT.getValue());
+        }
+        
+        // Valores booleanos padrão
+        if (annotation.sortable()) {
+            uiExtension.put(FieldConfigProperties.SORTABLE.getValue(), true);
+        }
+        
+        if (annotation.editable()) {
+            uiExtension.put(FieldConfigProperties.EDITABLE.getValue(), true);
+        }
+    }
+
+    /**
+     * ETAPA 2: Detecção AUTOMÁTICA baseada no OpenAPI Schema
+     * Esta é nossa lógica principal de detecção inteligente
+     */
+    private void applySchemaBasedDetection(Schema<?> property, Map<String, Object> uiExtension, String fieldName) {
+        String openApiType = property.getType();
+        String openApiFormat = property.getFormat();
+        boolean hasEnum = property.getEnum() != null && !property.getEnum().isEmpty();
+        
+        if (openApiType == null) return;
+        
+        // Determinar controlType e dataType baseado no schema
+        String detectedControlType = null;
+        String detectedDataType = null;
+        
+        switch (openApiType) {
+            case "string":
+                detectedDataType = FieldDataType.TEXT.getValue();
+                detectedControlType = FieldControlType.INPUT.getValue();
+                
+                if (hasEnum) {
+                    detectedControlType = FieldControlType.SELECT.getValue();
+                } else if (openApiFormat != null) {
+                    switch (openApiFormat) {
+                        case "date":
+                            detectedControlType = FieldControlType.DATE_PICKER.getValue();
+                            detectedDataType = FieldDataType.DATE.getValue();
+                            break;
+                        case "date-time":
+                            detectedControlType = FieldControlType.DATE_TIME_PICKER.getValue();
+                            detectedDataType = FieldDataType.DATE.getValue();
+                            break;
+                        case "time":
+                            detectedControlType = FieldControlType.TIME_PICKER.getValue();
+                            detectedDataType = FieldDataType.DATE.getValue();
+                            break;
+                        case "email":
+                            detectedControlType = FieldControlType.EMAIL_INPUT.getValue();
+                            detectedDataType = FieldDataType.EMAIL.getValue();
+                            break;
+                        case "password":
+                            detectedControlType = FieldControlType.PASSWORD.getValue();
+                            detectedDataType = FieldDataType.PASSWORD.getValue();
+                            break;
+                        case "uri":
+                        case "url":
+                            detectedControlType = FieldControlType.URL_INPUT.getValue();
+                            detectedDataType = FieldDataType.URL.getValue();
+                            break;
+                        case "binary":
+                        case "byte":
+                            detectedControlType = FieldControlType.FILE_UPLOAD.getValue();
+                            detectedDataType = FieldDataType.FILE.getValue();
+                            break;
+                        case "color":
+                            detectedControlType = FieldControlType.COLOR_PICKER.getValue();
+                            break;
+                        case "phone":
+                            detectedControlType = FieldControlType.PHONE.getValue();
+                            break;
+                        case "json":
+                            detectedDataType = FieldDataType.JSON.getValue();
+                            break;
+                    }
+                }
+                
+                // Verificar maxLength para textarea
+                Integer maxLength = property.getMaxLength();
+                if (maxLength != null && maxLength > 100 && 
+                    FieldControlType.INPUT.getValue().equals(detectedControlType)) {
+                    detectedControlType = FieldControlType.TEXTAREA.getValue();
+                }
+                break;
+                
+            case "number":
+            case "integer":
+                detectedDataType = FieldDataType.NUMBER.getValue();
+                detectedControlType = FieldControlType.NUMERIC_TEXT_BOX.getValue();
+                
+                if (hasEnum) {
+                    detectedControlType = FieldControlType.SELECT.getValue();
+                } else if ("currency".equals(openApiFormat)) {
+                    detectedControlType = FieldControlType.CURRENCY_INPUT.getValue();
+                }
+                break;
+                
+            case "boolean":
+                detectedDataType = FieldDataType.BOOLEAN.getValue();
+                detectedControlType = hasEnum ? FieldControlType.SELECT.getValue() : FieldControlType.CHECKBOX.getValue();
+                break;
+                
+            case "array":
+                if (property.getItems() != null && property.getItems().getEnum() != null && 
+                    !property.getItems().getEnum().isEmpty()) {
+                    detectedControlType = FieldControlType.MULTI_SELECT.getValue();
+                } else {
+                    detectedControlType = FieldControlType.ARRAY_INPUT.getValue();
+                }
+                break;
+                
+            case "object":
+                detectedControlType = FieldControlType.EXPANSION_PANEL.getValue();
+                break;
+        }
+        
+        // Aplicar detecções (sobrescreve valores padrão)
+        if (detectedControlType != null) {
+            uiExtension.put(FieldConfigProperties.CONTROL_TYPE.getValue(), detectedControlType);
+        }
+        
+        if (detectedDataType != null) {
+            uiExtension.put(FieldConfigProperties.TYPE.getValue(), detectedDataType);
+        }
+        
+        // Fallback: detecção inteligente por nome do campo
+        if (detectedControlType == null || FieldControlType.INPUT.getValue().equals(detectedControlType)) {
+            String smartControlType = OpenApiUiUtils.determineSmartControlTypeByFieldName(fieldName);
+            if (smartControlType != null) {
+                uiExtension.put(FieldConfigProperties.CONTROL_TYPE.getValue(), smartControlType);
+            }
+        }
+        
+        // Aplicar outras propriedades do schema
+        OpenApiUiUtils.populateUiName(uiExtension, fieldName);
+        OpenApiUiUtils.populateUiLabel(uiExtension, property.getTitle(), fieldName);
+        OpenApiUiUtils.populateUiPlaceholder(uiExtension, property.getTitle());
+        OpenApiUiUtils.populateUiHelpText(uiExtension, property.getDescription());
+        OpenApiUiUtils.populateUiDefaultValue(uiExtension, property.getExample());
+        OpenApiUiUtils.populateUiReadOnly(uiExtension, property.getReadOnly());
+        OpenApiUiUtils.populateUiMinLength(uiExtension, property.getMinLength(), null);
+        OpenApiUiUtils.populateUiMaxLength(uiExtension, property.getMaxLength(), null);
+        OpenApiUiUtils.populateUiMinimum(uiExtension, property.getMinimum(), null);
+        OpenApiUiUtils.populateUiMaximum(uiExtension, property.getMaximum(), null);
+        OpenApiUiUtils.populateUiPattern(uiExtension, property.getPattern(), null);
+        OpenApiUiUtils.populateUiOptionsFromEnum(uiExtension, property.getEnum(), this._mapper);
+        OpenApiUiUtils.populateUiRequired(uiExtension, property.getRequired() != null && !property.getRequired().isEmpty());
+        
+        // Adicionar NUMERIC_FORMAT se o formato for "percent"
+        if ("number".equals(openApiType) && "percent".equals(openApiFormat)) {
+            if (!uiExtension.containsKey(FieldConfigProperties.NUMERIC_FORMAT.getValue())) {
+                uiExtension.put(FieldConfigProperties.NUMERIC_FORMAT.getValue(), NumberFormatStyle.PERCENT.getValue());
+            }
+        }
+    }
+
+    /**
+     * ETAPA 3: Aplica valores EXPLÍCITOS da anotação @UISchema
+     * (valores definidos explicitamente pelo desenvolvedor)
+     */
+    private void applyUISchemaExplicitValues(UISchema annotation, Map<String, Object> uiExtension) {
+        // Processar apenas valores NÃO padrão (explicitamente definidos)
+        
+        // ControlType explícito (diferente do padrão)
+        if (annotation.controlType() != FieldControlType.INPUT) {
+            uiExtension.put(FieldConfigProperties.CONTROL_TYPE.getValue(), annotation.controlType().getValue());
+        }
+        
+        // DataType explícito (diferente do padrão)
+        if (annotation.type() != FieldDataType.TEXT) {
+            uiExtension.put(FieldConfigProperties.TYPE.getValue(), annotation.type().getValue());
+        }
+        
+        // Strings não vazias
+        if (!annotation.name().isEmpty()) {
+            uiExtension.put(FieldConfigProperties.NAME.getValue(), annotation.name());
+        }
+        if (!annotation.label().isEmpty()) {
+            uiExtension.put(FieldConfigProperties.LABEL.getValue(), annotation.label());
+        }
+        if (!annotation.placeholder().isEmpty()) {
+            uiExtension.put(FieldConfigProperties.PLACEHOLDER.getValue(), annotation.placeholder());
+        }
+        if (!annotation.defaultValue().isEmpty()) {
+            uiExtension.put(FieldConfigProperties.DEFAULT_VALUE.getValue(), annotation.defaultValue());
+        }
+        if (!annotation.group().isEmpty()) {
+            uiExtension.put(FieldConfigProperties.GROUP.getValue(), annotation.group());
+        }
+        if (!annotation.width().isEmpty()) {
+            uiExtension.put(FieldConfigProperties.WIDTH.getValue(), annotation.width());
+        }
+        if (!annotation.icon().isEmpty()) {
+            uiExtension.put(FieldConfigProperties.ICON.getValue(), annotation.icon());
+        }
+        if (!annotation.helpText().isEmpty()) {
+            uiExtension.put(FieldConfigProperties.HELP_TEXT.getValue(), annotation.helpText());
+        }
+        
+        // Inteiros não zero
+        if (annotation.order() != 0) {
+            uiExtension.put(FieldConfigProperties.ORDER.getValue(), String.valueOf(annotation.order()));
+        }
+        if (annotation.minLength() != 0) {
+            uiExtension.put(ValidationProperties.MIN_LENGTH.getValue(), String.valueOf(annotation.minLength()));
+        }
+        if (annotation.maxLength() != 0) {
+            uiExtension.put(ValidationProperties.MAX_LENGTH.getValue(), String.valueOf(annotation.maxLength()));
+        }
+        
+        // Booleanos explícitos (diferentes do padrão)
+        if (annotation.disabled()) {
+            uiExtension.put(FieldConfigProperties.DISABLED.getValue(), true);
+        }
+        if (annotation.readOnly()) {
+            uiExtension.put(FieldConfigProperties.READ_ONLY.getValue(), true);
+        }
+        if (annotation.hidden()) {
+            uiExtension.put(FieldConfigProperties.HIDDEN.getValue(), true);
+        }
+        if (!annotation.editable()) { // padrão é true
+            uiExtension.put(FieldConfigProperties.EDITABLE.getValue(), false);
+        }
+        if (!annotation.sortable()) { // padrão é true
+            uiExtension.put(FieldConfigProperties.SORTABLE.getValue(), false);
+        }
+        if (annotation.filterable()) { // padrão é false
+            uiExtension.put(FieldConfigProperties.FILTERABLE.getValue(), true);
+        }
+        if (annotation.required()) {
+            uiExtension.put(ValidationProperties.REQUIRED.getValue(), true);
+        }
+        
+        // Pattern explícito (diferente do padrão CUSTOM)
+        if (annotation.pattern() != ValidationPattern.CUSTOM) {
+            String patternValue = annotation.pattern().getPattern();
+            if (patternValue != null && !patternValue.isEmpty()) {
+                uiExtension.put(ValidationProperties.PATTERN.getValue(), patternValue);
+            }
+        }
+        
+        // IconPosition explícito (diferente do padrão LEFT)
+        if (annotation.iconPosition() != IconPosition.LEFT) {
+            uiExtension.put(FieldConfigProperties.ICON_POSITION.getValue(), annotation.iconPosition().getValue());
+        }
+        
+        // NumericFormat explícito (diferente do padrão INTEGER)
+        if (annotation.numericFormat() != NumericFormat.INTEGER) {
+            // Assumindo que NumericFormat tem um getValue() method similar aos outros enums
+            // uiExtension.put(FieldConfigProperties.NUMERIC_FORMAT.getValue(), annotation.numericFormat().getValue());
+        }
+    }
+
+    /**
+     * ETAPA 4: Processa anotações Jakarta Validation
+     */
+    private void processJakartaValidationAnnotations(Schema<?> property, Annotation[] annotations, Map<String, Object> uiExtension) {
+        // Reutilizar a lógica existente do processStandardAnnotations
+        for (Annotation annotation : annotations) {
+            String annotationType = annotation.annotationType().getSimpleName();
+
+            switch (annotationType) {
+                case "NotNull":
+                case "NotEmpty":
+                case "NotBlank":
+                    OpenApiUiUtils.populateUiRequired(uiExtension, true);
+                    break;
+
+                case "Size":
+                    processSizeAnnotation(annotation, uiExtension);
+                    break;
+
+                case "Min":
+                    processMinAnnotation(annotation, uiExtension);
+                    break;
+
+                case "Max":
+                    processMaxAnnotation(annotation, uiExtension);
+                    break;
+
+                case "DecimalMin":
+                    processDecimalMinAnnotation(annotation, uiExtension);
+                    break;
+
+                case "DecimalMax":
+                    processDecimalMaxAnnotation(annotation, uiExtension);
+                    break;
+
+                case "Pattern":
+                    processPatternAnnotation(annotation, uiExtension);
+                    break;
+
+                case "Email":
+                    if (!uiExtension.containsKey(FieldConfigProperties.CONTROL_TYPE.getValue())) {
+                        uiExtension.put(FieldConfigProperties.CONTROL_TYPE.getValue(), FieldControlType.EMAIL_INPUT.getValue());
+                    }
+                    break;
+
+                case "AssertTrue":
+                case "AssertFalse":
+                    if (!uiExtension.containsKey(FieldConfigProperties.CONTROL_TYPE.getValue())) {
+                        uiExtension.put(FieldConfigProperties.CONTROL_TYPE.getValue(), FieldControlType.CHECKBOX.getValue());
+                    }
+                    break;
+
+                case "Past":
+                case "PastOrPresent":
+                case "Future":
+                case "FutureOrPresent":
+                    processTemporal(annotation, annotationType, uiExtension);
+                    break;
+
+                case "Positive":
+                case "PositiveOrZero":
+                    processPositiveAnnotation(annotationType, uiExtension);
+                    break;
+
+                case "Negative":
+                case "NegativeOrZero":
+                    processNegativeAnnotation(annotationType, uiExtension);
+                    break;
+
+                case "Digits":
+                    processDigitsAnnotation(annotation, uiExtension);
+                    break;
+            }
+        }
+    }
+
+    /**
+     * ETAPA 5: Aplica extraProperties (precedência MÁXIMA)
+     */
+    private void applyExtraProperties(UISchema annotation, Map<String, Object> uiExtension) {
+        if (annotation.extraProperties() != null && annotation.extraProperties().length > 0) {
+            for (ExtensionProperty p : annotation.extraProperties()) {
+                // extraProperties sobrescreve TUDO (precedência máxima)
+                uiExtension.put(p.name(), p.value());
+            }
         }
     }
 
