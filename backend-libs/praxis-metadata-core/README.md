@@ -199,17 +199,61 @@ The Praxis Metadata Core library revolves around a few key concepts that enable 
         *   `order`: Defines the display order of fields.
         *   The annotation supports many other attributes for validation, layout, styling, icons, numeric formatting, and conditional rendering.
 
-### 2. Field Configuration
+### 2. UI Metadata Enrichment Process (🆕)
+
+The enrichment process is one of the most powerful features of Praxis Metadata Core. It automatically detects and applies appropriate UI metadata based on multiple sources, following a clear order of precedence:
+
+#### Order of Precedence (from lowest to highest priority):
+
+1. **Default Annotation Values** - Base values from `@UISchema` annotation defaults
+2. **Automatic Schema Detection** - Smart detection based on OpenAPI Schema type/format
+3. **Explicit Annotation Values** - Developer-specified values in `@UISchema`
+4. **Jakarta Validation** - Additional validation from `@NotNull`, `@Size`, etc.
+5. **Extra Properties** - Custom properties via `extraProperties` (highest priority)
+
+#### Example: Automatic Date Field Detection
+
+```java
+// Before: Incorrect enrichment (pre-fix)
+@UISchema  // Would incorrectly apply email pattern
+@Schema(type = "string", format = "date")
+private LocalDate birthDate;
+
+// Result was:
+// x-ui: { controlType: "input", pattern: "email regex", ... }
+
+// After: Correct automatic detection
+@UISchema  // Now correctly detects date format
+@Schema(type = "string", format = "date")
+private LocalDate birthDate;
+
+// Result now:
+// x-ui: { controlType: "date-picker", type: "date", ... }
+```
+
+#### Supported Automatic Detections:
+
+- **Date/Time Formats**: `date` → date-picker, `date-time` → datetime-picker, `time` → time-picker
+- **String Formats**: `email` → email-input, `password` → password, `url` → url-input, `phone` → phone
+- **Number Formats**: `currency` → currency-input, `percent` → numeric with percent formatting
+- **Binary Formats**: `binary`, `byte` → file-upload
+- **Boolean Types**: → checkbox (or select if enum values present)
+- **Arrays with Enums**: → multi-select
+- **Large Text**: String with maxLength > 100 → textarea
+
+This intelligent detection significantly reduces the need for manual configuration while still allowing full customization when needed.
+
+### 3. Field Configuration
 
 To support the `@UISchema` annotation, especially at the field level, several enums and helper classes define the possible configurations:
 
 *   **`FieldConfigProperties.java`**: An enum that provides a standardized set of string keys for all supported UI configuration properties. This is used internally by the framework and can be helpful for developers building custom extensions.
-*   **`FieldControlType.java`**: An enum listing the various types of UI controls that can be used to render a field (e.g., `INPUT`, `SELECT`, `TEXTAREA`, `CHECKBOX`, `RADIO`, `DATEPICKER`). This is used in the `controlType` attribute of `@UISchema`.
-*   **`FieldDataType.java`**: An enum defining the logical data types for fields (e.g., `TEXT`, `NUMBER`, `BOOLEAN`, `DATE`, `CURRENCY`). This is used in the `type` attribute of `@UISchema` and helps in determining appropriate rendering and validation.
+*   **`FieldControlType.java`**: An enum listing the various types of UI controls that can be used to render a field (e.g., `INPUT`, `SELECT`, `TEXTAREA`, `CHECKBOX`, `RADIO`, `DATE_PICKER`). This is used in the `controlType` attribute of `@UISchema`.
+*   **`FieldDataType.java`**: An enum defining the logical data types for fields (e.g., `TEXT`, `NUMBER`, `BOOLEAN`, `DATE`, `EMAIL`). This is used in the `type` attribute of `@UISchema` and helps in determining appropriate rendering and validation.
 
 These components work in tandem. For instance, when you annotate a field with `@UISchema`, you might set its `controlType` to `FieldControlType.SELECT` and its `type` to `FieldDataType.TEXT`.
 
-### 3. `@Filterable` Annotation
+### 4. `@Filterable` Annotation
 
 *   **Location:** `org.praxisplatform.uischema.filter.annotation.Filterable`
 *   **Purpose:** This annotation is used to mark specific fields within a Data Transfer Object (DTO) as being available for use as filter criteria in dynamic database queries.
@@ -220,7 +264,7 @@ These components work in tandem. For instance, when you annotate a field with `@
         *   `operation()`: Defines the comparison operation (e.g., `EQUAL`, `LIKE`, `GREATER_THAN`, `BETWEEN` via the `FilterOperation` enum).
         *   `relation()`: Specifies a path to a field in a related entity if the filter needs to span across JPA relationships (e.g., `customer.address.city`).
 
-### 4. CRUD Helpers
+### 5. CRUD Helpers
 
 To simplify the creation of RESTful services with UI metadata capabilities, the library provides abstract base classes:
 
