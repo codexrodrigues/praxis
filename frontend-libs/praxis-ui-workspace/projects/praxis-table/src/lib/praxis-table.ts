@@ -6,6 +6,7 @@ import {
   ContentChild,
   Input,
   OnChanges,
+  OnDestroy,
   SimpleChanges,
   ViewChild
 } from '@angular/core';
@@ -17,8 +18,16 @@ import {MatButtonModule} from '@angular/material/button';
 import {MatIconModule} from '@angular/material/icon';
 import {MatMenuModule} from '@angular/material/menu';
 import {MatDialog, MatDialogModule} from '@angular/material/dialog';
-import {ColumnDefinition, FieldDefinition, GenericCrudService, Page, Pageable, TableConfig} from '@praxis/core';
-import {BehaviorSubject, take} from 'rxjs';
+import {
+  ColumnDefinition, 
+  FieldDefinition, 
+  GenericCrudService, 
+  Page, 
+  Pageable, 
+  TableConfig,
+  createDefaultTableConfig
+} from '@praxis/core';
+import {BehaviorSubject, take, Subscription} from 'rxjs';
 import {PraxisTableToolbar} from './praxis-table-toolbar';
 import {PraxisTableConfigEditor} from './praxis-table-config-editor';
 import {DataFormattingService} from './data-formatter/data-formatting.service';
@@ -42,11 +51,11 @@ import {ColumnDataType} from './data-formatter/data-formatter-types';
     </button>
     <table mat-table [dataSource]="dataSource" matSort
            (matSortChange)="onSortChange($event)"
-           [matSortDisabled]="!config.gridOptions?.sortable"
+           [matSortDisabled]="!getSortingEnabled()"
            class="mat-elevation-z8">
       <ng-container *ngFor="let column of visibleColumns" [matColumnDef]="column.field">
         <th mat-header-cell *matHeaderCellDef mat-sort-header
-            [disabled]="!config.gridOptions?.sortable || column.sortable === false"
+            [disabled]="!getSortingEnabled() || column.sortable === false"
             [style.text-align]="column.align"
             [style.width]="column.width"
             [attr.style]="column.headerStyle">
@@ -62,11 +71,11 @@ import {ColumnDataType} from './data-formatter/data-formatter-types';
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
     </table>
-    <mat-paginator *ngIf="config.gridOptions?.pagination"
-                   [length]="config.gridOptions?.pagination?.length ?? 0"
-                   [pageSize]="config.gridOptions?.pagination?.pageSize"
-                   [pageSizeOptions]="config.gridOptions?.pagination?.pageSizeOptions ?? []"
-                   [showFirstLastButtons]="config.gridOptions?.pagination?.showFirstLastButtons"
+    <mat-paginator *ngIf="getPaginationEnabled()"
+                   [length]="getPaginationLength()"
+                   [pageSize]="getPaginationPageSize()"
+                   [pageSizeOptions]="getPaginationPageSizeOptions()"
+                   [showFirstLastButtons]="getPaginationShowFirstLast()"
                    (page)="onPageChange($event)">
     </mat-paginator>
   `,
@@ -78,7 +87,7 @@ import {ColumnDataType} from './data-formatter/data-formatter-types';
     flex: 1 1 auto;
   }`]
 })
-export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
+export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit, OnDestroy {
   @Input() config: TableConfig = {columns: []};
   @Input() resourcePath?: string;
   @Input() filterCriteria: any = {};
@@ -115,33 +124,26 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
   }
 
   ngAfterContentInit(): void {
-    this.showToolbar = this.config.toolbar?.visible ?? this.showToolbar;
-
-    // Inicialização inicial dos dados e colunas
-    this.setupColumns();
-    if (this.resourcePath) {
-      this.fetchData();
+    if (this.config) {
+      this.setupColumns();
+      if (this.resourcePath) {
+        this.fetchData();
+      }
     }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['config']) {
-      this.showToolbar = this.config.toolbar?.visible ?? this.showToolbar;
-      this.showFilter = this.config.gridOptions?.filterable ?? this.showFilter;
-    }
-    if (this.config.gridOptions?.pagination?.pageSize) {
-      this.pageSize = this.config.gridOptions?.pagination?.pageSize;
+    if (changes['config'] && this.config) {
+      this.setupColumns();
+      if (this.resourcePath) {
+        this.fetchData();
+      }
     }
 
     if (changes['resourcePath'] && this.resourcePath) {
       this.crudService.configure(this.resourcePath);
       this.loadSchema();
       this.fetchData();
-    } else if (changes['config']) {
-      this.setupColumns();
-      if (this.resourcePath) {
-        this.fetchData();
-      }
     }
 
     if (changes['filterCriteria'] && this.resourcePath) {
@@ -207,7 +209,7 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
   private applyDataSourceSettings(): void {
     if (this.paginator) {
       this.dataSource.paginator = this.paginator;
-      this.paginator.length = this.config.gridOptions?.pagination?.length ?? 0;
+      this.paginator.length = this.getPaginationLength();
     }
     if (this.sort) {
       this.dataSource.sort = this.sort;
@@ -215,7 +217,8 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
   }
 
   private setupColumns(): void {
-    this.visibleColumns = this.config.columns
+    const columns = this.config.columns || [];
+    this.visibleColumns = columns
       .filter(c => c.visible !== false)
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     this.displayedColumns = this.visibleColumns.map(c => c.field);
@@ -338,10 +341,6 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
       .pipe(take(1))
       .subscribe((page: Page<any>) => {
         this.dataSubject.next(page.content);
-        const pagination = this.config.gridOptions?.pagination;
-        if (pagination) {
-          pagination.length = page.totalElements;
-        }
         if (this.paginator) {
           this.paginator.length = page.totalElements;
         }
@@ -449,5 +448,81 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit {
       console.warn(`Error accessing property ${path}:`, error);
       return null;
     }
+  }
+
+  // =============================================================================
+  // CONFIGURATION ACCESS METHODS
+  // =============================================================================
+
+  /**
+   * Verifica se a ordenação está habilitada
+   */
+  getSortingEnabled(): boolean {
+    return this.config.behavior?.sorting?.enabled ?? true;
+  }
+
+  /**
+   * Verifica se a paginação está habilitada
+   */
+  getPaginationEnabled(): boolean {
+    return this.config.behavior?.pagination?.enabled ?? false;
+  }
+
+  /**
+   * Obtém o comprimento total da paginação
+   */
+  getPaginationLength(): number {
+    return this.config.behavior?.pagination?.totalItems ?? 0;
+  }
+
+  /**
+   * Obtém o tamanho da página
+   */
+  getPaginationPageSize(): number {
+    return this.config.behavior?.pagination?.pageSize ?? 10;
+  }
+
+  /**
+   * Obtém as opções de tamanho de página
+   */
+  getPaginationPageSizeOptions(): number[] {
+    return this.config.behavior?.pagination?.pageSizeOptions ?? [5, 10, 25, 50];
+  }
+
+  /**
+   * Verifica se deve mostrar botões primeira/última
+   */
+  getPaginationShowFirstLast(): boolean {
+    return this.config.behavior?.pagination?.showFirstLastButtons ?? true;
+  }
+
+  /**
+   * Verifica se uma funcionalidade está disponível
+   */
+  isFeatureAvailable(feature: string): boolean {
+    switch (feature) {
+      case 'multiSort':
+        return this.config.behavior?.sorting?.multiSort ?? false;
+      case 'bulkActions':
+        return this.config.actions?.bulk?.enabled ?? false;
+      case 'rowActions':
+        return this.config.actions?.row?.enabled ?? false;
+      case 'globalFilter':
+        return this.config.behavior?.filtering?.globalFilter?.enabled ?? false;
+      case 'columnFilters':
+        return this.config.behavior?.filtering?.columnFilters?.enabled ?? false;
+      case 'export':
+        return this.config.export?.enabled ?? false;
+      case 'resizing':
+        return this.config.behavior?.resizing?.enabled ?? false;
+      case 'dragging':
+        return this.config.behavior?.dragging?.columns ?? false;
+      default:
+        return false;
+    }
+  }
+
+  ngOnDestroy(): void {
+    // Clean up any subscriptions if needed
   }
 }

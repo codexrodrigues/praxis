@@ -6,6 +6,9 @@ export * from './lib/praxis-table';
 export * from './lib/praxis-table-config-editor';
 export * from './lib/json-config-editor/json-config-editor.component';
 export * from './lib/columns-config-editor/columns-config-editor.component';
+export * from './lib/behavior-config-editor/behavior-config-editor.component';
+export * from './lib/toolbar-actions-editor/toolbar-actions-editor.component';
+export * from './lib/messages-localization-editor/messages-localization-editor.component';
 export * from './lib/visual-formula-builder/visual-formula-builder.component';
 export * from './lib/visual-formula-builder/formula-types';
 export * from './lib/visual-formula-builder/formula-generator.service';
@@ -16,3 +19,4 @@ export * from './lib/data-formatter/data-formatting.service';
 export * from './lib/components/educational-card/educational-card.component';
 export * from './lib/components/help-button/help-button.component';
 export * from './lib/services/educational-cards.service';
+// export * from './lib/services/table-config-adapter.service'; // Removed - no longer needed

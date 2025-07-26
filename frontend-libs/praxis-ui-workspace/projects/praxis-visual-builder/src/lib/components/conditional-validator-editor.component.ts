@@ -15,7 +15,13 @@ import { MatDividerModule } from '@angular/material/divider';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
 
-import { ConditionalValidatorConfig, RuleNodeType } from '../models/rule-builder.model';
+import { 
+  ConditionalValidatorConfig, 
+  ConditionalValidatorType, 
+  ConditionalValidatorPreview,
+  RuleNode,
+  RuleNodeType 
+} from '../models/rule-builder.model';
 import { FieldSchema } from '../models/field-schema.model';
 import { FieldConditionEditorComponent } from './field-condition-editor.component';
 

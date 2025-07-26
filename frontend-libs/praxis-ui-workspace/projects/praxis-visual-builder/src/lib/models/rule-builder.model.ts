@@ -2,14 +2,19 @@
  * Models for the Visual Rule Builder
  */
 
-import { SpecificationMetadata } from '../../../praxis-specification/src/lib/specification/specification-metadata';
+import { SpecificationMetadata } from 'praxis-specification';
+
+/**
+ * Value types for rule configuration
+ */
+export type ValueType = 'literal' | 'field' | 'context' | 'function';
 
 export interface RuleNode {
   /** Unique identifier for this rule node */
   id: string;
   
   /** Type of rule node */
-  type: RuleNodeType;
+  type: RuleNodeType | RuleNodeTypeString;
   
   /** Human-readable label for this rule */
   label?: string;
@@ -44,7 +49,7 @@ export enum RuleNodeType {
   XOR_GROUP = 'xorGroup',
   IMPLIES_GROUP = 'impliesGroup',
   
-  // Phase 2 conditional validators
+  // Conditional validators (Phase 1 Implementation)
   REQUIRED_IF = 'requiredIf',
   VISIBLE_IF = 'visibleIf',
   DISABLED_IF = 'disabledIf',
@@ -69,28 +74,49 @@ export enum RuleNodeType {
   AT_LEAST = 'atLeast',
   EXACTLY = 'exactly',
   
+  // Phase 4: Expression and Contextual Support
+  EXPRESSION = 'expression',
+  CONTEXTUAL_TEMPLATE = 'contextualTemplate',
+  
   // Custom/extensible
   CUSTOM = 'custom'
 }
+
+/**
+ * String literal type for rule node types (for flexibility)
+ */
+export type RuleNodeTypeString = 
+  | 'fieldCondition'
+  | 'andGroup' | 'orGroup' | 'notGroup' | 'xorGroup' | 'impliesGroup'
+  | 'requiredIf' | 'visibleIf' | 'disabledIf' | 'readonlyIf'
+  | 'forEach' | 'uniqueBy' | 'minLength' | 'maxLength'
+  | 'ifDefined' | 'ifNotNull' | 'ifExists' | 'withDefault'
+  | 'functionCall' | 'fieldToField' | 'contextual' | 'atLeast' | 'exactly'
+  | 'expression' | 'contextualTemplate'
+  | 'custom';
 
 export type RuleNodeConfig = 
   | FieldConditionConfig
   | BooleanGroupConfig
   | ConditionalValidatorConfig
   | CollectionValidationConfig
+  | CollectionValidatorConfig
   | OptionalFieldConfig
   | FunctionCallConfig
   | FieldToFieldConfig
   | ContextualConfig
   | CardinalityConfig
+  | ExpressionConfig
+  | ContextualTemplateConfig
   | CustomConfig;
 
 export interface FieldConditionConfig {
   type: 'fieldCondition';
+  field?: string; // For specification bridge compatibility
   fieldName: string;
   operator: string;
   value: any;
-  valueType?: 'literal' | 'field' | 'context' | 'function';
+  valueType?: ValueType;
   compareToField?: string;
   contextVariable?: string;
 }
@@ -106,7 +132,15 @@ export interface ConditionalValidatorConfig {
   type: 'conditionalValidator';
   validatorType: 'requiredIf' | 'visibleIf' | 'disabledIf' | 'readonlyIf';
   targetField: string;
-  condition: string; // Reference to condition rule node ID
+  condition: RuleNode; // Embedded condition rule node
+  conditionNodeId?: string; // Reference to condition rule node ID (for backward compatibility)
+  inverse?: boolean; // Whether to invert the condition result
+  metadata?: {
+    description?: string;
+    errorMessage?: string;
+    successMessage?: string;
+    uiHints?: Record<string, any>;
+  };
 }
 
 export interface CollectionValidationConfig {
@@ -116,6 +150,48 @@ export interface CollectionValidationConfig {
   itemCondition?: string; // Reference to rule node ID for forEach
   uniqueKey?: string;     // Property name for uniqueBy
   lengthValue?: number;   // For min/max length
+}
+
+/**
+ * Enhanced collection validator configuration (Phase 2 Implementation)
+ */
+export interface CollectionValidatorConfig {
+  type: 'forEach' | 'uniqueBy' | 'minLength' | 'maxLength';
+  targetCollection: string;
+  
+  // For Each specific
+  itemVariable?: string;
+  indexVariable?: string;
+  itemValidationRules?: {
+    ruleType: string;
+    fieldPath: string;
+    errorMessage?: string;
+  }[];
+  
+  // Unique By specific
+  uniqueByFields?: string[];
+  caseSensitive?: boolean;
+  ignoreEmpty?: boolean;
+  duplicateErrorMessage?: string;
+  
+  // Length specific
+  minItems?: number;
+  maxItems?: number;
+  lengthErrorMessage?: string;
+  showItemCount?: boolean;
+  preventExcess?: boolean;
+  
+  // Advanced options
+  validateOnAdd?: boolean;
+  validateOnRemove?: boolean;
+  validateOnChange?: boolean;
+  validateOnSubmit?: boolean;
+  errorStrategy?: 'summary' | 'inline' | 'both';
+  stopOnFirstError?: boolean;
+  highlightErrorItems?: boolean;
+  batchSize?: number;
+  debounceValidation?: boolean;
+  debounceDelay?: number;
 }
 
 export interface OptionalFieldConfig {
@@ -166,6 +242,33 @@ export interface CustomConfig {
   type: 'custom';
   customType: string;
   properties: Record<string, any>;
+}
+
+/**
+ * Validator types for conditional validation
+ */
+export enum ConditionalValidatorType {
+  REQUIRED_IF = 'requiredIf',
+  VISIBLE_IF = 'visibleIf',
+  DISABLED_IF = 'disabledIf',
+  READONLY_IF = 'readonlyIf'
+}
+
+/**
+ * Preview data for conditional validator simulation
+ */
+export interface ConditionalValidatorPreview {
+  targetField: string;
+  currentValue: any;
+  conditionResult: boolean;
+  validatorType: ConditionalValidatorType;
+  resultingState: {
+    isRequired?: boolean;
+    isVisible?: boolean;
+    isDisabled?: boolean;
+    isReadonly?: boolean;
+  };
+  example: string;
 }
 
 /**
@@ -271,6 +374,52 @@ export interface RuleTemplate {
   
   /** Template preview image/icon */
   icon?: string;
+  
+  /** Template metadata */
+  metadata?: TemplateMetadata;
+}
+
+/**
+ * Template metadata for tracking and management
+ */
+export interface TemplateMetadata {
+  /** Creation date */
+  createdAt?: Date;
+  
+  /** Last update date */
+  updatedAt?: Date;
+  
+  /** Last used date */
+  lastUsed?: Date;
+  
+  /** Import date (if imported) */
+  importedAt?: Date;
+  
+  /** Template version */
+  version?: string;
+  
+  /** Usage count */
+  usageCount?: number;
+  
+  /** Template complexity */
+  complexity?: 'simple' | 'medium' | 'complex';
+  
+  /** Original template ID (for imports/copies) */
+  originalId?: string;
+  
+  /** Author information */
+  author?: {
+    name?: string;
+    email?: string;
+    organization?: string;
+  };
+  
+  /** Template size metrics */
+  metrics?: {
+    nodeCount?: number;
+    maxDepth?: number;
+    fieldCount?: number;
+  };
 }
 
 /**
@@ -376,4 +525,56 @@ export interface RuleBuilderConfig {
     /** Include metadata by default */
     includeMetadataByDefault?: boolean;
   };
+}
+
+// ===== Phase 4: Expression and Contextual Configuration Interfaces =====
+
+/**
+ * Configuration for expression specifications
+ */
+export interface ExpressionConfig {
+  type: 'expression';
+  
+  /** DSL expression string */
+  expression: string;
+  
+  /** Function registry for validation */
+  functionRegistry?: any;
+  
+  /** Context provider for variable resolution */
+  contextProvider?: any;
+  
+  /** Known field names for validation */
+  knownFields?: string[];
+  
+  /** Enable performance warnings */
+  enablePerformanceWarnings?: boolean;
+  
+  /** Maximum expression complexity */
+  maxComplexity?: number;
+  
+  /** Additional metadata */
+  metadata?: any;
+}
+
+/**
+ * Configuration for contextual template specifications
+ */
+export interface ContextualTemplateConfig {
+  type: 'contextualTemplate';
+  
+  /** Template string with context tokens */
+  template: string;
+  
+  /** Available context variables */
+  contextVariables?: any[];
+  
+  /** Context provider instance */
+  contextProvider?: any;
+  
+  /** Enable strict validation of context tokens */
+  strictContextValidation?: boolean;
+  
+  /** Additional metadata */
+  metadata?: any;
 }

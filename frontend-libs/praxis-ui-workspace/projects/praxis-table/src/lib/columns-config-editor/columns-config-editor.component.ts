@@ -24,7 +24,11 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatBadgeModule } from '@angular/material/badge';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
-import { TableConfig, ColumnDefinition } from '@praxis/core';
+import { 
+  TableConfig, 
+  ColumnDefinition,
+  isTableConfigV2 
+} from '@praxis/core';
 import { Subject } from 'rxjs';
 import { VisualFormulaBuilderComponent } from '../visual-formula-builder/visual-formula-builder.component';
 import { FieldSchema, FormulaDefinition } from '../visual-formula-builder/formula-types';
@@ -41,6 +45,7 @@ export interface ColumnChange {
   columnIndex?: number;
   column?: ColumnDefinition;
   columns?: ColumnDefinition[];
+  fullConfig?: TableConfig;
 }
 
 @Component({
@@ -126,6 +131,35 @@ export interface ColumnChange {
                   <mat-icon>format_align_right</mat-icon>
                 </mat-button-toggle>
               </mat-button-toggle-group>
+            </div>
+            
+            <!-- V2 Features -->
+            <div *ngIf="isV2Config" class="v2-features-section">
+              <mat-divider class="features-divider"></mat-divider>
+              
+              <!-- Resizable Columns -->
+              <div class="global-action-group">
+                <label class="group-label">Redimensionar</label>
+                <mat-checkbox [(ngModel)]="globalResizable" (ngModelChange)="applyGlobalResizable($event)" class="compact-checkbox">
+                  Colunas redimensionáveis
+                </mat-checkbox>
+              </div>
+              
+              <!-- Filterable Columns -->
+              <div class="global-action-group">
+                <label class="group-label">Filtragem</label>
+                <mat-checkbox [(ngModel)]="globalFilterable" (ngModelChange)="applyGlobalFilterable($event)" class="compact-checkbox">
+                  Filtros por coluna
+                </mat-checkbox>
+              </div>
+              
+              <!-- Sticky Columns -->
+              <div class="global-action-group">
+                <label class="group-label">Fixar</label>
+                <mat-checkbox [(ngModel)]="globalStickyEnabled" (ngModelChange)="applyGlobalSticky($event)" class="compact-checkbox">
+                  Fixar colunas
+                </mat-checkbox>
+              </div>
             </div>
           </div>
         </mat-card-content>
@@ -513,6 +547,18 @@ export interface ColumnChange {
     .compact-checkbox {
       font-size: 0.875rem;
     }
+    
+    .v2-features-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    
+    .features-divider {
+      margin: 8px 0;
+      opacity: 0.6;
+    }
 
     .master-detail-layout {
       display: flex;
@@ -869,7 +915,7 @@ export interface ColumnChange {
 })
 export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
 
-  @Input() config: TableConfig | null = null;
+  @Input() config: TableConfig = { columns: [] };
   @Output() configChange = new EventEmitter<TableConfig>();
   @Output() columnChange = new EventEmitter<ColumnChange>();
 
@@ -877,6 +923,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
   columns: ColumnDefinition[] = [];
   selectedColumnIndex = -1;
   selectedColumn: ColumnDefinition | null = null;
+  isV2Config = false;
 
   // Formula builder data
   availableDataSchema: FieldSchema[] = [];
@@ -888,6 +935,11 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
   // Global settings
   globalSortableEnabled = true;
   globalAlignment: 'left' | 'center' | 'right' | null = null;
+  
+  // V2 specific features
+  globalResizable = false;
+  globalFilterable = false;
+  globalStickyEnabled = false;
 
   // Cleanup
   private destroy$ = new Subject<void>();
@@ -899,6 +951,8 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.isV2Config = isTableConfigV2(this.config);
+    
     if (this.config?.columns) {
       this.columns = [...this.config.columns];
       this.updateGlobalSettings();
@@ -920,6 +974,13 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
     const alignments = this.columns.map(col => col.align).filter(Boolean);
     const uniqueAlignments = [...new Set(alignments)];
     this.globalAlignment = uniqueAlignments.length === 1 ? uniqueAlignments[0] as any : null;
+    
+    // V2 specific global settings
+    if (this.isV2Config) {
+      this.globalResizable = this.columns.every(col => (col as any).resizable !== false);
+      this.globalFilterable = this.columns.every(col => (col as any).filterable !== false);
+      this.globalStickyEnabled = this.columns.some(col => (col as any).sticky === true);
+    }
   }
 
   // Global Actions
@@ -950,8 +1011,40 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
     });
     this.emitConfigChange('global');
   }
+  
+  // V2 Global Actions
+  applyGlobalResizable(enabled: boolean): void {
+    if (this.isV2Config) {
+      this.columns.forEach(column => {
+        if (!this.isColumnExplicitlySet(column, 'resizable')) {
+          (column as any).resizable = enabled;
+        }
+      });
+      this.emitConfigChange('global');
+    }
+  }
+  
+  applyGlobalFilterable(enabled: boolean): void {
+    if (this.isV2Config) {
+      this.columns.forEach(column => {
+        if (!this.isColumnExplicitlySet(column, 'filterable')) {
+          (column as any).filterable = enabled;
+        }
+      });
+      this.emitConfigChange('global');
+    }
+  }
+  
+  applyGlobalSticky(enabled: boolean): void {
+    if (this.isV2Config) {
+      this.columns.forEach(column => {
+        (column as any).sticky = enabled;
+      });
+      this.emitConfigChange('global');
+    }
+  }
 
-  private isColumnExplicitlySet(column: ColumnDefinition, property: keyof ColumnDefinition): boolean {
+  private isColumnExplicitlySet(column: ColumnDefinition, property: keyof ColumnDefinition | string): boolean {
     // In a real implementation, you might track which properties were explicitly set
     // For now, we'll assume all are explicit if they differ from default
     return false;
@@ -1082,7 +1175,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
       .map(col => ({
         name: col.field,
         label: col.header || col.field,
-        type: this.mapColumnTypeToFieldType(col._originalApiType || col.type || 'string'),
+        type: this.mapColumnTypeToFieldType((col._originalApiType || col.type || 'string') as ColumnDataType),
         path: col.field
       }));
 
@@ -1233,7 +1326,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
 
     // 2. For API fields, use the original API type as fallback
     if (column._isApiField && column._originalApiType) {
-      return column._originalApiType;
+      return column._originalApiType as ColumnDataType;
     }
 
     // 3. Try to infer from column field name (last resort)
@@ -1384,7 +1477,8 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
         type: changeType,
         columns: [...this.columns],
         columnIndex: this.selectedColumnIndex,
-        column: this.selectedColumn || undefined
+        column: this.selectedColumn || undefined,
+        fullConfig: updatedConfig
       });
     }
 
@@ -1395,6 +1489,8 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
    * Public method to update columns from external source
    */
   updateColumnsFromConfig(config: TableConfig): void {
+    this.isV2Config = isTableConfigV2(config);
+    
     if (config?.columns) {
       this.columns = [...config.columns];
       this.updateGlobalSettings();
@@ -1420,7 +1516,10 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
   // Style Rules Integration Methods
   private initializeStyleRules(): void {
     // Convert table config to field schemas for the rule builder
-    this.currentFieldSchemas = this.fieldSchemaAdapter.adaptTableConfigToFieldSchema(this.config || { columns: this.columns });
+    const fallbackConfig: TableConfig = { columns: this.columns };
+    this.currentFieldSchemas = this.fieldSchemaAdapter.adaptTableConfigToFieldSchema(
+      !isTableConfigV2(this.config) ? fallbackConfig : this.config
+    );
     
     // Generate sample data for preview (in real app, this would come from actual data)
     this.generateSampleData();

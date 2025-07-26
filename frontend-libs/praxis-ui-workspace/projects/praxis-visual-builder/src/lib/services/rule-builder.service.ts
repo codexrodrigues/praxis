@@ -13,11 +13,7 @@ import {
   RuleBuilderConfig
 } from '../models/rule-builder.model';
 
-import { SpecificationFactory } from 'praxis-specification/lib/utils/specification-factory';
-import { Specification } from 'praxis-specification/lib/specification/specification';
-import { DslExporter } from 'praxis-specification/lib/dsl/exporter';
-import { DslValidator } from 'praxis-specification/lib/dsl/dsl-validator';
-import { DslParser } from 'praxis-specification/lib/dsl/parser';
+import { SpecificationFactory, Specification, DslExporter, DslValidator, DslParser } from 'praxis-specification';
 import { SpecificationBridgeService } from './specification-bridge.service';
 import { RoundTripValidatorService } from './round-trip-validator.service';
 

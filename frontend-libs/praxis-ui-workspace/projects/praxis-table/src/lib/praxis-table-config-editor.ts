@@ -13,9 +13,16 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatCardModule } from '@angular/material/card';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { TableConfig } from '@praxis/core';
+import { 
+  TableConfig,
+  isTableConfigV2,
+  TableConfigService
+} from '@praxis/core';
 import { JsonConfigEditorComponent, JsonValidationResult, JsonEditorEvent } from './json-config-editor/json-config-editor.component';
 import { ColumnsConfigEditorComponent, ColumnChange } from './columns-config-editor/columns-config-editor.component';
+import { BehaviorConfigEditorComponent, BehaviorConfigChange } from './behavior-config-editor/behavior-config-editor.component';
+import { ToolbarActionsEditorComponent, ToolbarActionsChange } from './toolbar-actions-editor/toolbar-actions-editor.component';
+import { MessagesLocalizationEditorComponent, MessagesLocalizationChange } from './messages-localization-editor/messages-localization-editor.component';
 import { EducationalCardComponent } from './components/educational-card/educational-card.component';
 import { HelpButtonComponent } from './components/help-button/help-button.component';
 import { EducationalCardsService, TabCardKey } from './services/educational-cards.service';
@@ -33,6 +40,9 @@ import { EducationalCardsService, TabCardKey } from './services/educational-card
     MatToolbarModule,
     JsonConfigEditorComponent,
     ColumnsConfigEditorComponent,
+    BehaviorConfigEditorComponent,
+    ToolbarActionsEditorComponent,
+    MessagesLocalizationEditorComponent,
     EducationalCardComponent,
     HelpButtonComponent
   ],
@@ -40,7 +50,12 @@ import { EducationalCardsService, TabCardKey } from './services/educational-card
     <div class="config-editor-container">
       <!-- Header -->
       <div class="config-editor-header">
-        <h2 mat-dialog-title>Configurações da Tabela Dinâmica</h2>
+        <div class="header-content">
+          <h2 mat-dialog-title>Configurações da Tabela Dinâmica</h2>
+          <span class="version-badge" [class.v2]="isV2Config">
+            {{ isV2Config ? 'V2' : 'V1' }}
+          </span>
+        </div>
         <button mat-icon-button mat-dialog-close class="close-button">
           <mat-icon>close</mat-icon>
         </button>
@@ -83,10 +98,11 @@ import { EducationalCardsService, TabCardKey } from './services/educational-card
                 (cardHidden)="onCardHidden($event)">
               </educational-card>
 
-              <!-- Placeholder para conteúdo futuro -->
-              <div class="content-placeholder">
-                <p class="placeholder-text">Formulários de configuração serão implementados em próximas etapas</p>
-              </div>
+              <behavior-config-editor
+                [config]="editedConfig"
+                (configChange)="onBehaviorConfigChange($event)"
+                (behaviorChange)="onBehaviorChange($event)">
+              </behavior-config-editor>
             </div>
           </mat-tab>
 
@@ -168,10 +184,11 @@ import { EducationalCardsService, TabCardKey } from './services/educational-card
                 (cardHidden)="onCardHidden($event)">
               </educational-card>
 
-              <!-- Placeholder para conteúdo futuro -->
-              <div class="content-placeholder">
-                <p class="placeholder-text">Configurações de toolbar serão implementadas em próximas etapas</p>
-              </div>
+              <toolbar-actions-editor
+                [config]="editedConfig"
+                (configChange)="onToolbarActionsConfigChange($event)"
+                (toolbarActionsChange)="onToolbarActionsChange($event)">
+              </toolbar-actions-editor>
             </div>
           </mat-tab>
 
@@ -210,10 +227,11 @@ import { EducationalCardsService, TabCardKey } from './services/educational-card
                 (cardHidden)="onCardHidden($event)">
               </educational-card>
 
-              <!-- Placeholder para conteúdo futuro -->
-              <div class="content-placeholder">
-                <p class="placeholder-text">Editor de mensagens será implementado em próximas etapas</p>
-              </div>
+              <messages-localization-editor
+                [config]="editedConfig"
+                (configChange)="onMessagesLocalizationConfigChange($event)"
+                (messagesLocalizationChange)="onMessagesLocalizationChange($event)">
+              </messages-localization-editor>
             </div>
           </mat-tab>
 
@@ -279,6 +297,14 @@ import { EducationalCardsService, TabCardKey } from './services/educational-card
           <button mat-stroked-button (click)="onResetToDefaults()" class="reset-button">
             Redefinir para Padrões
           </button>
+          <button mat-stroked-button 
+            *ngIf="!isV2Config" 
+            (click)="onMigrateToV2()" 
+            class="migrate-button"
+            color="accent">
+            <mat-icon>upgrade</mat-icon>
+            Migrar para V2
+          </button>
           <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!canSave">
             Salvar
           </button>
@@ -306,12 +332,32 @@ import { EducationalCardsService, TabCardKey } from './services/educational-card
       background-color: var(--mat-sys-surface-container);
       flex-shrink: 0;
     }
+    
+    .header-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
 
     .config-editor-header h2 {
       margin: 0;
       font-size: 1.5rem;
       font-weight: 500;
       color: var(--mat-sys-on-surface);
+    }
+    
+    .version-badge {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      background-color: var(--mat-sys-surface-variant);
+      color: var(--mat-sys-on-surface-variant);
+      
+      &.v2 {
+        background-color: var(--mat-sys-primary-container);
+        color: var(--mat-sys-on-primary-container);
+      }
     }
 
     .close-button {
@@ -482,6 +528,18 @@ import { EducationalCardsService, TabCardKey } from './services/educational-card
       color: var(--mat-sys-secondary);
       border-color: var(--mat-sys-secondary);
     }
+    
+    .migrate-button {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
 
     /* Responsividade */
     @media (max-width: 768px) {
@@ -545,13 +603,19 @@ import { EducationalCardsService, TabCardKey } from './services/educational-card
       overflow: hidden;
       border-radius: 12px;
     }
-  `]
+  `],
+  providers: [
+    TableConfigService
+  ]
 })
 export class PraxisTableConfigEditor implements OnInit, OnDestroy {
 
   // Configurações
   private originalConfig: TableConfig;
   editedConfig: TableConfig;
+  
+  // V2 specific configs for advanced editing
+  isV2Config = false;
 
   // Estado do componente
   canSave = false;
@@ -564,15 +628,22 @@ export class PraxisTableConfigEditor implements OnInit, OnDestroy {
     private dialogRef: MatDialogRef<PraxisTableConfigEditor>,
     @Inject(MAT_DIALOG_DATA) public data: { config?: TableConfig },
     private cdr: ChangeDetectorRef,
-    private cardsService: EducationalCardsService
+    private cardsService: EducationalCardsService,
+    private configService: TableConfigService
   ) {
     // Inicializar configurações
     this.originalConfig = data?.config || { columns: [] };
     this.editedConfig = JSON.parse(JSON.stringify(this.originalConfig));
+    
+    // Sempre usar V2 (arquitetura unificada)
+    this.isV2Config = true;
   }
 
   ngOnInit(): void {
     this.statusMessage = 'Pronto para configurar';
+    
+    // Configurar estado inicial
+    this.updateConfigurationVersion();
     this.updateCanSaveState();
   }
 
@@ -583,6 +654,9 @@ export class PraxisTableConfigEditor implements OnInit, OnDestroy {
   // Event handlers para o JsonConfigEditorComponent
   onJsonConfigChange(newConfig: TableConfig): void {
     this.editedConfig = newConfig;
+    
+    // Update state directly (no adapter needed in unified architecture)
+    this.updateConfigurationVersion();
     this.updateCanSaveState();
   }
 
@@ -613,6 +687,7 @@ export class PraxisTableConfigEditor implements OnInit, OnDestroy {
   // Event handlers para o ColumnsConfigEditorComponent
   onColumnsConfigChange(newConfig: TableConfig): void {
     this.editedConfig = newConfig;
+    this.updateConfigurationVersion();
     this.updateCanSaveState();
   }
 
@@ -681,24 +756,43 @@ export class PraxisTableConfigEditor implements OnInit, OnDestroy {
   }
 
   onResetToDefaults(): void {
-    // Reset para configuração padrão (vazia com colunas básicas)
+    // Reset para configuração padrão unificada
     const defaultConfig: TableConfig = {
       columns: [],
-      gridOptions: {
-        sortable: true,
-        filterable: false,
-        pagination: {
+      behavior: {
+        sorting: { 
+          enabled: true,
+          multiSort: false,
+          strategy: 'client',
+          showSortIndicators: true,
+          indicatorPosition: 'end',
+          allowClearSort: true
+        },
+        filtering: { 
+          enabled: false,
+          strategy: 'client',
+          debounceTime: 300
+        },
+        pagination: { 
+          enabled: true, 
           pageSize: 10,
           pageSizeOptions: [5, 10, 25, 50],
-          showFirstLastButtons: true
+          showFirstLastButtons: true,
+          showPageNumbers: true,
+          showPageInfo: true,
+          position: 'bottom',
+          style: 'default',
+          strategy: 'client'
         }
       },
       toolbar: {
-        visible: false
+        visible: false,
+        position: 'top'
       }
     };
 
     this.editedConfig = defaultConfig;
+    this.updateConfigurationVersion();
     this.updateCanSaveState();
     this.showSuccess('Configurações resetadas para padrão');
   }
@@ -739,5 +833,132 @@ export class PraxisTableConfigEditor implements OnInit, OnDestroy {
     // O card já foi ocultado pelo EducationalCardComponent
     // Apenas forçar detecção de mudanças se necessário
     this.cdr.markForCheck();
+  }
+  
+  /**
+   * Atualiza as flags de versão baseado na configuração atual
+   */
+  private updateConfigurationVersion(): void {
+    this.isV2Config = isTableConfigV2(this.editedConfig);
+    if (this.isV2Config) {
+      // this.v2Config = this.editedConfig as TableConfig; // Not needed
+    } else {
+      // this.v2Config = null; // Not needed
+    }
+    
+    // Atualizar mensagem de status baseado na versão
+    if (this.isV2Config) {
+      this.statusMessage = 'Configuração V2 - Recursos avançados disponíveis';
+    }
+  }
+  
+  /**
+   * Retorna a configuração atual (unified architecture)
+   */
+  getV1Config(): TableConfig {
+    return this.editedConfig as TableConfig;
+  }
+  
+  /**
+   * Verifica se um recurso está disponível na versão atual
+   */
+  isFeatureAvailable(feature: string): boolean {
+    // Direct feature check - no adapter needed in unified architecture
+    switch (feature) {
+      case 'multiSort':
+        return this.editedConfig.behavior?.sorting?.multiSort ?? false;
+      case 'bulkActions':
+        return this.editedConfig.actions?.bulk?.enabled ?? false;
+      case 'export':
+        return this.editedConfig.export?.enabled ?? false;
+      default:
+        return false;
+    }
+  }
+  
+  // Event handlers para o BehaviorConfigEditorComponent
+  onBehaviorConfigChange(newConfig: TableConfig): void {
+    this.editedConfig = newConfig;
+    this.updateConfigurationVersion();
+    this.updateCanSaveState();
+  }
+  
+  onBehaviorChange(change: BehaviorConfigChange): void {
+    // Show feedback based on behavior change type
+    switch (change.type) {
+      case 'pagination':
+        this.showSuccess('Configurações de paginação atualizadas');
+        break;
+      case 'sorting':
+        this.showSuccess('Configurações de ordenação atualizadas');
+        break;
+      case 'filtering':
+        this.showSuccess('Configurações de filtragem atualizadas');
+        break;
+      case 'selection':
+        this.showSuccess('Configurações de seleção atualizadas');
+        break;
+      case 'interaction':
+        this.showSuccess('Configurações de interação atualizadas');
+        break;
+    }
+  }
+  
+  // Event handlers para o ToolbarActionsEditorComponent
+  onToolbarActionsConfigChange(newConfig: TableConfig): void {
+    this.editedConfig = newConfig;
+    
+    // Update state directly (no adapter needed in unified architecture)
+    this.updateConfigurationVersion();
+    this.updateCanSaveState();
+  }
+  
+  onToolbarActionsChange(change: ToolbarActionsChange): void {
+    // Show feedback based on toolbar action change type
+    switch (change.type) {
+      case 'toolbar':
+        this.showSuccess('Configurações de toolbar atualizadas');
+        break;
+      case 'rowActions':
+        this.showSuccess('Ações por linha atualizadas');
+        break;
+      case 'bulkActions':
+        this.showSuccess('Ações em lote atualizadas');
+        break;
+      case 'export':
+        this.showSuccess('Configurações de exportação atualizadas');
+        break;
+    }
+  }
+  
+  /**
+   * Migra a configuração V1 para V2 (no longer needed in unified architecture)
+   */
+  onMigrateToV2(): void {
+    this.showError('Migração não necessária - arquitetura já unificada');
+  }
+  
+  // Event handlers para o MessagesLocalizationEditorComponent
+  onMessagesLocalizationConfigChange(newConfig: TableConfig): void {
+    this.editedConfig = newConfig;
+    
+    // Update state directly (no adapter needed in unified architecture)
+    this.updateConfigurationVersion();
+    this.updateCanSaveState();
+  }
+  
+  onMessagesLocalizationChange(change: MessagesLocalizationChange): void {
+    // Show feedback based on messages/localization change type
+    switch (change.type) {
+      case 'messages':
+        this.showSuccess('Mensagens atualizadas');
+        break;
+      case 'localization':
+        this.showSuccess('Configurações de localização atualizadas');
+        break;
+      case 'formatting':
+        this.showSuccess('Configurações de formatação atualizadas');
+        break;
+    }
   }
 }

@@ -1,5 +1,8 @@
 import { Injectable } from '@angular/core';
-import { ColumnDefinition, TableConfig, ColumnDataType } from '@praxis/core';
+import { ColumnDefinition, TableConfig } from '@praxis/core';
+
+// Type alias for column data types
+export type ColumnDataType = 'string' | 'number' | 'date' | 'boolean' | 'currency' | 'percentage' | 'custom';
 import { ConditionalStyle } from './table-rule-engine.service';
 import { FieldSchema } from '../visual-formula-builder/formula-types';
 
@@ -119,7 +122,7 @@ export class FieldSchemaAdapter {
     });
 
     // Table context
-    if (config.gridOptions?.pagination) {
+    if (config.behavior?.pagination?.enabled) {
       contextSchemas.push({
         name: '_pageIndex',
         label: 'Página Atual',
@@ -261,10 +264,10 @@ export class FieldSchemaAdapter {
       totalColumns: config.columns.length,
       visibleColumns: config.columns.filter(c => c.visible !== false).length,
       calculatedColumns: config.columns.filter(c => c._generatedValueGetter).length,
-      hasActions: config.showActionsColumn || false,
-      hasPagination: !!config.gridOptions?.pagination,
-      hasSorting: config.gridOptions?.sortable || false,
-      hasFiltering: config.gridOptions?.filterable || false
+      hasActions: config.actions?.row?.enabled || config.actions?.bulk?.enabled || false,
+      hasPagination: !!config.behavior?.pagination?.enabled,
+      hasSorting: config.behavior?.sorting?.enabled || false,
+      hasFiltering: config.behavior?.filtering?.enabled || false
     };
   }
 

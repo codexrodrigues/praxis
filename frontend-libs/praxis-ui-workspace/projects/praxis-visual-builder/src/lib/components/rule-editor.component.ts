@@ -867,10 +867,11 @@ export class RuleEditorComponent implements OnInit, OnDestroy {
       [RuleNodeType.NOT_GROUP]: 'block',
       [RuleNodeType.XOR_GROUP]: 'join_left',
       [RuleNodeType.IMPLIES_GROUP]: 'arrow_forward',
-      [RuleNodeType.REQUIRED_IF]: 'star',
+      // Phase 1: Conditional Validators (Enhanced Icons)
+      [RuleNodeType.REQUIRED_IF]: 'star_border',
       [RuleNodeType.VISIBLE_IF]: 'visibility',
       [RuleNodeType.DISABLED_IF]: 'block',
-      [RuleNodeType.READONLY_IF]: 'lock',
+      [RuleNodeType.READONLY_IF]: 'lock_outline',
       [RuleNodeType.FOR_EACH]: 'repeat',
       [RuleNodeType.UNIQUE_BY]: 'fingerprint',
       [RuleNodeType.MIN_LENGTH]: 'height',

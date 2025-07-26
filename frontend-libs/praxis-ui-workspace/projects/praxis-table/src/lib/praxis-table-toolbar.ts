@@ -22,11 +22,13 @@ import { TableConfig } from '@praxis/core';
   ],
   template: `
     <mat-toolbar class="praxis-toolbar">
-      <button *ngIf="config?.toolbar?.showNewButton" mat-button
-              [color]="config?.toolbar?.newButtonColor || 'primary'">
-        <mat-icon *ngIf="config?.toolbar?.newButtonIcon">{{config?.toolbar?.newButtonIcon}}</mat-icon>
-        {{ config?.toolbar?.newButtonText || 'Novo' }}
-      </button>
+      <!-- Add button via actions array -->
+      <ng-container *ngFor="let action of getStartActions()">
+        <button mat-button [color]="action.color || 'primary'">
+          <mat-icon *ngIf="action.icon">{{action.icon}}</mat-icon>
+          {{ action.label }}
+        </button>
+      </ng-container>
       <ng-container *ngFor="let action of config?.toolbar?.actions">
         <button mat-button
                 [color]="action.color"
@@ -45,18 +47,14 @@ import { TableConfig } from '@praxis/core';
       <ng-content select="[advancedFilter]"></ng-content>
       <ng-content select="[toolbar]"></ng-content>
       <span class="spacer"></span>
-      <ng-container *ngIf="config?.exportOptions">
+      <ng-container *ngIf="config?.export?.enabled">
         <button mat-button [matMenuTriggerFor]="exportMenu">
           <mat-icon>download</mat-icon>
         </button>
         <mat-menu #exportMenu="matMenu">
-          <button mat-menu-item *ngIf="config?.exportOptions?.excel" >
-            <mat-icon>grid_on</mat-icon>
-            Excel
-          </button>
-          <button mat-menu-item *ngIf="config?.exportOptions?.pdf" >
-            <mat-icon>picture_as_pdf</mat-icon>
-            PDF
+          <button mat-menu-item *ngFor="let format of config?.export?.formats">
+            <mat-icon>{{getExportIcon(format)}}</mat-icon>
+            {{format.toUpperCase()}}
           </button>
         </mat-menu>
       </ng-container>
@@ -70,4 +68,21 @@ export class PraxisTableToolbar {
   @Input() showFilter = false;
   @Input() filterValue = '';
 
+  getStartActions() {
+    return this.config?.toolbar?.actions?.filter(action => action.position === 'start') || [];
+  }
+
+  getExportIcon(format: string): string {
+    switch (format.toLowerCase()) {
+      case 'excel':
+      case 'xlsx':
+        return 'grid_on';
+      case 'pdf':
+        return 'picture_as_pdf';
+      case 'csv':
+        return 'table_chart';
+      default:
+        return 'download';
+    }
+  }
 }

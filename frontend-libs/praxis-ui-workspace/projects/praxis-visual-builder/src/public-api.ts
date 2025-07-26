@@ -8,6 +8,7 @@ export * from './lib/praxis-visual-builder';
 // Core models
 export * from './lib/models/field-schema.model';
 export * from './lib/models/rule-builder.model';
+export * from './lib/models/array-field-schema.model';
 
 // Services
 export * from './lib/services/field-schema.service';
@@ -16,6 +17,7 @@ export * from './lib/services/specification-bridge.service';
 export * from './lib/services/round-trip-validator.service';
 export * from './lib/services/export-integration.service';
 export * from './lib/services/webhook-integration.service';
+export * from './lib/services/rule-template.service';
 
 // Components
 export * from './lib/components/rule-editor.component';
@@ -30,3 +32,7 @@ export * from './lib/components/json-viewer.component';
 export * from './lib/components/round-trip-tester.component';
 export * from './lib/components/export-dialog.component';
 export * from './lib/components/dsl-linter.component';
+export * from './lib/components/visual-rule-builder.component';
+export * from './lib/components/template-gallery.component';
+export * from './lib/components/template-editor-dialog.component';
+export * from './lib/components/template-preview-dialog.component';

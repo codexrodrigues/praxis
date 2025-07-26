@@ -7,7 +7,10 @@ interface RuleBuilderService {
 interface SpecificationBridgeService {
   convertToExecutable(specification: any): Function;
 }
-import { ColumnDefinition, ColumnDataType } from '@praxis/core';
+import { ColumnDefinition } from '@praxis/core';
+
+// Type alias for column data types
+export type ColumnDataType = 'string' | 'number' | 'date' | 'boolean' | 'currency' | 'percentage' | 'custom';
 
 export interface ConditionalStyle {
   id: string;
