@@ -1,0 +1,28 @@
+<!-- praxis-resizable-window.component.html -->
+<div class="resizable-container" #resizableContainer role="dialog" aria-modal="true" [attr.aria-label]="title">
+  <div class="header" (mousedown)="startMove($event)" (touchstart)="startMove($event)">
+    <span class="title">{{ title }}</span>
+    <div class="actions">
+      <button mat-icon-button (click)="toggleMaximize()" *ngIf="!disableMaximize">
+        <mat-icon>{{ isMaximized ? 'fullscreen_exit' : 'fullscreen' }}</mat-icon>
+      </button>
+      <button mat-icon-button (click)="close()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </div>
+  <div class="content">
+    <ng-container cdkPortalOutlet></ng-container>
+    <ng-content></ng-content>
+  </div>
+  <ng-container *ngIf="!disableResize && !isMaximized">
+    <div class="resize-handle n" (mousedown)="startResize($event, 'n')" (touchstart)="startResize($event, 'n')"></div>
+    <div class="resize-handle s" (mousedown)="startResize($event, 's')" (touchstart)="startResize($event, 's')"></div>
+    <div class="resize-handle e" (mousedown)="startResize($event, 'e')" (touchstart)="startResize($event, 'e')"></div>
+    <div class="resize-handle w" (mousedown)="startResize($event, 'w')" (touchstart)="startResize($event, 'w')"></div>
+    <div class="resize-handle ne" (mousedown)="startResize($event, 'ne')" (touchstart)="startResize($event, 'ne')"></div>
+    <div class="resize-handle nw" (mousedown)="startResize($event, 'nw')" (touchstart)="startResize($event, 'nw')"></div>
+    <div class="resize-handle se" (mousedown)="startResize($event, 'se')" (touchstart)="startResize($event, 'se')"></div>
+    <div class="resize-handle sw" (mousedown)="startResize($event, 'sw')" (touchstart)="startResize($event, 'sw')"></div>
+  </ng-container>
+</div>

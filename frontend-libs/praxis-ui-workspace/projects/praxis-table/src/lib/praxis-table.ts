@@ -17,7 +17,7 @@ import {MatSort, MatSortModule, Sort} from '@angular/material/sort';
 import {MatButtonModule} from '@angular/material/button';
 import {MatIconModule} from '@angular/material/icon';
 import {MatMenuModule} from '@angular/material/menu';
-import {MatDialog, MatDialogModule} from '@angular/material/dialog';
+import {PraxisResizableWindowService} from '@praxis/core';
 import {
   ColumnDefinition, 
   FieldDefinition, 
@@ -37,7 +37,7 @@ import {ColumnDataType} from './data-formatter/data-formatter-types';
   selector: 'praxis-table',
   standalone: true,
   providers: [GenericCrudService],
-  imports: [CommonModule, MatTableModule, MatButtonModule, MatPaginatorModule, MatSortModule, MatIconModule, MatMenuModule, MatDialogModule, PraxisTableToolbar,],
+  imports: [CommonModule, MatTableModule, MatButtonModule, MatPaginatorModule, MatSortModule, MatIconModule, MatMenuModule, PraxisTableToolbar],
   template: `
     <praxis-table-toolbar *ngIf="showToolbar"
                           [config]="config"
@@ -113,14 +113,17 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit, 
   private pageIndex = 0;
   private pageSize = 5;
   private sortState: Sort = {active: '', direction: ''};
+  private subscriptions: Subscription[] = [];
 
   constructor(
     private crudService: GenericCrudService<any>, 
     private cdr: ChangeDetectorRef, 
-    private dialog: MatDialog,
+    private windowService: PraxisResizableWindowService,
     private formattingService: DataFormattingService
   ) {
-    this.dataSubject.subscribe(data => (this.dataSource.data = data));
+    this.subscriptions.push(
+      this.dataSubject.subscribe(data => (this.dataSource.data = data))
+    );
   }
 
   ngAfterContentInit(): void {
@@ -173,37 +176,48 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit, 
   }
 
   openConfigEditor(): void {
-    // Criar cópia profunda da configuração para evitar alterações acidentais
-    const configCopy = JSON.parse(JSON.stringify(this.config)) as TableConfig;
+    try {
+      // Criar cópia profunda da configuração para evitar alterações acidentais
+      const configCopy = JSON.parse(JSON.stringify(this.config)) as TableConfig;
 
-    const dialogRef = this.dialog.open(PraxisTableConfigEditor, {
-      data: { config: configCopy },
-      width: '90vw',
-      height: '90vh',
-      maxWidth: '1200px',
-      maxHeight: '90vh',
-      minWidth: '320px',
-      minHeight: '600px',
-      disableClose: false,
-      autoFocus: false,
-      restoreFocus: true,
-      panelClass: 'config-editor-dialog'
-    });
+      const ref = this.windowService.open({
+        title: 'Configurações da Tabela Dinâmica',
+        contentComponent: PraxisTableConfigEditor,
+        data: configCopy,
+        initialWidth: '90vw',
+        initialHeight: '90vh',
+        minWidth: '320px',
+        minHeight: '600px',
+        disableResize: false,
+        disableMaximize: false,
+        enableTouch: true,
+        minDragDistance: 5,
+        enableInertia: true,
+        inertiaFriction: 0.95,
+        inertiaMultiplier: 10,
+        bounceFactor: 0.5,
+        autoCenterAfterResize: false
+      });
 
-    dialogRef.afterClosed().subscribe((result: TableConfig | undefined) => {
-      if (result) {
-        // Aplicar as configurações retornadas
-        console.log('Configurações atualizadas:', result);
-        this.config = { ...result };
-        this.setupColumns();
-        this.applyDataSourceSettings();
-        if (this.resourcePath) {
-          this.fetchData();
-        }
-        // Forçar detecção de mudanças
-        this.cdr.detectChanges();
-      }
-    });
+      this.subscriptions.push(
+        ref.closed.subscribe((result) => {
+          if (result) {
+            // Aplicar as configurações retornadas
+            console.log('Configurações atualizadas:', result);
+            this.config = { ...result };
+            this.setupColumns();
+            this.applyDataSourceSettings();
+            if (this.resourcePath) {
+              this.fetchData();
+            }
+            // Forçar detecção de mudanças
+            this.cdr.detectChanges();
+          }
+        })
+      );
+    } catch (error) {
+      console.error('Erro ao abrir editor de configuração:', error);
+    }
   }
 
   private applyDataSourceSettings(): void {
@@ -523,6 +537,11 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit, 
   }
 
   ngOnDestroy(): void {
-    // Clean up any subscriptions if needed
+    // Clean up subscriptions to prevent memory leaks
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+    this.subscriptions = [];
+    
+    // Complete the data subject
+    this.dataSubject.complete();
   }
 }

@@ -1,22 +1,26 @@
 import {
   Component,
   Inject,
+  Output,
+  EventEmitter,
   OnInit,
+  OnDestroy,
   ChangeDetectorRef,
-  OnDestroy
+  Optional
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
-import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatCardModule } from '@angular/material/card';
-import { MatToolbarModule } from '@angular/material/toolbar';
 import { 
   TableConfig,
   isTableConfigV2,
-  TableConfigService
+  TableConfigService,
+  WINDOW_DATA,
+  WINDOW_REF,
+  PraxisResizableWindowRef
 } from '@praxis/core';
 import { JsonConfigEditorComponent, JsonValidationResult, JsonEditorEvent } from './json-config-editor/json-config-editor.component';
 import { ColumnsConfigEditorComponent, ColumnChange } from './columns-config-editor/columns-config-editor.component';
@@ -30,14 +34,13 @@ import { EducationalCardsService, TabCardKey } from './services/educational-card
 @Component({
   selector: 'praxis-table-config-editor',
   standalone: true,
+  styleUrls: ['./praxis-table-config-editor.scss'],
   imports: [
     CommonModule,
     MatButtonModule,
     MatIconModule,
     MatTabsModule,
-    MatDialogModule,
     MatCardModule,
-    MatToolbarModule,
     JsonConfigEditorComponent,
     ColumnsConfigEditorComponent,
     BehaviorConfigEditorComponent,
@@ -48,21 +51,8 @@ import { EducationalCardsService, TabCardKey } from './services/educational-card
   ],
   template: `
     <div class="config-editor-container">
-      <!-- Header -->
-      <div class="config-editor-header">
-        <div class="header-content">
-          <h2 mat-dialog-title>Configurações da Tabela Dinâmica</h2>
-          <span class="version-badge" [class.v2]="isV2Config">
-            {{ isV2Config ? 'V2' : 'V1' }}
-          </span>
-        </div>
-        <button mat-icon-button mat-dialog-close class="close-button">
-          <mat-icon>close</mat-icon>
-        </button>
-      </div>
-
       <!-- Content -->
-      <div class="config-editor-content" mat-dialog-content>
+      <div class="config-editor-content">
         <mat-tab-group class="config-tabs">
 
           <!-- Visão Geral & Comportamento -->
@@ -283,7 +273,7 @@ import { EducationalCardsService, TabCardKey } from './services/educational-card
       </div>
 
       <!-- Bottom Toolbar -->
-      <div class="config-editor-actions" mat-dialog-actions>
+      <div class="config-editor-actions">
         <div class="status-messages">
           <span class="status-text" [class.error]="hasErrors" [class.success]="hasSuccess">
             {{ statusMessage }}
@@ -297,14 +287,6 @@ import { EducationalCardsService, TabCardKey } from './services/educational-card
           <button mat-stroked-button (click)="onResetToDefaults()" class="reset-button">
             Redefinir para Padrões
           </button>
-          <button mat-stroked-button 
-            *ngIf="!isV2Config" 
-            (click)="onMigrateToV2()" 
-            class="migrate-button"
-            color="accent">
-            <mat-icon>upgrade</mat-icon>
-            Migrar para V2
-          </button>
           <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!canSave">
             Salvar
           </button>
@@ -312,307 +294,22 @@ import { EducationalCardsService, TabCardKey } from './services/educational-card
       </div>
     </div>
   `,
-  styles: [`
-    .config-editor-container {
-      display: flex;
-      flex-direction: column;
-      height: 90vh;
-      max-height: 90vh;
-      min-height: 600px;
-      width: 90vw;
-      max-width: 1200px;
-    }
-
-    .config-editor-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px 24px;
-      border-bottom: 1px solid rgba(0, 0, 0, 0.12);
-      background-color: var(--mat-sys-surface-container);
-      flex-shrink: 0;
-    }
-    
-    .header-content {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .config-editor-header h2 {
-      margin: 0;
-      font-size: 1.5rem;
-      font-weight: 500;
-      color: var(--mat-sys-on-surface);
-    }
-    
-    .version-badge {
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 0.75rem;
-      font-weight: 500;
-      background-color: var(--mat-sys-surface-variant);
-      color: var(--mat-sys-on-surface-variant);
-      
-      &.v2 {
-        background-color: var(--mat-sys-primary-container);
-        color: var(--mat-sys-on-primary-container);
-      }
-    }
-
-    .close-button {
-      color: var(--mat-sys-on-surface-variant);
-    }
-
-    .config-editor-content {
-      flex: 1;
-      overflow: hidden;
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .config-tabs {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .config-tabs ::ng-deep .mat-mdc-tab-group {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .config-tabs ::ng-deep .mat-mdc-tab-header {
-      flex-shrink: 0;
-    }
-
-    .config-tabs ::ng-deep .mat-mdc-tab-body-wrapper {
-      flex: 1;
-      overflow: hidden;
-      display: flex;
-    }
-
-    .config-tabs ::ng-deep .mat-mdc-tab-body {
-      height: 100%;
-      overflow: hidden;
-    }
-
-    .config-tabs ::ng-deep .mat-mdc-tab-body-content {
-      height: 100%;
-      overflow-y: auto;
-      padding: 0;
-    }
-
-    .tab-content {
-      padding: 24px;
-      min-height: 100%;
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .tab-header {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      padding: 8px 0;
-      flex-shrink: 0;
-    }
-
-    .tab-content columns-config-editor,
-    .tab-content json-config-editor {
-      flex: 1;
-      height: 100%;
-      min-height: 0;
-    }
-
-    .tab-icon {
-      margin-right: 8px;
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
-    }
-
-    .educational-card {
-      margin-bottom: 24px;
-      background-color: var(--mat-sys-surface-container-low);
-      border-left: 4px solid var(--mat-sys-primary);
-      flex-shrink: 0;
-    }
-
-    .educational-card .mat-mdc-card-header {
-      padding-bottom: 8px;
-    }
-
-    .card-icon {
-      background-color: var(--mat-sys-primary-container);
-      color: var(--mat-sys-on-primary-container);
-      font-size: 20px;
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .educational-card .mat-mdc-card-title {
-      font-size: 1.1rem;
-      font-weight: 500;
-      color: var(--mat-sys-on-surface);
-    }
-
-    .educational-card .mat-mdc-card-content {
-      color: var(--mat-sys-on-surface-variant);
-      line-height: 1.5;
-    }
-
-    .content-placeholder {
-      padding: 48px 24px;
-      text-align: center;
-      background-color: var(--mat-sys-surface-variant);
-      border-radius: 8px;
-      border: 2px dashed var(--mat-sys-outline-variant);
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 200px;
-    }
-
-    .placeholder-text {
-      color: var(--mat-sys-on-surface-variant);
-      font-style: italic;
-      margin: 0;
-    }
-
-    .config-editor-actions {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px 24px;
-      border-top: 1px solid rgba(0, 0, 0, 0.12);
-      background-color: var(--mat-sys-surface-container);
-      flex-shrink: 0;
-      position: sticky;
-      bottom: 0;
-      z-index: 10;
-    }
-
-    .status-messages {
-      flex: 1;
-      min-height: 20px;
-    }
-
-    .status-text {
-      font-size: 0.875rem;
-      line-height: 1.2;
-
-      &.error {
-        color: var(--mat-sys-error);
-      }
-
-      &.success {
-        color: var(--mat-sys-primary);
-      }
-    }
-
-    .action-buttons {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-    }
-
-    .reset-button {
-      color: var(--mat-sys-secondary);
-      border-color: var(--mat-sys-secondary);
-    }
-    
-    .migrate-button {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      
-      mat-icon {
-        font-size: 18px;
-        width: 18px;
-        height: 18px;
-      }
-    }
-
-    /* Responsividade */
-    @media (max-width: 768px) {
-      .config-editor-container {
-        height: 100vh;
-        max-height: 100vh;
-        min-height: 100vh;
-        width: 100vw;
-        max-width: 100vw;
-      }
-
-      .config-editor-header {
-        padding: 12px 16px;
-      }
-
-      .config-editor-header h2 {
-        font-size: 1.25rem;
-      }
-
-      .tab-content {
-        padding: 16px;
-      }
-
-      .config-editor-actions {
-        flex-direction: column;
-        gap: 12px;
-        align-items: stretch;
-        padding: 12px 16px;
-      }
-
-      .status-messages {
-        text-align: center;
-        order: 1;
-      }
-
-      .action-buttons {
-        justify-content: center;
-        order: 2;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .action-buttons {
-        flex-direction: column;
-        width: 100%;
-      }
-
-      .action-buttons button {
-        width: 100%;
-      }
-    }
-
-    /* Global dialog overrides */
-    :host-context(.config-editor-dialog) .mat-mdc-dialog-container {
-      padding: 0;
-      overflow: hidden;
-    }
-
-    :host-context(.config-editor-dialog) .mat-mdc-dialog-surface {
-      padding: 0;
-      overflow: hidden;
-      border-radius: 12px;
-    }
-  `],
   providers: [
     TableConfigService
   ]
 })
 export class PraxisTableConfigEditor implements OnInit, OnDestroy {
-
+  
+  // Outputs
+  @Output() configSaved = new EventEmitter<TableConfig>();
+  @Output() cancelled = new EventEmitter<void>();
+  
+  // Component lifecycle
+  private isDestroyed = false;
+  
   // Configurações
-  private originalConfig: TableConfig;
-  editedConfig: TableConfig;
+  private originalConfig!: TableConfig;
+  editedConfig!: TableConfig;
   
   // V2 specific configs for advanced editing
   isV2Config = false;
@@ -625,37 +322,54 @@ export class PraxisTableConfigEditor implements OnInit, OnDestroy {
   private isValidJson = true;
 
   constructor(
-    private dialogRef: MatDialogRef<PraxisTableConfigEditor>,
-    @Inject(MAT_DIALOG_DATA) public data: { config?: TableConfig },
     private cdr: ChangeDetectorRef,
     private cardsService: EducationalCardsService,
-    private configService: TableConfigService
-  ) {
-    // Inicializar configurações
-    this.originalConfig = data?.config || { columns: [] };
-    this.editedConfig = JSON.parse(JSON.stringify(this.originalConfig));
-    
-    // Sempre usar V2 (arquitetura unificada)
-    this.isV2Config = true;
-  }
+    private configService: TableConfigService,
+    @Optional() @Inject(WINDOW_DATA) private windowData: any,
+    @Optional() @Inject(WINDOW_REF) private windowRef: PraxisResizableWindowRef
+  ) {}
 
   ngOnInit(): void {
-    this.statusMessage = 'Pronto para configurar';
-    
-    // Configurar estado inicial
-    this.updateConfigurationVersion();
-    this.updateCanSaveState();
-  }
-
-  ngOnDestroy(): void {
-    // Cleanup if needed
+    try {
+      // Inicializar configurações
+      const config = this.windowData || { columns: [] };
+      
+      // Validar configuração recebida
+      if (!config || typeof config !== 'object') {
+        console.error('Configuração inválida recebida:', config);
+        this.showError('Erro ao carregar configuração');
+        return;
+      }
+      
+      this.originalConfig = config;
+      
+      // Safe JSON cloning with error handling
+      try {
+        this.editedConfig = JSON.parse(JSON.stringify(this.originalConfig));
+      } catch (cloneError) {
+        console.error('Erro ao clonar configuração:', cloneError);
+        this.editedConfig = { columns: [] }; // fallback to empty config
+      }
+      
+      // Sempre usar V2 (arquitetura unificada)
+      this.isV2Config = true;
+      
+      this.statusMessage = 'Pronto para configurar';
+      
+      // Configurar estado inicial
+      this.updateConfigurationVersion();
+      this.updateCanSaveState();
+    } catch (error) {
+      console.error('Erro ao inicializar editor de configuração:', error);
+      this.showError('Erro ao inicializar editor');
+    }
   }
 
   // Event handlers para o JsonConfigEditorComponent
   onJsonConfigChange(newConfig: TableConfig): void {
     this.editedConfig = newConfig;
     
-    // Update state directly (no adapter needed in unified architecture)
+    // Update state directly
     this.updateConfigurationVersion();
     this.updateCanSaveState();
   }
@@ -752,7 +466,10 @@ export class PraxisTableConfigEditor implements OnInit, OnDestroy {
   }
 
   onCancel(): void {
-    this.dialogRef.close();
+    this.cancelled.emit();
+    if (this.windowRef && !this.isDestroyed) {
+      this.windowRef.close();
+    }
   }
 
   onResetToDefaults(): void {
@@ -812,10 +529,18 @@ export class PraxisTableConfigEditor implements OnInit, OnDestroy {
 
       this.showSuccess('Configurações salvas com sucesso!');
 
-      // Fechar modal após 1 segundo retornando a configuração editada
-      setTimeout(() => {
-        this.dialogRef.close(this.editedConfig);
-      }, 1000);
+      // Emitir evento e fechar janela imediatamente para melhor UX
+      this.configSaved.emit(this.editedConfig);
+      
+      // Safe window closing with null check and component lifecycle check
+      if (this.windowRef && !this.isDestroyed) {
+        // Pequeno delay apenas para mostrar a mensagem de sucesso
+        setTimeout(() => {
+          if (this.windowRef && !this.isDestroyed) {
+            this.windowRef.close(this.editedConfig);
+          }
+        }, 500);
+      }
 
     } catch (error) {
       this.showError('Configuração inválida. Verifique os campos.');
@@ -840,11 +565,6 @@ export class PraxisTableConfigEditor implements OnInit, OnDestroy {
    */
   private updateConfigurationVersion(): void {
     this.isV2Config = isTableConfigV2(this.editedConfig);
-    if (this.isV2Config) {
-      // this.v2Config = this.editedConfig as TableConfig; // Not needed
-    } else {
-      // this.v2Config = null; // Not needed
-    }
     
     // Atualizar mensagem de status baseado na versão
     if (this.isV2Config) {
@@ -908,7 +628,7 @@ export class PraxisTableConfigEditor implements OnInit, OnDestroy {
   onToolbarActionsConfigChange(newConfig: TableConfig): void {
     this.editedConfig = newConfig;
     
-    // Update state directly (no adapter needed in unified architecture)
+    // Update state directly
     this.updateConfigurationVersion();
     this.updateCanSaveState();
   }
@@ -931,18 +651,12 @@ export class PraxisTableConfigEditor implements OnInit, OnDestroy {
     }
   }
   
-  /**
-   * Migra a configuração V1 para V2 (no longer needed in unified architecture)
-   */
-  onMigrateToV2(): void {
-    this.showError('Migração não necessária - arquitetura já unificada');
-  }
   
   // Event handlers para o MessagesLocalizationEditorComponent
   onMessagesLocalizationConfigChange(newConfig: TableConfig): void {
     this.editedConfig = newConfig;
     
-    // Update state directly (no adapter needed in unified architecture)
+    // Update state directly
     this.updateConfigurationVersion();
     this.updateCanSaveState();
   }
@@ -960,5 +674,9 @@ export class PraxisTableConfigEditor implements OnInit, OnDestroy {
         this.showSuccess('Configurações de formatação atualizadas');
         break;
     }
+  }
+
+  ngOnDestroy(): void {
+    this.isDestroyed = true;
   }
 }

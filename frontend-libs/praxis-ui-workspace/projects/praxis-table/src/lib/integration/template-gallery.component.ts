@@ -14,6 +14,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatBadgeModule } from '@angular/material/badge';
 
 import { StyleRuleTemplatesService, StyleRuleTemplate, TemplateVariable } from './style-rule-templates.service';
 import { ConditionalStyle } from './table-rule-engine.service';
@@ -41,7 +42,8 @@ export interface TemplateGalleryData {
     MatExpansionModule,
     MatDividerModule,
     MatTooltipModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatBadgeModule
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `

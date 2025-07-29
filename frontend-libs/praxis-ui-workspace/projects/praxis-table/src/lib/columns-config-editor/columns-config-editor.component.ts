@@ -6,7 +6,9 @@ import {
   OnInit,
   OnDestroy,
   ChangeDetectorRef,
-  ChangeDetectionStrategy
+  ChangeDetectionStrategy,
+  DestroyRef,
+  inject
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -29,16 +31,15 @@ import {
   ColumnDefinition,
   isTableConfigV2 
 } from '@praxis/core';
-import { Subject } from 'rxjs';
+import { Subject, debounceTime } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { VisualFormulaBuilderComponent } from '../visual-formula-builder/visual-formula-builder.component';
 import { FieldSchema, FormulaDefinition } from '../visual-formula-builder/formula-types';
 import { ValueMappingEditorComponent } from '../value-mapping-editor/value-mapping-editor.component';
 import { DataFormatterComponent } from '../data-formatter/data-formatter.component';
 import { ColumnDataType } from '../data-formatter/data-formatter-types';
-import { StyleRuleBuilderComponent } from '../integration/style-rule-builder.component';
-import { StylePreviewComponent } from '../integration/style-preview.component';
-import { TableRuleEngineService, ConditionalStyle, ValidationResult } from '../integration/table-rule-engine.service';
-import { FieldSchemaAdapter } from '../integration/field-schema-adapter.service';
+// import { TableRuleEngineService, ConditionalStyle, ValidationResult } from '../integration/table-rule-engine.service';
+// import { FieldSchemaAdapter } from '../integration/field-schema-adapter.service';
 
 export interface ColumnChange {
   type: 'add' | 'remove' | 'update' | 'reorder' | 'global';
@@ -48,10 +49,23 @@ export interface ColumnChange {
   fullConfig?: TableConfig;
 }
 
+interface ExtendedColumnDefinition extends ColumnDefinition {
+  calculationType?: string;
+  calculationParams?: any;
+  _generatedValueGetter?: string;
+  valueMapping?: { [key: string | number]: string };
+  format?: string;
+  conditionalStyles?: any[]; // ConditionalStyle[];
+  cellClassCondition?: any;
+  resizable?: boolean;
+  filterable?: boolean;
+}
+
 @Component({
   selector: 'columns-config-editor',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
+  styleUrls: ['./columns-config-editor.component.scss'],
   imports: [
     CommonModule,
     FormsModule,
@@ -86,84 +100,103 @@ export interface ColumnChange {
         </mat-card-content>
       </mat-card>
 
-      <!-- Global Actions Panel - Compact -->
-      <mat-card class="global-actions-card compact">
-        <mat-card-content class="compact-global-content">
-          <div class="global-header">
-            <mat-icon class="inline-icon">tune</mat-icon>
-            <h4>Configurações Globais</h4>
-          </div>
-          <div class="global-actions-grid compact">
-            <!-- Visibility Actions -->
-            <div class="global-action-group">
-              <label class="group-label">Visibilidade</label>
-              <mat-button-toggle-group class="compact-toggle-group">
-                <mat-button-toggle value="show" (click)="showAllColumns()">
-                  <mat-icon>visibility</mat-icon>
-                  <span class="toggle-text">Todas</span>
-                </mat-button-toggle>
-                <mat-button-toggle value="hide" (click)="hideAllColumns()">
-                  <mat-icon>visibility_off</mat-icon>
-                  <span class="toggle-text">Nenhuma</span>
-                </mat-button-toggle>
-              </mat-button-toggle-group>
-            </div>
+      <!-- Global Configuration Accordion -->
+      <mat-accordion class="global-config-accordion">
+        <mat-expansion-panel class="global-config-panel" [expanded]="true">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <mat-icon class="panel-icon">tune</mat-icon>
+              Configurações Globais
+            </mat-panel-title>
+          </mat-expansion-panel-header>
 
-            <!-- Sortable Global -->
-            <div class="global-action-group">
-              <label class="group-label">Ordenação</label>
-              <mat-checkbox [(ngModel)]="globalSortableEnabled" (ngModelChange)="applyGlobalSortable($event)" class="compact-checkbox">
-                Habilitar para todas
-              </mat-checkbox>
-            </div>
+          <div class="config-panel-content">
+            <div class="config-layout">
+              <!-- Visibility Controls -->
+              <div class="config-group">
+                <div class="control-section">
+                  <label class="control-label">
+                    Visibilidade
+                    <span class="control-status">({{ getVisibleColumnsCount() }}/{{ columns.length }} visíveis)</span>
+                  </label>
+                  <mat-button-toggle-group 
+                    [(ngModel)]="visibilityState" 
+                    (ngModelChange)="onVisibilityChange($event)" 
+                    class="visibility-toggle-group">
+                    <mat-button-toggle value="all" [disabled]="areAllColumnsVisible()">
+                      <mat-icon>visibility</mat-icon>
+                      <span>Todas</span>
+                    </mat-button-toggle>
+                    <mat-button-toggle value="none" [disabled]="areAllColumnsHidden()">
+                      <mat-icon>visibility_off</mat-icon>
+                      <span>Nenhuma</span>
+                    </mat-button-toggle>
+                  </mat-button-toggle-group>
+                </div>
+              </div>
 
-            <!-- Alignment Default -->
-            <div class="global-action-group">
-              <label class="group-label">Alinhamento</label>
-              <mat-button-toggle-group [(ngModel)]="globalAlignment" (ngModelChange)="applyGlobalAlignment($event)" class="compact-toggle-group">
-                <mat-button-toggle value="left">
-                  <mat-icon>format_align_left</mat-icon>
-                </mat-button-toggle>
-                <mat-button-toggle value="center">
-                  <mat-icon>format_align_center</mat-icon>
-                </mat-button-toggle>
-                <mat-button-toggle value="right">
-                  <mat-icon>format_align_right</mat-icon>
-                </mat-button-toggle>
-              </mat-button-toggle-group>
-            </div>
-            
-            <!-- V2 Features -->
-            <div *ngIf="isV2Config" class="v2-features-section">
-              <mat-divider class="features-divider"></mat-divider>
-              
-              <!-- Resizable Columns -->
-              <div class="global-action-group">
-                <label class="group-label">Redimensionar</label>
-                <mat-checkbox [(ngModel)]="globalResizable" (ngModelChange)="applyGlobalResizable($event)" class="compact-checkbox">
-                  Colunas redimensionáveis
-                </mat-checkbox>
+              <!-- Alignment Controls -->
+              <div class="config-group">
+                <div class="control-section">
+                  <label class="control-label">Alinhamento Padrão</label>
+                  <mat-button-toggle-group 
+                    [(ngModel)]="globalAlignment" 
+                    (ngModelChange)="applyGlobalAlignment($event)" 
+                    class="alignment-toggle-group">
+                    <mat-button-toggle value="left" matTooltip="Esquerda">
+                      <mat-icon>format_align_left</mat-icon>
+                    </mat-button-toggle>
+                    <mat-button-toggle value="center" matTooltip="Centro">
+                      <mat-icon>format_align_center</mat-icon>
+                    </mat-button-toggle>
+                    <mat-button-toggle value="right" matTooltip="Direita">
+                      <mat-icon>format_align_right</mat-icon>
+                    </mat-button-toggle>
+                  </mat-button-toggle-group>
+                </div>
               </div>
-              
-              <!-- Filterable Columns -->
-              <div class="global-action-group">
-                <label class="group-label">Filtragem</label>
-                <mat-checkbox [(ngModel)]="globalFilterable" (ngModelChange)="applyGlobalFilterable($event)" class="compact-checkbox">
-                  Filtros por coluna
-                </mat-checkbox>
-              </div>
-              
-              <!-- Sticky Columns -->
-              <div class="global-action-group">
-                <label class="group-label">Fixar</label>
-                <mat-checkbox [(ngModel)]="globalStickyEnabled" (ngModelChange)="applyGlobalSticky($event)" class="compact-checkbox">
-                  Fixar colunas
-                </mat-checkbox>
+
+              <!-- Feature Options -->
+              <div class="config-group features-group">
+                <div class="control-section">
+                  <label class="control-label">Recursos</label>
+                  <div class="features-grid">
+                    <mat-checkbox 
+                      [(ngModel)]="globalSortableEnabled" 
+                      (ngModelChange)="applyGlobalSortable($event)"
+                      class="feature-checkbox">
+                      Ordenação
+                    </mat-checkbox>
+                    
+                    @if (isV2Config) {
+                      <mat-checkbox 
+                        [(ngModel)]="globalResizable" 
+                        (ngModelChange)="applyGlobalResizable($event)"
+                        class="feature-checkbox">
+                        Redimensionáveis
+                      </mat-checkbox>
+                      
+                      <mat-checkbox 
+                        [(ngModel)]="globalFilterable" 
+                        (ngModelChange)="applyGlobalFilterable($event)"
+                        class="feature-checkbox">
+                        Filtros
+                      </mat-checkbox>
+                      
+                      <mat-checkbox 
+                        [(ngModel)]="globalStickyEnabled" 
+                        (ngModelChange)="applyGlobalSticky($event)"
+                        class="feature-checkbox">
+                        Fixar colunas
+                      </mat-checkbox>
+                    }
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </mat-card-content>
-      </mat-card>
+        </mat-expansion-panel>
+      </mat-accordion>
 
       <!-- Master-Detail Layout -->
       <div class="master-detail-layout">
@@ -179,8 +212,8 @@ export interface ColumnChange {
 
           <div class="columns-list-container" cdkDropList (cdkDropListDropped)="onColumnReorder($event)">
             <mat-list class="columns-list">
+              @for (column of columns; track column.field; let i = $index) {
               <mat-list-item
-                *ngFor="let column of columns; let i = index"
                 [class.selected]="selectedColumnIndex === i"
                 (click)="selectColumn(i)"
                 cdkDrag
@@ -208,7 +241,8 @@ export interface ColumnChange {
                                   [matBadgeHidden]="getMappingCount(column) === 0"
                                   matBadgeColor="accent"
                                   matBadgeSize="small"
-                                  [matTooltip]="getMappingTooltip(column)">
+                                  [matTooltip]="getMappingTooltip(column)"
+                                  [attr.aria-hidden]="getMappingCount(column) === 0">
                           swap_horiz
                         </mat-icon>
                         <mat-checkbox [(ngModel)]="column.visible"
@@ -228,6 +262,7 @@ export interface ColumnChange {
                   </button>
                 </div>
               </mat-list-item>
+              }
             </mat-list>
           </div>
         </div>
@@ -236,15 +271,18 @@ export interface ColumnChange {
 
         <!-- Detail: Column Editor -->
         <div class="detail-panel">
-          <div *ngIf="selectedColumnIndex === -1" class="no-selection-message">
+          @if (selectedColumnIndex === -1) {
+          <div class="no-selection-message">
             <mat-icon>table_chart</mat-icon>
             <h3>Selecione uma coluna</h3>
             <p>Escolha uma coluna da lista para editar suas propriedades</p>
           </div>
+          }
 
-          <div *ngIf="selectedColumn" class="column-editor">
+          @if (selectedColumn) {
+          <div class="column-editor">
             <div class="editor-header">
-              <h3>Editando: {{ selectedColumn.header || selectedColumn.field }}</h3>
+              <h3 class="editor-title">Editando: {{ selectedColumn.header || selectedColumn.field }}</h3>
             </div>
 
             <form class="column-form">
@@ -370,7 +408,8 @@ export interface ColumnChange {
               </div>
 
               <!-- Visual Formula Builder for Calculated Columns -->
-              <div class="form-section" *ngIf="isCalculatedColumn(selectedColumn)">
+              @if (isCalculatedColumn(selectedColumn)) {
+              <div class="form-section">
                 <mat-divider></mat-divider>
                 <div class="formula-builder-section">
                   <visual-formula-builder
@@ -381,6 +420,7 @@ export interface ColumnChange {
                   </visual-formula-builder>
                 </div>
               </div>
+              }
 
               <!-- Value Mapping Editor -->
               <div class="form-section">
@@ -409,7 +449,8 @@ export interface ColumnChange {
               </div>
 
               <!-- Data Formatting Editor -->
-              <div class="form-section" *ngIf="showDataFormatter(selectedColumn)">
+              @if (showDataFormatter(selectedColumn)) {
+              <div class="form-section">
                 <mat-divider></mat-divider>
                 <mat-expansion-panel class="formatter-expansion-panel">
                   <mat-expansion-panel-header>
@@ -431,487 +472,14 @@ export interface ColumnChange {
                   </div>
                 </mat-expansion-panel>
               </div>
+              }
             </form>
           </div>
+          }
         </div>
       </div>
     </div>
-  `,
-  styles: [`
-    .columns-config-editor {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      gap: 16px;
-    }
-
-    .educational-card {
-      background-color: var(--mat-sys-surface-container-low);
-      border-left: 4px solid var(--mat-sys-primary);
-      margin-bottom: 12px;
-    }
-
-    .educational-card.compact {
-      margin-bottom: 8px;
-    }
-
-    .compact-content {
-      padding: 12px 16px !important;
-    }
-
-    .compact-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-
-    .inline-icon {
-      font-size: 18px;
-      width: 18px;
-      height: 18px;
-      color: var(--mat-sys-primary);
-    }
-
-    .compact-content h4 {
-      margin: 0;
-      font-size: 1rem;
-      font-weight: 500;
-      color: var(--mat-sys-on-surface);
-    }
-
-    .compact-content p {
-      margin: 0;
-      font-size: 0.875rem;
-      line-height: 1.3;
-      color: var(--mat-sys-on-surface-variant);
-    }
-
-    .global-actions-card {
-      background-color: var(--mat-sys-surface-container);
-      border-left: 4px solid var(--mat-sys-secondary);
-      margin-bottom: 12px;
-    }
-
-    .global-actions-card.compact {
-      margin-bottom: 8px;
-    }
-
-    .compact-global-content {
-      padding: 12px 16px !important;
-    }
-
-    .global-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-
-    .global-actions-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px;
-      align-items: start;
-    }
-
-    .global-actions-grid.compact {
-      gap: 12px;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    }
-
-    .global-action-group {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .group-label {
-      font-weight: 500;
-      color: var(--mat-sys-on-surface);
-      font-size: 0.8rem;
-    }
-
-    .compact-toggle-group {
-      font-size: 0.875rem;
-    }
-
-    .compact-toggle-group .mat-button-toggle {
-      height: 36px;
-    }
-
-    .toggle-text {
-      font-size: 0.75rem;
-    }
-
-    .compact-checkbox {
-      font-size: 0.875rem;
-    }
-    
-    .v2-features-section {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-top: 12px;
-    }
-    
-    .features-divider {
-      margin: 8px 0;
-      opacity: 0.6;
-    }
-
-    .master-detail-layout {
-      display: flex;
-      flex: 1;
-      gap: 16px;
-      min-height: 0;
-    }
-
-    .master-panel {
-      flex: 0 0 350px;
-      display: flex;
-      flex-direction: column;
-      background-color: var(--mat-sys-surface-container-low);
-      border-radius: 8px;
-      overflow: hidden;
-    }
-
-    .list-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 16px;
-      background-color: var(--mat-sys-surface-container);
-      border-bottom: 1px solid var(--mat-sys-outline-variant);
-    }
-
-    .list-header h3 {
-      margin: 0;
-      font-size: 1.1rem;
-      font-weight: 500;
-    }
-
-    .add-column-fab {
-      transform: scale(0.7);
-    }
-
-    .columns-list-container {
-      flex: 1;
-      overflow-y: auto;
-    }
-
-    .columns-list {
-      padding: 0;
-    }
-
-    .column-item {
-      border-bottom: 1px solid var(--mat-sys-outline-variant);
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-
-    .column-item:hover {
-      background-color: var(--mat-sys-surface-container);
-    }
-
-    .column-item.selected {
-      background-color: var(--mat-sys-primary-container);
-      color: var(--mat-sys-on-primary-container);
-    }
-
-    .column-item-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 100%;
-      padding: 12px 16px;
-    }
-
-    .column-main-info {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .column-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      width: 100%;
-    }
-
-    .drag-handle {
-      cursor: grab;
-      color: var(--mat-sys-outline);
-      font-size: 18px;
-      flex-shrink: 0;
-    }
-
-    .column-text-info {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      min-width: 0;
-    }
-
-    .column-title {
-      font-weight: 600;
-      font-size: 0.9rem;
-      color: var(--mat-sys-on-surface);
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .column-field {
-      font-size: 0.75rem;
-      color: var(--mat-sys-on-surface-variant);
-      font-family: monospace;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .column-indicators {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      flex-shrink: 0;
-    }
-
-    .column-type-icon {
-      font-size: 16px;
-      color: var(--mat-sys-outline);
-    }
-
-    .mapping-indicator-icon {
-      font-size: 16px;
-      color: var(--mat-sys-outline);
-      transition: color 0.2s;
-    }
-
-    .mapping-indicator-icon:has([matBadge]:not([matBadgeHidden])) {
-      color: var(--mat-sys-secondary);
-    }
-
-    .visibility-checkbox {
-      transform: scale(0.9);
-    }
-
-    .remove-button {
-      opacity: 0.7;
-      transition: opacity 0.2s;
-    }
-
-    .remove-button:hover {
-      opacity: 1;
-    }
-
-    .panel-divider {
-      height: auto;
-    }
-
-    .detail-panel {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      background-color: var(--mat-sys-surface-container-low);
-      border-radius: 8px;
-      overflow: hidden;
-    }
-
-    .no-selection-message {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      flex: 1;
-      text-align: center;
-      padding: 48px;
-      color: var(--mat-sys-on-surface-variant);
-    }
-
-    .no-selection-message mat-icon {
-      font-size: 48px;
-      width: 48px;
-      height: 48px;
-      margin-bottom: 16px;
-    }
-
-    .column-editor {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-    }
-
-    .editor-header {
-      padding: 16px;
-      background-color: var(--mat-sys-surface-container);
-      border-bottom: 1px solid var(--mat-sys-outline-variant);
-    }
-
-    .editor-header h3 {
-      margin: 0;
-      font-size: 1.1rem;
-      font-weight: 500;
-    }
-
-    .column-form {
-      flex: 1;
-      padding: 24px;
-      overflow-y: auto;
-    }
-
-    .form-row {
-      display: flex;
-      gap: 16px;
-      margin-bottom: 24px;
-      align-items: flex-start;
-    }
-
-    .field-input {
-      flex: 1;
-    }
-
-    .header-input {
-      flex: 2;
-    }
-
-    .width-input {
-      flex: 1;
-    }
-
-    .data-type-input {
-      flex: 1;
-      min-width: 200px;
-    }
-
-    .checkbox-group {
-      display: flex;
-      align-items: center;
-      min-height: 56px;
-    }
-
-    .alignment-group,
-    .sticky-group {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .control-label {
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--mat-sys-on-surface);
-    }
-
-    .value-getter-input {
-      flex: 1;
-    }
-
-    .examples-section {
-      width: 100%;
-    }
-
-    .examples-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 8px;
-    }
-
-    .example-button {
-      font-size: 0.8rem;
-      padding: 4px 8px;
-      min-width: auto;
-      height: 32px;
-    }
-
-    .example-button mat-icon {
-      font-size: 16px;
-      width: 16px;
-      height: 16px;
-      margin-right: 4px;
-    }
-
-    .form-section {
-      margin-top: 24px;
-    }
-
-    .formula-builder-section {
-      margin-top: 16px;
-    }
-
-    .mapping-expansion-panel,
-    .formatter-expansion-panel {
-      margin-top: 16px;
-    }
-
-    .mapping-panel-content,
-    .formatter-panel-content,
-    .style-rules-panel-content {
-      padding: 16px 0;
-    }
-
-    .style-rules-expansion-panel {
-      margin-top: 16px;
-    }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
-      .master-detail-layout {
-        flex-direction: column;
-      }
-
-      .master-panel {
-        flex: 0 0 auto;
-        max-height: 300px;
-      }
-
-      .detail-panel {
-        flex: 1;
-      }
-
-      .global-actions-grid {
-        grid-template-columns: 1fr;
-        gap: 16px;
-      }
-
-      .form-row {
-        flex-direction: column;
-        gap: 12px;
-      }
-
-      .field-input,
-      .header-input,
-      .width-input {
-        flex: 1;
-      }
-    }
-
-    /* CDK Drag & Drop */
-    .cdk-drag-preview {
-      box-sizing: border-box;
-      border-radius: 4px;
-      box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2),
-                  0 8px 10px 1px rgba(0, 0, 0, 0.14),
-                  0 3px 14px 2px rgba(0, 0, 0, 0.12);
-    }
-
-    .cdk-drag-placeholder {
-      opacity: 0;
-    }
-
-    .cdk-drag-animating {
-      transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
-    }
-
-    .columns-list.cdk-drop-list-dragging .column-item:not(.cdk-drag-placeholder) {
-      transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
-    }
-  `]
+  `
 })
 export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
 
@@ -920,9 +488,9 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
   @Output() columnChange = new EventEmitter<ColumnChange>();
 
   // Component state
-  columns: ColumnDefinition[] = [];
+  columns: ExtendedColumnDefinition[] = [];
   selectedColumnIndex = -1;
-  selectedColumn: ColumnDefinition | null = null;
+  selectedColumn: ExtendedColumnDefinition | null = null;
   isV2Config = false;
 
   // Formula builder data
@@ -935,30 +503,51 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
   // Global settings
   globalSortableEnabled = true;
   globalAlignment: 'left' | 'center' | 'right' | null = null;
+  visibilityState: 'all' | 'none' | null = null;
   
   // V2 specific features
   globalResizable = false;
   globalFilterable = false;
   globalStickyEnabled = false;
 
+  // Race condition prevention
+  private operationInProgress = false;
+  private columnOperationSubject = new Subject<() => void>();
+  
+  // Dependency injection
+  private readonly destroyRef = inject(DestroyRef);
+
   // Cleanup
   private destroy$ = new Subject<void>();
 
   constructor(
-    private cdr: ChangeDetectorRef,
-    private tableRuleEngine: TableRuleEngineService,
-    private fieldSchemaAdapter: FieldSchemaAdapter
+    private cdr: ChangeDetectorRef
+    // private tableRuleEngine: TableRuleEngineService,
+    // private fieldSchemaAdapter: FieldSchemaAdapter
   ) {}
 
   ngOnInit(): void {
     this.isV2Config = isTableConfigV2(this.config);
     
     if (this.config?.columns) {
-      this.columns = [...this.config.columns];
+      this.columns = [...this.config.columns] as ExtendedColumnDefinition[];
       this.updateGlobalSettings();
       this.generateAvailableDataSchema();
-      this.initializeStyleRules();
+      // this.initializeStyleRules();
     }
+    
+    // Setup debounced column operations to prevent race conditions
+    this.columnOperationSubject.pipe(
+      debounceTime(100),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(operation => {
+      this.operationInProgress = true;
+      try {
+        operation();
+      } finally {
+        this.operationInProgress = false;
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -975,6 +564,9 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
     const uniqueAlignments = [...new Set(alignments)];
     this.globalAlignment = uniqueAlignments.length === 1 ? uniqueAlignments[0] as any : null;
     
+    // Update visibility state
+    this.updateVisibilityState();
+    
     // V2 specific global settings
     if (this.isV2Config) {
       this.globalResizable = this.columns.every(col => (col as any).resizable !== false);
@@ -983,14 +575,47 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
     }
   }
 
+  private updateVisibilityState(): void {
+    if (this.areAllColumnsVisible()) {
+      this.visibilityState = 'all';
+    } else if (this.areAllColumnsHidden()) {
+      this.visibilityState = 'none';
+    } else {
+      this.visibilityState = null;
+    }
+  }
+
+  // Visibility Helper Methods
+  getVisibleColumnsCount(): number {
+    return this.columns.filter(col => col.visible).length;
+  }
+
+  areAllColumnsVisible(): boolean {
+    return this.columns.length > 0 && this.columns.every(col => col.visible);
+  }
+
+  areAllColumnsHidden(): boolean {
+    return this.columns.length > 0 && this.columns.every(col => !col.visible);
+  }
+
+  onVisibilityChange(state: 'all' | 'none'): void {
+    if (state === 'all') {
+      this.showAllColumns();
+    } else if (state === 'none') {
+      this.hideAllColumns();
+    }
+  }
+
   // Global Actions
   showAllColumns(): void {
     this.columns.forEach(column => column.visible = true);
+    this.updateVisibilityState();
     this.emitConfigChange('global');
   }
 
   hideAllColumns(): void {
     this.columns.forEach(column => column.visible = false);
+    this.updateVisibilityState();
     this.emitConfigChange('global');
   }
 
@@ -1044,7 +669,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
     }
   }
 
-  private isColumnExplicitlySet(column: ColumnDefinition, property: keyof ColumnDefinition | string): boolean {
+  private isColumnExplicitlySet(column: ExtendedColumnDefinition, property: keyof ExtendedColumnDefinition | string): boolean {
     // In a real implementation, you might track which properties were explicitly set
     // For now, we'll assume all are explicit if they differ from default
     return false;
@@ -1052,69 +677,143 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
 
   // Column Selection
   selectColumn(index: number): void {
+    // Validate index
+    if (index < -1 || index >= this.columns.length) {
+      console.warn('Invalid column index for selection:', index);
+      index = -1;
+    }
+    
     this.selectedColumnIndex = index;
-    this.selectedColumn = index >= 0 ? this.columns[index] : null;
+    this.selectedColumn = index >= 0 && index < this.columns.length ? this.columns[index] : null;
     this.cdr.markForCheck();
   }
 
   // Column Management
   addNewColumn(): void {
-    const newColumn: any = {
-      field: `calculatedField${this.columns.length + 1}`,
-      header: `Nova Coluna Calculada ${this.columns.length + 1}`,
-      visible: true,
-      align: 'left',
-      sortable: true,
-      order: this.columns.length,
-      type: 'string', // Default type for calculated columns
-      _isApiField: false, // Explicitly mark as not from API
-      calculationType: 'none', // Initialize with no formula
-      calculationParams: {},
-      _generatedValueGetter: ''
-    };
+    if (this.operationInProgress) return;
+    
+    this.columnOperationSubject.next(() => {
+      // Generate unique field name
+      let fieldIndex = this.columns.length + 1;
+      let fieldName = `calculatedField${fieldIndex}`;
+      
+      // Ensure field name is unique
+      while (this.columns.some(col => col.field === fieldName)) {
+        fieldIndex++;
+        fieldName = `calculatedField${fieldIndex}`;
+      }
+      
+      const newColumn: ExtendedColumnDefinition = {
+        field: fieldName,
+        header: `Nova Coluna Calculada ${fieldIndex}`,
+        visible: true,
+        align: 'left',
+        sortable: true,
+        order: this.columns.length,
+        type: 'string',
+        _isApiField: false,
+        calculationType: 'none',
+        calculationParams: {},
+        _generatedValueGetter: ''
+      };
 
-    this.columns.push(newColumn);
-    this.selectColumn(this.columns.length - 1);
-    this.emitConfigChange('add');
+      this.columns = [...this.columns, newColumn];
+      this.selectColumn(this.columns.length - 1);
+      this.emitConfigChange('add');
+    });
   }
 
   removeColumn(index: number, event: Event): void {
     event.stopPropagation();
-
-    if (index >= 0 && index < this.columns.length) {
-      this.columns.splice(index, 1);
-
+    
+    if (this.operationInProgress) return;
+    
+    // Validate bounds
+    if (index < 0 || index >= this.columns.length) {
+      console.warn('Invalid column index for removal:', index);
+      return;
+    }
+    
+    this.columnOperationSubject.next(() => {
+      // Create new array without the removed column
+      this.columns = this.columns.filter((_, i) => i !== index);
+      
       // Update orders
       this.updateColumnOrders();
-
-      // Adjust selection
+      
+      // Adjust selection properly
       if (this.selectedColumnIndex === index) {
-        this.selectColumn(-1);
+        // Column being removed was selected - clear selection
+        this.selectedColumnIndex = -1;
+        this.selectedColumn = null;
       } else if (this.selectedColumnIndex > index) {
+        // Selected column is after removed column - adjust index
         this.selectedColumnIndex--;
-        this.selectedColumn = this.selectedColumnIndex >= 0 ? this.columns[this.selectedColumnIndex] : null;
+        // Ensure the selected column reference is updated
+        if (this.selectedColumnIndex >= 0 && this.selectedColumnIndex < this.columns.length) {
+          this.selectedColumn = this.columns[this.selectedColumnIndex];
+        } else {
+          // Safety check - clear selection if index is invalid
+          this.selectedColumnIndex = -1;
+          this.selectedColumn = null;
+        }
       }
-
+      // If selectedColumnIndex < index, no adjustment needed
+      
       this.emitConfigChange('remove');
-    }
+      this.cdr.markForCheck();
+    });
   }
 
-  onColumnReorder(event: CdkDragDrop<ColumnDefinition[]>): void {
-    if (event.previousIndex !== event.currentIndex) {
-      moveItemInArray(this.columns, event.previousIndex, event.currentIndex);
-      this.updateColumnOrders();
-
-      // Update selection index if needed
-      if (this.selectedColumnIndex === event.previousIndex) {
-        this.selectedColumnIndex = event.currentIndex;
-      } else if (this.selectedColumnIndex > event.previousIndex && this.selectedColumnIndex <= event.currentIndex) {
-        this.selectedColumnIndex--;
-      } else if (this.selectedColumnIndex < event.previousIndex && this.selectedColumnIndex >= event.currentIndex) {
-        this.selectedColumnIndex++;
-      }
-
-      this.emitConfigChange('reorder');
+  onColumnReorder(event: CdkDragDrop<ExtendedColumnDefinition[]>): void {
+    if (event.previousIndex === event.currentIndex || this.operationInProgress) {
+      return;
     }
+    
+    // Validate indices
+    if (event.previousIndex < 0 || event.previousIndex >= this.columns.length ||
+        event.currentIndex < 0 || event.currentIndex >= this.columns.length) {
+      console.warn('Invalid indices for reorder:', event.previousIndex, event.currentIndex);
+      return;
+    }
+    
+    this.columnOperationSubject.next(() => {
+      // Create a new array to avoid direct mutation
+      const newColumns = [...this.columns];
+      moveItemInArray(newColumns, event.previousIndex, event.currentIndex);
+      this.columns = newColumns;
+      
+      this.updateColumnOrders();
+      
+      // Update selection index if needed
+      let newSelectedIndex = this.selectedColumnIndex;
+      
+      if (this.selectedColumnIndex === event.previousIndex) {
+        // The selected item was moved
+        newSelectedIndex = event.currentIndex;
+      } else if (event.previousIndex < event.currentIndex) {
+        // Item moved forward
+        if (this.selectedColumnIndex > event.previousIndex && this.selectedColumnIndex <= event.currentIndex) {
+          newSelectedIndex--;
+        }
+      } else {
+        // Item moved backward
+        if (this.selectedColumnIndex >= event.currentIndex && this.selectedColumnIndex < event.previousIndex) {
+          newSelectedIndex++;
+        }
+      }
+      
+      // Update selection with validation
+      if (newSelectedIndex !== this.selectedColumnIndex) {
+        this.selectedColumnIndex = newSelectedIndex;
+        if (this.selectedColumnIndex >= 0 && this.selectedColumnIndex < this.columns.length) {
+          this.selectedColumn = this.columns[this.selectedColumnIndex];
+        }
+      }
+      
+      this.emitConfigChange('reorder');
+      this.cdr.markForCheck();
+    });
   }
 
   private updateColumnOrders(): void {
@@ -1125,8 +824,9 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
 
   // Column Property Changes
   onColumnPropertyChange(): void {
+    this.updateVisibilityState();
     this.emitConfigChange('update');
-    this.updateFieldSchemasForStyleRules();
+    // this.updateFieldSchemasForStyleRules();
   }
 
   isExistingColumn(column: ColumnDefinition): boolean {
@@ -1225,20 +925,34 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
   }
 
   onFormulaChange(formula: FormulaDefinition): void {
-    if (this.selectedColumn) {
-      const extendedColumn = this.selectedColumn as any;
-      extendedColumn.calculationType = formula.type;
-      extendedColumn.calculationParams = formula.params;
-      this.onColumnPropertyChange();
+    if (!this.selectedColumn || this.selectedColumnIndex < 0) return;
+    
+    // Verify column still exists in array
+    if (this.selectedColumnIndex >= this.columns.length ||
+        this.columns[this.selectedColumnIndex] !== this.selectedColumn) {
+      console.warn('Selected column reference is stale');
+      this.selectColumn(-1);
+      return;
     }
+    
+    this.selectedColumn.calculationType = formula.type;
+    this.selectedColumn.calculationParams = formula.params;
+    this.onColumnPropertyChange();
   }
 
   onGeneratedExpressionChange(expression: string): void {
-    if (this.selectedColumn) {
-      const extendedColumn = this.selectedColumn as any;
-      extendedColumn._generatedValueGetter = expression;
-      this.onColumnPropertyChange();
+    if (!this.selectedColumn || this.selectedColumnIndex < 0) return;
+    
+    // Verify column still exists
+    if (this.selectedColumnIndex >= this.columns.length ||
+        this.columns[this.selectedColumnIndex] !== this.selectedColumn) {
+      console.warn('Selected column reference is stale');
+      this.selectColumn(-1);
+      return;
     }
+    
+    this.selectedColumn._generatedValueGetter = expression;
+    this.onColumnPropertyChange();
   }
 
   // Value Mapping Management
@@ -1299,11 +1013,20 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
   }
 
   onMappingChange(mapping: { [key: string | number]: string }): void {
-    if (this.selectedColumn) {
-      const extendedColumn = this.selectedColumn as any;
-      extendedColumn.valueMapping = mapping;
-      this.onColumnPropertyChange();
+    if (!this.selectedColumn || this.selectedColumnIndex < 0) {
+      return;
     }
+    
+    // Verify column still exists
+    if (this.selectedColumnIndex >= this.columns.length ||
+        this.columns[this.selectedColumnIndex] !== this.selectedColumn) {
+      console.warn('Selected column reference is stale');
+      this.selectColumn(-1);
+      return;
+    }
+    
+    this.selectedColumn.valueMapping = mapping;
+    this.onColumnPropertyChange();
   }
 
   get selectedColumnDataType(): ColumnDataType {
@@ -1390,16 +1113,23 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
   }
 
   onDataTypeChange(dataType: ColumnDataType): void {
-    if (this.selectedColumn) {
-      // Store the user-selected type in the standard 'type' property
-      this.selectedColumn.type = dataType;
-
-      // Clear existing format when changing data type
-      const extendedColumn = this.selectedColumn as any;
-      extendedColumn.format = '';
-
-      this.onColumnPropertyChange();
+    if (!this.selectedColumn || this.selectedColumnIndex < 0) return;
+    
+    // Verify column still exists
+    if (this.selectedColumnIndex >= this.columns.length ||
+        this.columns[this.selectedColumnIndex] !== this.selectedColumn) {
+      console.warn('Selected column reference is stale');
+      this.selectColumn(-1);
+      return;
     }
+    
+    // Store the user-selected type in the standard 'type' property
+    this.selectedColumn.type = dataType;
+
+    // Clear existing format when changing data type
+    this.selectedColumn.format = '';
+
+    this.onColumnPropertyChange();
   }
 
   showDataFormatter(column: ColumnDefinition | null): boolean {
@@ -1456,31 +1186,41 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
   }
 
   onFormatChange(format: string): void {
-    if (this.selectedColumn) {
-      const extendedColumn = this.selectedColumn as any;
-      extendedColumn.format = format;
-      this.onColumnPropertyChange();
+    if (!this.selectedColumn || this.selectedColumnIndex < 0) return;
+    
+    // Verify column still exists
+    if (this.selectedColumnIndex >= this.columns.length ||
+        this.columns[this.selectedColumnIndex] !== this.selectedColumn) {
+      console.warn('Selected column reference is stale');
+      this.selectColumn(-1);
+      return;
     }
+    
+    this.selectedColumn.format = format;
+    this.onColumnPropertyChange();
   }
 
   // Data Synchronization
   private emitConfigChange(changeType: ColumnChange['type']): void {
-    if (this.config) {
-      const updatedConfig: TableConfig = {
-        ...this.config,
-        columns: [...this.columns]
-      };
+    if (!this.config) return;
+    
+    // Deep clone columns to prevent external mutations
+    const clonedColumns = this.columns.map(col => ({ ...col }));
+    
+    const updatedConfig: TableConfig = {
+      ...this.config,
+      columns: clonedColumns
+    };
 
-      this.configChange.emit(updatedConfig);
+    this.configChange.emit(updatedConfig);
 
-      this.columnChange.emit({
-        type: changeType,
-        columns: [...this.columns],
-        columnIndex: this.selectedColumnIndex,
-        column: this.selectedColumn || undefined,
-        fullConfig: updatedConfig
-      });
-    }
+    this.columnChange.emit({
+      type: changeType,
+      columns: clonedColumns,
+      columnIndex: this.selectedColumnIndex,
+      column: this.selectedColumnIndex >= 0 ? { ...this.columns[this.selectedColumnIndex] } : undefined,
+      fullConfig: updatedConfig
+    });
 
     this.cdr.markForCheck();
   }
@@ -1489,17 +1229,21 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
    * Public method to update columns from external source
    */
   updateColumnsFromConfig(config: TableConfig): void {
+    if (!config) return;
+    
     this.isV2Config = isTableConfigV2(config);
     
-    if (config?.columns) {
-      this.columns = [...config.columns];
+    if (config.columns && Array.isArray(config.columns)) {
+      this.columns = [...config.columns] as ExtendedColumnDefinition[];
       this.updateGlobalSettings();
+      this.generateAvailableDataSchema();
 
       // Reset selection if current selection is invalid
-      if (this.selectedColumnIndex >= this.columns.length) {
+      if (this.selectedColumnIndex >= this.columns.length || this.selectedColumnIndex < 0) {
         this.selectColumn(-1);
-      } else if (this.selectedColumnIndex >= 0) {
-        this.selectedColumn = this.columns[this.selectedColumnIndex];
+      } else {
+        // Re-select to ensure reference is updated
+        this.selectColumn(this.selectedColumnIndex);
       }
 
       this.cdr.markForCheck();
@@ -1509,20 +1253,20 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
   /**
    * Public method to get current columns
    */
-  getCurrentColumns(): ColumnDefinition[] {
+  getCurrentColumns(): ExtendedColumnDefinition[] {
     return [...this.columns];
   }
 
   // Style Rules Integration Methods
   private initializeStyleRules(): void {
     // Convert table config to field schemas for the rule builder
-    const fallbackConfig: TableConfig = { columns: this.columns };
-    this.currentFieldSchemas = this.fieldSchemaAdapter.adaptTableConfigToFieldSchema(
-      !isTableConfigV2(this.config) ? fallbackConfig : this.config
-    );
+    // const fallbackConfig: TableConfig = { columns: this.columns };
+    // this.currentFieldSchemas = this.fieldSchemaAdapter.adaptTableConfigToFieldSchema(
+    //   !isTableConfigV2(this.config) ? fallbackConfig : this.config
+    // );
     
     // Generate sample data for preview (in real app, this would come from actual data)
-    this.generateSampleData();
+    // this.generateSampleData();
   }
 
   private generateSampleData(): void {
@@ -1600,30 +1344,37 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
     }
   }
 
-  onConditionalStylesChanged(styles: ConditionalStyle[]): void {
-    if (this.selectedColumn) {
-      const extendedColumn = this.selectedColumn as any;
-      extendedColumn.conditionalStyles = styles;
-      
-      // Compile rules for execution in the table
-      if (styles.length > 0) {
-        extendedColumn.cellClassCondition = this.tableRuleEngine.compileConditionalStyles(styles);
-      } else {
-        delete extendedColumn.cellClassCondition;
-      }
-      
-      this.onColumnPropertyChange();
+  onConditionalStylesChanged(styles: any[]): void {
+    if (!this.selectedColumn || this.selectedColumnIndex < 0) return;
+    
+    // Verify column still exists
+    if (this.selectedColumnIndex >= this.columns.length ||
+        this.columns[this.selectedColumnIndex] !== this.selectedColumn) {
+      console.warn('Selected column reference is stale');
+      this.selectColumn(-1);
+      return;
     }
+    
+    this.selectedColumn.conditionalStyles = styles;
+    
+    // Compile rules for execution in the table
+    // if (styles.length > 0) {
+    //   this.selectedColumn.cellClassCondition = this.tableRuleEngine.compileConditionalStyles(styles);
+    // } else {
+    //   delete this.selectedColumn.cellClassCondition;
+    // }
+    
+    this.onColumnPropertyChange();
   }
 
-  onRuleValidated(event: { ruleId: string; result: ValidationResult }): void {
+  onRuleValidated(event: { ruleId: string; result: any }): void {
     // Handle rule validation results - could show feedback to user
     console.log('Rule validated:', event);
   }
 
   // Update field schemas when columns change
   private updateFieldSchemasForStyleRules(): void {
-    this.currentFieldSchemas = this.fieldSchemaAdapter.adaptTableConfigToFieldSchema({ columns: this.columns });
-    this.generateSampleData();
+    // this.currentFieldSchemas = this.fieldSchemaAdapter.adaptTableConfigToFieldSchema({ columns: this.columns });
+    // this.generateSampleData();
   }
 }

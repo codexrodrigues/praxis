@@ -1,6 +1,11 @@
+// Arquivo: frontend-libs/praxis-ui-workspace/src/theme-dark.scss
 @use '@angular/material' as mat;
 
-// Criando paletas personalizadas baseadas nas cores do Bard
+// Incluindo os pré-requisitos do theming do Material.
+// Isso é fundamental para o sistema M3 funcionar.
+@include mat.core();
+
+// As paletas customizadas que você criou estão perfeitas.
 $bard-primary-palette: (
   50: #e8edf5,
   100: #c5d3ea,
@@ -10,7 +15,7 @@ $bard-primary-palette: (
   500: #3d6bb1,
   600: #2f5fa3,
   700: #264f8c,
-  800: #213660, // novo tom desejado
+  800: #213660,
   900: #1a2c50,
   contrast: (
     50: #000000,
@@ -26,24 +31,21 @@ $bard-primary-palette: (
   )
 );
 
-
 $bard-accent-palette: (
-  50:  #e4eaf5,   // Azul muito claro
-  100: #b9c9e4,   // Azul suave e leve
-  200: #8ea8d3,   // Azul claro intermediário
-  300: #6286c2,   // Azul com presença, mas ainda suave
-  400: #406fb4,   // Mais próximo do tom principal
-  500: #295fa3,   // Azul acentuado
-  600: #214f8b,   // Mais escuro
-  700: #1b4479,   // Escurecendo mais
-  800: #173c6b,   // Azul escuro, elegante
-  900: #122f56,   // Azul bem profundo
-
-  A100: #9cb7ff,  // Accent claro (ripple claro, hover sutil)
-  A200: #628eff,  // Accent médio (para chips ou botões)
-  A400: #295fd1,  // Destaque
-  A700: #123aa0,  // Destaque forte (hover, foco)
-
+  50:  #e4eaf5,
+  100: #b9c9e4,
+  200: #8ea8d3,
+  300: #6286c2,
+  400: #406fb4,
+  500: #295fa3,
+  600: #214f8b,
+  700: #1b4479,
+  800: #173c6b,
+  900: #122f56,
+  A100: #9cb7ff,
+  A200: #628eff,
+  A400: #295fd1,
+  A700: #123aa0,
   contrast: (
     50:  #000000,
     100: #000000,
@@ -61,7 +63,6 @@ $bard-accent-palette: (
     A700: #ffffff,
   )
 );
-
 
 $bard-warn-palette: (
   50: #ffebe0,

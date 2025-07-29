@@ -15,3 +15,7 @@ export * from './lib/models/field-definition.model';
 
 // Table configuration services
 export * from './lib/services/table-config.service';
+
+// Resizable Window Component
+export * from './lib/components/resizable-window/praxis-resizable-window.component';
+export * from './lib/components/resizable-window/services/praxis-resizable-window.service';

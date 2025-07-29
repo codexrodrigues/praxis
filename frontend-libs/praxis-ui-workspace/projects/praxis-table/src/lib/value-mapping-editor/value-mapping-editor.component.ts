@@ -55,9 +55,11 @@ export interface ValueMappingPair {
         <div class="toolbar-title">
           <mat-icon class="title-icon">swap_horiz</mat-icon>
           <h4>Mapeamento de Valores</h4>
-          <span class="mapping-count" *ngIf="mappingPairs.length > 0">
-            ({{ mappingPairs.length }} {{ mappingPairs.length === 1 ? 'definido' : 'definidos' }})
-          </span>
+          @if (mappingPairs.length > 0) {
+            <span class="mapping-count">
+              ({{ mappingPairs.length }} {{ mappingPairs.length === 1 ? 'definido' : 'definidos' }})
+            </span>
+          }
         </div>
 
         <div class="toolbar-actions">
@@ -85,24 +87,30 @@ export interface ValueMappingPair {
             <td mat-cell *matCellDef="let pair; let i = index" class="key-cell">
 
               <!-- Text/Number Input -->
-              <mat-form-field *ngIf="keyInputType !== 'boolean'" appearance="outline" class="key-input">
-                <input matInput
-                       [(ngModel)]="pair.keyInput"
-                       [type]="keyInputType === 'number' ? 'number' : 'text'"
-                       [placeholder]="getKeyPlaceholder()"
-                       (ngModelChange)="onKeyChange(i, $event)"
-                       [class.error-input]="pair.hasError">
-                <mat-error *ngIf="pair.hasError">{{ pair.errorMessage }}</mat-error>
-              </mat-form-field>
+              @if (keyInputType !== 'boolean') {
+                <mat-form-field appearance="outline" class="key-input">
+                  <input matInput
+                         [(ngModel)]="pair.keyInput"
+                         [type]="keyInputType === 'number' ? 'number' : 'text'"
+                         [placeholder]="getKeyPlaceholder()"
+                         (ngModelChange)="onKeyChange(i, $event)"
+                         [class.error-input]="pair.hasError">
+                  @if (pair.hasError) {
+                    <mat-error>{{ pair.errorMessage }}</mat-error>
+                  }
+                </mat-form-field>
+              }
 
               <!-- Boolean Checkbox -->
-              <div *ngIf="keyInputType === 'boolean'" class="boolean-key-container">
-                <mat-checkbox
-                  [checked]="isKeyTruthy(pair)"
-                  (change)="onBooleanKeyChange(i, $event.checked)">
-                  {{ pair.key === true || pair.keyInput === 'true' ? 'Verdadeiro' : 'Falso' }}
-                </mat-checkbox>
-              </div>
+              @if (keyInputType === 'boolean') {
+                <div class="boolean-key-container">
+                  <mat-checkbox
+                    [checked]="isKeyTruthy(pair)"
+                    (change)="onBooleanKeyChange(i, $event.checked)">
+                    {{ pair.key === true || pair.keyInput === 'true' ? 'Verdadeiro' : 'Falso' }}
+                  </mat-checkbox>
+                </div>
+              }
             </td>
           </ng-container>
 
@@ -136,11 +144,13 @@ export interface ValueMappingPair {
         </table>
 
         <!-- Empty State -->
-        <div *ngIf="mappingPairs.length === 0" class="empty-state">
-          <mat-icon class="empty-icon">swap_horiz</mat-icon>
-          <h4>Nenhum mapeamento definido</h4>
-          <p>Adicione mapeamentos para converter valores brutos em texto amigável</p>
-        </div>
+        @if (mappingPairs.length === 0) {
+          <div class="empty-state">
+            <mat-icon class="empty-icon">swap_horiz</mat-icon>
+            <h4>Nenhum mapeamento definido</h4>
+            <p>Adicione mapeamentos para converter valores brutos em texto amigável</p>
+          </div>
+        }
       </div>
 
       <!-- Add New Mapping Button -->
@@ -154,7 +164,8 @@ export interface ValueMappingPair {
       </div>
 
       <!-- Import Dialog -->
-      <mat-expansion-panel *ngIf="showImportDialog" class="import-panel" [expanded]="true">
+      @if (showImportDialog) {
+        <mat-expansion-panel class="import-panel" [expanded]="true">
         <mat-expansion-panel-header>
           <mat-panel-title>
             <mat-icon>upload_file</mat-icon>
@@ -188,12 +199,15 @@ export interface ValueMappingPair {
             </button>
           </div>
 
-          <div *ngIf="importError" class="import-error">
-            <mat-icon>error</mat-icon>
-            {{ importError }}
-          </div>
+          @if (importError) {
+            <div class="import-error">
+              <mat-icon>error</mat-icon>
+              {{ importError }}
+            </div>
+          }
         </div>
       </mat-expansion-panel>
+      }
     </div>
   `,
   styles: [`
@@ -418,6 +432,7 @@ export class ValueMappingEditorComponent implements OnInit, OnChanges {
     }
   }
 
+
   private initializeMappingPairs(): void {
     this.mappingPairs = Object.entries(this.currentMapping || {}).map(([key, value]) => ({
       key: this.parseKeyByType(key),
@@ -428,8 +443,33 @@ export class ValueMappingEditorComponent implements OnInit, OnChanges {
   }
 
   private updateDataSource(): void {
+    console.log('🔄 updateDataSource() - Atualizando MatTable DataSource:', {
+      newDataLength: this.mappingPairs.length,
+      newData: [...this.mappingPairs]
+    });
+    
     this.dataSource.data = [...this.mappingPairs];
+    
+    // 🔍 LOG: Verificar estado após atualização do DataSource
+    console.log('🔍 Estado após update do DataSource:', {
+      mappingPairsLength: this.mappingPairs.length,
+      dataSourceLength: this.dataSource.data.length,
+      shouldShowEmptyState: this.mappingPairs.length === 0,
+      shouldShowTable: this.mappingPairs.length > 0
+    });
+    
     this.cdr.markForCheck();
+    
+    // 🔍 LOG: Forçar detecção adicional após markForCheck
+    setTimeout(() => {
+      console.log('🎯 Estado após ChangeDetection (async):', {
+        mappingPairsLength: this.mappingPairs.length,
+        dataSourceLength: this.dataSource.data.length,
+        DOMShouldUpdate: true
+      });
+    }, 10);
+    
+    console.log('✅ DataSource atualizado - Tabela será re-renderizada');
   }
 
   private parseKeyByType(key: string): string | number | boolean {
@@ -471,6 +511,7 @@ export class ValueMappingEditorComponent implements OnInit, OnChanges {
     this.updateDataSource();
     this.validateAndEmitMapping();
   }
+
 
   removePair(index: number): void {
     if (index >= 0 && index < this.mappingPairs.length) {
@@ -551,6 +592,7 @@ export class ValueMappingEditorComponent implements OnInit, OnChanges {
           mapping[String(pair.key)] = pair.value;
         }
       });
+      
       this.mappingChange.emit(mapping);
     }
 
