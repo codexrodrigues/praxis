@@ -176,6 +176,79 @@ export class ExampleComponent {
 }
 ```
 
+## ⚙️ Fluxo de Paginação e Filtros (Server-Side)
+
+Quando a `<praxis-table>` é conectada a um `resourcePath`, as operações de paginação, ordenação e filtro são delegadas ao backend. Isso garante alta performance, pois apenas os dados visíveis na tela são trafegados pela rede.
+
+O diagrama abaixo detalha a sequência de eventos, desde a interação do usuário na UI até a construção da consulta JPA no servidor.
+
+```mermaid
+sequenceDiagram
+    participant UI as @praxis/table (UI)
+    participant CrudService as @praxis/core (GenericCrudService)
+    participant Controller as Backend (AbstractCrudController)
+    participant Service as Backend (BaseCrudService)
+    participant SpecBuilder as Backend (GenericSpecificationsBuilder)
+    participant Repository as Spring Data JPA (JpaSpecificationExecutor)
+
+    UI->>UI: Usuário clica na página 2 e<br>digita "Tech" no filtro de nome.
+
+    UI->>UI: onPageChange({pageIndex: 1, pageSize: 10})<br>onFilterChange({nome: 'Tech'})
+
+    UI->>UI: Chama fetchData() com:<br>filterCriteria = {nome: 'Tech'}<br>pageable = {pageNumber: 1, pageSize: 10, sort: 'nome,asc'}
+
+    UI->>CrudService: Chama .filter({nome: 'Tech'}, pageable)
+
+    activate CrudService
+    CrudService->>CrudService: Cria HttpParams:<br>page=1, size=10, sort=nome,asc
+    CrudService->>Controller: Requisição POST para /api/.../filter<br>Body: {nome: 'Tech'}<br>Params: ?page=1&size=10&sort=nome,asc
+    deactivate CrudService
+
+    activate Controller
+    Controller->>Controller: Spring injeta o corpo no FilterDTO<br>e os params no objeto Pageable.
+    Controller->>Service: Chama .filter(filterDTO, pageable)
+    deactivate Controller
+
+    activate Service
+    Service->>SpecBuilder: Chama .buildSpecification(filterDTO)
+
+    activate SpecBuilder
+    SpecBuilder->>SpecBuilder: Itera nos campos do FilterDTO.<br>Encontra @Filterable no campo 'nome'.
+    SpecBuilder->>SpecBuilder: Cria um Predicate JPA:<br> `criteriaBuilder.like(root.get("nome"), "%tech%")`
+    SpecBuilder->>Service: Retorna a Specification JPA construída.
+    deactivate SpecBuilder
+
+    Service->>Repository: Chama .findAll(specification, pageable)
+
+    activate Repository
+    Repository->>Repository: Spring Data JPA executa a<br>query SQL com WHERE, LIMIT, OFFSET, ORDER BY.
+    Repository-->>Service: Retorna um objeto Page<Entity> do BD.
+    deactivate Repository
+
+    Service-->>Controller: Retorna o Page<Entity>
+    deactivate Service
+
+    activate Controller
+    Controller->>Controller: Mapeia Page<Entity> para Page<DTO><br>e encapsula em RestApiResponse.
+    Controller-->>CrudService: Resposta HTTP 200 com<br>JSON do RestApiResponse.
+    deactivate Controller
+
+    activate CrudService
+    CrudService-->>UI: Retorna Observable<Page<DTO>>
+    deactivate CrudService
+
+    UI->>UI: Atualiza a tabela com os novos dados e o paginador.
+
+```
+
+### Pontos-Chave do Fluxo:
+
+1.  **UI (`@praxis/table`)**: Captura eventos do usuário e os traduz em objetos `filterCriteria` e `pageable`.
+2.  **Serviço Frontend (`@praxis/core`)**: O `GenericCrudService` serializa o `pageable` como parâmetros de URL e o `filterCriteria` como corpo de uma requisição POST.
+3.  **Controller Backend**: O `AbstractCrudController` recebe a requisição. O Spring Boot automaticamente popula o DTO de filtro com o corpo da requisição e o objeto `Pageable` com os parâmetros da URL.
+4.  **Serviço Backend (`praxis-metadata-core`)**: O `GenericSpecificationsBuilder` inspeciona as anotações `@Filterable` no DTO de filtro para construir uma `Specification` JPA dinâmica.
+5.  **Repositório (Spring Data JPA)**: O `JpaSpecificationExecutor` (geralmente estendido pelo seu repositório) usa a `Specification` e o `Pageable` para gerar e executar a consulta SQL final, otimizada para o banco de dados.
+
 ## 🎛️ Editor de Configuração
 
 ### Abrindo o Editor Visual
