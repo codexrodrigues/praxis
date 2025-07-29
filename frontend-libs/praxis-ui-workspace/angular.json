@@ -45,8 +45,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "2kb",
-                  "maximumError": "4kb"
+                  "maximumWarning": "4kb",
+                  "maximumError": "8kb"
                 }
               ],
               "outputHashing": "all"
@@ -197,6 +197,32 @@
           "builder": "@angular/build:karma",
           "options": {
             "tsConfig": "projects/praxis-visual-builder/tsconfig.spec.json"
+          }
+        }
+      }
+    },
+    "praxis-dynamic-fields": {
+      "projectType": "library",
+      "root": "projects/praxis-dynamic-fields",
+      "sourceRoot": "projects/praxis-dynamic-fields/src",
+      "prefix": "pdx",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/praxis-dynamic-fields/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/praxis-dynamic-fields/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular/build:karma",
+          "options": {
+            "tsConfig": "projects/praxis-dynamic-fields/tsconfig.spec.json"
           }
         }
       }
