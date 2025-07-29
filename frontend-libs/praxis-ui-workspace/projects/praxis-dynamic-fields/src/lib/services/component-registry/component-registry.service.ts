@@ -217,7 +217,7 @@ export class ComponentRegistryService implements IComponentRegistry {
     // Date
     this.register(
       FieldControlTypeEnum.DATE_PICKER,
-      () => import('../../components/material-datepicker/material-datepicker.component').then(m => m.MaterialDatepickerComponent)
+      () => import('../../components/material-date-picker/material-date-picker.component').then(m => m.MaterialDatePickerComponent)
     );
 
     // Currency Input (componente especializado)
@@ -259,13 +259,13 @@ export class ComponentRegistryService implements IComponentRegistry {
     // Date Time Picker
     this.register(
       FieldControlTypeEnum.DATE_TIME_PICKER,
-      () => import('../../components/material-datepicker/material-datepicker.component').then(m => m.MaterialDatepickerComponent)
+      () => import('../../components/material-date-picker/material-date-picker.component').then(m => m.MaterialDatePickerComponent)
     );
 
     // Date Range
     this.register(
       FieldControlTypeEnum.DATE_RANGE,
-      () => import('../../components/material-datepicker/material-datepicker.component').then(m => m.MaterialDatepickerComponent)
+      () => import('../../components/material-date-range/material-date-range.component').then(m => m.MaterialDateRangeComponent)
     );
 
     // Button

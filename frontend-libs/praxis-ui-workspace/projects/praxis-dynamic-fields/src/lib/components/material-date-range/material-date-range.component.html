@@ -1,0 +1,37 @@
+<div class="pdx-datepicker-container">
+  <div *ngIf="rangePresets().length > 0 && presetDisplayStyle() === 'buttons'" class="pdx-date-presets">
+    <div class="pdx-preset-buttons">
+      <button *ngFor="let preset of rangePresets(); track preset.id" mat-button type="button" class="pdx-preset-button" [class.pdx-preset-active]="activePreset() === preset.id" (click)="applyPreset(preset.id)">
+        {{ preset.label }}
+      </button>
+      <button *ngIf="activePreset()" mat-icon-button type="button" class="pdx-preset-clear" (click)="clearPreset()">
+        <mat-icon>clear</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <mat-form-field [appearance]="materialAppearance()" [color]="materialColor()" [floatLabel]="floatLabelBehavior()" [subscriptSizing]="metadata()?.materialDesign?.subscriptSizing || 'fixed'" [hideRequiredMarker]="metadata()?.materialDesign?.hideRequiredMarker || false" class="pdx-datepicker-field pdx-daterange-field">
+    <mat-label>{{ metadata()?.label }}</mat-label>
+
+    <mat-date-range-input [rangePicker]="rangePicker" [formGroup]="rangeFormGroup()" [min]="minDate()" [max]="maxDate()" class="pdx-daterange-input">
+      <input matStartDate formControlName="start" [placeholder]="metadata()?.startPlaceholder || 'Data inicial'" (dateInput)="onRangeStartDateChange($event.value)" class="pdx-daterange-start">
+      <input matEndDate formControlName="end" [placeholder]="metadata()?.endPlaceholder || 'Data final'" (dateInput)="onRangeEndDateChange($event.value)" class="pdx-daterange-end">
+    </mat-date-range-input>
+
+    <mat-datepicker-toggle matSuffix [for]="rangePicker" [disabled]="componentState().disabled"></mat-datepicker-toggle>
+
+    <button *ngIf="selectedRange()?.startDate" mat-icon-button matSuffix type="button" class="pdx-clear-button" (click)="clearDateRange()">
+      <mat-icon>clear</mat-icon>
+    </button>
+
+    <mat-chip-set *ngIf="activePreset()" matSuffix class="pdx-active-preset-chip">
+      <mat-chip [removable]="true" (removed)="clearPreset()" class="pdx-preset-chip">{{ rangePresets().find(p => p.id === activePreset())?.label }}<mat-icon matChipRemove>cancel</mat-icon></mat-chip>
+    </mat-chip-set>
+
+    <mat-hint *ngIf="metadata()?.hint" align="start" [id]="componentId() + '-hint'">{{ metadata()?.hint }}</mat-hint>
+    <mat-hint *ngIf="!metadata()?.hint && selectedRange()?.startDate && selectedRange()?.endDate" align="end">{{ selectedRange()!.startDate | date:dateFormat() }} - {{ selectedRange()!.endDate | date:dateFormat() }}</mat-hint>
+    <mat-error *ngIf="rangeFormGroup().errors?.['rangeInvalid']" [id]="componentId() + '-error'" class="pdx-error-message">{{ rangeFormGroup().errors!['rangeInvalid'][0] }}</mat-error>
+  </mat-form-field>
+
+  <mat-date-range-picker #rangePicker [color]="materialColor()" [touchUi]="false"></mat-date-range-picker>
+</div>

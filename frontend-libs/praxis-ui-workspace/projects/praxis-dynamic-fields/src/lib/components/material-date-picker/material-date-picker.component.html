@@ -1,0 +1,40 @@
+<div class="pdx-datepicker-container">
+  <mat-form-field
+    [appearance]="materialAppearance()"
+    [color]="materialColor()"
+    [floatLabel]="floatLabelBehavior()"
+    [subscriptSizing]="metadata()?.materialDesign?.subscriptSizing || 'fixed'"
+    [hideRequiredMarker]="metadata()?.materialDesign?.hideRequiredMarker || false"
+    class="pdx-datepicker-field">
+
+    <mat-label>{{ metadata()?.label }}</mat-label>
+
+    <input
+      matInput
+      [matDatepicker]="picker"
+      [formControl]="formControl"
+      [placeholder]="inputPlaceholder()"
+      [min]="minDate()"
+      [max]="maxDate()"
+      [matDatepickerFilter]="isDateDisabled"
+      [readonly]="metadata()?.readOnly || false"
+      (dateInput)="onDateInput($event)"
+      (dateChange)="onDateChange($event.value)"
+      class="pdx-datepicker-input">
+
+    <mat-datepicker-toggle matSuffix [for]="picker" [disabled]="componentState().disabled"></mat-datepicker-toggle>
+
+    <button *ngIf="shouldShowClearButton() && selectedDate()" mat-icon-button matSuffix type="button" class="pdx-clear-button" (click)="clearDate()">
+      <mat-icon>clear</mat-icon>
+    </button>
+
+    <mat-hint *ngIf="metadata()?.hint" align="start" [id]="componentId() + '-hint'">{{ metadata()?.hint }}</mat-hint>
+    <mat-hint *ngIf="!metadata()?.hint && dateFormat()" align="end">Format: {{ dateFormat() }}</mat-hint>
+    <mat-error *ngIf="hasValidationError()" [id]="componentId() + '-error'" class="pdx-error-message">
+      <mat-icon class="pdx-error-icon">error_outline</mat-icon>
+      {{ primaryErrorMessage() }}
+    </mat-error>
+  </mat-form-field>
+
+  <mat-datepicker #picker [color]="materialColor()" [touchUi]="false" [startView]="'month'" [disabled]="componentState().disabled" (opened)="openPicker()" (closed)="closePicker()"></mat-datepicker>
+</div>
