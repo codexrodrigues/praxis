@@ -16,6 +16,7 @@ export const FieldControlType = {
   BARCODE_GENERATOR: 'barcodeGenerator',
   BOTTOM_NAVIGATION: 'bottomNavigation',
   BREADCRUMB: 'breadcrumb',
+  BUTTON: 'button',
   BUTTON_GROUP: 'buttonGroup',
   CALENDAR: 'calendar',
   CARD: 'card',

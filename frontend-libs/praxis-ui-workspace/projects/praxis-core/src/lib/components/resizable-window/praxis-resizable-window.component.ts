@@ -113,6 +113,7 @@ export class PraxisResizableWindowComponent implements OnInit, AfterViewInit, On
   private lastTimeResize: number = 0;
   private lastDeltaXResize: number = 0;
   private lastDeltaYResize: number = 0;
+  private debounceTimeout: number | null = null;
 
   constructor(
     private renderer: Renderer2,
@@ -135,9 +136,6 @@ export class PraxisResizableWindowComponent implements OnInit, AfterViewInit, On
   }
 
   ngAfterViewInit(): void {
-    // Don't save state here - let it be saved only when maximizing
-    // this.saveCurrentStateAsOriginal();
-    
     // Attach any pending content now that ViewChild is available
     if (this.pendingContentComponent) {
       this.attachContent(this.pendingContentComponent, this.pendingWindowRef);
@@ -157,6 +155,13 @@ export class PraxisResizableWindowComponent implements OnInit, AfterViewInit, On
   ngOnDestroy(): void {
     this.detachListeners();
     this.originalSize = null; // Clear state on destroy
+    
+    // Clear any pending debounce operations
+    if (this.debounceTimeout) {
+      clearTimeout(this.debounceTimeout);
+      this.debounceTimeout = null;
+    }
+    
     if (this.overlayRef) {
       this.overlayRef.dispose();
     }
@@ -546,47 +551,21 @@ export class PraxisResizableWindowComponent implements OnInit, AfterViewInit, On
   }
 
   toggleMaximize(): void {
-    console.log('🔲 [MAXIMIZE] toggleMaximize iniciado', {
-      disableMaximize: this.disableMaximize,
-      currentlyMaximized: this.isMaximized
-    });
-
     if (this.disableMaximize) {
-      console.log('❌ [MAXIMIZE] Cancelado: maximização desabilitada');
       return;
     }
 
-    this.isMaximized = !this.isMaximized;
-    this.maximizedChange.emit(this.isMaximized);
+    try {
+      this.isMaximized = !this.isMaximized;
+      this.maximizedChange.emit(this.isMaximized);
 
-    const pane = this.getPaneElement();
-    const currentRect = pane.getBoundingClientRect();
-    
-    console.log('📐 [MAXIMIZE] Estado atual do pane:', {
-      isMaximized: this.isMaximized,
-      currentRect: {
-        left: currentRect.left,
-        top: currentRect.top,
-        width: currentRect.width,
-        height: currentRect.height
-      },
-      computedStyle: {
-        position: getComputedStyle(pane).position,
-        transform: getComputedStyle(pane).transform,
-        left: getComputedStyle(pane).left,
-        top: getComputedStyle(pane).top
-      }
-    });
+      const pane = this.getPaneElement();
 
-    if (this.isMaximized) {
-      console.log('📈 [MAXIMIZE] Maximizando janela');
-      // Only save state if not already saved (prevent overwriting when moving)
-      if (!this.originalSize) {
+      if (this.isMaximized) {
+        // Always save current state before maximizing to ensure accuracy
+        // Clear any stale state first
+        this.originalSize = null;
         this.saveCurrentStateAsOriginal();
-        console.log('💾 [MAXIMIZE] Estado original salvo:', this.originalSize);
-      } else {
-        console.log('♻️ [MAXIMIZE] Estado original já existe, usando:', this.originalSize);
-      }
       
       // For overlay, directly apply styles to bypass CDK positioning strategy
       if (this.overlayRef) {
@@ -615,10 +594,6 @@ export class PraxisResizableWindowComponent implements OnInit, AfterViewInit, On
           this.overlay.position().global().top('8px').left('8px')
         );
         
-        console.log('🎨 [MAXIMIZE] Estilos aplicados diretamente ao overlay:', {
-          overlayElement,
-          classList: overlayElement.classList.toString()
-        });
       }
       
       // Also apply styles to the component host element with !important
@@ -637,22 +612,14 @@ export class PraxisResizableWindowComponent implements OnInit, AfterViewInit, On
         // Also add maximized class to host element for CSS styling
         this.renderer.addClass(hostElement, 'maximized');
         
-        console.log('🎨 [MAXIMIZE] Estilos aplicados ao host element:', {
-          hostElement,
-          classList: hostElement.classList.toString()
-        });
       } else {
         this.updateSize('100vw', '100vh');
         this.updatePosition('0px', '0px');
       }
       
-      this.renderer.addClass(pane, 'maximized');
-      
-      console.log('✅ [MAXIMIZE] Comandos de maximização executados');
-    } else {
-      console.log('📉 [MAXIMIZE] Restaurando janela');
-      if (this.originalSize) {
-        console.log('🔄 [MAXIMIZE] Restaurando para:', this.originalSize);
+        this.renderer.addClass(pane, 'maximized');
+      } else {
+        if (this.originalSize) {
         
         // Restore overlay element styles first
         if (this.overlayRef) {
@@ -684,10 +651,6 @@ export class PraxisResizableWindowComponent implements OnInit, AfterViewInit, On
               .left(this.originalSize.left)
           );
           
-          console.log('🎨 [MAXIMIZE] Estilos inline removidos do overlay:', {
-            overlayElement,
-            classList: overlayElement.classList.toString()
-          });
         }
         
         // Also remove styles from the component host element
@@ -706,10 +669,6 @@ export class PraxisResizableWindowComponent implements OnInit, AfterViewInit, On
           // Also remove maximized class from host element
           this.renderer.removeClass(hostElement, 'maximized');
           
-          console.log('🎨 [MAXIMIZE] Estilos removidos do host element:', {
-            hostElement,
-            classList: hostElement.classList.toString()
-          });
         }
         
         // Then restore original size and position
@@ -717,58 +676,22 @@ export class PraxisResizableWindowComponent implements OnInit, AfterViewInit, On
         this.updatePosition(this.originalSize.top, this.originalSize.left);
         this.renderer.setStyle(pane, 'transform', this.originalSize.transform);
         
-        // Clear original size so it can be saved again if needed
-        this.originalSize = null;
-      } else {
-        console.log('⚠️ [MAXIMIZE] AVISO: originalSize não definido!');
+          // Clear original size so it can be saved again if needed
+          this.originalSize = null;
+        } else {
+          // TODO: Add error handling for restore without saved state
+        }
+        this.renderer.removeClass(pane, 'maximized');
       }
-      this.renderer.removeClass(pane, 'maximized');
-      
-      console.log('✅ [MAXIMIZE] Comandos de restauração executados');
+    
+      this.cdr.markForCheck();
+    } catch (error) {
+      // Reset state on error to prevent inconsistent UI
+      this.isMaximized = false;
+      this.originalSize = null;
+      // TODO: Implement proper error logging service
+      this.cdr.markForCheck();
     }
-    
-    // Log final state with viewport comparison
-    setTimeout(() => {
-      const finalRect = pane.getBoundingClientRect();
-      const overlayRect = this.overlayRef ? this.overlayRef.overlayElement.getBoundingClientRect() : null;
-      
-      console.log('🏁 [MAXIMIZE] Estado final detalhado:', {
-        isMaximized: this.isMaximized,
-        viewport: {
-          width: window.innerWidth,
-          height: window.innerHeight
-        },
-        paneRect: {
-          left: finalRect.left,
-          top: finalRect.top,
-          width: finalRect.width,
-          height: finalRect.height
-        },
-        overlayRect: overlayRect ? {
-          left: overlayRect.left,
-          top: overlayRect.top,
-          width: overlayRect.width,
-          height: overlayRect.height
-        } : null,
-        paneComputedStyle: {
-          position: getComputedStyle(pane).position,
-          transform: getComputedStyle(pane).transform,
-          left: getComputedStyle(pane).left,
-          top: getComputedStyle(pane).top,
-          width: getComputedStyle(pane).width,
-          height: getComputedStyle(pane).height
-        },
-        overlayComputedStyle: this.overlayRef ? {
-          position: getComputedStyle(this.overlayRef.overlayElement).position,
-          left: getComputedStyle(this.overlayRef.overlayElement).left,
-          top: getComputedStyle(this.overlayRef.overlayElement).top,
-          width: getComputedStyle(this.overlayRef.overlayElement).width,
-          height: getComputedStyle(this.overlayRef.overlayElement).height
-        } : null
-      });
-    }, 100);
-    
-    this.cdr.markForCheck();
   }
 
   private saveCurrentStateAsOriginal(): void {
@@ -794,11 +717,6 @@ export class PraxisResizableWindowComponent implements OnInit, AfterViewInit, On
       transform: styles.transform
     };
     
-    console.log('💾 [SAVE] Estado capturado:', {
-      paneRect: rect,
-      overlayRect: this.overlayRef ? this.overlayRef.overlayElement.getBoundingClientRect() : null,
-      savedState: this.originalSize
-    });
   }
 
   private updateSize(width: string, height: string): void {
