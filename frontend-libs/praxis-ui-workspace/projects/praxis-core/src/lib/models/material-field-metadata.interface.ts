@@ -901,12 +901,10 @@ export interface MaterialButtonMetadata extends FieldMetadata {
 
 /**
  * Specialized metadata for Material Toggle/Switch components.
- * 
- * ⚠️ COMPONENTE NÃO IMPLEMENTADO - Interface de planejamento
- * 
- * Para implementar: criar MaterialToggleComponent em components/material-toggle/
- * e registrar no ComponentRegistryService
- * 
+ *
+ * Implemented via `MaterialToggleComponent` and registered in
+ * `ComponentRegistryService`.
+ *
  * Handles boolean toggle state with Material Design switch styling.
  */
 export interface MaterialToggleMetadata extends FieldMetadata {
@@ -927,12 +925,10 @@ export interface MaterialToggleMetadata extends FieldMetadata {
 
 /**
  * Specialized metadata for Material Slider components.
- * 
- * ⚠️ COMPONENTE NÃO IMPLEMENTADO - Interface de planejamento
- * 
- * Para implementar: criar MaterialSliderComponent em components/material-slider/
- * e registrar no ComponentRegistryService
- * 
+ *
+ * Implemented via `MaterialSliderComponent` and registered in
+ * `ComponentRegistryService`.
+ *
  * Handles numeric range selection with visual slider control.
  */
 export interface MaterialSliderMetadata extends FieldMetadata {
@@ -1088,12 +1084,10 @@ export interface MaterialColorPickerMetadata extends FieldMetadata {
 
 /**
  * Specialized metadata for Material Currency Input components.
- * 
- * ⚠️ COMPONENTE ESPECIALIZADO NÃO IMPLEMENTADO - Interface de planejamento
- * 
- * Atualmente: CURRENCY_INPUT → MaterialInputComponent (genérico)
- * Para implementar: criar MaterialCurrencyComponent em components/material-currency/
- * 
+ *
+ * Implemented via `MaterialCurrencyComponent` and registered in
+ * `ComponentRegistryService`.
+ *
  * Handles monetary values with currency formatting and validation.
  */
 export interface MaterialCurrencyMetadata extends FieldMetadata {
