@@ -61,7 +61,7 @@ Neste exemplo:
 
 ### Fluxo de Comunicação do `resourcePath`
 
-O diagrama abaixo ilustra como a propriedade `resourcePath` conecta o componente frontend ao controller do backend.
+O diagrama abaixo ilustra como a propriedade `resourcePath` conecta o componente frontend ao controller do backend. O fluxo de inicialização ocorre em três etapas principais: **Configurar**, **Carregar Schema** e **Buscar Dados**.
 
 ```mermaid
 sequenceDiagram
@@ -75,20 +75,47 @@ sequenceDiagram
 
     activate Praxis_Table
     Praxis_Table->>Praxis_Table: ngOnChanges() detecta o @Input() resourcePath
+    Praxis_Table->>Crud_Service: 1. Chama crudService.configure("human-resources/departamentos")
 
-    Praxis_Table->>Crud_Service: Chama crudService.configure("human-resources/departamentos")
     activate Crud_Service
-    Crud_Service->>Crud_Service: Armazena "human-resources/departamentos" <br> e constrói a URL base (ex: /api)
+    Crud_Service->>Crud_Service: Armazena o resourcePath
     deactivate Crud_Service
 
-    Praxis_Table->>Crud_Service: Chama crudService.filter(...) para buscar dados
+    Praxis_Table->>Praxis_Table: 2. Chama this.loadSchema()
+    Praxis_Table->>Crud_Service: Chama crudService.getSchema()
+
     activate Crud_Service
-    Crud_Service->>Crud_Service: getEndpointUrl('filter') constrói a URL final: <br> "/api/human-resources/departamentos/filter"
-    Crud_Service->>BE_Controller: Requisição HTTP POST para /api/human-resources/departamentos/filter
+    Crud_Service->>Crud_Service: getEndpointUrl('schema') constrói a URL: <br> "/api/human-resources/departamentos/schemas"
+    Crud_Service->>BE_Controller: Requisição HTTP GET para .../schemas
     deactivate Crud_Service
 
     activate BE_Controller
     Note over BE_Controller: @RequestMapping("/human-resources/departamentos")
+    BE_Controller->>Abstract_Controller: Herda o método que lida com @GetMapping("/schemas")
+
+    activate Abstract_Controller
+    Abstract_Controller->>Abstract_Controller: Gera e retorna o Schema da UI
+    Abstract_Controller-->>BE_Controller: Retorna o Schema
+    deactivate Abstract_Controller
+
+    BE_Controller-->>Crud_Service: Resposta HTTP com o JSON do Schema
+    deactivate BE_Controller
+
+    activate Crud_Service
+    Crud_Service-->>Praxis_Table: Retorna um Observable com as<br>definições de colunas (FieldDefinition[])
+    deactivate Crud_Service
+
+    Praxis_Table->>Praxis_Table: Constrói as colunas da tabela<br>a partir do schema recebido
+
+    Praxis_Table->>Praxis_Table: 3. Chama this.fetchData()
+    Praxis_Table->>Crud_Service: Chama crudService.filter(...) para buscar dados
+
+    activate Crud_Service
+    Crud_Service->>Crud_Service: getEndpointUrl('filter') constrói a URL: <br> "/api/human-resources/departamentos/filter"
+    Crud_Service->>BE_Controller: Requisição HTTP POST para .../filter
+    deactivate Crud_Service
+
+    activate BE_Controller
     BE_Controller->>Abstract_Controller: Herda o método que lida com @PostMapping("/filter")
 
     activate Abstract_Controller
