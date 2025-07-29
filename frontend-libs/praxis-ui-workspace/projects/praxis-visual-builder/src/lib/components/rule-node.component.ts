@@ -176,7 +176,7 @@ import { CollectionValidatorEditorComponent } from './collection-validator-edito
 
           <!-- Metadata Preview -->
           <div *ngIf="node?.metadata" class="metadata-preview">
-            <mat-chip-listbox class="metadata-chips">
+            <mat-chip-set class="metadata-chips">
               <mat-chip *ngIf="node.metadata.code" 
                        class="metadata-chip code-chip">
                 {{ node.metadata.code }}
@@ -186,7 +186,7 @@ import { CollectionValidatorEditorComponent } from './collection-validator-edito
                        class="metadata-chip tag-chip">
                 {{ node.metadata.tag }}
               </mat-chip>
-            </mat-chip-listbox>
+            </mat-chip-set>
             
             <div *ngIf="node.metadata.message" 
                  class="metadata-message"

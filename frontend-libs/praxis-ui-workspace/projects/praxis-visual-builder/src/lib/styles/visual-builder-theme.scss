@@ -1,92 +1,34 @@
-// Visual Builder Theme - Material 20 Dark Theme
-@use '@angular/material' as mat;
-
-// Define custom palette for the Visual Builder
-$visual-builder-primary: mat.m2-define-palette(
-  (
-    50: #e3f2fd,
-    100: #bbdefb,
-    200: #90caf9,
-    300: #64b5f6,
-    400: #42a5f5,
-    500: #2196f3,
-    600: #1e88e5,
-    700: #1976d2,
-    800: #1565c0,
-    900: #0d47a1,
-    contrast: (
-      50: #000000,
-      100: #000000,
-      200: #000000,
-      300: #000000,
-      400: #000000,
-      500: #ffffff,
-      600: #ffffff,
-      700: #ffffff,
-      800: #ffffff,
-      900: #ffffff,
-    ),
-  ),
-  500, 200, 700
-);
-
-$visual-builder-accent: mat.m2-define-palette(mat.$cyan-palette, 500, 300, 700);
-$visual-builder-warn: mat.m2-define-palette(mat.$red-palette);
-
-// Create the dark theme
-$visual-builder-theme: mat.m2-define-dark-theme((
-  color: (
-    primary: $visual-builder-primary,
-    accent: $visual-builder-accent,
-    warn: $visual-builder-warn,
-  ),
-  density: 0,
-));
-
-// Apply Material theme overrides for Visual Builder
-@include mat.theme-overrides((
-  primary: #2196f3,
-  on-primary: #ffffff,
-  surface: #1a1a1a,
-  on-surface: #e0e0e0,
-  surface-container: #242424,
-  surface-container-high: #2e2e2e,
-  surface-container-highest: #383838,
-  outline: rgba(255, 255, 255, 0.12),
-  outline-variant: rgba(255, 255, 255, 0.08),
-));
-
 // Custom Visual Builder specific styles
 .praxis-visual-builder {
-  
+
   // Rule canvas styling
   .rule-canvas {
     background: var(--mat-sys-surface);
     border: 1px solid var(--mat-sys-outline-variant);
     border-radius: 8px;
-    
+
     &:hover {
       border-color: var(--mat-sys-outline);
     }
   }
-  
+
   // Rule node styling
   .rule-node {
     background: var(--mat-sys-surface-container);
     border: 1px solid var(--mat-sys-outline-variant);
     border-radius: 6px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    
+
     &.selected {
       border-color: var(--mat-sys-primary);
       box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
     }
-    
+
     &:hover {
       background: var(--mat-sys-surface-container-high);
     }
   }
-  
+
   // Condition editor styling
   .condition-editor {
     .field-selector,
@@ -97,77 +39,77 @@ $visual-builder-theme: mat.m2-define-dark-theme((
       }
     }
   }
-  
+
   // Metadata editor styling
   .metadata-editor {
     background: var(--mat-sys-surface-container);
     border: 1px solid var(--mat-sys-outline-variant);
     border-radius: 8px;
-    
+
     .metadata-field {
       margin-bottom: 16px;
-      
+
       &:last-child {
         margin-bottom: 0;
       }
     }
   }
-  
+
   // DSL viewer styling
   .dsl-viewer {
     background: var(--mat-sys-surface-container-highest);
     border: 1px solid var(--mat-sys-outline-variant);
     border-radius: 8px;
     font-family: 'Roboto Mono', monospace;
-    
+
     .dsl-content {
       color: var(--mat-sys-on-surface);
-      
+
       .syntax-keyword {
         color: #bb86fc;
       }
-      
+
       .syntax-operator {
         color: #03dac6;
       }
-      
+
       .syntax-string {
         color: #a5d6a7;
       }
-      
+
       .syntax-number {
         color: #ffab91;
       }
     }
   }
-  
+
   // Button styling
   .action-button {
     &.primary {
       background-color: var(--mat-sys-primary);
       color: var(--mat-sys-on-primary);
     }
-    
+
     &.secondary {
       border: 1px solid var(--mat-sys-outline);
       color: var(--mat-sys-on-surface);
     }
   }
-  
+
   // Drag and drop styling
   .drag-placeholder {
     background: rgba(33, 150, 243, 0.1);
     border: 2px dashed var(--mat-sys-primary);
     border-radius: 6px;
   }
-  
+
   .drag-preview {
     background: var(--mat-sys-surface-container);
     border: 1px solid var(--mat-sys-primary);
     border-radius: 6px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
   }
-  
+
   // Help and tooltip styling
   .help-tooltip {
     background: var(--mat-sys-surface-container-highest);
@@ -175,23 +117,20 @@ $visual-builder-theme: mat.m2-define-dark-theme((
     border-radius: 6px;
     color: var(--mat-sys-on-surface);
   }
-  
+
   // Error and validation styling
   .validation-error {
     color: var(--mat-sys-error);
     border-color: var(--mat-sys-error);
   }
-  
+
   .validation-warning {
     color: #ff9800;
     border-color: #ff9800;
   }
-  
+
   .validation-success {
     color: #4caf50;
     border-color: #4caf50;
   }
 }
-
-// Apply the theme
-@include mat.all-component-themes($visual-builder-theme);

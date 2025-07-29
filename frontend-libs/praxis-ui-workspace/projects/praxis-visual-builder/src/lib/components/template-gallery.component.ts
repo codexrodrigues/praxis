@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, FormControl } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, FormControl, FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -46,6 +46,7 @@ export interface TemplateSortOption {
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     MatCardModule,
     MatButtonModule,
     MatIconModule,
@@ -187,19 +188,19 @@ export interface TemplateSortOption {
           <!-- Tags Filter -->
           <div class="tags-section" *ngIf="popularTags.length > 0">
             <span class="tags-label">Popular tags:</span>
-            <mat-chip-list class="tags-list">
-              <mat-chip *ngFor="let tag of popularTags" 
+            <mat-chip-listbox class="tags-list">
+              <mat-chip-option *ngFor="let tag of popularTags" 
                        [selected]="selectedTags.has(tag)"
                        (click)="toggleTag(tag)">
                 {{ tag }}
-              </mat-chip>
-            </mat-chip-list>
+              </mat-chip-option>
+            </mat-chip-listbox>
           </div>
 
           <!-- Active Filters -->
           <div class="active-filters" *ngIf="hasActiveFilters()">
             <span class="filters-label">Active filters:</span>
-            <mat-chip-list class="filter-chips">
+            <mat-chip-set class="filter-chips">
               <mat-chip *ngIf="searchForm.get('category')?.value" 
                        (removed)="clearFilter('category')">
                 Category: {{ getCategoryName(searchForm.get('category')?.value || '') }}
@@ -215,7 +216,7 @@ export interface TemplateSortOption {
                 {{ tag }}
                 <mat-icon matChipRemove>cancel</mat-icon>
               </mat-chip>
-            </mat-chip-list>
+            </mat-chip-set>
             <button mat-button 
                     color="warn" 
                     class="clear-all-button"
@@ -324,7 +325,7 @@ export interface TemplateSortOption {
                 <p class="template-description">{{ template.description }}</p>
                 
                 <div class="template-tags">
-                  <mat-chip-list>
+                  <mat-chip-set>
                     <mat-chip *ngFor="let tag of template.tags.slice(0, 3)" 
                              class="template-tag">
                       {{ tag }}
@@ -333,7 +334,7 @@ export interface TemplateSortOption {
                              class="more-tags">
                       +{{ template.tags.length - 3 }}
                     </mat-chip>
-                  </mat-chip-list>
+                  </mat-chip-set>
                 </div>
 
                 <div class="template-metadata">
@@ -998,10 +999,10 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
   popularTags: string[] = [];
 
   // Observables
-  templates$ = this.templateService.getTemplates();
-  categories$ = this.templateService.getCategories();
-  recentlyUsed$ = this.templateService.recentlyUsed$;
-  stats$ = this.templateService.getTemplateStats();
+  templates$!: Observable<RuleTemplate[]>;
+  categories$!: Observable<TemplateCategory[]>;
+  recentlyUsed$!: Observable<RuleTemplate[]>;
+  stats$!: Observable<TemplateStats>;
   filteredTemplates$: Observable<RuleTemplate[]>;
 
   Array = Array; // For template usage
@@ -1013,6 +1014,10 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
     private snackBar: MatSnackBar
   ) {
     this.searchForm = this.createSearchForm();
+    this.templates$ = this.templateService.getTemplates();
+    this.categories$ = this.templateService.getCategories();
+    this.recentlyUsed$ = this.templateService.recentlyUsed$;
+    this.stats$ = this.templateService.getTemplateStats();
     this.filteredTemplates$ = this.createFilteredTemplatesStream();
   }
 
@@ -1357,7 +1362,7 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
   }
 
   exportTemplate(template: RuleTemplate): void {
-    this.templateService.exportTemplate(template.id, { prettyPrint: true }).subscribe({
+    this.templateService.exportTemplate(template.id, { format: 'json', prettyPrint: true }).subscribe({
       next: (jsonData) => {
         this.downloadFile(jsonData, `${template.name}.template.json`, 'application/json');
         this.snackBar.open('Template exported successfully', 'Close', {

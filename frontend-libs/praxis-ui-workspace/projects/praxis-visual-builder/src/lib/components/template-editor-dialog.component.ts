@@ -116,19 +116,19 @@ export interface TemplateEditorResult {
                 <h4>Tags</h4>
                 <mat-form-field appearance="outline" class="tags-input">
                   <mat-label>Add tags</mat-label>
-                  <mat-chip-list #chipList>
-                    <mat-chip *ngFor="let tag of tags" 
+                  <mat-chip-grid #chipList>
+                    <mat-chip-row *ngFor="let tag of tags" 
                              [removable]="true"
                              (removed)="removeTag(tag)">
                       {{ tag }}
                       <mat-icon matChipRemove>cancel</mat-icon>
-                    </mat-chip>
+                    </mat-chip-row>
                     <input placeholder="Type and press Enter"
                            [matChipInputFor]="chipList"
                            [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
                            [matChipInputAddOnBlur]="true"
                            (matChipInputTokenEnd)="addTag($event)">
-                  </mat-chip-list>
+                  </mat-chip-grid>
                   <mat-hint>Tags help organize and find templates. Press Enter to add.</mat-hint>
                 </mat-form-field>
               </div>
@@ -183,19 +183,19 @@ export interface TemplateEditorResult {
                   
                   <mat-form-field appearance="outline" class="required-fields-input">
                     <mat-label>Required field names</mat-label>
-                    <mat-chip-list #requiredFieldsList>
-                      <mat-chip *ngFor="let field of requiredFields" 
+                    <mat-chip-grid #requiredFieldsList>
+                      <mat-chip-row *ngFor="let field of requiredFields" 
                                [removable]="true"
                                (removed)="removeRequiredField(field)">
                         {{ field }}
                         <mat-icon matChipRemove>cancel</mat-icon>
-                      </mat-chip>
+                      </mat-chip-row>
                       <input placeholder="Add field name"
                              [matChipInputFor]="requiredFieldsList"
                              [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
                              [matChipInputAddOnBlur]="true"
                              (matChipInputTokenEnd)="addRequiredField($event)">
-                    </mat-chip-list>
+                    </mat-chip-grid>
                     <mat-hint>Field names that must exist for the template to work correctly</mat-hint>
                   </mat-form-field>
                 </div>
@@ -207,12 +207,12 @@ export interface TemplateEditorResult {
                   </p>
                   
                   <div class="detected-variables">
-                    <mat-chip-list>
+                    <mat-chip-set>
                       <mat-chip *ngFor="let variable of detectedVariables" 
                                color="accent">
                         {{ variable }}
                       </mat-chip>
-                    </mat-chip-list>
+                    </mat-chip-set>
                     <p *ngIf="detectedVariables.length === 0" class="no-variables">
                       No template variables detected in this configuration.
                     </p>

@@ -93,7 +93,7 @@ export class RoundTripValidatorService {
           code: 'VISUAL_TO_SPEC_ERROR'
         });
       }
-      result.performance.stageTimings.visualToSpecification = performance.now() - stage1Start;
+      result.performance.stageTimings['visualToSpecification'] = performance.now() - stage1Start;
 
       if (!specification) {
         result.performance.totalTime = performance.now() - startTime;
@@ -118,7 +118,7 @@ export class RoundTripValidatorService {
         result.performance.totalTime = performance.now() - startTime;
         return result;
       }
-      result.performance.stageTimings.specificationToDsl = performance.now() - stage2Start;
+      result.performance.stageTimings['specificationToDsl'] = performance.now() - stage2Start;
 
       // Stage 3: DSL → Specification
       const stage3Start = performance.now();
@@ -137,7 +137,7 @@ export class RoundTripValidatorService {
         result.performance.totalTime = performance.now() - startTime;
         return result;
       }
-      result.performance.stageTimings.dslToSpecification = performance.now() - stage3Start;
+      result.performance.stageTimings['dslToSpecification'] = performance.now() - stage3Start;
 
       // Stage 4: Specification → Visual
       const stage4Start = performance.now();
@@ -156,12 +156,12 @@ export class RoundTripValidatorService {
         result.performance.totalTime = performance.now() - startTime;
         return result;
       }
-      result.performance.stageTimings.specificationToVisual = performance.now() - stage4Start;
+      result.performance.stageTimings['specificationToVisual'] = performance.now() - stage4Start;
 
       // Data Integrity Validation
       const integrityStart = performance.now();
       result.dataIntegrity = this.validateDataIntegrity(visualRule, reconstructedVisual, result);
-      result.performance.stageTimings.dataIntegrityValidation = performance.now() - integrityStart;
+      result.performance.stageTimings['dataIntegrityValidation'] = performance.now() - integrityStart;
 
       // Overall success determination
       result.success = Object.values(result.stages).every(stage => stage.success) && 
@@ -303,7 +303,7 @@ export class RoundTripValidatorService {
     // Compare metadata fields
     const metadataMatches = originalMeta.code === reconstructedMeta.code &&
                            originalMeta.message === reconstructedMeta.message &&
-                           originalMeta.severity === reconstructedMeta.severity;
+                           originalMeta['severity'] === reconstructedMeta['severity'];
 
     if (!metadataMatches) {
       result.warnings.push({
@@ -497,14 +497,15 @@ export class RoundTripValidatorService {
         description: 'Tests a basic field equals condition',
         visualRule: {
           id: 'test-1',
-          type: 'field',
+          type: 'fieldCondition',
           label: 'Name equals "Test"',
           config: {
-            field: 'name',
+            type: 'fieldCondition',
+            fieldName: 'name',
             operator: 'equals',
             value: 'Test',
             valueType: 'literal'
-          }
+          } as any
         },
         expectedValidation: {
           shouldSucceed: true
@@ -516,35 +517,38 @@ export class RoundTripValidatorService {
         description: 'Tests an AND group with multiple conditions',
         visualRule: {
           id: 'test-2',
-          type: 'boolean-group',
+          type: 'andGroup',
           label: 'AND Group',
           config: {
+            type: 'booleanGroup',
             operator: 'and'
-          },
+          } as any,
           children: [
             {
               id: 'test-2-1',
-              type: 'field',
+              type: 'fieldCondition',
               label: 'Age > 18',
               config: {
-                field: 'age',
+                type: 'fieldCondition',
+                fieldName: 'age',
                 operator: 'greaterThan',
                 value: 18,
                 valueType: 'literal'
-              }
+              } as any
             },
             {
               id: 'test-2-2',
-              type: 'field',
+              type: 'fieldCondition',
               label: 'Active = true',
               config: {
-                field: 'active',
+                type: 'fieldCondition',
+                fieldName: 'active',
                 operator: 'equals',
                 value: true,
                 valueType: 'literal'
-              }
+              } as any
             }
-          ]
+          ] as any
         },
         expectedValidation: {
           shouldSucceed: true
@@ -556,15 +560,16 @@ export class RoundTripValidatorService {
         description: 'Tests a function call condition',
         visualRule: {
           id: 'test-3',
-          type: 'function',
+          type: 'functionCall',
           label: 'contains(name, "test")',
           config: {
+            type: 'functionCall',
             functionName: 'contains',
             parameters: [
-              { name: 'field', value: 'name', valueType: 'field', required: true },
-              { name: 'value', value: 'test', valueType: 'literal', required: true }
+              { name: 'field', value: 'name', valueType: 'field' },
+              { name: 'value', value: 'test', valueType: 'literal' }
             ]
-          }
+          } as any
         },
         expectedValidation: {
           shouldSucceed: true

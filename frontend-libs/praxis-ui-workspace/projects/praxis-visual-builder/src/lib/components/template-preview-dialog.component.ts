@@ -54,11 +54,11 @@ export interface TemplatePreviewDialogData {
           
           <div class="template-tags" *ngIf="data.template.tags.length > 0">
             <h4>Tags</h4>
-            <mat-chip-list>
+            <mat-chip-set>
               <mat-chip *ngFor="let tag of data.template.tags" class="tag-chip">
                 {{ tag }}
               </mat-chip>
-            </mat-chip-list>
+            </mat-chip-set>
           </div>
         </div>
 
@@ -144,13 +144,13 @@ export interface TemplatePreviewDialogData {
         <div class="required-fields" *ngIf="data.template.requiredFields && data.template.requiredFields.length > 0">
           <mat-divider></mat-divider>
           <h3>Required Fields</h3>
-          <mat-chip-list>
+          <mat-chip-set>
             <mat-chip *ngFor="let field of data.template.requiredFields" 
                      color="accent"
                      class="required-field-chip">
               {{ field }}
             </mat-chip>
-          </mat-chip-list>
+          </mat-chip-set>
           <p class="fields-note">
             These fields must be available in your form schema for the template to work correctly.
           </p>

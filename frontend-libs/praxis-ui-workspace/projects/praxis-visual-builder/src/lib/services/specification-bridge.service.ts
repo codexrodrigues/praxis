@@ -13,9 +13,16 @@ import {
   CardinalityConfig, 
   FunctionParameter,
   ConditionalValidatorConfig,
-  CollectionValidatorConfig 
+  CollectionValidatorConfig,
+  FieldConditionConfig,
+  BooleanGroupConfig,
+  FunctionCallConfig,
+  FieldToFieldConfig,
+  ContextualConfig
 } from '../models/rule-builder.model';
 import { ContextVariable } from '../components/expression-editor.component';
+import { RuleNodeRegistryService } from './rule-node-registry.service';
+import { ConverterFactoryService } from './converters/converter-factory.service';
 
 /**
  * Configuration for parsing DSL expressions
@@ -53,7 +60,7 @@ export interface DslParsingResult<T extends object = any> {
 /**
  * Configuration for contextual specification support
  */
-export interface ContextualConfig {
+export interface SpecificationContextualConfig {
   /** Context variables available for token resolution */
   contextVariables?: ContextVariable[];
   /** Context provider instance */
@@ -71,7 +78,10 @@ export class SpecificationBridgeService {
   private dslValidator: DslValidator;
   private contextProvider?: ContextProvider;
 
-  constructor() {
+  constructor(
+    private nodeRegistry: RuleNodeRegistryService,
+    private converterFactory: ConverterFactoryService
+  ) {
     this.dslExporter = new DslExporter({
       prettyPrint: true,
       indentSize: 2,
@@ -90,31 +100,21 @@ export class SpecificationBridgeService {
    */
   ruleNodeToSpecification<T extends object = any>(node: RuleNode): Specification<T> {
     try {
-      switch (node.type) {
-        case 'field':
-        case 'fieldCondition':
-          return this.createFieldSpecification<T>(node);
-        
-        case 'boolean-group':
-        case 'andGroup':
-        case 'orGroup':
-        case 'notGroup':
-        case 'xorGroup':
-        case 'impliesGroup':
-          return this.createBooleanGroupSpecification<T>(node);
-        
-        case 'function':
+      // Use the config type for converter lookup (more reliable than node.type)
+      const nodeType = node.config?.type || node.type;
+      
+      // Check if we have a converter for this node type
+      if (this.converterFactory.isSupported(nodeType)) {
+        return this.converterFactory.convert<T>(node);
+      }
+      
+      // Fall back to legacy methods for unsupported types
+      switch (nodeType) {
         case 'functionCall':
           return this.createFunctionSpecification<T>(node);
         
-        case 'field-to-field':
         case 'fieldToField':
           return this.createFieldToFieldSpecification<T>(node);
-        
-        case 'cardinality':
-        case 'atLeast':
-        case 'exactly':
-          return this.createCardinalitySpecification<T>(node);
         
         // Phase 1: Conditional Validators
         case 'requiredIf':
@@ -135,10 +135,10 @@ export class SpecificationBridgeService {
           return this.createExpressionSpecification<T>(node);
         
         case 'contextual':
-          return this.createContextualSpecification<T>(node);
+          return this.createContextualSpecificationFromNode<T>(node);
         
         default:
-          throw new Error(`Unsupported rule node type: ${node.type}`);
+          throw new Error(`Unsupported rule node type: ${nodeType}`);
       }
     } catch (error) {
       throw new Error(`Failed to convert rule node to specification: ${error}`);
@@ -259,7 +259,7 @@ export class SpecificationBridgeService {
       if (original.metadata.message !== reconstructed.metadata.message) {
         warnings.push('Metadata message changed during round-trip');
       }
-      if (original.metadata.severity !== reconstructed.metadata.severity) {
+      if (original.metadata['severity'] !== reconstructed.metadata['severity']) {
         warnings.push('Metadata severity changed during round-trip');
       }
     } else if (!!original.metadata !== !!reconstructed.metadata) {
@@ -423,7 +423,7 @@ export class SpecificationBridgeService {
    */
   createContextualSpecification<T extends object = any>(
     template: string,
-    config?: ContextualConfig
+    config?: SpecificationContextualConfig
   ): ContextualSpecification<T> {
     const contextProvider = config?.contextProvider || this.createContextProviderFromVariables(config?.contextVariables || []);
     
@@ -483,7 +483,7 @@ export class SpecificationBridgeService {
    */
   dslToContextualSpecification<T extends object = any>(
     dslExpression: string,
-    config?: ContextualConfig
+    config?: SpecificationContextualConfig
   ): ContextualSpecification<T> {
     // Validate that the DSL contains context tokens
     const tokens = this.extractContextTokens(dslExpression);
@@ -586,7 +586,6 @@ export class SpecificationBridgeService {
     const keywords: string[] = [];
 
     switch (node.type) {
-      case 'field':
       case 'fieldCondition':
         const config = node.config as any;
         const fieldName = config?.field || config?.fieldName;
@@ -598,7 +597,6 @@ export class SpecificationBridgeService {
         }
         break;
       
-      case 'boolean-group':
       case 'andGroup':
       case 'orGroup':
       case 'notGroup':
@@ -608,7 +606,6 @@ export class SpecificationBridgeService {
         }
         break;
       
-      case 'function':
       case 'functionCall':
         const funcConfig = node.config as any;
         if (funcConfig?.functionName) {
@@ -647,8 +644,11 @@ export class SpecificationBridgeService {
       throw new Error('Boolean group requires children');
     }
 
-    const childSpecs = node.children.map(child => this.ruleNodeToSpecification<T>(child));
-    const operator = node.config?.operator || 'and';
+    // Resolve children nodes using the registry
+    const childNodes = this.nodeRegistry.resolveChildren(node);
+    const childSpecs = childNodes.map(child => this.ruleNodeToSpecification<T>(child));
+    const booleanConfig = node.config as any;
+    const operator = booleanConfig?.operator || 'and';
 
     switch (operator.toLowerCase()) {
       case 'and':
@@ -678,12 +678,13 @@ export class SpecificationBridgeService {
   }
 
   private createFunctionSpecification<T extends object = any>(node: RuleNode): Specification<T> {
-    if (!node.config?.functionName) {
+    const functionConfig = node.config as any;
+    if (!functionConfig?.functionName) {
       throw new Error('Function specification requires functionName');
     }
 
-    const functionName = node.config.functionName;
-    const parameters = node.config.parameters || [];
+    const functionName = functionConfig.functionName;
+    const parameters = functionConfig.parameters || [];
     
     // Convert parameters to function arguments
     const args = parameters.map((param: FunctionParameter) => {
@@ -694,15 +695,16 @@ export class SpecificationBridgeService {
   }
 
   private createFieldToFieldSpecification<T extends object = any>(node: RuleNode): Specification<T> {
-    if (!node.config?.fieldA || !node.config?.fieldB || !node.config?.operator) {
+    const fieldConfig = node.config as any;
+    if (!fieldConfig?.fieldA || !fieldConfig?.fieldB || !fieldConfig?.operator) {
       throw new Error('Field-to-field specification requires fieldA, fieldB, and operator');
     }
 
-    const fieldA = node.config.fieldA as keyof T;
-    const fieldB = node.config.fieldB as keyof T;
-    const operator = this.convertToComparisonOperator(node.config.operator);
-    const transformA = node.config.transformA;
-    const transformB = node.config.transformB;
+    const fieldA = fieldConfig.fieldA as keyof T;
+    const fieldB = fieldConfig.fieldB as keyof T;
+    const operator = this.convertToComparisonOperator(fieldConfig.operator);
+    const transformA = fieldConfig.transformA;
+    const transformB = fieldConfig.transformB;
 
     return SpecificationFactory.fieldToField<T>(
       fieldA,
@@ -718,7 +720,9 @@ export class SpecificationBridgeService {
       throw new Error('Cardinality specification requires children and config');
     }
 
-    const childSpecs = node.children.map(child => this.ruleNodeToSpecification<T>(child));
+    // Resolve children nodes using the registry
+    const childNodes = this.nodeRegistry.resolveChildren(node);
+    const childSpecs = childNodes.map(child => this.ruleNodeToSpecification<T>(child));
     const config = node.config as CardinalityConfig;
 
     switch (config.cardinalityType) {
@@ -822,7 +826,7 @@ export class SpecificationBridgeService {
         }
         
         // Create a placeholder that checks array exists
-        spec = SpecificationFactory.field<T>(targetField, ComparisonOperator.IS_NOT_NULL, null);
+        spec = SpecificationFactory.field<T>(targetField, ComparisonOperator.NOT_EQUALS, null);
         break;
       
       case 'uniqueBy':
@@ -833,7 +837,7 @@ export class SpecificationBridgeService {
         }
         
         // Create a placeholder that checks array exists
-        spec = SpecificationFactory.field<T>(targetField, ComparisonOperator.IS_NOT_NULL, null);
+        spec = SpecificationFactory.field<T>(targetField, ComparisonOperator.NOT_EQUALS, null);
         break;
       
       case 'minLength':
@@ -844,7 +848,7 @@ export class SpecificationBridgeService {
         }
         
         // Create a placeholder that checks array exists
-        spec = SpecificationFactory.field<T>(targetField, ComparisonOperator.IS_NOT_NULL, null);
+        spec = SpecificationFactory.field<T>(targetField, ComparisonOperator.NOT_EQUALS, null);
         break;
       
       case 'maxLength':
@@ -855,7 +859,7 @@ export class SpecificationBridgeService {
         }
         
         // Create a placeholder that checks array exists
-        spec = SpecificationFactory.field<T>(targetField, ComparisonOperator.IS_NOT_NULL, null);
+        spec = SpecificationFactory.field<T>(targetField, ComparisonOperator.NOT_EQUALS, null);
         break;
       
       default:
@@ -906,7 +910,7 @@ export class SpecificationBridgeService {
   /**
    * Creates contextual specification (Phase 4 implementation)
    */
-  private createContextualSpecification<T extends object = any>(node: RuleNode): Specification<T> {
+  private createContextualSpecificationFromNode<T extends object = any>(node: RuleNode): Specification<T> {
     if (!node.config || !('template' in node.config)) {
       throw new Error('Contextual specification requires template in config');
     }
@@ -924,7 +928,7 @@ export class SpecificationBridgeService {
       throw new Error('Contextual specification template must contain at least one context token (${...})');
     }
 
-    const contextualConfig: ContextualConfig = {
+    const contextualConfig: SpecificationContextualConfig = {
       contextVariables: config.contextVariables || [],
       contextProvider: config.contextProvider,
       strictContextValidation: config.strictContextValidation ?? false
@@ -974,13 +978,13 @@ export class SpecificationBridgeService {
         return ComparisonOperator.IN;
       
       case 'notin':
-        return ComparisonOperator.NOT_IN;
+        return ComparisonOperator.NOT_EQUALS; // Using NOT_EQUALS as fallback for NOT_IN
       
       case 'isnull':
-        return ComparisonOperator.IS_NULL;
+        return ComparisonOperator.EQUALS; // Using EQUALS for IS_NULL check
       
       case 'isnotnull':
-        return ComparisonOperator.IS_NOT_NULL;
+        return ComparisonOperator.NOT_EQUALS; // Using NOT_EQUALS for IS_NOT_NULL check
       
       default:
         throw new Error(`Unsupported comparison operator: ${operator}`);
@@ -1015,7 +1019,7 @@ export class SpecificationBridgeService {
       id: this.generateNodeId(),
       type: this.mapSpecificationTypeToNodeType(json.type),
       label: this.generateNodeLabel(json),
-      config: {},
+      config: undefined,
       metadata: json.metadata,
       children: []
     };
@@ -1023,59 +1027,66 @@ export class SpecificationBridgeService {
     switch (json.type) {
       case 'field':
         baseNode.config = {
+          type: 'fieldCondition',
           field: json.field,
+          fieldName: json.field,
           operator: this.mapComparisonOperator(json.operator),
           value: json.value,
           valueType: this.inferValueType(json.value)
-        };
+        } as FieldConditionConfig;
         break;
 
       case 'and':
       case 'or':
       case 'xor':
         baseNode.config = {
+          type: 'booleanGroup',
           operator: json.type
-        };
-        baseNode.children = json.specs.map((spec: any) => this.jsonToRuleNode(spec));
+        } as BooleanGroupConfig;
+        const childNodes = json.specs.map((spec: any) => this.jsonToRuleNode(spec));
+        baseNode.children = childNodes.map((child: RuleNode) => child.id);
         break;
 
       case 'not':
         baseNode.config = {
+          type: 'booleanGroup',
           operator: 'not'
-        };
-        baseNode.children = [this.jsonToRuleNode(json.spec)];
+        } as BooleanGroupConfig;
+        const childNode = this.jsonToRuleNode(json.spec);
+        baseNode.children = [childNode.id];
         break;
 
       case 'implies':
         baseNode.config = {
+          type: 'booleanGroup',
           operator: 'implies'
-        };
-        baseNode.children = [
-          this.jsonToRuleNode(json.antecedent),
-          this.jsonToRuleNode(json.consequent)
-        ];
+        } as BooleanGroupConfig;
+        const antecedent = this.jsonToRuleNode(json.antecedent);
+        const consequent = this.jsonToRuleNode(json.consequent);
+        baseNode.children = [antecedent.id, consequent.id];
         break;
 
       case 'function':
         baseNode.config = {
+          type: 'functionCall',
           functionName: json.name,
           parameters: json.args.map((arg: any, index: number) => ({
             name: `param${index}`,
             value: arg,
-            valueType: this.inferValueType(arg),
-            required: true
+            valueType: this.inferValueType(arg)
           }))
-        };
+        } as FunctionCallConfig;
         break;
 
       case 'fieldToField':
         baseNode.config = {
-          fieldA: json.fieldA,
-          fieldB: json.fieldB,
+          type: 'fieldToField',
+          leftField: json.fieldA,
+          rightField: json.fieldB,
           operator: this.mapComparisonOperator(json.operator),
-          transformA: json.transformA,
-          transformB: json.transformB
-        };
+          leftTransforms: json.transformA ? [json.transformA] : [],
+          rightTransforms: json.transformB ? [json.transformB] : []
+        } as FieldToFieldConfig;
         break;
 
       case 'atLeast':
@@ -1109,7 +1120,6 @@ export class SpecificationBridgeService {
           targetField: json.targetField,
           condition: this.jsonToRuleNode(json.condition),
           inverse: json.inverse || false,
-          metadata: json.metadata
         };
         break;
 
@@ -1121,7 +1131,6 @@ export class SpecificationBridgeService {
           itemVariable: json.itemVariable || 'item',
           indexVariable: json.indexVariable || 'index',
           itemValidationRules: json.itemValidationRules || [],
-          metadata: json.metadata
         };
         break;
 
@@ -1133,7 +1142,6 @@ export class SpecificationBridgeService {
           caseSensitive: json.caseSensitive !== false,
           ignoreEmpty: json.ignoreEmpty !== false,
           duplicateErrorMessage: json.duplicateErrorMessage,
-          metadata: json.metadata
         };
         break;
 
@@ -1144,7 +1152,6 @@ export class SpecificationBridgeService {
           minItems: json.minItems,
           lengthErrorMessage: json.lengthErrorMessage,
           showItemCount: json.showItemCount !== false,
-          metadata: json.metadata
         };
         break;
 
@@ -1155,7 +1162,6 @@ export class SpecificationBridgeService {
           maxItems: json.maxItems,
           lengthErrorMessage: json.lengthErrorMessage,
           preventExcess: json.preventExcess !== false,
-          metadata: json.metadata
         };
         break;
 
@@ -1169,7 +1175,6 @@ export class SpecificationBridgeService {
           knownFields: json.knownFields || [],
           enablePerformanceWarnings: json.enablePerformanceWarnings ?? true,
           maxComplexity: json.maxComplexity || 50,
-          metadata: json.metadata
         };
         break;
 
@@ -1180,7 +1185,6 @@ export class SpecificationBridgeService {
           contextVariables: json.contextVariables || [],
           contextProvider: json.contextProvider,
           strictContextValidation: json.strictContextValidation ?? false,
-          metadata: json.metadata
         };
         break;
     }
@@ -1191,46 +1195,50 @@ export class SpecificationBridgeService {
   private mapSpecificationTypeToNodeType(specType: string): RuleNodeType {
     switch (specType) {
       case 'field':
-        return 'fieldCondition';
+        return RuleNodeType.FIELD_CONDITION;
       case 'and':
+        return RuleNodeType.AND_GROUP;
       case 'or':
+        return RuleNodeType.OR_GROUP;
       case 'not':
+        return RuleNodeType.NOT_GROUP;
       case 'xor':
+        return RuleNodeType.XOR_GROUP;
       case 'implies':
-        return 'boolean-group';
+        return RuleNodeType.IMPLIES_GROUP;
       case 'function':
-        return 'functionCall';
+        return RuleNodeType.FUNCTION_CALL;
       case 'fieldToField':
-        return 'fieldToField';
+        return RuleNodeType.FIELD_TO_FIELD;
       case 'atLeast':
-        return 'atLeast';
+        return RuleNodeType.AT_LEAST;
       case 'exactly':
-        return 'exactly';
+        return RuleNodeType.EXACTLY;
       // Phase 1: Conditional Validators
       case 'requiredIf':
-        return 'requiredIf';
+        return RuleNodeType.REQUIRED_IF;
       case 'visibleIf':
-        return 'visibleIf';
+        return RuleNodeType.VISIBLE_IF;
       case 'disabledIf':
-        return 'disabledIf';
+        return RuleNodeType.DISABLED_IF;
       case 'readonlyIf':
-        return 'readonlyIf';
+        return RuleNodeType.READONLY_IF;
       // Phase 2: Collection Validators
       case 'forEach':
-        return 'forEach';
+        return RuleNodeType.FOR_EACH;
       case 'uniqueBy':
-        return 'uniqueBy';
+        return RuleNodeType.UNIQUE_BY;
       case 'minLength':
-        return 'minLength';
+        return RuleNodeType.MIN_LENGTH;
       case 'maxLength':
-        return 'maxLength';
+        return RuleNodeType.MAX_LENGTH;
       // Phase 4: Expression and Contextual Specifications
       case 'expression':
-        return 'expression';
+        return RuleNodeType.EXPRESSION;
       case 'contextual':
-        return 'contextual';
+        return RuleNodeType.CONTEXTUAL;
       default:
-        return 'fieldCondition'; // fallback
+        return RuleNodeType.FIELD_CONDITION; // fallback
     }
   }
 
@@ -1256,12 +1264,8 @@ export class SpecificationBridgeService {
         return 'endsWith';
       case ComparisonOperator.IN:
         return 'in';
-      case ComparisonOperator.NOT_IN:
-        return 'notIn';
-      case ComparisonOperator.IS_NULL:
-        return 'isNull';
-      case ComparisonOperator.IS_NOT_NULL:
-        return 'isNotNull';
+      // Note: NOT_IN, IS_NULL, IS_NOT_NULL are not available in praxis-specification ComparisonOperator enum
+      // These would need to be handled as custom functions or additional operators
       default:
         return 'equals';
     }
@@ -1343,7 +1347,7 @@ export class SpecificationBridgeService {
     const variableMap = new Map<string, any>();
     
     for (const variable of variables) {
-      let value = variable.example;
+      let value: any = variable.example;
       
       // Convert example to appropriate type
       if (value !== undefined && value !== null) {
@@ -1371,18 +1375,10 @@ export class SpecificationBridgeService {
       variableMap.set(variable.name, value);
     }
 
-    // Create a simple context provider implementation
+    // Create a context provider implementation aligned with praxis-specification ContextProvider interface
     return {
-      hasValue: (key: string) => variableMap.has(key),
-      getValue: (key: string) => variableMap.get(key),
-      setValue: (key: string, value: any) => variableMap.set(key, value),
-      removeValue: (key: string) => variableMap.delete(key),
-      getScope: (key: string) => {
-        const variable = variables.find(v => v.name === key);
-        return variable?.scope || 'global';
-      },
-      getAllKeys: () => Array.from(variableMap.keys()),
-      clear: () => variableMap.clear()
+      hasValue: (path: string) => variableMap.has(path),
+      getValue: (path: string) => variableMap.get(path)
     };
   }
 

@@ -2,12 +2,17 @@
  * Models for the Visual Rule Builder
  */
 
-import { SpecificationMetadata } from 'praxis-specification';
+import { SpecificationMetadata, ComparisonOperator, ContextProvider } from 'praxis-specification';
 
 /**
  * Value types for rule configuration
  */
 export type ValueType = 'literal' | 'field' | 'context' | 'function';
+
+/**
+ * Valid comparison operators (aligned with praxis-specification)
+ */
+export type ValidComparisonOperator = 'eq' | 'neq' | 'lt' | 'lte' | 'gt' | 'gte' | 'contains' | 'startsWith' | 'endsWith' | 'in';
 
 export interface RuleNode {
   /** Unique identifier for this rule node */
@@ -112,56 +117,83 @@ export type RuleNodeConfig =
 
 export interface FieldConditionConfig {
   type: 'fieldCondition';
-  field?: string; // For specification bridge compatibility
+  /** Primary field name */
   fieldName: string;
-  operator: string;
+  /** Comparison operator aligned with praxis-specification */
+  operator: ValidComparisonOperator | string;
+  /** Comparison value */
   value: any;
+  /** Type of value for proper handling */
   valueType?: ValueType;
+  /** Field to compare against (for field-to-field comparisons) */
   compareToField?: string;
+  /** Context variable to use as value */
   contextVariable?: string;
+  /** Optional metadata for error messages and UI hints */
+  metadata?: SpecificationMetadata;
+  /** Legacy field alias for backward compatibility */
+  field?: string;
 }
 
 export interface BooleanGroupConfig {
   type: 'booleanGroup';
+  /** Boolean operator type */
   operator: 'and' | 'or' | 'not' | 'xor' | 'implies';
-  minimumRequired?: number; // For atLeast scenarios
-  exactRequired?: number;   // For exactly scenarios
+  /** Minimum required true conditions (for atLeast scenarios) */
+  minimumRequired?: number;
+  /** Exact required true conditions (for exactly scenarios) */
+  exactRequired?: number;
+  /** Optional metadata for group validation */
+  metadata?: SpecificationMetadata;
 }
 
 export interface ConditionalValidatorConfig {
   type: 'conditionalValidator';
+  /** Type of conditional validator */
   validatorType: 'requiredIf' | 'visibleIf' | 'disabledIf' | 'readonlyIf';
+  /** Target field to apply conditional logic */
   targetField: string;
-  condition: RuleNode; // Embedded condition rule node
-  conditionNodeId?: string; // Reference to condition rule node ID (for backward compatibility)
-  inverse?: boolean; // Whether to invert the condition result
-  metadata?: {
-    description?: string;
-    errorMessage?: string;
-    successMessage?: string;
-    uiHints?: Record<string, any>;
-  };
+  /** Embedded condition rule node */
+  condition: RuleNode;
+  /** Reference to condition rule node ID (for backward compatibility) */
+  conditionNodeId?: string;
+  /** Whether to invert the condition result */
+  inverse?: boolean;
+  /** Metadata aligned with praxis-specification */
+  metadata?: SpecificationMetadata;
 }
 
 export interface CollectionValidationConfig {
   type: 'collectionValidation';
+  /** Type of collection validation */
   validationType: 'forEach' | 'uniqueBy' | 'minLength' | 'maxLength';
+  /** Array field to validate */
   arrayField: string;
-  itemCondition?: string; // Reference to rule node ID for forEach
-  uniqueKey?: string;     // Property name for uniqueBy
-  lengthValue?: number;   // For min/max length
+  /** Reference to rule node ID for forEach validation */
+  itemCondition?: string;
+  /** Property name for uniqueBy validation */
+  uniqueKey?: string;
+  /** Length value for min/max length validation */
+  lengthValue?: number;
+  /** Optional metadata for validation */
+  metadata?: SpecificationMetadata;
 }
 
 /**
  * Enhanced collection validator configuration (Phase 2 Implementation)
+ * Aligned with praxis-specification collection validation patterns
  */
 export interface CollectionValidatorConfig {
   type: 'forEach' | 'uniqueBy' | 'minLength' | 'maxLength';
+  /** Target collection field name */
   targetCollection: string;
   
   // For Each specific
+  /** Variable name for current item in forEach */
   itemVariable?: string;
+  /** Variable name for current index in forEach */
   indexVariable?: string;
+  /** Validation rules applied to each item */
   itemValidationRules?: {
     ruleType: string;
     fieldPath: string;
@@ -169,29 +201,50 @@ export interface CollectionValidatorConfig {
   }[];
   
   // Unique By specific
+  /** Fields to check uniqueness by */
   uniqueByFields?: string[];
+  /** Case-sensitive uniqueness check */
   caseSensitive?: boolean;
+  /** Ignore empty values in uniqueness check */
   ignoreEmpty?: boolean;
+  /** Custom error message for duplicates */
   duplicateErrorMessage?: string;
   
   // Length specific
+  /** Minimum number of items */
   minItems?: number;
+  /** Maximum number of items */
   maxItems?: number;
+  /** Custom error message for length validation */
   lengthErrorMessage?: string;
+  /** Show current item count in UI */
   showItemCount?: boolean;
+  /** Prevent adding items beyond maxItems */
   preventExcess?: boolean;
   
   // Advanced options
+  /** Validate when items are added */
   validateOnAdd?: boolean;
+  /** Validate when items are removed */
   validateOnRemove?: boolean;
+  /** Validate when items are changed */
   validateOnChange?: boolean;
+  /** Validate on form submit */
   validateOnSubmit?: boolean;
+  /** Error display strategy */
   errorStrategy?: 'summary' | 'inline' | 'both';
+  /** Stop validation on first error */
   stopOnFirstError?: boolean;
+  /** Highlight items with errors */
   highlightErrorItems?: boolean;
+  /** Batch size for large collections */
   batchSize?: number;
+  /** Debounce validation for performance */
   debounceValidation?: boolean;
+  /** Debounce delay in milliseconds */
   debounceDelay?: number;
+  /** Optional metadata for validation messages */
+  metadata?: SpecificationMetadata;
 }
 
 export interface OptionalFieldConfig {
@@ -204,44 +257,77 @@ export interface OptionalFieldConfig {
 
 export interface FunctionCallConfig {
   type: 'functionCall';
+  /** Name of the function to call */
   functionName: string;
+  /** Function parameters with type information */
   parameters: FunctionParameter[];
+  /** Optional metadata for validation */
+  metadata?: SpecificationMetadata;
 }
 
 export interface FunctionParameter {
+  /** Parameter name */
   name: string;
+  /** Parameter value */
   value: any;
-  valueType: 'literal' | 'field' | 'context';
+  /** Type of parameter value */
+  valueType: ValueType;
+  /** Field name if valueType is 'field' */
   fieldName?: string;
+  /** Context variable name if valueType is 'context' */
   contextVariable?: string;
 }
 
 export interface FieldToFieldConfig {
   type: 'fieldToField';
+  /** Left side field name */
   leftField: string;
-  operator: string;
+  /** Comparison operator */
+  operator: ValidComparisonOperator | string;
+  /** Right side field name */
   rightField: string;
+  /** Transform functions applied to left field */
   leftTransforms?: string[];
+  /** Transform functions applied to right field */
   rightTransforms?: string[];
+  /** Optional metadata for validation */
+  metadata?: SpecificationMetadata;
 }
 
 export interface ContextualConfig {
   type: 'contextual';
+  /** Template string with context placeholders */
   template: string;
+  /** Available context variables */
   contextVariables: Record<string, any>;
+  /** Optional context provider for dynamic values */
+  contextProvider?: ContextProvider;
+  /** Strict validation of context tokens */
+  strictContextValidation?: boolean;
+  /** Optional metadata */
+  metadata?: SpecificationMetadata;
 }
 
 export interface CardinalityConfig {
   type: 'cardinality';
+  /** Type of cardinality check */
   cardinalityType: 'atLeast' | 'exactly';
+  /** Required count of true conditions */
   count: number;
-  conditions: string[]; // References to rule node IDs
+  /** References to rule node IDs to evaluate */
+  conditions: string[];
+  /** Optional metadata for validation */
+  metadata?: SpecificationMetadata;
 }
 
 export interface CustomConfig {
   type: 'custom';
+  /** Custom configuration type identifier */
   customType: string;
+  /** Custom properties specific to the type */
   properties: Record<string, any>;
+  /** Optional metadata for validation */
+  metadata?: SpecificationMetadata;
 }
 
 /**
@@ -527,10 +613,29 @@ export interface RuleBuilderConfig {
   };
 }
 
+// ===== Enhanced Configuration Interfaces =====
+
+/**
+ * Configuration for optional field handling
+ */
+export interface OptionalFieldConfig {
+  type: 'optionalField';
+  /** Type of optional field validation */
+  validationType: 'ifDefined' | 'ifNotNull' | 'ifExists' | 'withDefault';
+  /** Target field name */
+  fieldName: string;
+  /** Default value when field is undefined/null */
+  defaultValue?: any;
+  /** Reference to condition rule node ID */
+  conditionNodeId?: string;
+  /** Optional metadata for validation */
+  metadata?: SpecificationMetadata;
+}
+
 // ===== Phase 4: Expression and Contextual Configuration Interfaces =====
 
 /**
- * Configuration for expression specifications
+ * Configuration for expression specifications (aligned with praxis-specification)
  */
 export interface ExpressionConfig {
   type: 'expression';
@@ -539,10 +644,10 @@ export interface ExpressionConfig {
   expression: string;
   
   /** Function registry for validation */
-  functionRegistry?: any;
+  functionRegistry?: any; // FunctionRegistry<any> from praxis-specification
   
   /** Context provider for variable resolution */
-  contextProvider?: any;
+  contextProvider?: ContextProvider;
   
   /** Known field names for validation */
   knownFields?: string[];
@@ -553,12 +658,12 @@ export interface ExpressionConfig {
   /** Maximum expression complexity */
   maxComplexity?: number;
   
-  /** Additional metadata */
-  metadata?: any;
+  /** Metadata aligned with praxis-specification */
+  metadata?: SpecificationMetadata;
 }
 
 /**
- * Configuration for contextual template specifications
+ * Configuration for contextual template specifications (aligned with praxis-specification)
  */
 export interface ContextualTemplateConfig {
   type: 'contextualTemplate';
@@ -567,14 +672,14 @@ export interface ContextualTemplateConfig {
   template: string;
   
   /** Available context variables */
-  contextVariables?: any[];
+  contextVariables?: Record<string, any>;
   
   /** Context provider instance */
-  contextProvider?: any;
+  contextProvider?: ContextProvider;
   
   /** Enable strict validation of context tokens */
   strictContextValidation?: boolean;
   
-  /** Additional metadata */
-  metadata?: any;
+  /** Metadata aligned with praxis-specification */
+  metadata?: SpecificationMetadata;
 }

@@ -257,13 +257,13 @@ export interface ContextVariable {
                 <div class="reference-content">
                   <div class="operator-group" *ngFor="let group of operatorGroups">
                     <h5>{{ group.name }}</h5>
-                    <mat-chip-list>
-                      <mat-chip *ngFor="let op of group.operators" 
+                    <mat-chip-listbox>
+                      <mat-chip-option *ngFor="let op of group.operators" 
                                (click)="insertAtCursor(op.symbol)"
                                class="clickable-chip">
                         {{ op.symbol }} - {{ op.description }}
-                      </mat-chip>
-                    </mat-chip-list>
+                      </mat-chip-option>
+                    </mat-chip-listbox>
                   </div>
                 </div>
               </mat-tab>
@@ -852,7 +852,7 @@ export class ExpressionEditorComponent implements OnInit, OnDestroy {
               type: 'SYNTAX_ERROR' as any,
               severity: 'error' as any,
               message: parseError instanceof Error ? parseError.message : 'Parse error',
-              position: { line: 1, column: 1, offset: 0 }
+              position: { start: 0, end: 0, line: 1, column: 1 }
             }],
             metrics: { parseTime, complexity: 0 }
           };
@@ -872,13 +872,13 @@ export class ExpressionEditorComponent implements OnInit, OnDestroy {
           type: 'VALIDATION_ERROR' as any,
           severity: 'error' as any,
           message: error instanceof Error ? error.message : 'Validation error',
-          position: { line: 1, column: 1, offset: 0 }
+          position: { start: 0, end: 0, line: 1, column: 1 }
         }],
         metrics: { parseTime: performance.now() - startTime, complexity: 0 }
       };
     }
 
-    this.validationChanged.emit(this.validationResult);
+    this.validationChanged.emit(this.validationResult || undefined);
     this.cdr.detectChanges();
   }
 

@@ -949,7 +949,16 @@ export class RoundTripTesterComponent implements OnInit {
     const state = this.ruleBuilderService.getCurrentState();
     if (state.rootNodes.length > 0) {
       const rootNode = state.nodes[state.rootNodes[0]];
-      return rootNode?.type || 'Unknown';
+      if (!rootNode) return 'Unknown';
+      
+      // Convert enum values to string if needed
+      const nodeType = rootNode.type;
+      if (typeof nodeType === 'string') {
+        return nodeType;
+      }
+      
+      // Handle enum values
+      return nodeType.toString();
     }
     return 'None';
   }
@@ -964,16 +973,36 @@ export class RoundTripTesterComponent implements OnInit {
   }
 
   getTestCaseColor(testCase: RoundTripTestCase): 'primary' | 'accent' | 'warn' {
-    switch (testCase.visualRule.type) {
-      case 'field':
-        return 'primary';
-      case 'boolean-group':
-        return 'accent';
-      case 'function':
-        return 'warn';
-      default:
-        return 'primary';
+    const ruleType = testCase.visualRule.type;
+    
+    // Handle field conditions
+    if (ruleType === 'fieldCondition' || ruleType === RuleNodeType.FIELD_CONDITION) {
+      return 'primary';
     }
+    
+    // Handle boolean groups
+    if (ruleType === 'andGroup' || ruleType === RuleNodeType.AND_GROUP) {
+      return 'accent';
+    }
+    if (ruleType === 'orGroup' || ruleType === RuleNodeType.OR_GROUP) {
+      return 'accent';
+    }
+    if (ruleType === 'notGroup' || ruleType === RuleNodeType.NOT_GROUP) {
+      return 'accent';
+    }
+    if (ruleType === 'xorGroup' || ruleType === RuleNodeType.XOR_GROUP) {
+      return 'accent';
+    }
+    if (ruleType === 'impliesGroup' || ruleType === RuleNodeType.IMPLIES_GROUP) {
+      return 'accent';
+    }
+    
+    // Handle function calls
+    if (ruleType === 'functionCall' || ruleType === RuleNodeType.FUNCTION_CALL) {
+      return 'warn';
+    }
+    
+    return 'primary';
   }
 
   getResultSummary(): string {
