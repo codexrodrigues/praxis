@@ -41,6 +41,8 @@ interface ExtendedSliderMetadata extends ComponentMetadata {
   range?: boolean;
   color?: 'primary' | 'accent' | 'warn';
   displayWith?: (value: number) => string;
+  showCurrentValue?: boolean;
+  showMinMaxLabels?: boolean;
 }
 
 function safeSliderMetadata(metadata: ComponentMetadata | null | undefined): ExtendedSliderMetadata {
@@ -158,6 +160,24 @@ export class MaterialSliderComponent
     const metadata = safeSliderMetadata(this.metadata());
     return metadata.range ?? false;
   });
+
+  /** Deve exibir o valor atual */
+  readonly showCurrentValue = computed(() => {
+    const metadata = safeSliderMetadata(this.metadata());
+    return metadata.showCurrentValue !== false;
+  });
+
+  /** Deve exibir os valores mínimo e máximo */
+  readonly showMinMaxLabels = computed(() => {
+    const metadata = safeSliderMetadata(this.metadata());
+    return metadata.showMinMaxLabels !== false;
+  });
+
+  /** Função para formatar o valor do thumb */
+  readonly thumbLabelFormatter = (value: number): string => {
+    const metadata = safeSliderMetadata(this.metadata());
+    return metadata.displayWith ? metadata.displayWith(value) : value.toString();
+  };
 
   /** Valor atual formatado */
   readonly formattedValue = computed(() => {
@@ -301,6 +321,14 @@ export class MaterialSliderComponent
   onSliderEnd(): void {
     this.updateSliderState({ isDragging: false });
     this.log('debug', 'Slider drag ended');
+  }
+
+  onSliderFocus(): void {
+    this.focus();
+  }
+
+  onSliderBlur(): void {
+    this.blur();
   }
 
   // =============================================================================
