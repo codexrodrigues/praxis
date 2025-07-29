@@ -513,7 +513,7 @@ describe('DynamicFieldLoaderDirective', () => {
       await fixture.whenStable();
 
       expect(console.debug).toHaveBeenCalledWith(
-        '[DynamicFieldLoader] Rendering already in progress, skipping...'
+        '[DynamicFieldLoader] Waiting for current rendering to complete...'
       );
     });
   });
