@@ -398,25 +398,12 @@ export class PraxisResizableWindowComponent implements OnInit, AfterViewInit, On
   }
 
   startMove(event: MouseEvent | TouchEvent): void {
-    console.log('🚀 [DRAG] startMove iniciado', {
-      eventType: event instanceof MouseEvent ? 'mouse' : 'touch',
-      target: (event.target as HTMLElement)?.tagName,
-      isMaximized: this.isMaximized,
-      enableTouch: this.enableTouch
-    });
-
     if (event instanceof TouchEvent && event.touches.length > 1) {
-      console.log('❌ [DRAG] Cancelado: múltiplos toques');
       return;
     }
     
     const target = event.target as HTMLElement;
     if (this.isMaximized || target.tagName === 'BUTTON' || !this.enableTouch && (event instanceof TouchEvent)) {
-      console.log('❌ [DRAG] Cancelado por condição:', {
-        isMaximized: this.isMaximized,
-        isButton: target.tagName === 'BUTTON',
-        touchDisabled: !this.enableTouch && (event instanceof TouchEvent)
-      });
       return;
     }
 
@@ -429,19 +416,6 @@ export class PraxisResizableWindowComponent implements OnInit, AfterViewInit, On
     this.startLeft = rect.left;
     this.startTop = rect.top;
 
-    console.log('📍 [DRAG] Posições iniciais:', {
-      startX: this.startX,
-      startY: this.startY,
-      startLeft: this.startLeft,
-      startTop: this.startTop,
-      paneRect: {
-        left: rect.left,
-        top: rect.top,
-        width: rect.width,
-        height: rect.height
-      }
-    });
-
     this.lastTimeDrag = Date.now();
     this.lastDeltaXDrag = 0;
     this.lastDeltaYDrag = 0;
@@ -452,8 +426,6 @@ export class PraxisResizableWindowComponent implements OnInit, AfterViewInit, On
 
     const moveEvent = (event instanceof MouseEvent) ? 'mousemove' : 'touchmove';
     const upEvent = (event instanceof MouseEvent) ? 'mouseup' : 'touchend';
-
-    console.log('🎯 [DRAG] Registrando listeners:', { moveEvent, upEvent });
 
     this.globalMoveListener = this.renderer.listen(this.document, moveEvent, (e: MouseEvent | TouchEvent) => this.onDragMove(e), { passive: false });
     this.globalUpListener = this.renderer.listen(this.document, upEvent, () => this.stopMove(), { passive: false });
@@ -472,7 +444,6 @@ export class PraxisResizableWindowComponent implements OnInit, AfterViewInit, On
     const deltaY = currentY - this.startY;
     
     if (Math.abs(deltaX) < this.minDragDistance && Math.abs(deltaY) < this.minDragDistance) {
-      console.log('⏸️ [DRAG] Movimento muito pequeno, ignorando:', { deltaX, deltaY, minDistance: this.minDragDistance });
       return;
     }
 
@@ -489,14 +460,6 @@ export class PraxisResizableWindowComponent implements OnInit, AfterViewInit, On
     let newLeft = this.startLeft + deltaX;
     let newTop = this.startTop + deltaY;
 
-    console.log('🔄 [DRAG] Calculando nova posição:', {
-      currentMouse: { x: currentX, y: currentY },
-      startMouse: { x: this.startX, y: this.startY },
-      delta: { x: deltaX, y: deltaY },
-      startPosition: { left: this.startLeft, top: this.startTop },
-      calculatedNew: { left: newLeft, top: newTop }
-    });
-
     // Apply boundaries
     const originalNewLeft = newLeft;
     const originalNewTop = newTop;
@@ -507,19 +470,6 @@ export class PraxisResizableWindowComponent implements OnInit, AfterViewInit, On
     const rect = pane.getBoundingClientRect();
     newLeft = Math.min(window.innerWidth - rect.width, newLeft);
     newTop = Math.min(window.innerHeight - rect.height, newTop);
-
-    console.log('🎯 [DRAG] Aplicando posição:', {
-      boundaries: {
-        minX: 0,
-        minY: 0,
-        maxX: window.innerWidth - rect.width,
-        maxY: window.innerHeight - rect.height
-      },
-      beforeBoundaries: { left: originalNewLeft, top: originalNewTop },
-      afterBoundaries: { left: newLeft, top: newTop },
-      windowSize: { width: window.innerWidth, height: window.innerHeight },
-      paneSize: { width: rect.width, height: rect.height }
-    });
 
     // Fix: Parâmetros corretos (top, left)
     this.updatePosition(`${newTop}px`, `${newLeft}px`);
@@ -643,24 +593,53 @@ export class PraxisResizableWindowComponent implements OnInit, AfterViewInit, On
         const overlayElement = this.overlayRef.overlayElement;
         this.renderer.addClass(overlayElement, 'maximized');
         
-        // Force overlay element to maximize
-        this.renderer.setStyle(overlayElement, 'position', 'fixed');
-        this.renderer.setStyle(overlayElement, 'top', '0px');
-        this.renderer.setStyle(overlayElement, 'left', '0px');
-        this.renderer.setStyle(overlayElement, 'right', '0px');
-        this.renderer.setStyle(overlayElement, 'bottom', '0px');
-        this.renderer.setStyle(overlayElement, 'width', '100vw');
-        this.renderer.setStyle(overlayElement, 'height', '100vh');
-        this.renderer.setStyle(overlayElement, 'min-width', '100vw');
-        this.renderer.setStyle(overlayElement, 'min-height', '100vh');
-        this.renderer.setStyle(overlayElement, 'max-width', '100vw');
-        this.renderer.setStyle(overlayElement, 'max-height', '100vh');
-        this.renderer.setStyle(overlayElement, 'transform', 'none');
-        this.renderer.setStyle(overlayElement, 'z-index', '1000');
+        // Completely disable CDK positioning by setting important styles
+        this.renderer.setStyle(overlayElement, 'position', 'fixed', 1); // 1 = RendererStyleFlags2.Important
+        this.renderer.setStyle(overlayElement, 'top', '0px', 1);
+        this.renderer.setStyle(overlayElement, 'left', '0px', 1);
+        this.renderer.setStyle(overlayElement, 'right', '0px', 1);
+        this.renderer.setStyle(overlayElement, 'bottom', '0px', 1);
+        this.renderer.setStyle(overlayElement, 'width', 'calc(100vw - 16px)', 1);
+        this.renderer.setStyle(overlayElement, 'height', 'calc(100vh - 16px)', 1);
+        this.renderer.setStyle(overlayElement, 'min-width', 'calc(100vw - 16px)', 1);
+        this.renderer.setStyle(overlayElement, 'min-height', 'calc(100vh - 16px)', 1);
+        this.renderer.setStyle(overlayElement, 'max-width', 'calc(100vw - 16px)', 1);
+        this.renderer.setStyle(overlayElement, 'max-height', 'calc(100vh - 16px)', 1);
+        this.renderer.setStyle(overlayElement, 'transform', 'none', 1);
+        this.renderer.setStyle(overlayElement, 'z-index', '1000', 1);
+        this.renderer.setStyle(overlayElement, 'margin', '0px', 1);
+        this.renderer.setStyle(overlayElement, 'padding', '0px', 1);
+        
+        // Also disable CDK position strategy temporarily with breathing room
+        this.overlayRef.updatePositionStrategy(
+          this.overlay.position().global().top('8px').left('8px')
+        );
         
         console.log('🎨 [MAXIMIZE] Estilos aplicados diretamente ao overlay:', {
           overlayElement,
           classList: overlayElement.classList.toString()
+        });
+      }
+      
+      // Also apply styles to the component host element with !important
+      const hostElement = this.resizableContainer.nativeElement.parentElement; // praxis-resizable-window
+      if (hostElement) {
+        this.renderer.setStyle(hostElement, 'width', '100%', 1);
+        this.renderer.setStyle(hostElement, 'height', '100%', 1);
+        this.renderer.setStyle(hostElement, 'max-width', '100%', 1);
+        this.renderer.setStyle(hostElement, 'max-height', '100%', 1);
+        this.renderer.setStyle(hostElement, 'position', 'relative', 1);
+        this.renderer.setStyle(hostElement, 'top', '0px', 1);
+        this.renderer.setStyle(hostElement, 'left', '0px', 1);
+        this.renderer.setStyle(hostElement, 'margin', '0px', 1);
+        this.renderer.setStyle(hostElement, 'padding', '0px', 1);
+        
+        // Also add maximized class to host element for CSS styling
+        this.renderer.addClass(hostElement, 'maximized');
+        
+        console.log('🎨 [MAXIMIZE] Estilos aplicados ao host element:', {
+          hostElement,
+          classList: hostElement.classList.toString()
         });
       } else {
         this.updateSize('100vw', '100vh');
@@ -694,10 +673,42 @@ export class PraxisResizableWindowComponent implements OnInit, AfterViewInit, On
           this.renderer.removeStyle(overlayElement, 'min-height');
           this.renderer.removeStyle(overlayElement, 'transform');
           this.renderer.removeStyle(overlayElement, 'z-index');
+          this.renderer.removeStyle(overlayElement, 'margin');
+          this.renderer.removeStyle(overlayElement, 'padding');
+          
+          // Restore original CDK positioning strategy
+          this.overlayRef.updatePositionStrategy(
+            this.overlay.position()
+              .global()
+              .top(this.originalSize.top)
+              .left(this.originalSize.left)
+          );
           
           console.log('🎨 [MAXIMIZE] Estilos inline removidos do overlay:', {
             overlayElement,
             classList: overlayElement.classList.toString()
+          });
+        }
+        
+        // Also remove styles from the component host element
+        const hostElement = this.resizableContainer.nativeElement.parentElement; // praxis-resizable-window
+        if (hostElement) {
+          this.renderer.removeStyle(hostElement, 'width');
+          this.renderer.removeStyle(hostElement, 'height');
+          this.renderer.removeStyle(hostElement, 'max-width');
+          this.renderer.removeStyle(hostElement, 'max-height');
+          this.renderer.removeStyle(hostElement, 'position');
+          this.renderer.removeStyle(hostElement, 'top');
+          this.renderer.removeStyle(hostElement, 'left');
+          this.renderer.removeStyle(hostElement, 'margin');
+          this.renderer.removeStyle(hostElement, 'padding');
+          
+          // Also remove maximized class from host element
+          this.renderer.removeClass(hostElement, 'maximized');
+          
+          console.log('🎨 [MAXIMIZE] Estilos removidos do host element:', {
+            hostElement,
+            classList: hostElement.classList.toString()
           });
         }
         
