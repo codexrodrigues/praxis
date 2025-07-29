@@ -292,13 +292,13 @@ export class ComponentRegistryService implements IComponentRegistry {
       () => import('../../components/material-slider/material-slider.component').then(m => m.MaterialSliderComponent)
     );
 
+    // Time Picker
+    this.register(
+      FieldControlTypeEnum.TIME_PICKER,
+      () => import('../../components/material-timepicker/material-timepicker.component').then(m => m.MaterialTimepickerComponent)
+    );
+
     // COMPONENTES PLANEJADOS PARA IMPLEMENTAÇÃO FUTURA
-    
-    // Time Picker (futura implementação)
-    // this.register(
-    //   FieldControlTypeEnum.TIME_PICKER,
-    //   () => import('../../components/material-time-picker/material-time-picker.component').then(m => m.MaterialTimePickerComponent)
-    // );
 
     // Rating (futura implementação)
     // this.register(
