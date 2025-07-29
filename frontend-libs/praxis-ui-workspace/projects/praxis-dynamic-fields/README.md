@@ -8,6 +8,7 @@ Sistema simplificado de campos dinâmicos para aplicações corporativas Angular
 - **Lazy Loading**: Carregamento sob demanda com cache inteligente
 - **Material Design**: Componentes baseados no Angular Material
 - **Color Picker**: Novo componente de seleção de cores com suporte a paleta e canvas
+- **Novos Componentes**: Toggle, Slider, Time Picker e Rating
 - **TypeScript**: Totalmente tipado com integração do `@praxis/core`
 - **Corporativo**: Adequado para cenários empresariais
 
@@ -45,6 +46,11 @@ O sistema usa as constantes do `@praxis/core` para garantir consistência:
 - `FieldControlType.DATE_TIME_PICKER` - Data e hora
 - `FieldControlType.DATE_RANGE` - Intervalo de datas
 - `FieldControlType.FILE_UPLOAD` - Upload de arquivos
+- `FieldControlType.TOGGLE` - Interruptor Material Design
+- `FieldControlType.SLIDER` - Slider Material Design
+- `FieldControlType.TIME_PICKER` - Seletor de horário
+- `FieldControlType.RATING` - Classificação por estrelas
+- `FieldControlType.COLOR_PICKER` - Seletor de cores
 
 ## 📦 Instalação
 
@@ -82,6 +88,10 @@ export class DynamicFormComponent {
 
   async loadDatePicker() {
     await this.loadField(FieldControlType.DATE_PICKER);
+  }
+
+  async loadColorPicker() {
+    await this.loadField(FieldControlType.COLOR_PICKER);
   }
 }
 ```
