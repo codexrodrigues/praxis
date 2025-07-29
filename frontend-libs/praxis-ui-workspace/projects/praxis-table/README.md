@@ -249,36 +249,40 @@ sequenceDiagram
 4.  **Serviço Backend (`praxis-metadata-core`)**: O `GenericSpecificationsBuilder` inspeciona as anotações `@Filterable` no DTO de filtro para construir uma `Specification` JPA dinâmica.
 5.  **Repositório (Spring Data JPA)**: O `JpaSpecificationExecutor` (geralmente estendido pelo seu repositório) usa a `Specification` e o `Pageable` para gerar e executar a consulta SQL final, otimizada para o banco de dados.
 
-## 🎛️ Editor de Configuração
+## 🎨 Edição Visual da Tabela: O Poder do Low-Code
 
-### Abrindo o Editor Visual
-```typescript
-import { MatDialog } from '@angular/material/dialog';
-import { PraxisTableConfigEditor } from '@praxis/table';
+A `<praxis-table>` vem com um poderoso editor de configuração visual que permite personalizar quase todos os aspectos da sua tabela em tempo real, sem escrever uma única linha de código. Ative o editor passando a propriedade `[editModeEnabled]="true"` para o componente.
 
-@Component({
-  // ...
-})
-export class MyComponent {
-  constructor(private dialog: MatDialog) {}
+A seguir, veja os principais recursos que você pode configurar visualmente:
 
-  openConfigEditor() {
-    const dialogRef = this.dialog.open(PraxisTableConfigEditor, {
-      data: { config: this.tableConfig },
-      width: '90vw',
-      height: '90vh',
-      panelClass: 'config-editor-dialog'
-    });
+### 1. Gerenciamento de Colunas
+Controle total sobre as colunas da sua tabela. Dentro do editor, você pode:
+- **Reordenar com Arrastar e Soltar:** Simplesmente clique e arraste uma coluna para a posição desejada.
+- **Alterar Visibilidade:** Use a caixa de seleção ao lado de cada coluna para mostrá-la ou ocultá-la instantaneamente.
+- **Editar Títulos e Largura:** Clique em uma coluna para abrir suas propriedades e altere o texto do cabeçalho, defina uma largura fixa (ex: `150px`) ou deixe-a automática.
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.tableConfig = result;
-        console.log('Nova configuração:', result);
-      }
-    });
-  }
-}
-```
+### 2. Transformação de Dados Sem Código
+Converta dados brutos em informações claras e formatadas para o usuário.
+- **Formatação Automática:** Selecione uma coluna e escolha seu "Tipo de Dado". Se escolher `Moeda`, os valores serão formatados como `R$ 1.234,56`. Se escolher `Data`, você pode selecionar formatos como `dd/MM/yyyy` ou `25 de janeiro de 2025`.
+- **Mapeamento de Valores:** Transforme códigos e valores brutos em texto legível. Na seção "Mapeamento de Valores", você pode definir visualmente que o valor `true` deve ser exibido como "Ativo" e `false` como "Inativo", ou que o código `1` significa "Pendente" e `2` significa "Aprovado".
+
+### 3. Colunas Calculadas com Fórmulas Visuais
+Crie novas colunas dinamicamente a partir de dados existentes, sem precisar programar.
+- **Concatenar Texto:** Crie uma "Coluna Calculada", escolha a fórmula "Concatenar" e selecione os campos `nome` e `sobrenome` para criar uma coluna "Nome Completo".
+- **Realizar Operações Matemáticas:** Use a fórmula "Operação Matemática" para criar uma coluna que calcula `preço * quantidade`.
+- **Criar Valores Condicionais (IF/ELSE):** Com a fórmula "Condicional", você pode criar uma coluna "Nível de Risco" que exibe "Alto" se o `valor` for maior que 1000, e "Baixo" caso contrário.
+
+### 4. Formatação Condicional (Regras de Estilo)
+Destaque informações importantes aplicando estilos que mudam com base nos dados da linha.
+- **Crie Regras Visuais:** Na seção de "Formatação Condicional", crie uma nova regra.
+- **Defina a Condição:** Estabeleça a condição, por exemplo: "Quando a coluna `status` tiver o valor igual a 'Urgente'".
+- **Aplique o Estilo:** Use seletores de cor para definir que, quando a condição for verdadeira, a cor de fundo da célula ou da linha inteira deve se tornar vermelha e o texto, branco.
+
+### 5. Comportamentos da Tabela
+Habilite e configure as funcionalidades centrais da tabela com um clique. Na aba "Comportamento", você pode:
+- **Ativar/Desativar Paginação:** Com um único interruptor, ative a paginação para tabelas com muitos dados e defina quantos itens exibir por página.
+- **Controlar Ordenação e Filtros:** Habilite a capacidade dos usuários de ordenar colunas e filtrar os dados com simples caixas de seleção.
+- **Gerenciar Seleção de Linhas:** Permita que os usuários selecionem uma ou várias linhas para realizar ações em lote.
 
 ### Editores Especializados
 
