@@ -151,6 +151,58 @@ openConfigEditor() {
 }
 ```
 
+## 🔗 Integração com Backend (Praxis Metadata Core)
+
+O ecossistema Praxis é projetado para uma integração transparente entre o frontend e o backend. As bibliotecas do `praxis-ui-workspace` são otimizadas para consumir metadados de UI fornecidos por um backend que utiliza o **`praxis-metadata-core`**.
+
+### Fluxo de Metadados
+
+1.  **Definição no Backend**: Desenvolvedores backend utilizam a anotação `@UISchema` nos seus DTOs Java para definir como cada campo deve ser apresentado e validado na UI (tipo de controle, rótulo, obrigatoriedade, etc.).
+
+    ```java
+    // Exemplo de DTO no backend (praxis-metadata-core)
+    public class CargoDTO {
+        @UISchema(label = "Código", readOnly = true)
+        private Long id;
+
+        @UISchema(label = "Nome do Cargo", required = true)
+        private String nome;
+    }
+    ```
+
+2.  **Exposição via API**: O backend expõe esses metadados através de um endpoint específico, geralmente `/api/{recurso}/schemas` ou, de forma mais centralizada, em `/schemas/filtered`.
+
+3.  **Consumo no Frontend**: A biblioteca `@praxis/core`, através do `GenericCrudService`, busca esses metadados.
+
+    ```typescript
+    // Exemplo de uso no frontend
+    import { GenericCrudService } from '@praxis/core';
+
+    @Injectable({ providedIn: 'root' })
+    export class CargoService extends GenericCrudService<Cargo> {
+      constructor(http: HttpClient, schemaNormalizer: SchemaNormalizerService, apiUrl: ApiUrlConfig) {
+        super(http, schemaNormalizer, apiUrl);
+        this.configure('human-resources/cargos'); // Configura o endpoint base
+      }
+    }
+    ```
+
+4.  **Renderização Dinâmica**: O `GenericCrudService` utiliza o método `getFilteredSchema` para obter a configuração da UI. Essa configuração é então passada para componentes como o `<praxis-table>`, que a utiliza para renderizar colunas, filtros e formulários de edição dinamicamente, sem a necessidade de definir a estrutura no código do frontend.
+
+    ```typescript
+    // Componente que usa o serviço para obter o schema
+    this.cargoService.getFilteredSchema({ path: '/api/human-resources/cargos' })
+      .subscribe(fieldDefinitions => {
+        // As fieldDefinitions são usadas para construir a configuração da tabela
+        const tableConfig = this.buildTableConfig(fieldDefinitions);
+        this.tableConfig = tableConfig;
+      });
+    ```
+
+### Aplicação de Exemplo
+
+O projeto `praxis-backend-libs-sample-app` no repositório serve como uma implementação de referência completa de um backend que utiliza o `praxis-metadata-core` e expõe as APIs necessárias para alimentar o `praxis-ui-workspace`. Ele é fundamental para testar a integração e entender o fluxo de ponta a ponta.
+
 ## 🧪 Testes
 
 ### Executar todos os testes
