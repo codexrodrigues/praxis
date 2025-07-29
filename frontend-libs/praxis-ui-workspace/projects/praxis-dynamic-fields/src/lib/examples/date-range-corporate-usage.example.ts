@@ -1,5 +1,5 @@
 /**
- * @fileoverview Exemplos de uso corporativo do MaterialDatepickerComponent com daterange
+ * @fileoverview Exemplos de uso corporativo do MaterialDateRangeComponent
  * 
  * Demonstra cenários reais de uso empresarial:
  * 📊 Relatórios financeiros com presets trimestrais
@@ -253,11 +253,11 @@ export const STRATEGIC_PLANNING_PERIOD: MaterialDatepickerMetadata = {
         <!-- Relatório Financeiro -->
         <section class="example-section">
           <h3>📊 Relatório Financeiro Trimestral</h3>
-          <pdx-material-datepicker
+          <pdx-material-date-range
             [metadata]="financialReportConfig"
             formControlName="financialPeriod"
             (valueChange)="onFinancialPeriodChange($event)">
-          </pdx-material-datepicker>
+          </pdx-material-date-range>
           
           @if (selectedFinancialRange) {
             <div class="range-info">
@@ -274,28 +274,28 @@ export const STRATEGIC_PLANNING_PERIOD: MaterialDatepickerMetadata = {
         <!-- Analytics de Vendas -->
         <section class="example-section">
           <h3>📈 Analytics de Vendas</h3>
-          <pdx-material-datepicker
+          <pdx-material-date-range
             [metadata]="salesAnalyticsConfig"
             formControlName="salesPeriod">
-          </pdx-material-datepicker>
+          </pdx-material-date-range>
         </section>
         
         <!-- Auditoria de Compliance -->
         <section class="example-section">
           <h3>🔍 Auditoria de Compliance</h3>
-          <pdx-material-datepicker
+          <pdx-material-date-range
             [metadata]="complianceAuditConfig"
             formControlName="auditPeriod">
-          </pdx-material-datepicker>
+          </pdx-material-date-range>
         </section>
         
         <!-- Planejamento Estratégico -->
         <section class="example-section">
           <h3>📅 Planejamento Estratégico</h3>
-          <pdx-material-datepicker
+          <pdx-material-date-range
             [metadata]="strategicPlanningConfig"
             formControlName="planningPeriod">
-          </pdx-material-datepicker>
+          </pdx-material-date-range>
         </section>
         
       </form>
