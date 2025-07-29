@@ -176,36 +176,113 @@ export class ExampleComponent {
 }
 ```
 
-## 🎛️ Editor de Configuração
+## ⚙️ Fluxo de Paginação e Filtros (Server-Side)
 
-### Abrindo o Editor Visual
-```typescript
-import { MatDialog } from '@angular/material/dialog';
-import { PraxisTableConfigEditor } from '@praxis/table';
+Quando a `<praxis-table>` é conectada a um `resourcePath`, as operações de paginação, ordenação e filtro são delegadas ao backend. Isso garante alta performance, pois apenas os dados visíveis na tela são trafegados pela rede.
 
-@Component({
-  // ...
-})
-export class MyComponent {
-  constructor(private dialog: MatDialog) {}
+O diagrama abaixo detalha a sequência de eventos, desde a interação do usuário na UI até a construção da consulta JPA no servidor.
 
-  openConfigEditor() {
-    const dialogRef = this.dialog.open(PraxisTableConfigEditor, {
-      data: { config: this.tableConfig },
-      width: '90vw',
-      height: '90vh',
-      panelClass: 'config-editor-dialog'
-    });
+```mermaid
+sequenceDiagram
+    participant UI as @praxis/table (UI)
+    participant CrudService as @praxis/core (GenericCrudService)
+    participant Controller as Backend (AbstractCrudController)
+    participant Service as Backend (BaseCrudService)
+    participant SpecBuilder as Backend (GenericSpecificationsBuilder)
+    participant Repository as Spring Data JPA (JpaSpecificationExecutor)
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        this.tableConfig = result;
-        console.log('Nova configuração:', result);
-      }
-    });
-  }
-}
+    UI->>UI: Usuário clica na página 2 e<br>digita "Tech" no filtro de nome.
+
+    UI->>UI: onPageChange({pageIndex: 1, pageSize: 10})<br>onFilterChange({nome: 'Tech'})
+
+    UI->>UI: Chama fetchData() com:<br>filterCriteria = {nome: 'Tech'}<br>pageable = {pageNumber: 1, pageSize: 10, sort: 'nome,asc'}
+
+    UI->>CrudService: Chama .filter({nome: 'Tech'}, pageable)
+
+    activate CrudService
+    CrudService->>CrudService: Cria HttpParams:<br>page=1, size=10, sort=nome,asc
+    CrudService->>Controller: Requisição POST para /api/.../filter<br>Body: {nome: 'Tech'}<br>Params: ?page=1&size=10&sort=nome,asc
+    deactivate CrudService
+
+    activate Controller
+    Controller->>Controller: Spring injeta o corpo no FilterDTO<br>e os params no objeto Pageable.
+    Controller->>Service: Chama .filter(filterDTO, pageable)
+    deactivate Controller
+
+    activate Service
+    Service->>SpecBuilder: Chama .buildSpecification(filterDTO)
+
+    activate SpecBuilder
+    SpecBuilder->>SpecBuilder: Itera nos campos do FilterDTO.<br>Encontra @Filterable no campo 'nome'.
+    SpecBuilder->>SpecBuilder: Cria um Predicate JPA:<br> `criteriaBuilder.like(root.get("nome"), "%tech%")`
+    SpecBuilder->>Service: Retorna a Specification JPA construída.
+    deactivate SpecBuilder
+
+    Service->>Repository: Chama .findAll(specification, pageable)
+
+    activate Repository
+    Repository->>Repository: Spring Data JPA executa a<br>query SQL com WHERE, LIMIT, OFFSET, ORDER BY.
+    Repository-->>Service: Retorna um objeto Page<Entity> do BD.
+    deactivate Repository
+
+    Service-->>Controller: Retorna o Page<Entity>
+    deactivate Service
+
+    activate Controller
+    Controller->>Controller: Mapeia Page<Entity> para Page<DTO><br>e encapsula em RestApiResponse.
+    Controller-->>CrudService: Resposta HTTP 200 com<br>JSON do RestApiResponse.
+    deactivate Controller
+
+    activate CrudService
+    CrudService-->>UI: Retorna Observable<Page<DTO>>
+    deactivate CrudService
+
+    UI->>UI: Atualiza a tabela com os novos dados e o paginador.
+
 ```
+
+### Pontos-Chave do Fluxo:
+
+1.  **UI (`@praxis/table`)**: Captura eventos do usuário e os traduz em objetos `filterCriteria` e `pageable`.
+2.  **Serviço Frontend (`@praxis/core`)**: O `GenericCrudService` serializa o `pageable` como parâmetros de URL e o `filterCriteria` como corpo de uma requisição POST.
+3.  **Controller Backend**: O `AbstractCrudController` recebe a requisição. O Spring Boot automaticamente popula o DTO de filtro com o corpo da requisição e o objeto `Pageable` com os parâmetros da URL.
+4.  **Serviço Backend (`praxis-metadata-core`)**: O `GenericSpecificationsBuilder` inspeciona as anotações `@Filterable` no DTO de filtro para construir uma `Specification` JPA dinâmica.
+5.  **Repositório (Spring Data JPA)**: O `JpaSpecificationExecutor` (geralmente estendido pelo seu repositório) usa a `Specification` e o `Pageable` para gerar e executar a consulta SQL final, otimizada para o banco de dados.
+
+## 🎨 Edição Visual da Tabela: O Poder do Low-Code
+
+A `<praxis-table>` vem com um poderoso editor de configuração visual que permite personalizar quase todos os aspectos da sua tabela em tempo real, sem escrever uma única linha de código. Ative o editor passando a propriedade `[editModeEnabled]="true"` para o componente.
+
+A seguir, veja os principais recursos que você pode configurar visualmente:
+
+### 1. Gerenciamento de Colunas
+Controle total sobre as colunas da sua tabela. Dentro do editor, você pode:
+- **Reordenar com Arrastar e Soltar:** Simplesmente clique e arraste uma coluna para a posição desejada.
+- **Alterar Visibilidade:** Use a caixa de seleção ao lado de cada coluna para mostrá-la ou ocultá-la instantaneamente.
+- **Editar Títulos e Largura:** Clique em uma coluna para abrir suas propriedades e altere o texto do cabeçalho, defina uma largura fixa (ex: `150px`) ou deixe-a automática.
+
+### 2. Transformação de Dados Sem Código
+Converta dados brutos em informações claras e formatadas para o usuário.
+- **Formatação Automática:** Selecione uma coluna e escolha seu "Tipo de Dado". Se escolher `Moeda`, os valores serão formatados como `R$ 1.234,56`. Se escolher `Data`, você pode selecionar formatos como `dd/MM/yyyy` ou `25 de janeiro de 2025`.
+- **Mapeamento de Valores:** Transforme códigos e valores brutos em texto legível. Na seção "Mapeamento de Valores", você pode definir visualmente que o valor `true` deve ser exibido como "Ativo" e `false` como "Inativo", ou que o código `1` significa "Pendente" e `2` significa "Aprovado".
+
+### 3. Colunas Calculadas com Fórmulas Visuais
+Crie novas colunas dinamicamente a partir de dados existentes, sem precisar programar.
+- **Concatenar Texto:** Crie uma "Coluna Calculada", escolha a fórmula "Concatenar" e selecione os campos `nome` e `sobrenome` para criar uma coluna "Nome Completo".
+- **Realizar Operações Matemáticas:** Use a fórmula "Operação Matemática" para criar uma coluna que calcula `preço * quantidade`.
+- **Criar Valores Condicionais (IF/ELSE):** Com a fórmula "Condicional", você pode criar uma coluna "Nível de Risco" que exibe "Alto" se o `valor` for maior que 1000, e "Baixo" caso contrário.
+
+### 4. Formatação Condicional (Regras de Estilo)
+Destaque informações importantes aplicando estilos que mudam com base nos dados da linha.
+- **Crie Regras Visuais:** Na seção de "Formatação Condicional", crie uma nova regra.
+- **Defina a Condição:** Estabeleça a condição, por exemplo: "Quando a coluna `status` tiver o valor igual a 'Urgente'".
+- **Aplique o Estilo:** Use seletores de cor para definir que, quando a condição for verdadeira, a cor de fundo da célula ou da linha inteira deve se tornar vermelha e o texto, branco.
+
+### 5. Comportamentos da Tabela
+Habilite e configure as funcionalidades centrais da tabela com um clique. Na aba "Comportamento", você pode:
+- **Ativar/Desativar Paginação:** Com um único interruptor, ative a paginação para tabelas com muitos dados e defina quantos itens exibir por página.
+- **Controlar Ordenação e Filtros:** Habilite a capacidade dos usuários de ordenar colunas e filtrar os dados com simples caixas de seleção.
+- **Gerenciar Seleção de Linhas:** Permita que os usuários selecionem uma ou várias linhas para realizar ações em lote.
 
 ### Editores Especializados
 
