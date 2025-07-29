@@ -7,6 +7,7 @@ import {FeriasAfastamentos} from './features/ferias-afastamentos/ferias-afastame
 import {EventosFolha} from './features/eventos-folha/eventos-folha';
 import {FolhaPagamento} from './features/folha-pagamento/folha-pagamento';
 import {Cargos} from './features/cargos/cargos';
+// import { IntegrationDemoComponent } from '@praxis/table';
 
 export const routes: Routes = [
   { path: 'funcionarios', component: Funcionarios },
@@ -17,4 +18,6 @@ export const routes: Routes = [
   { path: 'ferias-afastamentos', component: FeriasAfastamentos },
   { path: 'eventos-folha', component: EventosFolha },
   { path: 'folha-pagamento', component: FolhaPagamento },
+  // { path: 'integration-demo', component: IntegrationDemoComponent },
+  { path: '', redirectTo: '/funcionarios', pathMatch: 'full' }
 ];

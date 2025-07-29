@@ -7,7 +7,6 @@ import {MatIcon} from '@angular/material/icon';
 import {MatButtonModule, MatIconButton} from '@angular/material/button';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import {MatSelectModule} from '@angular/material/select';
-import {PraxisTable} from '@praxis/table';
 
 
 
@@ -28,7 +27,7 @@ window.MonacoEnvironment = {
 
 @Component({
   selector: 'app-root',
-  imports: [MatSidenavModule, MatFormFieldModule, MatSelectModule, MatButtonModule, MatIcon, MatToolbar, PraxisTable, MatNavList, MatListSubheaderCssMatStyler, MatListItem, RouterLink, RouterOutlet, RouterLinkActive],
+  imports: [MatSidenavModule, MatFormFieldModule, MatSelectModule, MatButtonModule, MatIcon, MatToolbar, MatNavList, MatListSubheaderCssMatStyler, MatListItem, RouterLink, RouterOutlet, RouterLinkActive],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
