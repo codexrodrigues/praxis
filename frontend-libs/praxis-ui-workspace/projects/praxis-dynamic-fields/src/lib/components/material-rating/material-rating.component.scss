@@ -1,0 +1,45 @@
+/**
+ * Estilos para MaterialRatingComponent
+ */
+
+.pdx-rating-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.pdx-rating-stars {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.pdx-rating-star {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+}
+
+.pdx-rating-star.filled mat-icon,
+.pdx-rating-star.half mat-icon {
+  color: inherit;
+}
+
+.pdx-rating-star.empty mat-icon {
+  color: rgba(0, 0, 0, 0.38);
+}
+
+.pdx-rating-stars.readonly .pdx-rating-star,
+.pdx-rating-stars.disabled .pdx-rating-star {
+  cursor: default;
+  pointer-events: none;
+}
+
+.pdx-rating-value {
+  margin-left: 8px;
+  font-size: 14px;
+  color: var(--mdc-theme-on-surface, rgba(0,0,0,.87));
+}

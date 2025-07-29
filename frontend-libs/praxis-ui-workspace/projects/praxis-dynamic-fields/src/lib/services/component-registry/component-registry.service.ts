@@ -298,6 +298,12 @@ export class ComponentRegistryService implements IComponentRegistry {
       () => import('../../components/material-timepicker/material-timepicker.component').then(m => m.MaterialTimepickerComponent)
     );
 
+    // Rating
+    this.register(
+      FieldControlTypeEnum.RATING,
+      () => import('../../components/material-rating/material-rating.component').then(m => m.MaterialRatingComponent)
+    );
+
     // COMPONENTES PLANEJADOS PARA IMPLEMENTAÇÃO FUTURA
 
     // Rating (futura implementação)
