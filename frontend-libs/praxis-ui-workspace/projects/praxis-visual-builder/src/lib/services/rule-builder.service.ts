@@ -83,7 +83,7 @@ export class RuleBuilderService {
     const newNode: RuleNode = {
       id: nodeId,
       type: node.type || RuleNodeType.FIELD_CONDITION,
-      label: node.label || this.generateNodeLabel(node.type || RuleNodeType.FIELD_CONDITION),
+      label: node.label || this.generateNodeLabel((node.type as RuleNodeType) || RuleNodeType.FIELD_CONDITION),
       metadata: node.metadata,
       selected: false,
       expanded: true,
@@ -375,10 +375,12 @@ export class RuleBuilderService {
         }
       
       case 'typescript':
-        return this.exportToTypeScript(this.toSpecification(), options);
+        const spec = this.toSpecification();
+        return spec ? this.exportToTypeScript(spec, options) : '';
       
       case 'form-config':
-        return this.exportToFormConfig(this.toSpecification(), options);
+        const formSpec = this.toSpecification();
+        return formSpec ? this.exportToFormConfig(formSpec, options) : '';
       
       default:
         throw new Error(`Unsupported export format: ${options.format}`);
@@ -535,8 +537,8 @@ export class RuleBuilderService {
       });
     }
 
-    // Perform round-trip validation for root nodes
-    if (this.config?.validation?.enableRoundTripValidation) {
+    // Perform round-trip validation for root nodes (if enabled)
+    if (this.config?.validation?.realTime) {
       const roundTripErrors = this.validateRoundTrip(currentState);
       errors.push(...roundTripErrors);
     }
@@ -730,6 +732,8 @@ export class RuleBuilderService {
       [RuleNodeType.CONTEXTUAL]: 'Contextual',
       [RuleNodeType.AT_LEAST]: 'At Least',
       [RuleNodeType.EXACTLY]: 'Exactly',
+      [RuleNodeType.EXPRESSION]: 'Expression',
+      [RuleNodeType.CONTEXTUAL_TEMPLATE]: 'Contextual Template',
       [RuleNodeType.CUSTOM]: 'Custom'
     };
 
@@ -746,7 +750,7 @@ export class RuleBuilderService {
 
     return {
       ...node,
-      children: node.children?.map(childId => this.buildRuleNodeTree(childId)).filter(child => child !== null) as RuleNode[] || []
+      children: node.children || []
     };
   }
 
@@ -755,18 +759,25 @@ export class RuleBuilderService {
     const rootNodes: string[] = [rootNode.id];
 
     const flattenNode = (node: RuleNode): void => {
-      // Store the node without children in the flat structure
+      // Store the node in the flat structure
       nodes[node.id] = {
         ...node,
-        children: node.children?.map(child => child.id) || []
+        children: node.children || []
       };
 
-      // Recursively flatten children
-      if (node.children) {
-        node.children.forEach(child => {
-          child.parentId = node.id;
-          flattenNode(child);
-        });
+      // Recursively flatten children if they exist and are RuleNode objects (not just IDs)
+      if (node.children && node.children.length > 0) {
+        // If children are already string IDs, no need to flatten
+        const firstChild = node.children[0];
+        if (typeof firstChild === 'object' && firstChild.id) {
+          // Children are RuleNode objects, need to flatten them
+          node.children.forEach((child: any) => {
+            if (child && typeof child === 'object' && child.id) {
+              child.parentId = node.id;
+              flattenNode(child);
+            }
+          });
+        }
       }
     };
 

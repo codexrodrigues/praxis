@@ -41,7 +41,7 @@ export abstract class VisualBuilderError extends Error {
   constructor(
     message: string,
     context: Record<string, any> = {},
-    public readonly cause?: Error
+    public override readonly cause?: Error
   ) {
     super(message);
     this.name = this.constructor.name;
@@ -49,8 +49,8 @@ export abstract class VisualBuilderError extends Error {
     this.context = context;
     
     // Maintain proper stack trace
-    if (Error.captureStackTrace) {
-      Error.captureStackTrace(this, this.constructor);
+    if ((Error as any).captureStackTrace) {
+      (Error as any).captureStackTrace(this, this.constructor);
     }
   }
 
@@ -294,8 +294,8 @@ export class ErrorHandler {
   getStatistics(): ErrorStatistics {
     const stats: ErrorStatistics = {
       total: this.errors.length,
-      byCategory: {},
-      bySeverity: {},
+      byCategory: {} as Record<ErrorCategory, number>,
+      bySeverity: {} as Record<ErrorSeverity, number>,
       recent: this.errors.slice(-10)
     };
 

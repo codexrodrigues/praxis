@@ -13,11 +13,45 @@ export * from './lib/models/array-field-schema.model';
 // Services
 export * from './lib/services/field-schema.service';
 export * from './lib/services/rule-builder.service';
-export * from './lib/services/specification-bridge.service';
+export { 
+  SpecificationBridgeService
+} from './lib/services/specification-bridge.service';
+export type { 
+  SpecificationContextualConfig 
+} from './lib/services/specification-bridge.service';
 export * from './lib/services/round-trip-validator.service';
 export * from './lib/services/export-integration.service';
 export * from './lib/services/webhook-integration.service';
 export * from './lib/services/rule-template.service';
+export * from './lib/services/rule-validation.service';
+export * from './lib/services/rule-node-registry.service';
+export * from './lib/services/converters/converter-factory.service';
+export * from './lib/services/rule-conversion.service';
+export * from './lib/services/dsl/dsl-parsing.service';
+export { 
+  ContextManagementService,
+  ContextScope,
+  ContextScopeType,
+  ContextVariable,
+  ContextValue 
+} from './lib/services/context/context-management.service';
+export { 
+  VisualBuilderError,
+  ValidationError as VBValidationError,
+  ConversionError,
+  RegistryError,
+  DslError,
+  ContextError,
+  ConfigurationError,
+  InternalError,
+  ErrorCategory,
+  ErrorSeverity,
+  ErrorInfo,
+  ErrorHandler,
+  ErrorStatistics,
+  globalErrorHandler,
+  createError
+} from './lib/errors/visual-builder-errors';
 
 // Components
 export * from './lib/components/rule-editor.component';

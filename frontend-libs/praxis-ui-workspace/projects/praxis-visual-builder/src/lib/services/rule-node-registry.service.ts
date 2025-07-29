@@ -373,9 +373,9 @@ export class RuleNodeRegistryService {
   }
   
   /**
-   * Validate the integrity of the node graph
+   * Validate the graph structure integrity (legacy method for backward compatibility)
    */
-  validateIntegrity(): RegistryValidationResult {
+  validateGraphIntegrity(): RegistryValidationResult {
     const errors: string[] = [];
     const warnings: string[] = [];
     
