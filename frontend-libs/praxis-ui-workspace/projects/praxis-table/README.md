@@ -38,7 +38,79 @@ npm install @praxis/core @praxis/table
 
 ## 📝 Uso Básico
 
-### Importação do Módulo
+### Conectando ao Backend com `resourcePath`
+
+A forma mais poderosa de usar a `<praxis-table>` é conectá-la diretamente a um endpoint de API compatível com o ecossistema Praxis. Isso é feito através do input `resourcePath`.
+
+Quando `resourcePath` é fornecido, a tabela se torna "inteligente":
+1.  **Busca automática de dados**: A tabela gerencia a paginação, ordenação e filtros, fazendo as requisições necessárias ao backend.
+2.  **Geração dinâmica de colunas**: A tabela busca os metadados (schema) do backend para gerar as colunas automaticamente, respeitando as configurações definidas no `praxis-metadata-core` (via anotação `@UISchema`).
+
+```html
+<!-- Exemplo no template do seu componente -->
+<praxis-table
+  resourcePath="human-resources/departamentos"
+  [editModeEnabled]="true">
+</praxis-table>
+```
+
+Neste exemplo:
+- `resourcePath="human-resources/departamentos"` instrui a tabela a se comunicar com o endpoint `/api/human-resources/departamentos`.
+- A tabela fará requisições como `POST /api/human-resources/departamentos/filter` para obter os dados e `GET /api/human-resources/departamentos/schemas` para obter a configuração das colunas.
+- `[editModeEnabled]="true"` permite a edição visual da configuração da tabela em tempo real.
+
+### Fluxo de Comunicação do `resourcePath`
+
+O diagrama abaixo ilustra como a propriedade `resourcePath` conecta o componente frontend ao controller do backend.
+
+```mermaid
+sequenceDiagram
+    participant FE_Component as Componente Angular<br>(departamentos.html)
+    participant Praxis_Table as @praxis/table<br>(praxis-table.ts)
+    participant Crud_Service as @praxis/core<br>(generic-crud.service.ts)
+    participant BE_Controller as Backend Controller<br>(DepartamentoController.java)
+    participant Abstract_Controller as AbstractCrudController
+
+    FE_Component->>Praxis_Table: Usa o componente com <br> <praxis-table resourcePath="human-resources/departamentos">
+
+    activate Praxis_Table
+    Praxis_Table->>Praxis_Table: ngOnChanges() detecta o @Input() resourcePath
+
+    Praxis_Table->>Crud_Service: Chama crudService.configure("human-resources/departamentos")
+    activate Crud_Service
+    Crud_Service->>Crud_Service: Armazena "human-resources/departamentos" <br> e constrói a URL base (ex: /api)
+    deactivate Crud_Service
+
+    Praxis_Table->>Crud_Service: Chama crudService.filter(...) para buscar dados
+    activate Crud_Service
+    Crud_Service->>Crud_Service: getEndpointUrl('filter') constrói a URL final: <br> "/api/human-resources/departamentos/filter"
+    Crud_Service->>BE_Controller: Requisição HTTP POST para /api/human-resources/departamentos/filter
+    deactivate Crud_Service
+
+    activate BE_Controller
+    Note over BE_Controller: @RequestMapping("/human-resources/departamentos")
+    BE_Controller->>Abstract_Controller: Herda o método que lida com @PostMapping("/filter")
+
+    activate Abstract_Controller
+    Abstract_Controller->>Abstract_Controller: Processa a requisição e busca os dados
+    Abstract_Controller-->>BE_Controller: Retorna os dados
+    deactivate Abstract_Controller
+
+    BE_Controller-->>Crud_Service: Resposta HTTP com os dados (Page<DepartamentoDTO>)
+    deactivate BE_Controller
+
+    activate Crud_Service
+    Crud_Service-->>Praxis_Table: Retorna um Observable com os dados
+    deactivate Crud_Service
+
+    Praxis_Table->>Praxis_Table: Atualiza o dataSource da tabela com os dados recebidos
+    deactivate Praxis_Table
+```
+
+### Uso com Dados Locais (Client-Side)
+
+Se você precisar fornecer os dados manualmente (por exemplo, de uma fonte que não é uma API Praxis), pode usar o input `[data]` e omitir o `resourcePath`. Neste modo, todas as operações (paginação, ordenação, filtro) são realizadas no lado do cliente.
+
 ```typescript
 import { PraxisTable } from '@praxis/table';
 import { TableConfig } from '@praxis/core';
@@ -55,90 +127,23 @@ import { TableConfig } from '@praxis/core';
   `
 })
 export class ExampleComponent {
-  // Configuração unificada
+  // Configuração de colunas e comportamento é obrigatória neste modo
   tableConfig: TableConfig = {
     columns: [
-      { field: 'id', header: 'ID', type: 'number', sortable: true },
-      { field: 'name', header: 'Nome', type: 'string', sortable: true },
-      { field: 'email', header: 'Email', type: 'string', filterable: true },
-      { field: 'department', header: 'Departamento', type: 'string' },
-      { field: 'salary', header: 'Salário', type: 'currency' }
+      { field: 'id', header: 'ID', type: 'number' },
+      { field: 'name', header: 'Nome', type: 'string' },
+      { field: 'email', header: 'Email', type: 'string' },
     ],
     behavior: {
-      pagination: {
-        enabled: true,
-        pageSize: 10,
-        pageSizeOptions: [5, 10, 25, 50],
-        showFirstLastButtons: true,
-        showPageNumbers: true,
-        showPageInfo: true,
-        position: 'bottom',
-        style: 'default',
-        strategy: 'client'
-      },
-      sorting: {
-        enabled: true,
-        multiSort: true,
-        strategy: 'client',
-        showSortIndicators: true,
-        indicatorPosition: 'end',
-        allowClearSort: true
-      },
-      filtering: {
-        enabled: true,
-        strategy: 'client',
-        debounceTime: 300,
-        globalFilter: {
-          enabled: true,
-          placeholder: 'Buscar...',
-          position: 'toolbar'
-        }
-      },
-      selection: {
-        enabled: true,
-        type: 'multiple',
-        mode: 'checkbox',
-        allowSelectAll: true,
-        checkboxPosition: 'start'
-      }
-    },
-    toolbar: {
-      visible: true,
-      position: 'top',
-      title: 'Lista de Funcionários',
-      actions: [
-        {
-          id: 'add',
-          label: 'Adicionar',
-          icon: 'add',
-          type: 'button',
-          action: 'add',
-          position: 'start'
-        }
-      ]
-    },
-    actions: {
-      row: {
-        enabled: true,
-        position: 'end',
-        actions: [
-          { id: 'edit', label: 'Editar', icon: 'edit', action: 'edit' },
-          { id: 'delete', label: 'Excluir', icon: 'delete', action: 'delete' }
-        ]
-      },
-      bulk: {
-        enabled: true,
-        position: 'toolbar',
-        actions: [
-          { id: 'deleteSelected', label: 'Excluir Selecionados', icon: 'delete', action: 'deleteSelected' }
-        ]
-      }
+      pagination: { enabled: true, pageSize: 10 },
+      sorting: { enabled: true },
+      filtering: { enabled: true, globalFilter: { enabled: true } }
     }
   };
 
   employees = [
-    { id: 1, name: 'João Silva', email: 'joao@empresa.com', department: 'TI', salary: 5000 },
-    { id: 2, name: 'Maria Santos', email: 'maria@empresa.com', department: 'RH', salary: 4500 },
+    { id: 1, name: 'João Silva', email: 'joao@empresa.com' },
+    { id: 2, name: 'Maria Santos', email: 'maria@empresa.com' },
     // ... mais dados
   ];
 }
