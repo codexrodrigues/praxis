@@ -74,34 +74,29 @@ Com a aplicação em execução, abra seu navegador e acesse:
 
 [http://localhost:8086/swagger-ui.html](http://localhost:8086/swagger-ui.html)
 
-Você verá a interface do Swagger UI, que documenta os endpoints da API. Explore o endpoint POST `/users`. Você notará que o schema da requisição para `UserDTO` no Swagger UI não exibirá diretamente as anotações `x-ui` do Praxis, pois estas são extensões do schema OpenAPI e são servidas por um endpoint específico do Praxis.
+Você verá a interface do Swagger UI, que documenta os endpoints da API. Explore o endpoint POST `/api/human-resources/funcionarios`. Você notará que o schema da requisição para `FuncionarioDTO` no Swagger UI não exibirá diretamente as anotações `x-ui` do Praxis, pois estas são extensões do schema OpenAPI e são servidas por um endpoint específico do Praxis.
 
 ## Acessando o Schema Enriquecido pelo Praxis
 
-O `praxis-metadata-springdoc` expõe os metadados de UI enriquecidos através de um endpoint específico. Para visualizar o schema do `UserDTO` com as propriedades `x-ui` injetadas pelo Praxis, faça uma requisição GET para o seguinte endpoint (por exemplo, usando `curl` ou uma ferramenta como o Postman):
+O `praxis-metadata-springdoc` expõe os metadados de UI enriquecidos através de um endpoint específico. Para visualizar o schema do `FuncionarioDTO` com as propriedades `x-ui` injetadas pelo Praxis, faça uma requisição GET para o seguinte endpoint (por exemplo, usando `curl` ou uma ferramenta como o Postman):
 
 ```bash
 # Schema do corpo de requisição
-curl -X GET "http://localhost:8086/schemas/filtered?path=/users&operation=post&schemaType=request"
+curl -X GET "http://localhost:8086/schemas/filtered?path=/api/human-resources/funcionarios&operation=post&schemaType=request"
 
 # Schema de resposta
-curl -X GET "http://localhost:8086/schemas/filtered?path=/users&operation=post&schemaType=response"
+curl -X GET "http://localhost:8086/schemas/filtered?path=/api/human-resources/funcionarios&operation=post&schemaType=response"
 ```
 
 **O que esperar na resposta:**
 
-Você receberá uma resposta JSON contendo a especificação OpenAPI para o endpoint `/users` (operação POST). Dentro desta especificação, o schema para `UserDTO` (geralmente em `components.schemas.UserDTO`) incluirá as propriedades `x-ui` que foram definidas através das anotações Praxis:
-
-*   `fullName`: Terá `x-ui-controlType: "nomeProprio"` (devido a `@UINomeProprioExtension`).
-*   `birthDate`: Terá `x-ui-controlType: "data"` (devido a `@UIDataExtension`).
-*   `email`: Terá `x-ui-controlType: "email"` (definido via `@UIExtension`).
-*   `active`: Não terá um `x-ui-controlType` específico, mas estará presente no schema.
+Você receberá uma resposta JSON contendo a especificação OpenAPI para o endpoint `/api/human-resources/funcionarios` (operação POST). Dentro desta especificação, o schema para `FuncionarioDTO` (geralmente em `components.schemas.FuncionarioDTO`) incluirá as propriedades `x-ui` que foram definidas através das anotações Praxis.
 
 Essas extensões `x-ui` são o que uma aplicação frontend compatível com Praxis (como uma construída com `praxis-ui`) utilizaria para renderizar dinamicamente formulários e componentes.
 
 ## Funcionalidades Demonstradas
 
-*   **Anotações de Metadados:** Uso de `@UISchema`, `@UIExtension` e extensões padrão como `@UINomeProprioExtension` e `@UIDataExtension` no `UserDTO.java`.
+*   **Anotações de Metadados:** Uso de `@UISchema`, `@UIExtension` e extensões padrão no `FuncionarioDTO.java`.
 *   **Auto-configuração:** O `praxis-spring-boot-starter` configura automaticamente os beans necessários para o Praxis funcionar.
 *   **Exposição de Schema:** O `praxis-metadata-springdoc` integra-se ao SpringDoc para expor os metadados enriquecidos, que podem ser consumidos por aplicações cliente.
 
