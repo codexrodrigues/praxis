@@ -51,6 +51,10 @@ export * from './lib/components/material-date-picker/material-date-picker.compon
 export * from './lib/components/material-date-range/material-date-range.component';
 export * from './lib/components/material-button/material-button.component';
 export * from './lib/components/material-colorpicker/material-colorpicker.component';
+export * from './lib/components/material-toggle/material-toggle.component';
+export * from './lib/components/material-slider/material-slider.component';
+export * from './lib/components/material-timepicker/material-timepicker.component';
+export * from './lib/components/material-rating/material-rating.component';
 
 // =============================================================================
 // DIRETIVAS
