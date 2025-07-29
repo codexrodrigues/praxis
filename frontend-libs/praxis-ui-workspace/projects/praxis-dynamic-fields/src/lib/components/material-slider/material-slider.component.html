@@ -1,0 +1,90 @@
+<!-- Container principal do slider -->
+<div class="pdx-slider-container" [class]="sliderSpecificClasses()">
+
+  <!-- Rótulo do campo -->
+  @if (metadata()?.label) {
+    <label class="pdx-slider-label" [for]="componentId() + '-slider'">
+      {{ metadata()?.label }}
+      @if (metadata()?.required) {
+        <span class="pdx-required-marker" aria-label="required"> *</span>
+      }
+    </label>
+  }
+
+  <!-- Controle do slider -->
+  <div class="pdx-slider-wrapper">
+    @if (showCurrentValue()) {
+      <div class="pdx-slider-value">{{ formattedValue() }}</div>
+    }
+
+    <mat-slider
+      class="pdx-slider-control"
+      [id]="componentId() + '-slider'"
+      [min]="minValue()"
+      [max]="maxValue()"
+      [step]="stepValue()"
+      [value]="sliderState().value"
+      [disabled]="componentState().disabled"
+      [color]="materialColor()"
+      [vertical]="isVertical()"
+      [thumbLabel]="shouldShowThumbLabel()"
+      [displayWith]="thumbLabelFormatter"
+      [tickInterval]="shouldShowTickMarks() ? stepValue() : 0"
+      (input)="onSliderInput($event)"
+      (change)="onSliderChange($event)"
+      (slideStart)="onSliderStart()"
+      (slideEnd)="onSliderEnd()"
+      (focus)="onSliderFocus()"
+      (blur)="onSliderBlur()">
+    </mat-slider>
+
+    @if (showMinMaxLabels()) {
+      <div class="pdx-slider-labels">
+        <span class="pdx-slider-min">{{ minValue() }}</span>
+        <span class="pdx-slider-max">{{ maxValue() }}</span>
+      </div>
+    }
+  </div>
+
+  <!-- Texto de ajuda -->
+  @if (metadata()?.hint) {
+    <div class="pdx-slider-hint" [id]="componentId() + '-hint'">{{ metadata()?.hint }}</div>
+  }
+
+  <!-- Mensagens de erro -->
+  @if (hasValidationError()) {
+    <div class="pdx-slider-errors">
+      <div class="pdx-error-message">
+        <mat-icon class="pdx-error-icon">error_outline</mat-icon>
+        {{ primaryErrorMessage() }}
+      </div>
+
+      @if (allErrorMessages().length > 1) {
+        <div class="pdx-additional-errors">
+          @for (error of allErrorMessages().slice(1); track error) {
+            <div class="pdx-error-message pdx-additional-error">{{ error }}</div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- Indicador de validação assíncrona -->
+@if (validationState().isValidating) {
+  <div class="pdx-validation-loading" [attr.aria-label]="'Validating ' + metadata()?.label">
+    <mat-icon class="pdx-loading-spinner">hourglass_empty</mat-icon>
+    <span class="pdx-sr-only">Validating...</span>
+  </div>
+}
+
+<!-- Informações de debug -->
+@if (isDebugMode() && metadata()?.security) {
+  <div class="pdx-debug-info">
+    <small class="pdx-debug-security">
+      Security Level: {{ metadata()?.security?.securityLevel }}
+      @if (metadata()?.security?.audit?.enabled) { | Audit: ON }
+      | Value: {{ formattedValue() }}
+    </small>
+  </div>
+}
