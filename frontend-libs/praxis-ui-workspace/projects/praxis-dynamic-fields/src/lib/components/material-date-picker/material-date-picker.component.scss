@@ -1,0 +1,80 @@
+// =============================================================================
+// MATERIAL DATEPICKER COMPONENT STYLES
+// Enhanced for Corporate Date Range Support
+// =============================================================================
+
+.pdx-datepicker-container {
+  display: block;
+  width: 100%;
+  
+  // =============================================================================
+  // CORPORATE PRESETS STYLING
+  // =============================================================================
+  
+  .pdx-date-presets {
+    margin-bottom: 16px;
+    
+    .pdx-preset-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      
+      .pdx-preset-button {
+        min-width: auto;
+        padding: 6px 12px;
+        font-size: 12px;
+        line-height: 1.2;
+        border-radius: 16px;
+        text-transform: none;
+        transition: all 0.2s ease;
+        
+        mat-icon {
+          width: 16px;
+          height: 16px;
+          font-size: 16px;
+          margin-right: 4px;
+        }
+        
+        &.pdx-preset-active {
+          background-color: var(--mat-sys-primary);
+          color: var(--mat-sys-on-primary);
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        &:hover:not(.pdx-preset-active) {
+          background-color: var(--mat-sys-primary-container);
+          color: var(--mat-sys-on-primary-container);
+        }
+      }
+      
+      .pdx-preset-clear {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+        opacity: 0.7;
+        transition: opacity 0.2s ease;
+        
+        &:hover {
+          opacity: 1;
+        }
+        
+        mat-icon {
+          width: 18px;
+          height: 18px;
+          font-size: 18px;
+        }
+      }
+    }
+  }
+  
+  // Dropdown de presets (estilo alternativo)
+  .pdx-date-presets-dropdown {
+    margin-bottom: 16px;
+    
+    .pdx-preset-selector {
+      width: 100%;
+      max-width: 300px;
+      
+      mat-option {
+        display: flex;
