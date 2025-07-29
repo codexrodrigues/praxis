@@ -304,6 +304,12 @@ export class ComponentRegistryService implements IComponentRegistry {
       () => import('../../components/material-rating/material-rating.component').then(m => m.MaterialRatingComponent)
     );
 
+    // Color Picker
+    this.register(
+      FieldControlTypeEnum.COLOR_PICKER,
+      () => import('../../components/material-colorpicker/material-colorpicker.component').then(m => m.MaterialColorPickerComponent)
+    );
+
     // COMPONENTES PLANEJADOS PARA IMPLEMENTAÇÃO FUTURA
 
     // Rating (futura implementação)

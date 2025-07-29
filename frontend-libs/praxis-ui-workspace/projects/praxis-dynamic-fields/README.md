@@ -7,6 +7,7 @@ Sistema simplificado de campos dinâmicos para aplicações corporativas Angular
 - **Registro Simplificado**: Sistema de registro de componentes focado no essencial
 - **Lazy Loading**: Carregamento sob demanda com cache inteligente
 - **Material Design**: Componentes baseados no Angular Material
+- **Color Picker**: Novo componente de seleção de cores com suporte a paleta e canvas
 - **TypeScript**: Totalmente tipado com integração do `@praxis/core`
 - **Corporativo**: Adequado para cenários empresariais
 

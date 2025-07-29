@@ -50,6 +50,7 @@ export * from './lib/components/material-radio/material-radio.component';
 export * from './lib/components/material-date-picker/material-date-picker.component';
 export * from './lib/components/material-date-range/material-date-range.component';
 export * from './lib/components/material-button/material-button.component';
+export * from './lib/components/material-colorpicker/material-colorpicker.component';
 
 // =============================================================================
 // DIRETIVAS
