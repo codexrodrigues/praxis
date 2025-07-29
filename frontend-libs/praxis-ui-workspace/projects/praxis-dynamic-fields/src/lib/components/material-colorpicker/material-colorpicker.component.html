@@ -1,0 +1,65 @@
+<div class="pdx-colorpicker-container" [class]="cssClasses() + ' ' + fieldCssClasses()">
+  <mat-form-field [appearance]="materialAppearance()" [color]="materialColor()">
+    <mat-label>{{ metadata()?.label }}</mat-label>
+    <input matInput
+           [formControl]="formControl"
+           [placeholder]="getColorPlaceholder()"
+           [readonly]="metadata()?.readonly"
+           [disabled]="effectiveDisabled()"
+           (input)="onColorInput($event)"
+           (focus)="focus()"
+           (blur)="blur()">
+    <div matPrefix class="pdx-color-preview"
+         [style.background-color]="currentColor()"
+         (click)="openColorPicker()"></div>
+    <mat-icon matSuffix class="pdx-picker-icon"
+              (click)="openColorPicker()"
+              [class.disabled]="effectiveDisabled()">palette</mat-icon>
+    <mat-hint *ngIf="metadata()?.hint && !hasValidationError()">{{ metadata()?.hint }}</mat-hint>
+    <mat-error *ngIf="hasValidationError()">{{ primaryErrorMessage() }}</mat-error>
+  </mat-form-field>
+
+  <div *ngIf="isPickerOpen()" class="pdx-colorpicker-overlay" (click)="closeColorPicker()">
+    <div class="pdx-colorpicker-dialog" (click)="$event.stopPropagation()">
+      <div class="pdx-current-color">
+        <div class="pdx-color-display" [style.background-color]="currentColor()"></div>
+        <span class="pdx-color-value">{{ currentColor() }}</span>
+      </div>
+      <div *ngIf="hasPresetColors()" class="pdx-preset-colors">
+        <div class="pdx-color-grid">
+          <button *ngFor="let color of getPresetColors(); trackBy: trackByColor"
+                  type="button"
+                  class="pdx-preset-color"
+                  [style.background-color]="color"
+                  [class.selected]="isColorSelected(color)"
+                  (click)="selectPresetColor(color)"></button>
+        </div>
+      </div>
+      <div *ngIf="allowCustomColors()" class="pdx-custom-color-picker">
+        <canvas #colorCanvas class="pdx-color-canvas"
+                width="200" height="200"
+                (mousedown)="onCanvasMouseDown($event)"
+                (mousemove)="onCanvasMouseMove($event)"
+                (mouseup)="onCanvasMouseUp()"></canvas>
+        <div class="pdx-color-cursor" [style.transform]="getCursorTransform()"></div>
+        <div class="pdx-hue-slider">
+          <input type="range" min="0" max="360" [value]="0" (input)="onHueChange($event)">
+        </div>
+        <div *ngIf="showAlpha()" class="pdx-alpha-slider">
+          <input type="range" min="0" max="1" step="0.01" [value]="1" (input)="onAlphaChange($event)">
+        </div>
+      </div>
+      <div *ngIf="showInput()" class="pdx-color-inputs">
+        <mat-form-field>
+          <mat-label>Color</mat-label>
+          <input matInput [(ngModel)]="formControl.value">
+        </mat-form-field>
+      </div>
+      <div class="pdx-colorpicker-actions">
+        <button mat-button (click)="closeColorPicker()">Cancelar</button>
+        <button mat-button (click)="clearColor()">Limpar</button>
+        <button mat-button color="primary" (click)="confirmColor()">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
