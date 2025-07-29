@@ -38,6 +38,9 @@ import { ScrollingModule } from '@angular/cdk/scrolling';
 
 import { BaseDynamicListComponent } from '../../base/base-dynamic-list.component';
 import { MaterialSelectMetadata, FieldOption, ComponentMetadata } from '@praxis/core';
+import { SelectSearchInputComponent } from './select-search-input.component';
+import { SelectOptionsListComponent } from './select-options-list.component';
+import { SelectChipsComponent } from './select-chips.component';
 import { GenericCrudService } from '@praxis/core';
 
 // =============================================================================
@@ -91,7 +94,10 @@ interface SelectState {
     MatProgressSpinnerModule,
     MatCheckboxModule,
     MatDividerModule,
-    ScrollingModule
+    ScrollingModule,
+    SelectSearchInputComponent,
+    SelectOptionsListComponent,
+    SelectChipsComponent
   ],
   providers: [{
     provide: NG_VALUE_ACCESSOR,
@@ -115,8 +121,8 @@ export class MaterialSelectComponent
   @ViewChild('selectElement', { static: false })
   private selectElement?: ElementRef;
 
-  @ViewChild('searchInput', { static: false })
-  private searchInput?: ElementRef<HTMLInputElement>;
+  @ViewChild(SelectSearchInputComponent, { static: false })
+  private searchInputCmp?: SelectSearchInputComponent;
 
   // =============================================================================
   // SIGNALS ESPECÍFICOS DO SELECT
@@ -332,9 +338,9 @@ export class MaterialSelectComponent
     this.updateSelectState({ panelOpen: true });
     
     // Focar na busca se habilitada
-    if (this.isSearchEnabled() && this.searchInput) {
+    if (this.isSearchEnabled() && this.searchInputCmp) {
       setTimeout(() => {
-        this.searchInput?.nativeElement.focus();
+        this.searchInputCmp?.focus();
       });
     }
   }
@@ -374,9 +380,7 @@ export class MaterialSelectComponent
     this.updateSelectState({ searchTerm: '' });
     this.setSearchTerm('');
     
-    if (this.searchInput) {
-      this.searchInput.nativeElement.value = '';
-    }
+    this.searchInputCmp?.clearInput();
   }
 
   // =============================================================================
