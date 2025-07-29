@@ -1,0 +1,242 @@
+<!-- Container principal do button -->
+<div class="pdx-button-container" [class]="buttonSpecificClasses()">
+
+  <!-- Button básico -->
+  @if (buttonVariant() === 'basic') {
+    <button
+      mat-button
+      [type]="buttonType()"
+      [color]="materialColor()"
+      [disabled]="isDisabled()"
+      [disableRipple]="shouldDisableRipple()"
+      [attr.aria-label]="metadata()?.label"
+      [attr.aria-describedby]="metadata()?.description ? componentId() + '-description' : null"
+      [matTooltip]="tooltipText()"
+      [matTooltipDisabled]="!tooltipText()"
+      matTooltipPosition="above"
+      (click)="onClick($event)"
+      (mousedown)="onMouseDown()"
+      (mouseup)="onMouseUp()"
+      (keydown)="onKeyDown($event)"
+      class="pdx-button-element">
+      
+      @if (shouldShowSpinner()) {
+        <mat-spinner diameter="16" class="pdx-button-spinner"></mat-spinner>
+      }
+      
+      @if (shouldShowIcon()) {
+        <mat-icon class="pdx-button-icon">{{ iconName() }}</mat-icon>
+      }
+      
+      <span class="pdx-button-text">{{ buttonText() }}</span>
+    </button>
+  }
+
+  <!-- Button raised -->
+  @if (buttonVariant() === 'raised') {
+    <button
+      mat-raised-button
+      [type]="buttonType()"
+      [color]="materialColor()"
+      [disabled]="isDisabled()"
+      [disableRipple]="shouldDisableRipple()"
+      [attr.aria-label]="metadata()?.label"
+      [attr.aria-describedby]="metadata()?.description ? componentId() + '-description' : null"
+      [matTooltip]="tooltipText()"
+      [matTooltipDisabled]="!tooltipText()"
+      matTooltipPosition="above"
+      (click)="onClick($event)"
+      (mousedown)="onMouseDown()"
+      (mouseup)="onMouseUp()"
+      (keydown)="onKeyDown($event)"
+      class="pdx-button-element">
+      
+      @if (shouldShowSpinner()) {
+        <mat-spinner diameter="16" class="pdx-button-spinner"></mat-spinner>
+      }
+      
+      @if (shouldShowIcon()) {
+        <mat-icon class="pdx-button-icon">{{ iconName() }}</mat-icon>
+      }
+      
+      <span class="pdx-button-text">{{ buttonText() }}</span>
+    </button>
+  }
+
+  <!-- Button stroked -->
+  @if (buttonVariant() === 'stroked') {
+    <button
+      mat-stroked-button
+      [type]="buttonType()"
+      [color]="materialColor()"
+      [disabled]="isDisabled()"
+      [disableRipple]="shouldDisableRipple()"
+      [attr.aria-label]="metadata()?.label"
+      [attr.aria-describedby]="metadata()?.description ? componentId() + '-description' : null"
+      [matTooltip]="tooltipText()"
+      [matTooltipDisabled]="!tooltipText()"
+      matTooltipPosition="above"
+      (click)="onClick($event)"
+      (mousedown)="onMouseDown()"
+      (mouseup)="onMouseUp()"
+      (keydown)="onKeyDown($event)"
+      class="pdx-button-element">
+      
+      @if (shouldShowSpinner()) {
+        <mat-spinner diameter="16" class="pdx-button-spinner"></mat-spinner>
+      }
+      
+      @if (shouldShowIcon()) {
+        <mat-icon class="pdx-button-icon">{{ iconName() }}</mat-icon>
+      }
+      
+      <span class="pdx-button-text">{{ buttonText() }}</span>
+    </button>
+  }
+
+  <!-- Button flat -->
+  @if (buttonVariant() === 'flat') {
+    <button
+      mat-flat-button
+      [type]="buttonType()"
+      [color]="materialColor()"
+      [disabled]="isDisabled()"
+      [disableRipple]="shouldDisableRipple()"
+      [attr.aria-label]="metadata()?.label"
+      [attr.aria-describedby]="metadata()?.description ? componentId() + '-description' : null"
+      [matTooltip]="tooltipText()"
+      [matTooltipDisabled]="!tooltipText()"
+      matTooltipPosition="above"
+      (click)="onClick($event)"
+      (mousedown)="onMouseDown()"
+      (mouseup)="onMouseUp()"
+      (keydown)="onKeyDown($event)"
+      class="pdx-button-element">
+      
+      @if (shouldShowSpinner()) {
+        <mat-spinner diameter="16" class="pdx-button-spinner"></mat-spinner>
+      }
+      
+      @if (shouldShowIcon()) {
+        <mat-icon class="pdx-button-icon">{{ iconName() }}</mat-icon>
+      }
+      
+      <span class="pdx-button-text">{{ buttonText() }}</span>
+    </button>
+  }
+
+  <!-- Button icon -->
+  @if (buttonVariant() === 'icon') {
+    <button
+      mat-icon-button
+      [type]="buttonType()"
+      [color]="materialColor()"
+      [disabled]="isDisabled()"
+      [disableRipple]="shouldDisableRipple()"
+      [attr.aria-label]="metadata()?.label || iconName()"
+      [attr.aria-describedby]="metadata()?.description ? componentId() + '-description' : null"
+      [matTooltip]="tooltipText() || metadata()?.label"
+      [matTooltipDisabled]="!tooltipText() && !metadata()?.label"
+      matTooltipPosition="above"
+      (click)="onClick($event)"
+      (mousedown)="onMouseDown()"
+      (mouseup)="onMouseUp()"
+      (keydown)="onKeyDown($event)"
+      class="pdx-button-element">
+      
+      @if (shouldShowSpinner()) {
+        <mat-spinner diameter="16" class="pdx-button-spinner"></mat-spinner>
+      } @else {
+        <mat-icon>{{ iconName() || 'button' }}</mat-icon>
+      }
+    </button>
+  }
+
+  <!-- Button FAB -->
+  @if (buttonVariant() === 'fab') {
+    <button
+      mat-fab
+      [type]="buttonType()"
+      [color]="materialColor()"
+      [disabled]="isDisabled()"
+      [disableRipple]="shouldDisableRipple()"
+      [attr.aria-label]="metadata()?.label || iconName()"
+      [attr.aria-describedby]="metadata()?.description ? componentId() + '-description' : null"
+      [matTooltip]="tooltipText() || metadata()?.label"
+      [matTooltipDisabled]="!tooltipText() && !metadata()?.label"
+      matTooltipPosition="above"
+      (click)="onClick($event)"
+      (mousedown)="onMouseDown()"
+      (mouseup)="onMouseUp()"
+      (keydown)="onKeyDown($event)"
+      class="pdx-button-element">
+      
+      @if (shouldShowSpinner()) {
+        <mat-spinner diameter="20" class="pdx-button-spinner"></mat-spinner>
+      } @else {
+        <mat-icon>{{ iconName() || 'add' }}</mat-icon>
+      }
+    </button>
+  }
+
+  <!-- Button Mini FAB -->
+  @if (buttonVariant() === 'mini-fab') {
+    <button
+      mat-mini-fab
+      [type]="buttonType()"
+      [color]="materialColor()"
+      [disabled]="isDisabled()"
+      [disableRipple]="shouldDisableRipple()"
+      [attr.aria-label]="metadata()?.label || iconName()"
+      [attr.aria-describedby]="metadata()?.description ? componentId() + '-description' : null"
+      [matTooltip]="tooltipText() || metadata()?.label"
+      [matTooltipDisabled]="!tooltipText() && !metadata()?.label"
+      matTooltipPosition="above"
+      (click)="onClick($event)"
+      (mousedown)="onMouseDown()"
+      (mouseup)="onMouseUp()"
+      (keydown)="onKeyDown($event)"
+      class="pdx-button-element">
+      
+      @if (shouldShowSpinner()) {
+        <mat-spinner diameter="16" class="pdx-button-spinner"></mat-spinner>
+      } @else {
+        <mat-icon>{{ iconName() || 'add' }}</mat-icon>
+      }
+    </button>
+  }
+
+  <!-- Descrição do botão (se disponível) -->
+  @if (metadata()?.description && !isIconOnlyButton()) {
+    <div 
+      class="pdx-button-description"
+      [id]="componentId() + '-description'">
+      {{ metadata()?.description }}
+    </div>
+  }
+
+</div>
+
+<!-- Loading indicator para validação assíncrona -->
+@if (validationState().isValidating) {
+  <div class="pdx-validation-loading" [attr.aria-label]="'Validating ' + metadata()?.label">
+    <mat-icon class="pdx-loading-spinner">hourglass_empty</mat-icon>
+    <span class="pdx-sr-only">Validating...</span>
+  </div>
+}
+
+<!-- Indicador de estado enterprise (debug) -->
+@if (isDebugMode() && metadata()?.security) {
+  <div class="pdx-debug-info">
+    <small class="pdx-debug-security">
+      Security Level: {{ metadata()?.security?.securityLevel }}
+      @if (metadata()?.security?.audit?.enabled) {
+        | Audit: ON
+      }
+      | Clicks: {{ buttonState().clickCount }}
+      @if (keyboardShortcut()) {
+        | Shortcut: {{ keyboardShortcut() }}
+      }
+    </small>
+  </div>
+}

@@ -1,0 +1,86 @@
+<!-- Container principal do toggle -->
+<div class="pdx-toggle-container" [class]="toggleSpecificClasses()">
+
+  <!-- Toggle switch -->
+  <div class="pdx-toggle-wrapper">
+    
+    <mat-slide-toggle
+      [formControl]="formControl"
+      [color]="materialColor()"
+      [labelPosition]="labelPosition()"
+      [disabled]="componentState().disabled"
+      [checked]="toggleState().checked"
+      [disableRipple]="shouldDisableRipple()"
+      [attr.aria-describedby]="shouldShowDescription() ? componentId() + '-description' : null"
+      (change)="onToggleChange($event)"
+      class="pdx-main-toggle">
+      
+      <!-- Label com ícone opcional -->
+      <div class="pdx-toggle-label-content">
+        @if (!shouldHideIcon() && metadata()?.prefixIcon) {
+          <mat-icon class="pdx-toggle-icon">{{ metadata()?.prefixIcon }}</mat-icon>
+        }
+        
+        <span class="pdx-toggle-label-text">{{ metadata()?.label }}</span>
+        
+        @if (metadata()?.required) {
+          <span class="pdx-required-marker" aria-label="required"> *</span>
+        }
+      </div>
+    </mat-slide-toggle>
+
+    <!-- Descrição do toggle -->
+    @if (shouldShowDescription()) {
+      <div 
+        class="pdx-toggle-description"
+        [id]="componentId() + '-description'"
+        [attr.aria-label]="'Description for ' + metadata()?.label">
+        {{ metadata()?.description }}
+      </div>
+    }
+
+  </div>
+
+  <!-- Mensagens de erro -->
+  @if (hasValidationError()) {
+    <div class="pdx-toggle-errors">
+      <div class="pdx-error-message">
+        <mat-icon class="pdx-error-icon">error_outline</mat-icon>
+        {{ primaryErrorMessage() }}
+      </div>
+
+      <!-- Erros adicionais (se houver múltiplos) -->
+      @if (allErrorMessages().length > 1) {
+        <div class="pdx-additional-errors">
+          @for (error of allErrorMessages().slice(1); track error) {
+            <div class="pdx-error-message pdx-additional-error">
+              {{ error }}
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+
+</div>
+
+<!-- Loading indicator para validação assíncrona -->
+@if (validationState().isValidating) {
+  <div class="pdx-validation-loading" [attr.aria-label]="'Validating ' + metadata()?.label">
+    <mat-icon class="pdx-loading-spinner">hourglass_empty</mat-icon>
+    <span class="pdx-sr-only">Validating...</span>
+  </div>
+}
+
+<!-- Indicador de estado enterprise (debug) -->
+@if (isDebugMode() && metadata()?.security) {
+  <div class="pdx-debug-info">
+    <small class="pdx-debug-security">
+      Security Level: {{ metadata()?.security?.securityLevel }}
+      @if (metadata()?.security?.audit?.enabled) {
+        | Audit: ON
+      }
+      | Value: {{ toggleState().value }} | Checked: {{ toggleState().checked }}
+    </small>
+  </div>
+}

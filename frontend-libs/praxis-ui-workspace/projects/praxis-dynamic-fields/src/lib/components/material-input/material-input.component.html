@@ -1,0 +1,173 @@
+<!-- Container principal do campo -->
+<mat-form-field 
+  [appearance]="materialAppearance()"
+  [color]="materialColor()"
+  [floatLabel]="floatLabelBehavior()"
+  [subscriptSizing]="metadata()?.materialDesign?.subscriptSizing || 'fixed'"
+  [hideRequiredMarker]="metadata()?.materialDesign?.hideRequiredMarker || false"
+  [class]="inputSpecificClasses()"
+  [class.pdx-disabled-interactive]="isDisabledInteractive()">
+
+  <!-- Label editável ou estático -->
+  @if (!labelEditingState().isEditing) {
+    <mat-label 
+      (dblclick)="onLabelDoubleClick()"
+      [matTooltip]="metadata()?.description || ''"
+      [matTooltipDisabled]="!metadata()?.description"
+      matTooltipPosition="above">
+      {{ metadata()?.label }}
+      @if (metadata()?.required && !metadata()?.materialDesign?.hideRequiredMarker) {
+        <span class="pdx-required-marker" aria-label="required"> *</span>
+      }
+    </mat-label>
+  } @else {
+    <!-- Editor inline de label -->
+    <input
+      #labelEditor
+      matInput
+      class="pdx-label-editor"
+      [value]="editingLabel()"
+      (input)="updateLabelText($event)"
+      (blur)="onLabelEditorBlur()"
+      (keydown)="onLabelEditorKeyDown($event)"
+      [attr.aria-label]="'Editing label for ' + metadata()?.name">
+  }
+
+  <!-- Ícone de prefixo -->
+  @if (metadata()?.prefixIcon) {
+    <mat-icon 
+      matPrefix 
+      [matTooltip]="'Icon: ' + metadata()?.prefixIcon"
+      matTooltipPosition="above">
+      {{ metadata()?.prefixIcon }}
+    </mat-icon>
+  }
+
+  <!-- Campo de input principal -->
+  <input
+    #inputElement
+    matInput
+    [formControl]="formControl"
+    [disabled]="effectiveDisabled()"
+    [errorStateMatcher]="errorStateMatcher()"
+    [type]="effectiveInputType()"
+    [placeholder]="metadata()?.placeholder || ''"
+    [maxlength]="metadata()?.maxLength || null"
+    [minlength]="metadata()?.minLength || null"
+    [autocomplete]="metadata()?.autocomplete || 'off'"
+    [spellcheck]="metadata()?.spellcheck ?? true"
+    [readonly]="metadata()?.readonly || metadata()?.readOnly || false"
+    [step]="metadata()?.step || null"
+    [min]="metadata()?.min || null"
+    [max]="metadata()?.max || null"
+    [attr.inputmode]="metadata()?.inputMode || null"
+    [attr.aria-describedby]="metadata()?.hint ? componentId() + '-hint' : null"
+    (input)="onInputChange($event)"
+    (focus)="onInputFocus($event)"
+    (blur)="onInputBlur($event)"
+    (keydown)="onKeyDown($event)">
+
+  <!-- Botão limpar campo -->
+  @if (shouldShowClearButton()) {
+    <button
+      mat-icon-button
+      matSuffix
+      type="button"
+      class="pdx-clear-button"
+      [attr.aria-label]="metadata()?.clearButton?.ariaLabel || ('Clear ' + metadata()?.label)"
+      [matTooltip]="metadata()?.clearButton?.tooltip || 'Clear field'"
+      matTooltipPosition="above"
+      (click)="clearValue()">
+      <mat-icon>{{ metadata()?.clearButton?.icon || 'clear' }}</mat-icon>
+    </button>
+  }
+
+  <!-- Toggle de visibilidade da senha -->
+  @if (shouldShowPasswordToggle()) {
+    <button
+      mat-icon-button
+      matSuffix
+      type="button"
+      class="pdx-password-toggle"
+      [attr.aria-label]="inputState().passwordVisible ? 'Hide password' : 'Show password'"
+      [matTooltip]="inputState().passwordVisible ? 'Hide password' : 'Show password'"
+      matTooltipPosition="above"
+      (click)="togglePasswordVisibility()">
+      <mat-icon>
+        {{ inputState().passwordVisible ? 'visibility_off' : 'visibility' }}
+      </mat-icon>
+    </button>
+  }
+
+  <!-- Ícone de sufixo customizado -->
+  @if (metadata()?.suffixIcon && !shouldShowClearButton() && !shouldShowPasswordToggle()) {
+    <mat-icon 
+      matSuffix
+      [matTooltip]="'Icon: ' + metadata()?.suffixIcon"
+      matTooltipPosition="above">
+      {{ metadata()?.suffixIcon }}
+    </mat-icon>
+  }
+
+  <!-- Texto de ajuda -->
+  @if (metadata()?.hint) {
+    <mat-hint 
+      [id]="componentId() + '-hint'"
+      align="start">
+      {{ metadata()?.hint }}
+    </mat-hint>
+  }
+
+  <!-- Contador de caracteres -->
+  @if (shouldShowCharacterCount()) {
+    <mat-hint 
+      align="end"
+      class="pdx-character-count"
+      [class.pdx-character-count-warning]="inputState().characterCount > (inputState().maxLength! * 0.8)"
+      [class.pdx-character-count-error]="inputState().characterCount >= inputState().maxLength!">
+      {{ inputState().characterCount }}{{ inputState().maxLength ? '/' + inputState().maxLength : '' }}
+    </mat-hint>
+  }
+
+  <!-- Mensagens de erro -->
+  @if (hasValidationError()) {
+    <mat-error 
+      [id]="componentId() + '-error'"
+      class="pdx-error-message">
+      <mat-icon class="pdx-error-icon">error_outline</mat-icon>
+      {{ primaryErrorMessage() }}
+    </mat-error>
+  }
+
+  <!-- Erros adicionais (se houver múltiplos) -->
+  @if (allErrorMessages().length > 1) {
+    <div class="pdx-additional-errors">
+      @for (error of allErrorMessages().slice(1); track error) {
+        <mat-error class="pdx-error-message pdx-additional-error">
+          {{ error }}
+        </mat-error>
+      }
+    </div>
+  }
+
+</mat-form-field>
+
+<!-- Loading indicator para validação assíncrona -->
+@if (validationState().isValidating) {
+  <div class="pdx-validation-loading" [attr.aria-label]="'Validating ' + metadata()?.label">
+    <mat-icon class="pdx-loading-spinner">hourglass_empty</mat-icon>
+    <span class="pdx-sr-only">Validating...</span>
+  </div>
+}
+
+<!-- Indicador de estado enterprise (debug) -->
+@if (isDebugMode() && metadata()?.security) {
+  <div class="pdx-debug-info">
+    <small class="pdx-debug-security">
+      Security Level: {{ metadata()?.security?.securityLevel }}
+      @if (metadata()?.security?.audit?.enabled) {
+        | Audit: ON
+      }
+    </small>
+  </div>
+}

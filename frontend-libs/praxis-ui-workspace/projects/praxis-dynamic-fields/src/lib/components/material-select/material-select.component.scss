@@ -1,0 +1,594 @@
+/**
+ * Estilos para o componente Material Select dinâmico
+ * 
+ * Utiliza variáveis do Angular Material e design tokens
+ * para garantir consistência visual e suporte a temas.
+ */
+
+@use '@angular/material' as mat;
+
+// =============================================================================
+// VARIÁVEIS E MIXINS
+// =============================================================================
+
+:host {
+  display: block;
+  width: 100%;
+  position: relative;
+
+  // Estados básicos do campo
+  &.pdx-loading {
+    pointer-events: none;
+    opacity: 0.7;
+  }
+
+  &.pdx-error {
+    .mat-mdc-form-field {
+      --mdc-outlined-text-field-outline-color: var(--mdc-theme-error, #f44336);
+    }
+  }
+
+  &.pdx-focused {
+    .mat-mdc-form-field {
+      --mdc-outlined-text-field-focused-outline-color: var(--mdc-theme-primary, #1976d2);
+    }
+  }
+
+  // Estados específicos do formulário
+  &.pdx-dirty {
+    .mat-mdc-form-field-label {
+      &::after {
+        content: ' •';
+        color: var(--mdc-theme-primary, #1976d2);
+        font-weight: bold;
+      }
+    }
+  }
+
+  &.pdx-pristine {
+    // Estilos para campos não tocados
+  }
+
+  &.pdx-touched {
+    // Estilos para campos tocados
+  }
+
+  &.pdx-valid.pdx-dirty {
+    .mat-mdc-form-field {
+      --mdc-outlined-text-field-outline-color: var(--mdc-theme-success, #4caf50);
+    }
+  }
+
+  &.pdx-invalid.pdx-touched {
+    .mat-mdc-form-field {
+      --mdc-outlined-text-field-outline-color: var(--mdc-theme-error, #f44336);
+    }
+  }
+
+  // Estados específicos do select
+  &.pdx-select-multiple {
+    .mat-mdc-select-value {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      align-items: center;
+    }
+  }
+
+  &.pdx-select-searchable {
+    .mat-mdc-select-panel {
+      padding-top: 0;
+    }
+  }
+
+  &.pdx-select-open {
+    .mat-mdc-form-field {
+      --mdc-outlined-text-field-focused-outline-color: var(--mdc-theme-primary, #1976d2);
+    }
+  }
+
+  &.pdx-select-has-select-all {
+    // Estilos para quando tem opção "selecionar todos"
+  }
+}
+
+// =============================================================================
+// ESTILOS DO FORM FIELD
+// =============================================================================
+
+.mat-mdc-form-field {
+  width: 100%;
+  
+  // Customização do select
+  .mat-mdc-select {
+    min-height: auto;
+    
+    .mat-mdc-select-value {
+      .mat-mdc-select-value-text {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+    }
+  }
+
+  &.pdx-has-chips {
+    .mat-mdc-form-field-infix {
+      padding-right: 8px;
+    }
+  }
+}
+
+// =============================================================================
+// ESTILOS DO PAINEL DO SELECT
+// =============================================================================
+
+.pdx-select-panel {
+  max-height: 400px;
+  
+  // Opção de busca
+  .pdx-search-option {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--mdc-theme-surface, #ffffff);
+    border-bottom: 1px solid var(--mdc-theme-outline-variant, #e0e0e0);
+    margin-bottom: 8px;
+    
+    &:hover {
+      background: var(--mdc-theme-surface, #ffffff) !important;
+    }
+    
+    .pdx-search-field {
+      width: 100%;
+      margin: 8px;
+      
+      .mat-mdc-form-field-wrapper {
+        margin: 0;
+        padding: 0;
+      }
+      
+      .mat-mdc-form-field-infix {
+        min-height: 40px;
+        padding: 4px 0;
+      }
+      
+      .pdx-clear-search {
+        width: 32px;
+        height: 32px;
+        
+        .mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+        }
+      }
+    }
+  }
+
+  // Opção "Selecionar Todos"
+  .pdx-select-all-option {
+    background: var(--mdc-theme-surface-variant, #f5f5f5);
+    font-weight: 500;
+    border-bottom: 1px solid var(--mdc-theme-outline-variant, #e0e0e0);
+    
+    .mat-mdc-checkbox {
+      margin-right: 8px;
+    }
+    
+    &:hover {
+      background: var(--mdc-theme-surface-variant, #f0f0f0) !important;
+    }
+  }
+
+  // Opções com checkbox (múltipla seleção)
+  .mat-mdc-option {
+    .mat-mdc-checkbox {
+      margin-right: 12px;
+      pointer-events: none;
+    }
+    
+    .pdx-option-icon {
+      margin-left: auto;
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      color: var(--mdc-theme-on-surface-variant, rgba(0, 0, 0, 0.6));
+    }
+  }
+
+  // Estados especiais de opções
+  .pdx-loading-option,
+  .pdx-empty-option,
+  .pdx-error-option {
+    text-align: center;
+    padding: 16px;
+    color: var(--mdc-theme-on-surface-variant, rgba(0, 0, 0, 0.6));
+    
+    &:hover {
+      background: transparent !important;
+    }
+  }
+
+  .pdx-loading-content,
+  .pdx-empty-content,
+  .pdx-error-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    
+    .mat-icon {
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+      color: var(--mdc-theme-on-surface-variant, rgba(0, 0, 0, 0.4));
+    }
+    
+    .mat-spinner {
+      margin: 0 auto;
+    }
+    
+    button {
+      margin-top: 8px;
+    }
+  }
+}
+
+// =============================================================================
+// CHIPS PARA SELEÇÃO MÚLTIPLA
+// =============================================================================
+
+.pdx-selected-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 4px 0;
+  max-width: 200px;
+  
+  .pdx-selection-chip {
+    font-size: 0.75rem;
+    height: 24px;
+    padding: 0 8px;
+    
+    .mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      margin-left: 4px;
+    }
+  }
+}
+
+// =============================================================================
+// VIRTUALIZAÇÃO
+// =============================================================================
+
+.pdx-virtual-viewport {
+  height: 300px;
+  max-height: 300px;
+}
+
+// =============================================================================
+// LABEL EDITÁVEL
+// =============================================================================
+
+.mat-mdc-form-field-label {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    color: var(--mdc-theme-primary, #1976d2);
+  }
+
+  .pdx-required-marker {
+    color: var(--mdc-theme-error, #f44336);
+    margin-left: 2px;
+    font-weight: bold;
+  }
+}
+
+.pdx-label-editor {
+  background: var(--mdc-theme-surface, #ffffff);
+  border: 1px solid var(--mdc-theme-primary, #1976d2);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: inherit;
+  font-family: inherit;
+  color: inherit;
+  outline: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  &:focus {
+    border-color: var(--mdc-theme-primary, #1976d2);
+    box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+  }
+}
+
+// =============================================================================
+// CONTADOR DE SELEÇÃO
+// =============================================================================
+
+.pdx-selection-count {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--mdc-theme-on-surface-variant, rgba(0, 0, 0, 0.6));
+  transition: color 0.2s ease;
+
+  &.pdx-selection-count-full {
+    color: var(--mdc-theme-primary, #1976d2);
+    font-weight: 500;
+  }
+}
+
+// =============================================================================
+// MENSAGENS DE ERRO
+// =============================================================================
+
+.pdx-error-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  margin-top: 4px;
+
+  .pdx-error-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    margin-top: 1px;
+    color: var(--mdc-theme-error, #f44336);
+  }
+
+  &.pdx-additional-error {
+    margin-top: 2px;
+    opacity: 0.8;
+    font-size: 0.7rem;
+  }
+}
+
+.pdx-additional-errors {
+  margin-top: 4px;
+}
+
+// =============================================================================
+// LOADING E VALIDAÇÃO
+// =============================================================================
+
+.pdx-data-loading {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--mdc-theme-primary, #1976d2);
+  font-size: 0.75rem;
+
+  .pdx-loading-spinner {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    animation: spin 1s linear infinite;
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+// =============================================================================
+// BOTÕES AUXILIARES
+// =============================================================================
+
+.pdx-clear-button {
+  width: 32px;
+  height: 32px;
+  line-height: 32px;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+  
+  &:hover {
+    opacity: 1;
+  }
+  
+  .mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+// =============================================================================
+// DEBUG E DESENVOLVIMENTO
+// =============================================================================
+
+.pdx-debug-info {
+  position: absolute;
+  top: -24px;
+  right: 0;
+  background: var(--mdc-theme-surface-variant, #f5f5f5);
+  border: 1px solid var(--mdc-theme-outline, #e0e0e0);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.65rem;
+  color: var(--mdc-theme-on-surface-variant, rgba(0, 0, 0, 0.6));
+  z-index: 10;
+
+  .pdx-debug-security {
+    display: block;
+    font-family: monospace;
+  }
+}
+
+// =============================================================================
+// ACESSIBILIDADE
+// =============================================================================
+
+.pdx-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// Melhor contraste para modo de alto contraste
+@media (prefers-contrast: high) {
+  :host {
+    .mat-mdc-form-field {
+      --mdc-outlined-text-field-outline-color: currentColor;
+      --mdc-outlined-text-field-focused-outline-color: currentColor;
+    }
+
+    .pdx-selection-count {
+      color: currentColor;
+      font-weight: bold;
+    }
+  }
+
+  .pdx-select-panel {
+    .pdx-search-option {
+      border-bottom-color: currentColor;
+    }
+
+    .pdx-select-all-option {
+      border-bottom-color: currentColor;
+    }
+  }
+}
+
+// Redução de movimento para usuários sensíveis
+@media (prefers-reduced-motion: reduce) {
+  :host {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+// =============================================================================
+// SUPORTE A TEMAS DARK
+// =============================================================================
+
+@media (prefers-color-scheme: dark) {
+  :host {
+    .pdx-label-editor {
+      background: var(--mdc-theme-surface, #121212);
+      border-color: var(--mdc-theme-primary, #90caf9);
+      color: var(--mdc-theme-on-surface, #ffffff);
+    }
+
+    .pdx-debug-info {
+      background: var(--mdc-theme-surface-variant, #2c2c2c);
+      border-color: var(--mdc-theme-outline, #404040);
+      color: var(--mdc-theme-on-surface-variant, rgba(255, 255, 255, 0.7));
+    }
+  }
+
+  .pdx-select-panel {
+    .pdx-search-option {
+      background: var(--mdc-theme-surface, #121212);
+      border-bottom-color: var(--mdc-theme-outline-variant, #404040);
+    }
+
+    .pdx-select-all-option {
+      background: var(--mdc-theme-surface-variant, #2c2c2c);
+      border-bottom-color: var(--mdc-theme-outline-variant, #404040);
+      
+      &:hover {
+        background: var(--mdc-theme-surface-variant, #353535) !important;
+      }
+    }
+  }
+}
+
+// =============================================================================
+// RESPONSIVE DESIGN
+// =============================================================================
+
+// Mobile específico
+@media (max-width: 599px) {
+  :host {
+    .pdx-selected-chips {
+      max-width: 150px;
+      
+      .pdx-selection-chip {
+        font-size: 0.7rem;
+        height: 20px;
+        
+        .mat-icon {
+          font-size: 14px;
+          width: 14px;
+          height: 14px;
+        }
+      }
+    }
+
+    .pdx-data-loading {
+      right: 16px;
+    }
+  }
+
+  .pdx-select-panel {
+    max-height: 300px;
+    
+    .pdx-search-option {
+      .pdx-search-field {
+        margin: 4px;
+        
+        .mat-mdc-form-field-infix {
+          min-height: 36px;
+        }
+      }
+    }
+
+    .pdx-virtual-viewport {
+      height: 250px;
+      max-height: 250px;
+    }
+  }
+}
+
+// Tablet e desktop
+@media (min-width: 600px) {
+  :host {
+    .pdx-selection-count {
+      font-size: 0.8rem;
+    }
+
+    .pdx-error-message {
+      font-size: 0.8rem;
+    }
+  }
+
+  .pdx-select-panel {
+    max-height: 500px;
+    
+    .pdx-virtual-viewport {
+      height: 400px;
+      max-height: 400px;
+    }
+  }
+}
+
+// Desktop grande
+@media (min-width: 1200px) {
+  .pdx-select-panel {
+    max-height: 600px;
+    
+    .pdx-virtual-viewport {
+      height: 500px;
+      max-height: 500px;
+    }
+  }
+}

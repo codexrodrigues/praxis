@@ -1,0 +1,473 @@
+/**
+ * Estilos para o componente Material Input dinâmico
+ * 
+ * Utiliza variáveis do Angular Material e design tokens
+ * para garantir consistência visual e suporte a temas.
+ */
+
+@use '@angular/material' as mat;
+
+// =============================================================================
+// VARIÁVEIS E MIXINS
+// =============================================================================
+
+:host {
+  display: block;
+  width: 100%;
+  position: relative;
+
+  // Estados básicos do campo
+  &.pdx-loading {
+    pointer-events: none;
+    opacity: 0.7;
+  }
+
+  &.pdx-error {
+    .mat-mdc-form-field {
+      --mdc-outlined-text-field-outline-color: var(--mdc-theme-error, #f44336);
+    }
+  }
+
+  &.pdx-focused {
+    .mat-mdc-form-field {
+      --mdc-outlined-text-field-focused-outline-color: var(--mdc-theme-primary, #1976d2);
+    }
+  }
+
+  // Estados específicos do formulário
+  &.pdx-dirty {
+    .mat-mdc-form-field-label {
+      &::after {
+        content: ' •';
+        color: var(--mdc-theme-primary, #1976d2);
+        font-weight: bold;
+      }
+    }
+  }
+
+  &.pdx-pristine {
+    // Estilos para campos não tocados
+  }
+
+  &.pdx-touched {
+    // Estilos para campos tocados
+  }
+
+  &.pdx-valid.pdx-dirty {
+    .mat-mdc-form-field {
+      --mdc-outlined-text-field-outline-color: var(--mdc-theme-success, #4caf50);
+    }
+  }
+
+  &.pdx-invalid.pdx-touched {
+    .mat-mdc-form-field {
+      --mdc-outlined-text-field-outline-color: var(--mdc-theme-error, #f44336);
+    }
+  }
+
+  // =============================================================================
+  // DISABLED INTERACTIVE STATE (CRITICAL ISSUE #10)
+  // =============================================================================
+  
+  &.pdx-disabled-interactive {
+    .mat-mdc-form-field {
+      // Maintain disabled visual appearance
+      opacity: 0.6;
+      
+      .mat-mdc-text-field-wrapper {
+        // Disabled-like styling but still interactive
+        background-color: var(--mdc-filled-text-field-disabled-container-color, rgba(0, 0, 0, 0.04));
+        
+        // Allow text selection cursor
+        .mat-mdc-input-element {
+          cursor: text !important;
+          user-select: text !important;
+          -webkit-user-select: text !important;
+          -moz-user-select: text !important;
+          -ms-user-select: text !important;
+          
+          // Keep text readable
+          color: var(--mdc-filled-text-field-disabled-input-text-color, rgba(0, 0, 0, 0.6)) !important;
+          
+          // Remove pointer events for editing but allow selection
+          pointer-events: auto !important;
+          
+          &:focus {
+            outline: 2px solid var(--mdc-theme-primary, #1976d2);
+            outline-offset: 1px;
+          }
+        }
+      }
+      
+      // Style the label as disabled but still visible
+      .mat-mdc-form-field-label {
+        color: var(--mdc-filled-text-field-disabled-label-text-color, rgba(0, 0, 0, 0.4)) !important;
+      }
+      
+      // Hide buttons and interactive elements
+      .mat-mdc-form-field-suffix {
+        .pdx-clear-button,
+        .pdx-password-toggle {
+          display: none;
+        }
+      }
+      
+      // Show a subtle indicator that field is selectable
+      &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 3px;
+        height: 100%;
+        background: linear-gradient(
+          to bottom,
+          var(--mdc-theme-primary, #1976d2) 0%,
+          transparent 100%
+        );
+        opacity: 0.3;
+        pointer-events: none;
+      }
+    }
+    
+    // Provide visual feedback on hover
+    &:hover {
+      .mat-mdc-form-field {
+        opacity: 0.8;
+        
+        &::after {
+          opacity: 0.6;
+        }
+      }
+    }
+  }
+}
+
+// =============================================================================
+// ESTILOS DO FORM FIELD
+// =============================================================================
+
+.mat-mdc-form-field {
+  width: 100%;
+  
+  // Customização específica por tipo de input
+  &.pdx-input-password {
+    .mat-mdc-form-field-suffix {
+      .pdx-password-toggle {
+        color: var(--mdc-theme-on-surface-variant, rgba(0, 0, 0, 0.6));
+        
+        &:hover {
+          color: var(--mdc-theme-primary, #1976d2);
+        }
+      }
+    }
+  }
+
+  &.pdx-input-email {
+    .mat-mdc-text-field-wrapper {
+      &::after {
+        content: '@';
+        position: absolute;
+        right: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--mdc-theme-on-surface-variant, rgba(0, 0, 0, 0.4));
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+    }
+
+    &:not(.mat-form-field-has-label) {
+      .mat-mdc-text-field-wrapper::after {
+        opacity: 1;
+      }
+    }
+  }
+
+  &.pdx-has-counter {
+    .mat-mdc-form-field-subscript-wrapper {
+      margin-top: 4px;
+    }
+  }
+
+  &.pdx-has-clear {
+    .mat-mdc-form-field-suffix {
+      .pdx-clear-button {
+        opacity: 0.7;
+        transition: opacity 0.2s ease;
+
+        &:hover {
+          opacity: 1;
+        }
+      }
+    }
+  }
+}
+
+// =============================================================================
+// LABEL EDITÁVEL
+// =============================================================================
+
+.mat-mdc-form-field-label {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    color: var(--mdc-theme-primary, #1976d2);
+  }
+
+  .pdx-required-marker {
+    color: var(--mdc-theme-error, #f44336);
+    margin-left: 2px;
+    font-weight: bold;
+  }
+}
+
+.pdx-label-editor {
+  background: var(--mdc-theme-surface, #ffffff);
+  border: 1px solid var(--mdc-theme-primary, #1976d2);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: inherit;
+  font-family: inherit;
+  color: inherit;
+  outline: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  &:focus {
+    border-color: var(--mdc-theme-primary, #1976d2);
+    box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+  }
+}
+
+// =============================================================================
+// CONTADOR DE CARACTERES
+// =============================================================================
+
+.pdx-character-count {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  transition: color 0.2s ease;
+
+  &.pdx-character-count-warning {
+    color: var(--mdc-theme-warning, #ff9800);
+    font-weight: 500;
+  }
+
+  &.pdx-character-count-error {
+    color: var(--mdc-theme-error, #f44336);
+    font-weight: 600;
+    animation: pulse-error 1s ease-in-out;
+  }
+}
+
+@keyframes pulse-error {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+// =============================================================================
+// MENSAGENS DE ERRO
+// =============================================================================
+
+.pdx-error-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  margin-top: 4px;
+
+  .pdx-error-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    margin-top: 1px;
+    color: var(--mdc-theme-error, #f44336);
+  }
+
+  &.pdx-additional-error {
+    margin-top: 2px;
+    opacity: 0.8;
+    font-size: 0.7rem;
+  }
+}
+
+.pdx-additional-errors {
+  margin-top: 4px;
+}
+
+// =============================================================================
+// LOADING E VALIDAÇÃO
+// =============================================================================
+
+.pdx-validation-loading {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--mdc-theme-primary, #1976d2);
+  font-size: 0.75rem;
+
+  .pdx-loading-spinner {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    animation: spin 1s linear infinite;
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+// =============================================================================
+// BOTÕES AUXILIARES
+// =============================================================================
+
+.pdx-clear-button,
+.pdx-password-toggle {
+  width: 32px;
+  height: 32px;
+  line-height: 32px;
+  
+  .mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+// =============================================================================
+// DEBUG E DESENVOLVIMENTO
+// =============================================================================
+
+.pdx-debug-info {
+  position: absolute;
+  top: -24px;
+  right: 0;
+  background: var(--mdc-theme-surface-variant, #f5f5f5);
+  border: 1px solid var(--mdc-theme-outline, #e0e0e0);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.65rem;
+  color: var(--mdc-theme-on-surface-variant, rgba(0, 0, 0, 0.6));
+  z-index: 10;
+
+  .pdx-debug-security {
+    display: block;
+    font-family: monospace;
+  }
+}
+
+// =============================================================================
+// ACESSIBILIDADE
+// =============================================================================
+
+.pdx-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// Melhor contraste para modo de alto contraste
+@media (prefers-contrast: high) {
+  :host {
+    .mat-mdc-form-field {
+      --mdc-outlined-text-field-outline-color: currentColor;
+      --mdc-outlined-text-field-focused-outline-color: currentColor;
+    }
+
+    .pdx-character-count {
+      &.pdx-character-count-warning,
+      &.pdx-character-count-error {
+        color: currentColor;
+        font-weight: bold;
+      }
+    }
+  }
+}
+
+// Redução de movimento para usuários sensíveis
+@media (prefers-reduced-motion: reduce) {
+  :host {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+// =============================================================================
+// SUPORTE A TEMAS DARK
+// =============================================================================
+
+@media (prefers-color-scheme: dark) {
+  :host {
+    .pdx-label-editor {
+      background: var(--mdc-theme-surface, #121212);
+      border-color: var(--mdc-theme-primary, #90caf9);
+      color: var(--mdc-theme-on-surface, #ffffff);
+    }
+
+    .pdx-debug-info {
+      background: var(--mdc-theme-surface-variant, #2c2c2c);
+      border-color: var(--mdc-theme-outline, #404040);
+      color: var(--mdc-theme-on-surface-variant, rgba(255, 255, 255, 0.7));
+    }
+  }
+}
+
+// =============================================================================
+// RESPONSIVE DESIGN
+// =============================================================================
+
+// Mobile específico
+@media (max-width: 599px) {
+  :host {
+    .mat-mdc-form-field {
+      .mat-mdc-form-field-suffix {
+        .pdx-clear-button,
+        .pdx-password-toggle {
+          width: 40px;
+          height: 40px;
+          
+          .mat-icon {
+            font-size: 20px;
+            width: 20px;
+            height: 20px;
+          }
+        }
+      }
+    }
+
+    .pdx-validation-loading {
+      right: 16px;
+    }
+  }
+}
+
+// Tablet e desktop
+@media (min-width: 600px) {
+  :host {
+    .pdx-character-count {
+      font-size: 0.8rem;
+    }
+
+    .pdx-error-message {
+      font-size: 0.8rem;
+    }
+  }
+}

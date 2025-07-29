@@ -1,0 +1,245 @@
+/**
+ * @fileoverview Estilos para MaterialToggleComponent
+ * Seguindo Material Design 3 + tokens de tema customizáveis
+ */
+
+.pdx-toggle-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.pdx-toggle-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pdx-main-toggle {
+  display: flex;
+  align-items: center;
+  min-height: 48px; /* Área de toque WCAG 2.1 AA */
+  
+  // Variações de cor usando tokens Material
+  &.mat-primary {
+    --mdc-switch-selected-track-color: var(--mdc-theme-primary, var(--mat-app-primary));
+    --mdc-switch-selected-handle-color: var(--mdc-theme-on-primary, var(--mat-app-on-primary));
+  }
+  
+  &.mat-accent {
+    --mdc-switch-selected-track-color: var(--mdc-theme-secondary, var(--mat-app-secondary));
+    --mdc-switch-selected-handle-color: var(--mdc-theme-on-secondary, var(--mat-app-on-secondary));
+  }
+  
+  &.mat-warn {
+    --mdc-switch-selected-track-color: var(--mdc-theme-error, var(--mat-app-error));
+    --mdc-switch-selected-handle-color: var(--mdc-theme-on-error, var(--mat-app-on-error));
+  }
+}
+
+.pdx-toggle-label-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--mdc-theme-on-surface, var(--mat-app-on-surface));
+}
+
+.pdx-toggle-icon {
+  font-size: 18px;
+  height: 18px;
+  width: 18px;
+  color: var(--mdc-theme-on-surface-variant, var(--mat-app-on-surface-variant));
+}
+
+.pdx-toggle-label-text {
+  font-weight: 400;
+  user-select: none;
+}
+
+.pdx-required-marker {
+  color: var(--mdc-theme-error, var(--mat-app-error));
+  font-weight: 500;
+  margin-left: 2px;
+}
+
+.pdx-toggle-description {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--mdc-theme-on-surface-variant, var(--mat-app-on-surface-variant));
+  margin-top: 4px;
+  padding-left: 16px; // Alinhado com o switch
+}
+
+// =============================================================================
+// ESTADOS DO TOGGLE
+// =============================================================================
+
+.pdx-toggle-checked {
+  .pdx-toggle-label-text {
+    font-weight: 500;
+  }
+}
+
+.pdx-toggle-no-ripple {
+  .mat-mdc-slide-toggle {
+    --mdc-switch-state-layer-size: 0px;
+  }
+}
+
+.pdx-toggle-no-icon {
+  .pdx-toggle-icon {
+    display: none;
+  }
+}
+
+// =============================================================================
+// POSICIONAMENTO DO LABEL
+// =============================================================================
+
+.pdx-toggle-label-before {
+  .mat-mdc-slide-toggle {
+    flex-direction: row-reverse;
+  }
+  
+  .pdx-toggle-description {
+    padding-left: 0;
+    padding-right: 16px;
+    text-align: right;
+  }
+}
+
+.pdx-toggle-label-after {
+  .mat-mdc-slide-toggle {
+    flex-direction: row;
+  }
+}
+
+// =============================================================================
+// ESTADOS DE ERRO
+// =============================================================================
+
+.pdx-toggle-errors {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.pdx-error-message {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--mdc-theme-error, var(--mat-app-error));
+}
+
+.pdx-error-icon {
+  font-size: 16px;
+  height: 16px;
+  width: 16px;
+}
+
+.pdx-additional-error {
+  margin-left: 22px; // Alinhado com o texto da primeira mensagem
+}
+
+// =============================================================================
+// VALIDAÇÃO ASSÍNCRONA
+// =============================================================================
+
+.pdx-validation-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--mdc-theme-on-surface-variant, var(--mat-app-on-surface-variant));
+}
+
+.pdx-loading-spinner {
+  font-size: 14px;
+  height: 14px;
+  width: 14px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.pdx-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// =============================================================================
+// DEBUG MODE
+// =============================================================================
+
+.pdx-debug-info {
+  margin-top: 8px;
+  padding: 4px 8px;
+  background: var(--mdc-theme-surface-variant, var(--mat-app-surface-variant));
+  border-radius: 4px;
+  border: 1px solid var(--mdc-theme-outline-variant, var(--mat-app-outline-variant));
+}
+
+.pdx-debug-security {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 10px;
+  color: var(--mdc-theme-on-surface-variant, var(--mat-app-on-surface-variant));
+}
+
+// =============================================================================
+// ESTADOS DE DESABILITADO
+// =============================================================================
+
+.pdx-toggle-container:has(.mat-mdc-slide-toggle[disabled]) {
+  opacity: 0.6;
+  
+  .pdx-toggle-label-content {
+    color: var(--mdc-theme-on-surface, var(--mat-app-on-surface));
+    opacity: 0.38;
+  }
+}
+
+// =============================================================================
+// RESPONSIVIDADE
+// =============================================================================
+
+@media (max-width: 768px) {
+  .pdx-toggle-container {
+    gap: 6px;
+  }
+  
+  .pdx-main-toggle {
+    min-height: 44px; // Slightly smaller on mobile but still accessible
+  }
+  
+  .pdx-toggle-label-content {
+    font-size: 13px;
+  }
+}
+
+// =============================================================================
+// DARK THEME SUPPORT
+// =============================================================================
+
+@media (prefers-color-scheme: dark) {
+  .pdx-toggle-container {
+    --mdc-switch-unselected-track-color: rgba(255, 255, 255, 0.12);
+    --mdc-switch-unselected-handle-color: rgba(255, 255, 255, 0.87);
+  }
+}

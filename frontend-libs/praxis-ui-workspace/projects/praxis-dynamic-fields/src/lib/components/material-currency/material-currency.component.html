@@ -1,0 +1,159 @@
+<!-- Container principal do currency input -->
+<mat-form-field 
+  [appearance]="materialAppearance()"
+  [color]="materialColor()"
+  [floatLabel]="floatLabelBehavior()"
+  [subscriptSizing]="metadata()?.materialDesign?.subscriptSizing || 'fixed'"
+  [hideRequiredMarker]="metadata()?.materialDesign?.hideRequiredMarker || false"
+  [class]="currencySpecificClasses()"
+  [class.pdx-disabled-interactive]="isDisabledInteractive()">
+
+  <!-- Label com símbolo da moeda -->
+  <mat-label 
+    [matTooltip]="metadata()?.description || ''"
+    [matTooltipDisabled]="!metadata()?.description"
+    matTooltipPosition="above">
+    @if (shouldShowCurrencySymbol()) {
+      <span class="pdx-currency-symbol">{{ currencySymbol() }}</span>
+    }
+    {{ metadata()?.label }}
+    @if (metadata()?.required && !metadata()?.materialDesign?.hideRequiredMarker) {
+      <span class="pdx-required-marker" aria-label="required"> *</span>
+    }
+  </mat-label>
+
+  <!-- Ícone de prefixo (moeda) -->
+  @if (metadata()?.prefixIcon) {
+    <mat-icon 
+      matPrefix 
+      [matTooltip]="'Currency: ' + currencyCode()"
+      matTooltipPosition="above"
+      class="pdx-currency-prefix-icon">
+      {{ metadata()?.prefixIcon }}
+    </mat-icon>
+  } @else if (shouldShowCurrencySymbol()) {
+    <span 
+      matPrefix 
+      class="pdx-currency-prefix-symbol"
+      [matTooltip]="'Currency: ' + currencyCode()"
+      matTooltipPosition="above">
+      {{ currencySymbol() }}
+    </span>
+  }
+
+  <!-- Campo de input principal -->
+  <input
+    #inputElement
+    matInput
+    [formControl]="formControl"
+    [disabled]="effectiveDisabled()"
+    [errorStateMatcher]="errorStateMatcher()"
+    type="text"
+    inputmode="decimal"
+    [placeholder]="effectivePlaceholder()"
+    [value]="displayValue()"
+    [attr.aria-describedby]="metadata()?.hint ? componentId() + '-hint' : null"
+    [attr.min]="minValue()"
+    [attr.max]="maxValue()"
+    (input)="onInputChange($event)"
+    (focus)="onInputFocus()"
+    (blur)="onInputBlur()"
+    (keydown)="onKeyDown($event)"
+    class="pdx-currency-input">
+
+  <!-- Botão limpar campo -->
+  @if (shouldShowClearButton()) {
+    <button
+      mat-icon-button
+      matSuffix
+      type="button"
+      class="pdx-clear-button"
+      [attr.aria-label]="metadata()?.clearButton?.ariaLabel || ('Clear ' + metadata()?.label)"
+      [matTooltip]="metadata()?.clearButton?.tooltip || 'Clear field'"
+      matTooltipPosition="above"
+      (click)="clearValue()">
+      <mat-icon>{{ metadata()?.clearButton?.icon || 'clear' }}</mat-icon>
+    </button>
+  }
+
+  <!-- Ícone de sufixo customizado -->
+  @if (metadata()?.suffixIcon && !shouldShowClearButton()) {
+    <mat-icon 
+      matSuffix
+      [matTooltip]="'Icon: ' + metadata()?.suffixIcon"
+      matTooltipPosition="above"
+      class="pdx-currency-suffix-icon">
+      {{ metadata()?.suffixIcon }}
+    </mat-icon>
+  }
+
+  <!-- Texto de ajuda -->
+  @if (metadata()?.hint) {
+    <mat-hint 
+      [id]="componentId() + '-hint'"
+      align="start">
+      {{ metadata()?.hint }}
+    </mat-hint>
+  }
+
+  <!-- Indicador de moeda no hint -->
+  @if (!metadata()?.hint) {
+    <mat-hint 
+      align="start"
+      class="pdx-currency-hint">
+      {{ currencyCode() }} - {{ locale() }}
+    </mat-hint>
+  }
+
+  <!-- Contador de valor/formatação -->
+  @if (currencyState().rawValue !== 0) {
+    <mat-hint 
+      align="end"
+      class="pdx-currency-value-hint">
+      Raw: {{ currencyState().rawValue }}
+    </mat-hint>
+  }
+
+  <!-- Mensagens de erro -->
+  @if (hasValidationError()) {
+    <mat-error 
+      [id]="componentId() + '-error'"
+      class="pdx-error-message">
+      <mat-icon class="pdx-error-icon">error_outline</mat-icon>
+      {{ primaryErrorMessage() }}
+    </mat-error>
+  }
+
+  <!-- Erros adicionais (se houver múltiplos) -->
+  @if (allErrorMessages().length > 1) {
+    <div class="pdx-additional-errors">
+      @for (error of allErrorMessages().slice(1); track error) {
+        <mat-error class="pdx-error-message pdx-additional-error">
+          {{ error }}
+        </mat-error>
+      }
+    </div>
+  }
+
+</mat-form-field>
+
+<!-- Loading indicator para validação assíncrona -->
+@if (validationState().isValidating) {
+  <div class="pdx-validation-loading" [attr.aria-label]="'Validating ' + metadata()?.label">
+    <mat-icon class="pdx-loading-spinner">hourglass_empty</mat-icon>
+    <span class="pdx-sr-only">Validating currency value...</span>
+  </div>
+}
+
+<!-- Indicador de estado enterprise (debug) -->
+@if (isDebugMode() && metadata()?.security) {
+  <div class="pdx-debug-info">
+    <small class="pdx-debug-security">
+      Security Level: {{ metadata()?.security?.securityLevel }}
+      @if (metadata()?.security?.audit?.enabled) {
+        | Audit: ON
+      }
+      | Currency: {{ currencyCode() }} | Raw: {{ currencyState().rawValue }} | Formatted: {{ formatCurrency(currencyState().rawValue) }}
+    </small>
+  </div>
+}

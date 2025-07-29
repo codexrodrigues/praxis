@@ -1,0 +1,746 @@
+/**
+ * Estilos para o componente Material Textarea dinâmico
+ * 
+ * Utiliza variáveis do Angular Material e design tokens
+ * para garantir consistência visual e suporte a temas avançados.
+ */
+
+@use '@angular/material' as mat;
+
+// =============================================================================
+// VARIÁVEIS E MIXINS
+// =============================================================================
+
+:host {
+  display: block;
+  width: 100%;
+  position: relative;
+
+  // Estados básicos do campo
+  &.pdx-loading {
+    pointer-events: none;
+    opacity: 0.7;
+  }
+
+  &.pdx-error {
+    .mat-mdc-form-field {
+      --mdc-outlined-text-field-outline-color: var(--mdc-theme-error, #f44336);
+    }
+  }
+
+  &.pdx-focused {
+    .mat-mdc-form-field {
+      --mdc-outlined-text-field-focused-outline-color: var(--mdc-theme-primary, #1976d2);
+    }
+  }
+
+  // Estados específicos do formulário
+  &.pdx-dirty {
+    .mat-mdc-form-field-label {
+      &::after {
+        content: ' •';
+        color: var(--mdc-theme-primary, #1976d2);
+        font-weight: bold;
+      }
+    }
+  }
+
+  &.pdx-valid.pdx-dirty {
+    .mat-mdc-form-field {
+      --mdc-outlined-text-field-outline-color: var(--mdc-theme-success, #4caf50);
+    }
+  }
+
+  &.pdx-invalid.pdx-touched {
+    .mat-mdc-form-field {
+      --mdc-outlined-text-field-outline-color: var(--mdc-theme-error, #f44336);
+    }
+  }
+
+  // Estados específicos do textarea
+  &.pdx-textarea-auto-resize {
+    .mat-mdc-text-field-wrapper {
+      .mat-mdc-form-field-infix textarea {
+        resize: none !important;
+        overflow-y: hidden;
+        transition: height 0.2s ease-out;
+      }
+    }
+  }
+
+  &.pdx-textarea-with-preview {
+    .mat-mdc-form-field {
+      margin-bottom: 16px;
+    }
+  }
+
+  &.pdx-textarea-spellcheck {
+    .mat-mdc-text-field-wrapper textarea {
+      &::-webkit-input-placeholder {
+        font-style: italic;
+      }
+      
+      &::-moz-placeholder {
+        font-style: italic;
+      }
+    }
+  }
+
+  &.pdx-textarea-with-stats {
+    margin-bottom: 48px; // Espaço para estatísticas
+  }
+}
+
+// =============================================================================
+// CONTAINER PRINCIPAL
+// =============================================================================
+
+.pdx-textarea-container {
+  position: relative;
+  width: 100%;
+}
+
+// =============================================================================
+// ESTILOS DO FORM FIELD
+// =============================================================================
+
+.mat-mdc-form-field {
+  width: 100%;
+  
+  // Customização do textarea
+  .mat-mdc-text-field-wrapper {
+    textarea.mat-mdc-input-element {
+      font-family: inherit;
+      line-height: 1.5;
+      
+      // Melhor espaçamento para texto longo
+      &::placeholder {
+        color: var(--mdc-theme-on-surface-variant, rgba(0, 0, 0, 0.6));
+        opacity: 1;
+      }
+      
+      // Scrollbar customizada
+      &::-webkit-scrollbar {
+        width: 8px;
+      }
+      
+      &::-webkit-scrollbar-track {
+        background: var(--mdc-theme-surface-variant, #f5f5f5);
+        border-radius: 4px;
+      }
+      
+      &::-webkit-scrollbar-thumb {
+        background: var(--mdc-theme-outline, #e0e0e0);
+        border-radius: 4px;
+        
+        &:hover {
+          background: var(--mdc-theme-outline-variant, #c0c0c0);
+        }
+      }
+    }
+  }
+
+  // Múltiplos botões de sufixo
+  .mat-mdc-form-field-suffix {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  &.pdx-textarea-with-tabs {
+    border-top: 1px solid var(--mdc-theme-outline-variant, #e0e0e0);
+    border-radius: 0 0 4px 4px;
+  }
+}
+
+// =============================================================================
+// TABS PARA EDITOR/PREVIEW
+// =============================================================================
+
+.pdx-textarea-tabs {
+  background: var(--mdc-theme-surface, #ffffff);
+  border: 1px solid var(--mdc-theme-outline-variant, #e0e0e0);
+  border-radius: 4px 4px 0 0;
+  margin-bottom: -1px; // Conectar com form field
+
+  .mat-mdc-tab-group {
+    .mat-mdc-tab-header {
+      border-bottom: 1px solid var(--mdc-theme-outline-variant, #e0e0e0);
+    }
+    
+    .mat-mdc-tab-body-wrapper {
+      padding: 16px;
+      min-height: 200px;
+    }
+  }
+}
+
+.pdx-textarea-editor-content {
+  // Conteúdo do editor será o form field
+}
+
+.pdx-textarea-preview-content {
+  background: var(--mdc-theme-surface, #ffffff);
+  border: 1px solid var(--mdc-theme-outline-variant, #e0e0e0);
+  border-radius: 4px;
+  padding: 16px;
+  min-height: 120px;
+  font-family: inherit;
+  line-height: 1.6;
+  
+  // Estilos para conteúdo markdown
+  .markdown-content {
+    h1, h2, h3, h4, h5, h6 {
+      margin: 16px 0 8px 0;
+      color: var(--mdc-theme-on-surface, #000000);
+      
+      &:first-child {
+        margin-top: 0;
+      }
+    }
+    
+    h1 { font-size: 1.5rem; font-weight: 600; }
+    h2 { font-size: 1.3rem; font-weight: 600; }
+    h3 { font-size: 1.1rem; font-weight: 500; }
+    
+    p {
+      margin: 8px 0;
+      
+      &:first-child {
+        margin-top: 0;
+      }
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+    
+    strong {
+      font-weight: 600;
+      color: var(--mdc-theme-on-surface, #000000);
+    }
+    
+    em {
+      font-style: italic;
+    }
+    
+    code {
+      background: var(--mdc-theme-surface-variant, #f5f5f5);
+      border: 1px solid var(--mdc-theme-outline-variant, #e0e0e0);
+      border-radius: 3px;
+      padding: 2px 4px;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.9em;
+    }
+    
+    br {
+      line-height: 1.8;
+    }
+  }
+}
+
+// =============================================================================
+// BOTÕES DE AÇÃO
+// =============================================================================
+
+.pdx-templates-button,
+.pdx-preview-button,
+.pdx-auto-resize-button,
+.pdx-clear-button {
+  width: 32px;
+  height: 32px;
+  line-height: 32px;
+  opacity: 0.7;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    opacity: 1;
+    background: var(--mdc-theme-primary-container, rgba(25, 118, 210, 0.1));
+  }
+  
+  .mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+  
+  &.pdx-preview-active,
+  &.pdx-auto-resize-active {
+    background: var(--mdc-theme-primary-container, rgba(25, 118, 210, 0.1));
+    color: var(--mdc-theme-primary, #1976d2);
+    opacity: 1;
+  }
+}
+
+// =============================================================================
+// MENU DE TEMPLATES
+// =============================================================================
+
+.pdx-templates-menu {
+  .pdx-template-item {
+    padding: 12px 16px;
+    line-height: 1.4;
+    
+    .mat-icon {
+      margin-right: 12px;
+      color: var(--mdc-theme-primary, #1976d2);
+    }
+    
+    .pdx-template-info {
+      display: flex;
+      flex-direction: column;
+      
+      .pdx-template-name {
+        font-weight: 500;
+        color: var(--mdc-theme-on-surface, #000000);
+      }
+      
+      .pdx-template-description {
+        color: var(--mdc-theme-on-surface-variant, rgba(0, 0, 0, 0.6));
+        font-size: 0.75rem;
+        margin-top: 2px;
+      }
+    }
+    
+    &:hover {
+      background: var(--mdc-theme-surface-variant, #f5f5f5);
+    }
+  }
+}
+
+// =============================================================================
+// ESTATÍSTICAS DO TEXTO
+// =============================================================================
+
+.pdx-text-statistics {
+  position: absolute;
+  bottom: -44px;
+  left: 0;
+  right: 0;
+  background: var(--mdc-theme-surface-variant, #f5f5f5);
+  border: 1px solid var(--mdc-theme-outline-variant, #e0e0e0);
+  border-radius: 4px;
+  padding: 8px 12px;
+  
+  .pdx-stats-grid {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    flex-wrap: wrap;
+    
+    .pdx-stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 60px;
+      
+      .pdx-stat-value {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--mdc-theme-primary, #1976d2);
+        font-variant-numeric: tabular-nums;
+      }
+      
+      .pdx-stat-label {
+        font-size: 0.7rem;
+        color: var(--mdc-theme-on-surface-variant, rgba(0, 0, 0, 0.6));
+        text-transform: lowercase;
+        margin-top: 2px;
+      }
+    }
+  }
+}
+
+// =============================================================================
+// PREVIEW PANEL SEPARADO
+// =============================================================================
+
+.pdx-preview-panel {
+  margin-top: 16px;
+  border: 1px solid var(--mdc-theme-outline-variant, #e0e0e0);
+  border-radius: 4px;
+  background: var(--mdc-theme-surface, #ffffff);
+  
+  .pdx-preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--mdc-theme-outline-variant, #e0e0e0);
+    background: var(--mdc-theme-surface-variant, #f5f5f5);
+    
+    .pdx-preview-title {
+      font-weight: 500;
+      color: var(--mdc-theme-on-surface, #000000);
+    }
+    
+    .pdx-preview-mode-selector {
+      display: flex;
+      gap: 4px;
+      
+      button {
+        width: 32px;
+        height: 32px;
+        opacity: 0.6;
+        transition: all 0.2s ease;
+        
+        &.active {
+          background: var(--mdc-theme-primary-container, rgba(25, 118, 210, 0.1));
+          color: var(--mdc-theme-primary, #1976d2);
+          opacity: 1;
+        }
+        
+        &:hover {
+          opacity: 1;
+        }
+        
+        .mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+        }
+      }
+    }
+  }
+  
+  .pdx-preview-content {
+    padding: 16px;
+    min-height: 120px;
+    line-height: 1.6;
+  }
+}
+
+// =============================================================================
+// LABEL EDITÁVEL
+// =============================================================================
+
+.mat-mdc-form-field-label {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    color: var(--mdc-theme-primary, #1976d2);
+  }
+
+  .pdx-required-marker {
+    color: var(--mdc-theme-error, #f44336);
+    margin-left: 2px;
+    font-weight: bold;
+  }
+}
+
+.pdx-label-editor {
+  background: var(--mdc-theme-surface, #ffffff);
+  border: 1px solid var(--mdc-theme-primary, #1976d2);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: inherit;
+  font-family: inherit;
+  color: inherit;
+  outline: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  &:focus {
+    border-color: var(--mdc-theme-primary, #1976d2);
+    box-shadow: 0 0 0 2px rgba(25, 118, 210, 0.2);
+  }
+}
+
+// =============================================================================
+// CONTADOR DE CARACTERES
+// =============================================================================
+
+.pdx-character-count {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  transition: color 0.2s ease;
+
+  &.pdx-character-count-warning {
+    color: var(--mdc-theme-warning, #ff9800);
+    font-weight: 500;
+  }
+
+  &.pdx-character-count-error {
+    color: var(--mdc-theme-error, #f44336);
+    font-weight: 600;
+    animation: pulse-error 1s ease-in-out;
+  }
+}
+
+@keyframes pulse-error {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+// =============================================================================
+// MENSAGENS DE ERRO
+// =============================================================================
+
+.pdx-error-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  margin-top: 4px;
+
+  .pdx-error-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    margin-top: 1px;
+    color: var(--mdc-theme-error, #f44336);
+  }
+
+  &.pdx-additional-error {
+    margin-top: 2px;
+    opacity: 0.8;
+    font-size: 0.7rem;
+  }
+}
+
+.pdx-additional-errors {
+  margin-top: 4px;
+}
+
+// =============================================================================
+// LOADING E VALIDAÇÃO
+// =============================================================================
+
+.pdx-validation-loading {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--mdc-theme-primary, #1976d2);
+  font-size: 0.75rem;
+
+  .pdx-loading-spinner {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    animation: spin 1s linear infinite;
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+// =============================================================================
+// DEBUG E DESENVOLVIMENTO
+// =============================================================================
+
+.pdx-debug-info {
+  position: absolute;
+  top: -24px;
+  right: 0;
+  background: var(--mdc-theme-surface-variant, #f5f5f5);
+  border: 1px solid var(--mdc-theme-outline, #e0e0e0);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.65rem;
+  color: var(--mdc-theme-on-surface-variant, rgba(0, 0, 0, 0.6));
+  z-index: 10;
+
+  .pdx-debug-security {
+    display: block;
+    font-family: monospace;
+  }
+}
+
+// =============================================================================
+// ACESSIBILIDADE
+// =============================================================================
+
+.pdx-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// Melhor contraste para modo de alto contraste
+@media (prefers-contrast: high) {
+  :host {
+    .mat-mdc-form-field {
+      --mdc-outlined-text-field-outline-color: currentColor;
+      --mdc-outlined-text-field-focused-outline-color: currentColor;
+    }
+
+    .pdx-character-count {
+      &.pdx-character-count-warning,
+      &.pdx-character-count-error {
+        color: currentColor;
+        font-weight: bold;
+      }
+    }
+    
+    .pdx-text-statistics {
+      border-color: currentColor;
+      
+      .pdx-stat-value {
+        color: currentColor;
+      }
+    }
+  }
+}
+
+// Redução de movimento para usuários sensíveis
+@media (prefers-reduced-motion: reduce) {
+  :host {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+// =============================================================================
+// SUPORTE A TEMAS DARK
+// =============================================================================
+
+@media (prefers-color-scheme: dark) {
+  :host {
+    .pdx-label-editor {
+      background: var(--mdc-theme-surface, #121212);
+      border-color: var(--mdc-theme-primary, #90caf9);
+      color: var(--mdc-theme-on-surface, #ffffff);
+    }
+
+    .pdx-debug-info {
+      background: var(--mdc-theme-surface-variant, #2c2c2c);
+      border-color: var(--mdc-theme-outline, #404040);
+      color: var(--mdc-theme-on-surface-variant, rgba(255, 255, 255, 0.7));
+    }
+    
+    .pdx-text-statistics {
+      background: var(--mdc-theme-surface-variant, #2c2c2c);
+      border-color: var(--mdc-theme-outline, #404040);
+    }
+    
+    .pdx-textarea-tabs,
+    .pdx-preview-panel {
+      background: var(--mdc-theme-surface, #121212);
+      border-color: var(--mdc-theme-outline, #404040);
+      
+      .pdx-preview-header {
+        background: var(--mdc-theme-surface-variant, #2c2c2c);
+        border-bottom-color: var(--mdc-theme-outline, #404040);
+      }
+    }
+    
+    .pdx-textarea-preview-content {
+      background: var(--mdc-theme-surface, #121212);
+      border-color: var(--mdc-theme-outline, #404040);
+      
+      .markdown-content {
+        h1, h2, h3, h4, h5, h6 {
+          color: var(--mdc-theme-on-surface, #ffffff);
+        }
+        
+        strong {
+          color: var(--mdc-theme-on-surface, #ffffff);
+        }
+        
+        code {
+          background: var(--mdc-theme-surface-variant, #2c2c2c);
+          border-color: var(--mdc-theme-outline, #404040);
+          color: var(--mdc-theme-on-surface-variant, rgba(255, 255, 255, 0.8));
+        }
+      }
+    }
+  }
+}
+
+// =============================================================================
+// RESPONSIVE DESIGN
+// =============================================================================
+
+// Mobile específico
+@media (max-width: 599px) {
+  :host {
+    .pdx-text-statistics {
+      .pdx-stats-grid {
+        gap: 8px;
+        
+        .pdx-stat-item {
+          min-width: 50px;
+          
+          .pdx-stat-value {
+            font-size: 0.8rem;
+          }
+          
+          .pdx-stat-label {
+            font-size: 0.65rem;
+          }
+        }
+      }
+    }
+    
+    .pdx-textarea-tabs {
+      .mat-mdc-tab-body-wrapper {
+        padding: 8px;
+        min-height: 150px;
+      }
+    }
+    
+    .pdx-preview-panel {
+      .pdx-preview-content {
+        padding: 12px;
+        min-height: 100px;
+      }
+    }
+  }
+}
+
+// Tablet e desktop
+@media (min-width: 600px) {
+  :host {
+    .pdx-character-count {
+      font-size: 0.8rem;
+    }
+
+    .pdx-error-message {
+      font-size: 0.8rem;
+    }
+    
+    .pdx-text-statistics {
+      .pdx-stats-grid {
+        .pdx-stat-item {
+          min-width: 70px;
+        }
+      }
+    }
+  }
+}
+
+// Desktop grande
+@media (min-width: 1200px) {
+  :host {
+    &.pdx-textarea-with-preview {
+      display: flex;
+      gap: 16px;
+      
+      .pdx-textarea-container {
+        flex: 1;
+      }
+      
+      .pdx-preview-panel {
+        flex: 1;
+        margin-top: 0;
+        height: fit-content;
+      }
+    }
+  }
+}

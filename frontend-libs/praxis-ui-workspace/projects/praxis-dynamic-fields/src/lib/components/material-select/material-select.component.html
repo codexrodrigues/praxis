@@ -1,0 +1,368 @@
+<!-- Container principal do select -->
+<mat-form-field 
+  [appearance]="materialAppearance()"
+  [color]="materialColor()"
+  [floatLabel]="floatLabelBehavior()"
+  [subscriptSizing]="metadata()?.materialDesign?.subscriptSizing || 'fixed'"
+  [hideRequiredMarker]="metadata()?.materialDesign?.hideRequiredMarker || false"
+  [class]="selectSpecificClasses()">
+
+  <!-- Label editável ou estático -->
+  @if (!labelEditingState().isEditing) {
+    <mat-label 
+      (dblclick)="onLabelDoubleClick()"
+      [matTooltip]="metadata()?.description || ''"
+      [matTooltipDisabled]="!metadata()?.description"
+      matTooltipPosition="above">
+      {{ metadata()?.label }}
+      @if (metadata()?.required && !metadata()?.materialDesign?.hideRequiredMarker) {
+        <span class="pdx-required-marker" aria-label="required"> *</span>
+      }
+    </mat-label>
+  } @else {
+    <!-- Editor inline de label -->
+    <input
+      #labelEditor
+      matInput
+      class="pdx-label-editor"
+      [value]="editingLabel()"
+      (input)="updateLabelText($event)"
+      (blur)="onLabelEditorBlur()"
+      (keydown)="onLabelEditorKeyDown($event)"
+      [attr.aria-label]="'Editing label for ' + metadata()?.name">
+  }
+
+  <!-- Ícone de prefixo -->
+  @if (metadata()?.prefixIcon) {
+    <mat-icon 
+      matPrefix 
+      [matTooltip]="'Icon: ' + metadata()?.prefixIcon"
+      matTooltipPosition="above">
+      {{ metadata()?.prefixIcon }}
+    </mat-icon>
+  }
+
+  <!-- Select principal -->
+  <mat-select
+    #selectElement
+    [formControl]="formControl"
+    [multiple]="isMultiple()"
+    [placeholder]="metadata()?.placeholder || ''"
+    [compareWith]="compareOptions"
+    [disabled]="componentState().disabled"
+    [panelClass]="'pdx-select-panel'"
+    (selectionChange)="onSelectionChange($event)"
+    (openedChange)="$event ? onPanelOpened() : onPanelClosed()"
+    [attr.aria-describedby]="metadata()?.hint ? componentId() + '-hint' : null">
+
+    <!-- Opção de busca no painel -->
+    @if (isSearchEnabled()) {
+      <mat-option disabled class="pdx-search-option">
+        <mat-form-field 
+          appearance="outline" 
+          subscriptSizing="dynamic"
+          class="pdx-search-field">
+          <mat-icon matPrefix>search</mat-icon>
+          <input
+            #searchInput
+            matInput
+            placeholder="Buscar..."
+            [value]="selectState().searchTerm"
+            (input)="onSearchInput($event)"
+            (keydown)="onSearchKeyDown($event)"
+            (click)="$event.stopPropagation()">
+          @if (selectState().searchTerm) {
+            <button
+              mat-icon-button
+              matSuffix
+              type="button"
+              class="pdx-clear-search"
+              (click)="clearSearch(); $event.stopPropagation()"
+              [attr.aria-label]="'Clear search'">
+              <mat-icon>clear</mat-icon>
+            </button>
+          }
+        </mat-form-field>
+      </mat-option>
+    }
+
+    <!-- Opção "Selecionar Todos" para múltipla seleção -->
+    @if (metadata()?.showSelectAll && isMultiple() && filteredOptions().length > 0) {
+      <mat-option 
+        class="pdx-select-all-option"
+        (click)="toggleSelectAll(); $event.stopPropagation()">
+        <mat-checkbox
+          [checked]="allOptionsSelected()"
+          [indeterminate]="selectState().selectedOptions.length > 0 && !allOptionsSelected()"
+          (click)="$event.stopPropagation()">
+          Selecionar Todos ({{ filteredOptions().length }})
+        </mat-checkbox>
+      </mat-option>
+      
+      <mat-divider></mat-divider>
+    }
+
+    <!-- Loading state -->
+    @if (listDataState().loading) {
+      <mat-option disabled class="pdx-loading-option">
+        <div class="pdx-loading-content">
+          <mat-spinner diameter="20"></mat-spinner>
+          <span>Carregando opções...</span>
+        </div>
+      </mat-option>
+    }
+
+    <!-- Lista de opções normal -->
+    @if (!shouldUseVirtualization()) {
+      <!-- Opções agrupadas -->
+      @if (metadata()?.enableGroups) {
+        @for (group of groupedOptions() | keyvalue; track trackByGroup($index, group)) {
+          @if (group.key) {
+            <mat-optgroup [label]="group.key">
+              @for (option of group.value; track trackByValue($index, option)) {
+                <mat-option 
+                  [value]="option.value"
+                  [disabled]="option.disabled || false"
+                  [class]="option.class || ''"
+                  [matTooltip]="option.tooltip || ''"
+                  [matTooltipDisabled]="!option.tooltip">
+                  
+                  @if (isMultiple()) {
+                    <mat-checkbox
+                      [checked]="selectState().selectedOptions.some(sel => sel.value === option.value)"
+                      (click)="$event.stopPropagation()">
+                      {{ option.text }}
+                    </mat-checkbox>
+                  } @else {
+                    {{ option.text }}
+                  }
+                  
+                  @if (option.icon) {
+                    <mat-icon class="pdx-option-icon">{{ option.icon }}</mat-icon>
+                  }
+                </mat-option>
+              }
+            </mat-optgroup>
+          } @else {
+            @for (option of group.value; track trackByValue($index, option)) {
+              <mat-option 
+                [value]="option.value"
+                [disabled]="option.disabled || false"
+                [class]="option.class || ''"
+                [matTooltip]="option.tooltip || ''"
+                [matTooltipDisabled]="!option.tooltip">
+                
+                @if (isMultiple()) {
+                  <mat-checkbox
+                    [checked]="selectState().selectedOptions.some(sel => sel.value === option.value)"
+                    (click)="$event.stopPropagation()">
+                    {{ option.text }}
+                  </mat-checkbox>
+                } @else {
+                  {{ option.text }}
+                }
+                
+                @if (option.icon) {
+                  <mat-icon class="pdx-option-icon">{{ option.icon }}</mat-icon>
+                }
+              </mat-option>
+            }
+          }
+        }
+      } @else {
+        <!-- Opções simples (não agrupadas) -->
+        @for (option of filteredOptions(); track trackByValue($index, option)) {
+          <mat-option 
+            [value]="option.value"
+            [disabled]="option.disabled || false"
+            [class]="option.class || ''"
+            [matTooltip]="option.tooltip || ''"
+            [matTooltipDisabled]="!option.tooltip">
+            
+            @if (isMultiple()) {
+              <mat-checkbox
+                [checked]="selectState().selectedOptions.some(sel => sel.value === option.value)"
+                (click)="$event.stopPropagation()">
+                {{ option.text }}
+              </mat-checkbox>
+            } @else {
+              {{ option.text }}
+            }
+            
+            @if (option.icon) {
+              <mat-icon class="pdx-option-icon">{{ option.icon }}</mat-icon>
+            }
+          </mat-option>
+        }
+      }
+    } @else {
+      <!-- Lista virtualizada para muitas opções -->
+      <cdk-virtual-scroll-viewport 
+        itemSize="48" 
+        maxBufferPx="600" 
+        minBufferPx="200"
+        class="pdx-virtual-viewport">
+        
+        @for (option of filteredOptions(); track trackByValue($index, option)) {
+          <mat-option 
+            [value]="option.value"
+            [disabled]="option.disabled || false"
+            [class]="option.class || ''"
+            [matTooltip]="option.tooltip || ''"
+            [matTooltipDisabled]="!option.tooltip">
+            
+            @if (isMultiple()) {
+              <mat-checkbox
+                [checked]="selectState().selectedOptions.some(sel => sel.value === option.value)"
+                (click)="$event.stopPropagation()">
+                {{ option.text }}
+              </mat-checkbox>
+            } @else {
+              {{ option.text }}
+            }
+            
+            @if (option.icon) {
+              <mat-icon class="pdx-option-icon">{{ option.icon }}</mat-icon>
+            }
+          </mat-option>
+        }
+      </cdk-virtual-scroll-viewport>
+    }
+
+    <!-- Estado vazio -->
+    @if (!listDataState().loading && filteredOptions().length === 0) {
+      <mat-option disabled class="pdx-empty-option">
+        <div class="pdx-empty-content">
+          <mat-icon>search_off</mat-icon>
+          <span>
+            @if (selectState().searchTerm) {
+              Nenhuma opção encontrada para "{{ selectState().searchTerm }}"
+            } @else {
+              Nenhuma opção disponível
+            }
+          </span>
+        </div>
+      </mat-option>
+    }
+
+    <!-- Estado de erro -->
+    @if (listDataState().error) {
+      <mat-option disabled class="pdx-error-option">
+        <div class="pdx-error-content">
+          <mat-icon>error_outline</mat-icon>
+          <span>{{ listDataState().error }}</span>
+          <button 
+            mat-button 
+            color="primary" 
+            (click)="retryDataLoad(); $event.stopPropagation()">
+            Tentar Novamente
+          </button>
+        </div>
+      </mat-option>
+    }
+
+  </mat-select>
+
+  <!-- Chips para seleção múltipla (fora do select) -->
+  @if (isMultiple() && metadata()?.multipleDisplay === 'chips' && selectState().selectedOptions.length > 0) {
+    <div class="pdx-selected-chips" matSuffix>
+      @for (option of selectState().selectedOptions; track trackByValue($index, option)) {
+        <mat-chip 
+          [removable]="!componentState().disabled"
+          (removed)="onChipRemoved(option)"
+          class="pdx-selection-chip">
+          {{ option.text }}
+          @if (!componentState().disabled) {
+            <mat-icon matChipRemove>cancel</mat-icon>
+          }
+        </mat-chip>
+      }
+    </div>
+  }
+
+  <!-- Botão limpar seleção -->
+  @if (metadata()?.clearButton?.enabled && selectState().selectedOptions.length > 0 && !componentState().disabled) {
+    <button
+      mat-icon-button
+      matSuffix
+      type="button"
+      class="pdx-clear-button"
+      [attr.aria-label]="'Clear selection'"
+      [matTooltip]="'Clear selection'"
+      matTooltipPosition="above"
+      (click)="clearAll()">
+      <mat-icon>{{ metadata()?.clearButton?.icon || 'clear' }}</mat-icon>
+    </button>
+  }
+
+  <!-- Ícone de sufixo customizado -->
+  @if (metadata()?.suffixIcon && !metadata()?.clearButton?.enabled) {
+    <mat-icon 
+      matSuffix
+      [matTooltip]="'Icon: ' + metadata()?.suffixIcon"
+      matTooltipPosition="above">
+      {{ metadata()?.suffixIcon }}
+    </mat-icon>
+  }
+
+  <!-- Texto de ajuda -->
+  @if (metadata()?.hint) {
+    <mat-hint 
+      [id]="componentId() + '-hint'"
+      align="start">
+      {{ metadata()?.hint }}
+    </mat-hint>
+  }
+
+  <!-- Contador de seleção -->
+  @if (isMultiple() && metadata()?.showSelectionCount) {
+    <mat-hint 
+      align="end"
+      class="pdx-selection-count">
+      {{ selectState().selectedOptions.length }}/{{ filteredOptions().length }}
+    </mat-hint>
+  }
+
+  <!-- Mensagens de erro -->
+  @if (hasValidationError()) {
+    <mat-error 
+      [id]="componentId() + '-error'"
+      class="pdx-error-message">
+      <mat-icon class="pdx-error-icon">error_outline</mat-icon>
+      {{ primaryErrorMessage() }}
+    </mat-error>
+  }
+
+  <!-- Erros adicionais (se houver múltiplos) -->
+  @if (allErrorMessages().length > 1) {
+    <div class="pdx-additional-errors">
+      @for (error of allErrorMessages().slice(1); track error) {
+        <mat-error class="pdx-error-message pdx-additional-error">
+          {{ error }}
+        </mat-error>
+      }
+    </div>
+  }
+
+</mat-form-field>
+
+<!-- Loading indicator para dados -->
+@if (listDataState().loading && !selectState().panelOpen) {
+  <div class="pdx-data-loading" [attr.aria-label]="'Loading options for ' + metadata()?.label">
+    <mat-icon class="pdx-loading-spinner">hourglass_empty</mat-icon>
+    <span class="pdx-sr-only">Loading options...</span>
+  </div>
+}
+
+<!-- Indicador de estado enterprise (debug) -->
+@if (isDebugMode() && metadata()?.security) {
+  <div class="pdx-debug-info">
+    <small class="pdx-debug-security">
+      Security Level: {{ metadata()?.security?.securityLevel }}
+      @if (metadata()?.security?.audit?.enabled) {
+        | Audit: ON
+      }
+      | Options: {{ filteredOptions().length }}
+    </small>
+  </div>
+}
