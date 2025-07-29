@@ -1,0 +1,12 @@
+<div class="pdx-selected-chips" *ngIf="selectedOptions.length > 0">
+  <mat-chip
+    *ngFor="let option of selectedOptions"
+    class="pdx-selection-chip"
+    [removable]="!disabled"
+    (removed)="remove.emit(option)">
+    {{ option.text }}
+    <ng-container *ngIf="!disabled">
+      <mat-icon matChipRemove>cancel</mat-icon>
+    </ng-container>
+  </mat-chip>
+</div>
