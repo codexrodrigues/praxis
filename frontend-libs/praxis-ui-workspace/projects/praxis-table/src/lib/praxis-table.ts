@@ -203,7 +203,6 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit, 
         ref.closed.subscribe((result) => {
           if (result) {
             // Aplicar as configurações retornadas
-            console.log('Configurações atualizadas:', result);
             this.config = { ...result };
             this.setupColumns();
             this.applyDataSourceSettings();
@@ -216,7 +215,7 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit, 
         })
       );
     } catch (error) {
-      console.error('Erro ao abrir editor de configuração:', error);
+      // TODO: Implement proper error logging service
     }
   }
 
@@ -378,7 +377,7 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit, 
         const evaluationFunction = new Function('rowData', `return ${column._generatedValueGetter}`);
         value = evaluationFunction(rowData);
       } catch (error) {
-        console.warn(`Error evaluating formula for column ${column.field}:`, error);
+        // TODO: Implement proper error logging service
         return `[Formula Error]`;
       }
     } else {
@@ -397,7 +396,7 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit, 
       try {
         value = this.formattingService.formatValue(value, column.type, column.format);
       } catch (error) {
-        console.warn(`Error formatting value for column ${column.field}:`, error);
+        // TODO: Implement proper error logging service
       }
     }
 
@@ -459,7 +458,7 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit, 
         return current && current[key] !== undefined ? current[key] : null;
       }, obj);
     } catch (error) {
-      console.warn(`Error accessing property ${path}:`, error);
+      // TODO: Implement proper error logging service
       return null;
     }
   }

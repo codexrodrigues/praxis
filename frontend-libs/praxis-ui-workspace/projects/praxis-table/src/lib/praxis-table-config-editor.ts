@@ -336,7 +336,7 @@ export class PraxisTableConfigEditor implements OnInit, OnDestroy {
       
       // Validar configuração recebida
       if (!config || typeof config !== 'object') {
-        console.error('Configuração inválida recebida:', config);
+        // TODO: Implement proper error logging service
         this.showError('Erro ao carregar configuração');
         return;
       }
@@ -347,7 +347,7 @@ export class PraxisTableConfigEditor implements OnInit, OnDestroy {
       try {
         this.editedConfig = JSON.parse(JSON.stringify(this.originalConfig));
       } catch (cloneError) {
-        console.error('Erro ao clonar configuração:', cloneError);
+        // TODO: Implement proper error logging service
         this.editedConfig = { columns: [] }; // fallback to empty config
       }
       
@@ -360,7 +360,7 @@ export class PraxisTableConfigEditor implements OnInit, OnDestroy {
       this.updateConfigurationVersion();
       this.updateCanSaveState();
     } catch (error) {
-      console.error('Erro ao inicializar editor de configuração:', error);
+      // TODO: Implement proper error logging service
       this.showError('Erro ao inicializar editor');
     }
   }
