@@ -302,6 +302,7 @@ utilizando o módulo `DragDrop` do Angular CDK. As mudanças são emitidas por
 eventos e podem ser persistidas via `FormLayoutService`. Essa abordagem facilita
 o ajuste fino dos formulários sem modificar o código-fonte.
 
+
 ### Integração CRUD
 
 O `PraxisDynamicForm` utiliza o `GenericCrudService` para buscar o schema e
@@ -310,6 +311,7 @@ por meio do input `customEndpoints`, permitindo integrar o formulário a APIs
 diversas. Durante a submissão, eventos `FormSubmitEvent` são emitidos indicando
 o resultado das operações de criação ou atualização, cabendo à aplicação exibir
 as mensagens de sucesso ou erro ao usuário.
+
 
 ## 📚 Documentação
 
