@@ -1,0 +1,90 @@
+<ng-container *ngIf="!useVirtualization">
+  <ng-container *ngFor="let group of groupedOptions | keyvalue; trackBy: trackByGroup">
+    <mat-optgroup *ngIf="group.key" [label]="group.key">
+      <mat-option
+        *ngFor="let option of group.value; trackBy: trackByValue"
+        [value]="option.value"
+        [disabled]="option.disabled || false"
+        [class]="option.class || ''"
+        [matTooltip]="option.tooltip || ''"
+        [matTooltipDisabled]="!option.tooltip"
+        (click)="optionSelected.emit(option.value)">
+        <ng-container *ngIf="multiple; else singleItem">
+          <mat-checkbox [checked]="isSelected(option.value)" (click)="$event.stopPropagation()">
+            {{ option.text }}
+          </mat-checkbox>
+        </ng-container>
+        <ng-template #singleItem>
+          {{ option.text }}
+        </ng-template>
+        <mat-icon *ngIf="option.icon" class="pdx-option-icon">{{ option.icon }}</mat-icon>
+      </mat-option>
+    </mat-optgroup>
+    <ng-container *ngIf="!group.key">
+      <mat-option
+        *ngFor="let option of group.value; trackBy: trackByValue"
+        [value]="option.value"
+        [disabled]="option.disabled || false"
+        [class]="option.class || ''"
+        [matTooltip]="option.tooltip || ''"
+        [matTooltipDisabled]="!option.tooltip"
+        (click)="optionSelected.emit(option.value)">
+        <ng-container *ngIf="multiple; else singleItemNoGroup">
+          <mat-checkbox [checked]="isSelected(option.value)" (click)="$event.stopPropagation()">
+            {{ option.text }}
+          </mat-checkbox>
+        </ng-container>
+        <ng-template #singleItemNoGroup>
+          {{ option.text }}
+        </ng-template>
+        <mat-icon *ngIf="option.icon" class="pdx-option-icon">{{ option.icon }}</mat-icon>
+      </mat-option>
+    </ng-container>
+  </ng-container>
+
+  <mat-option
+    *ngFor="let option of options; trackBy: trackByValue"
+    [value]="option.value"
+    [disabled]="option.disabled || false"
+    [class]="option.class || ''"
+    [matTooltip]="option.tooltip || ''"
+    [matTooltipDisabled]="!option.tooltip"
+    (click)="optionSelected.emit(option.value)">
+    <ng-container *ngIf="multiple; else singleItem">
+      <mat-checkbox [checked]="isSelected(option.value)" (click)="$event.stopPropagation()">
+        {{ option.text }}
+      </mat-checkbox>
+    </ng-container>
+    <ng-template #singleItem>
+      {{ option.text }}
+    </ng-template>
+    <mat-icon *ngIf="option.icon" class="pdx-option-icon">{{ option.icon }}</mat-icon>
+  </mat-option>
+
+</ng-container>
+
+<cdk-virtual-scroll-viewport
+  *ngIf="useVirtualization"
+  itemSize="48"
+  maxBufferPx="600"
+  minBufferPx="200"
+  class="pdx-virtual-viewport">
+  <mat-option
+    *ngFor="let option of options; trackBy: trackByValue"
+    [value]="option.value"
+    [disabled]="option.disabled || false"
+    [class]="option.class || ''"
+    [matTooltip]="option.tooltip || ''"
+    [matTooltipDisabled]="!option.tooltip"
+    (click)="optionSelected.emit(option.value)">
+    <ng-container *ngIf="multiple; else singleItemVirtual">
+      <mat-checkbox [checked]="isSelected(option.value)" (click)="$event.stopPropagation()">
+        {{ option.text }}
+      </mat-checkbox>
+    </ng-container>
+    <ng-template #singleItemVirtual>
+      {{ option.text }}
+    </ng-template>
+    <mat-icon *ngIf="option.icon" class="pdx-option-icon">{{ option.icon }}</mat-icon>
+  </mat-option>
+</cdk-virtual-scroll-viewport>

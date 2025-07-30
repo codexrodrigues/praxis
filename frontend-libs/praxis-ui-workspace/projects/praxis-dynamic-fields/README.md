@@ -8,6 +8,8 @@ Sistema simplificado de campos dinâmicos para aplicações corporativas Angular
 - **Lazy Loading**: Carregamento sob demanda com cache inteligente
 - **Material Design**: Componentes baseados no Angular Material
 - **Color Picker**: Novo componente de seleção de cores com suporte a paleta e canvas
+- **Novos Componentes**: Toggle, Slider, Time Picker e Rating
+- **Material Select Modular**: Fragmentado em subcomponentes (SearchInput, OptionsList e Chips)
 - **TypeScript**: Totalmente tipado com integração do `@praxis/core`
 - **Corporativo**: Adequado para cenários empresariais
 
@@ -45,6 +47,21 @@ O sistema usa as constantes do `@praxis/core` para garantir consistência:
 - `FieldControlType.DATE_TIME_PICKER` - Data e hora
 - `FieldControlType.DATE_RANGE` - Intervalo de datas
 - `FieldControlType.FILE_UPLOAD` - Upload de arquivos
+- `FieldControlType.TOGGLE` - Interruptor Material Design
+- `FieldControlType.SLIDER` - Slider Material Design
+- `FieldControlType.TIME_PICKER` - Seletor de horário
+- `FieldControlType.RATING` - Classificação por estrelas
+- `FieldControlType.COLOR_PICKER` - Seletor de cores
+
+## 🧩 MaterialSelectComponent
+
+O `MaterialSelectComponent` agora está dividido em subcomponentes menores para facilitar manutenção e testes:
+
+- **SelectSearchInputComponent** - Campo de busca opcional exibido dentro do painel.
+- **SelectOptionsListComponent** - Lista de opções com suporte a grupos e virtualização.
+- **SelectChipsComponent** - Exibe as opções selecionadas como chips quando `multipleDisplay` é `"chips"`.
+
+Esses subcomponentes são utilizados internamente pelo select e não exigem alterações na utilização normal do componente.
 
 ## 📦 Instalação
 
@@ -82,6 +99,10 @@ export class DynamicFormComponent {
 
   async loadDatePicker() {
     await this.loadField(FieldControlType.DATE_PICKER);
+  }
+
+  async loadColorPicker() {
+    await this.loadField(FieldControlType.COLOR_PICKER);
   }
 }
 ```
