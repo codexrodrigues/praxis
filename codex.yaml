@@ -1,0 +1,17 @@
+setup:
+  script: ./frontend-libs/praxis-ui-workspace/setup.sh
+
+language:
+  node: 20
+  java: 21
+
+workspace:
+  path: frontend-libs/praxis-ui-workspace
+
+test:
+  commands:
+    - npx ng test praxis-dynamic-form --watch=false --browsers=ChromeHeadless
+
+build:
+  commands:
+    - npx ng build praxis-core
