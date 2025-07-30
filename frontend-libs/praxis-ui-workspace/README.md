@@ -295,6 +295,7 @@ as regras de layout de cada formulário. Ele suporta múltiplos contextos, permi
 compartilhar regras entre formulários sem conflitos. Para verificar condições de
 visibilidade ou estilo, utilize as funções utilitárias em `form-rule.utils`.
 
+
 ### Editor de Layout com Drag & Drop
 
 O `FormLayoutEditor` permite reorganizar visualmente fieldsets, linhas e campos
