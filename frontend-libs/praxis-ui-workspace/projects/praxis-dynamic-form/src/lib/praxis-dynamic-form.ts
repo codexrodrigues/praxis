@@ -18,12 +18,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { GenericCrudService, FieldMetadata, mapFieldDefinitionsToMetadata } from '@praxis/core';
 import { DynamicFieldLoaderDirective } from '@praxis/dynamic-fields';
 import { FormConfig } from './models/form-config.model';
-
-export interface FormSubmitEvent {
-  mode: 'create' | 'edit';
-  data: any;
-  formValue: any;
-}
+import { FormSubmitEvent } from './models/form-events.model';
 
 @Component({
   selector: 'praxis-dynamic-form',

@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
-import { PraxisDynamicForm, FormSubmitEvent } from './praxis-dynamic-form';
+import { PraxisDynamicForm } from './praxis-dynamic-form';
 import { GenericCrudService } from '@praxis/core';
 import { DynamicFieldLoaderDirective } from '@praxis/dynamic-fields';
 
