@@ -10,7 +10,7 @@ describe('PraxisDynamicForm', () => {
   let crudService: jasmine.SpyObj<GenericCrudService<any>>;
 
   beforeEach(async () => {
-    crudService = jasmine.createSpyObj('GenericCrudService', ['configure', 'getSchema', 'get', 'create', 'update']);
+    crudService = jasmine.createSpyObj('GenericCrudService', ['configure', 'configureEndpoints', 'getSchema', 'get', 'create', 'update']);
 
     await TestBed.configureTestingModule({
       imports: [PraxisDynamicForm, DynamicFieldLoaderDirective],
@@ -61,5 +61,23 @@ describe('PraxisDynamicForm', () => {
     await fixture.whenStable();
     expect(readySpy).toHaveBeenCalled();
   });
+
+  it('configura endpoints customizados quando informados', () => {
+    const endpoints = { create: '/custom' };
+    component.customEndpoints = endpoints;
+    expect(crudService.configureEndpoints).toHaveBeenCalledWith(endpoints);
+  });
+
+  it('emite evento de submit após criação', () => {
+    crudService.create.and.returnValue(of({ id: 1 } as any));
+    const submitSpy = jasmine.createSpy('submit');
+    component.formSubmit.subscribe(submitSpy);
+    component['fieldMetadata'] = [{ name: 'nome', controlType: 'input' } as any];
+    (component as any).buildForm();
+    component.form.setValue({ nome: 'Teste' });
+    component.onSubmit();
+    expect(submitSpy).toHaveBeenCalled();
+  });
+
 
 });

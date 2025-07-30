@@ -16,7 +16,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { GenericCrudService, FieldMetadata, mapFieldDefinitionsToMetadata } from '@praxis/core';
+import { GenericCrudService, FieldMetadata, mapFieldDefinitionsToMetadata, EndpointConfig } from '@praxis/core';
 import { DynamicFieldLoaderDirective } from '@praxis/dynamic-fields';
 import { FormConfig } from './models/form-config.model';
 import { FormLayout } from './models/form-layout.model';
@@ -70,6 +70,18 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   /** Optional layout to use instead of generated one */
   @Input() layout?: FormLayout;
 
+  /** Custom endpoints for CRUD operations */
+  private _customEndpoints: EndpointConfig = {};
+  @Input()
+  get customEndpoints(): EndpointConfig {
+    return this._customEndpoints;
+  }
+  set customEndpoints(value: EndpointConfig) {
+    this._customEndpoints = value;
+    if (value && Object.keys(value).length > 0) {
+      this.crud.configureEndpoints(value);
+    }
+  }
 
   @Output() formSubmit = new EventEmitter<FormSubmitEvent>();
   @Output() formCancel = new EventEmitter<void>();
@@ -163,12 +175,22 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
 
   onSubmit(): void {
     if (this.form.invalid) { return; }
-    const value = this.form.value;
-    const req$ = this.mode === 'edit' && this.resourceId != null
-      ? this.crud.update(this.resourceId, value)
-      : this.crud.create(value);
-    req$.pipe(takeUntilDestroyed()).subscribe(data => {
-      this.formSubmit.emit({ mode: this.mode === 'edit' ? 'edit' : 'create', data, formValue: value });
+    const formData = this.form.value;
+    const operation: 'create' | 'update' = this.mode === 'edit' && this.resourceId != null ? 'update' : 'create';
+
+    this.formSubmit.emit({ stage: 'before', formData, isValid: true, operation, entityId: this.resourceId ?? undefined });
+
+    const req$ = operation === 'update'
+      ? this.crud.update(this.resourceId!, formData)
+      : this.crud.create(formData);
+
+    req$.pipe(takeUntilDestroyed()).subscribe({
+      next: result => {
+        this.formSubmit.emit({ stage: 'after', formData, isValid: true, operation, entityId: this.resourceId ?? undefined, result });
+      },
+      error: error => {
+        this.formSubmit.emit({ stage: 'error', formData, isValid: false, operation, entityId: this.resourceId ?? undefined, error });
+      }
     });
   }
 

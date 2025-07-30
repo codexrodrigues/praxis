@@ -12,3 +12,9 @@ export * from './lib/layout-editor/form-layout-editor.component';
 export * from './lib/layout-editor/fieldset-configurator.component';
 export * from './lib/layout-editor/row-configurator.component';
 export * from './lib/layout-editor/field-configurator.component';
+
+
+export * from './lib/layout-editor/form-layout-editor.component';
+export * from './lib/layout-editor/fieldset-configurator.component';
+export * from './lib/layout-editor/row-configurator.component';
+export * from './lib/layout-editor/field-configurator.component';
