@@ -5,7 +5,7 @@ import {
   FormConfigState,
   createDefaultFormConfig,
   isValidFormConfig
-} from '../models/form-config.model';
+} from '@praxis/core';
 
 @Injectable({ providedIn: 'root' })
 export class FormConfigService {

@@ -33,3 +33,7 @@ export * from './lib/services/table-config.service';
 export * from './lib/components/resizable-window/praxis-resizable-window.component';
 export * from './lib/components/resizable-window/services/praxis-resizable-window.service';
 export * from './lib/helpers/field-definition-mapper';
+// Dynamic form models
+export * from './lib/models/form/form-config.model';
+export * from './lib/models/form/form-events.model';
+export * from './lib/models/form/form-layout.model';

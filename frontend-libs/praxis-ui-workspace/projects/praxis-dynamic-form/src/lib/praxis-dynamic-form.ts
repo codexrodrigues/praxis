@@ -18,9 +18,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { GenericCrudService, FieldMetadata, mapFieldDefinitionsToMetadata, EndpointConfig } from '@praxis/core';
 import { DynamicFieldLoaderDirective } from '@praxis/dynamic-fields';
-import { FormConfig } from './models/form-config.model';
-import { FormLayout } from './models/form-layout.model';
-import { FormSubmitEvent, FormReadyEvent, FormValueChangeEvent } from './models/form-events.model';
+import { FormConfig, FormLayout, FormSubmitEvent, FormReadyEvent, FormValueChangeEvent } from '@praxis/core';
 import { FormLayoutService } from './services/form-layout.service';
 import { FormContextService } from './services/form-context.service';
 

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { FieldMetadata } from '@praxis/core';
-import { FormLayoutRule, FormRuleContext } from '../models/form-layout.model';
+import { FormLayoutRule, FormRuleContext } from '@praxis/core';
 
 @Injectable({ providedIn: 'root' })
 export class FormContextService {

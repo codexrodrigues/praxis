@@ -1,5 +1,5 @@
 import { Injectable, InjectionToken, Inject, Optional } from '@angular/core';
-import { FormLayout } from '../models/form-layout.model';
+import { FormLayout } from '@praxis/core';
 
 export interface FormLayoutStorage {
   load(formId: string): FormLayout | null;

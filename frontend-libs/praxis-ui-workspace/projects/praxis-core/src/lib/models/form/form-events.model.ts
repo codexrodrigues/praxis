@@ -1,5 +1,5 @@
 import { FormGroup } from '@angular/forms';
-import { FieldMetadata } from '@praxis/core';
+import type { FieldMetadata } from '../component-metadata.interface';
 import { FormLayout } from './form-layout.model';
 
 export interface FormValueChangeEvent {

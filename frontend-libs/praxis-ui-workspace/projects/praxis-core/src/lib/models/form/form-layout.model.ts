@@ -44,7 +44,7 @@ export interface FormMessagesLayout {
   [key: string]: any;
 }
 
-import { FieldMetadata } from '@praxis/core';
+import type { FieldMetadata } from '../component-metadata.interface';
 import { Specification } from '@praxis/specification';
 
 export interface FormRowLayout {

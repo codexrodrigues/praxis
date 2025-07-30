@@ -1,5 +1,5 @@
 import { FormContextService } from './form-context.service';
-import { FormLayoutRule } from '../models/form-layout.model';
+import { FormLayoutRule } from '@praxis/core';
 
 describe('FormContextService', () => {
   let service: FormContextService;
