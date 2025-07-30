@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
-import { PraxisDynamicForm, FormSubmitEvent } from './praxis-dynamic-form';
+import { PraxisDynamicForm } from './praxis-dynamic-form';
 import { GenericCrudService } from '@praxis/core';
 import { DynamicFieldLoaderDirective } from '@praxis/dynamic-fields';
 
@@ -49,6 +49,17 @@ describe('PraxisDynamicForm', () => {
     fixture.detectChanges();
     const button = fixture.nativeElement.querySelector('button[mat-icon-button]');
     expect(button).toBeTruthy();
+  });
+
+  it('emite formReady após construir o formulário', async () => {
+    const schema = [{ name: 'nome', controlType: 'input' }];
+    crudService.getSchema.and.returnValue(of(schema as any));
+    const readySpy = jasmine.createSpy('formReady');
+    component.formReady.subscribe(readySpy);
+    component.resourcePath = 'usuarios';
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(readySpy).toHaveBeenCalled();
   });
 
 });
