@@ -279,6 +279,15 @@ praxis-ui-workspace/
 └── ARCHITECTURE-UNIFICATION.md # Detalhes da arquitetura
 ```
 
+### Persistência de Layout de Formulários
+
+O layout dos formulários dinâmicos é armazenado localmente utilizando o
+`localStorage`. Cada formulário é salvo com a chave
+`praxis-layout-<formId>`, permitindo que o usuário mantenha personalizações
+entre sessões. O serviço responsável por essa funcionalidade foi estruturado
+para que, futuramente, seja possível substituir o mecanismo de persistência por
+uma chamada REST sem alterar as chamadas no restante da aplicação.
+
 ## 📚 Documentação
 
 ### Guias Detalhados
