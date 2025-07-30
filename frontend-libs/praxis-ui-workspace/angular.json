@@ -226,6 +226,26 @@
           }
         }
       }
+    },
+    "praxis-dynamic-form": {
+      "projectType": "library",
+      "root": "projects/praxis-dynamic-form",
+      "sourceRoot": "projects/praxis-dynamic-form/src",
+      "prefix": "praxis",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "configurations": {
+            "production": { "tsConfig": "projects/praxis-dynamic-form/tsconfig.lib.prod.json" },
+            "development": { "tsConfig": "projects/praxis-dynamic-form/tsconfig.lib.json" }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular/build:karma",
+          "options": { "tsConfig": "projects/praxis-dynamic-form/tsconfig.spec.json" }
+        }
+      }
     }
   },
   "cli": {
