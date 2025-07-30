@@ -10,8 +10,10 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { GenericCrudService, FieldMetadata, mapFieldDefinitionsToMetadata } from '@praxis/core';
 import { DynamicFieldLoaderDirective } from '@praxis/dynamic-fields';
@@ -48,6 +50,7 @@ export interface FormSubmitEvent {
         <button type="submit" mat-raised-button color="primary" [disabled]="form.invalid">
           {{ mode === 'edit' ? 'Atualizar' : 'Criar' }}
         </button>
+
         <button *ngIf="editModeEnabled" type="button" mat-icon-button (click)="openConfigEditor()">
           <mat-icon>settings</mat-icon>
         </button>
@@ -63,6 +66,7 @@ export class PraxisDynamicForm implements OnChanges, OnDestroy {
   @Input() config: FormConfig = { sections: [] };
   /** Shows the configuration editor button */
   @Input() editModeEnabled = false;
+
 
   @Output() formSubmit = new EventEmitter<FormSubmitEvent>();
   @Output() formCancel = new EventEmitter<void>();

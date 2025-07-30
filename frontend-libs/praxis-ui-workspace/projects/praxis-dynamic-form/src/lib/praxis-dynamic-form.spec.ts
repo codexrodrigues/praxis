@@ -40,6 +40,7 @@ describe('PraxisDynamicForm', () => {
     expect(crudService.get).toHaveBeenCalled();
   });
 
+
   it('mostra botão de edição quando editModeEnabled é verdadeiro', () => {
     const schema = [{ name: 'nome', controlType: 'input' }];
     crudService.getSchema.and.returnValue(of(schema as any));
@@ -49,4 +50,5 @@ describe('PraxisDynamicForm', () => {
     const button = fixture.nativeElement.querySelector('button[mat-icon-button]');
     expect(button).toBeTruthy();
   });
+
 });
