@@ -1,0 +1,81 @@
+<kendo-dialog title="Editar Propriedades do Campo" [maxHeight]="720" (close)="cancel()">
+  <kendo-card class="field-editor-card elegant-card">
+    <kendo-card-header class="elegant-header">
+      <div class="header-info">
+        <div class="header-icon" *ngIf="fieldControlTypeOption">
+          <i class="bi" [ngClass]="fieldControlTypeOption!.icon"></i>
+        </div>
+        <div class="header-text">
+          <h1 kendoCardTitle class="elegant-title">{{ fieldMetadata.label }}</h1>
+          <p kendoCardSubtitle class="elegant-subtitle">{{ fieldMetadata.name }}</p>
+        </div>
+      </div>
+      <div class="field-descriptions elegant-descriptions" *ngIf="fieldControlTypeOption">
+        <p class="short-description" *ngIf="fieldControlTypeOption.shortDescription">
+          {{ fieldControlTypeOption.shortDescription }}
+        </p>
+        <p class="long-description" *ngIf="fieldControlTypeOption.description">
+          {{ fieldControlTypeOption.description }}
+        </p>
+      </div>
+    </kendo-card-header>
+
+    <kendo-card-body class="elegant-body">
+      <kendo-tabstrip class="elegant-tabstrip">
+        <kendo-tabstrip-tab title="Geral" [selected]="true">
+          <ng-template kendoTabContent>
+            <div class="tab-content-wrapper">
+              <form *ngIf="formGroup" [formGroup]="formGroup">
+                <ng-container dynamicFieldLoader [fields]="fieldSchema" [formGroup]="formGroup"></ng-container>
+              </form>
+              <div *ngIf="!formGroup" class="loading-placeholder">Carregando propriedades...</div>
+            </div>
+          </ng-template>
+        </kendo-tabstrip-tab>
+
+        <kendo-tabstrip-tab title="Visibilidade">
+          <ng-template kendoTabContent>
+            <div class="tab-content-wrapper">
+              <p class="tab-explanation">
+                <i class="bi bi-info-circle"></i>
+                Defina as condições de <strong>visibilidade</strong> para que este campo seja <strong>exibido apenas</strong> quando critérios específicos forem atendidos.
+                <br><em>Exemplo: Exibir o campo 'Nome do Cônjuge' <strong>apenas quando</strong> o 'Estado Civil' estiver definido como 'Casado(a)'.</em>
+              </p>
+              <app-condition-builder
+                [context]="'visibility'"
+                [availableFields]="otherAvailableFields"
+                [initialConditions]="fieldMetadata.hiddenCondition ?? null"
+                (conditionsChange)="onConditionsChange($event, 'hiddenCondition')">
+              </app-condition-builder>
+            </div>
+          </ng-template>
+        </kendo-tabstrip-tab>
+
+        <kendo-tabstrip-tab title="Obrigatoriedade">
+          <ng-template kendoTabContent>
+            <div class="tab-content-wrapper">
+              <p class="tab-explanation">
+                <i class="bi bi-asterisk"></i>
+                Estabeleça as condições que determinarão quando o preenchimento deste campo será <strong>obrigatório</strong>.
+                <br><em>Exemplo: O campo 'Motivo da Isenção' só será <strong>obrigatório</strong> se o 'Tipo de Pagamento' estiver definido como 'Isento'.</em>
+              </p>
+
+              <app-condition-builder
+                [context]="'required'"
+                [availableFields]="otherAvailableFields"
+                [initialConditions]="fieldMetadata.conditionalRequired ?? null"
+                (conditionsChange)="onConditionsChange($event, 'conditionalRequired')">
+              </app-condition-builder>
+            </div>
+          </ng-template>
+        </kendo-tabstrip-tab>
+      </kendo-tabstrip>
+
+    </kendo-card-body>
+
+    <kendo-card-actions class="elegant-actions">
+      <button kendoButton themeColor="base" fillMode="flat" (click)="cancel()">Cancelar</button>
+      <button kendoButton themeColor="primary" (click)="save()" [disabled]="formGroup.invalid">Salvar</button>
+    </kendo-card-actions>
+  </kendo-card>
+</kendo-dialog>

@@ -1,0 +1,23 @@
+.actions-container-right {
+  display: flex;
+  justify-content: flex-end; /* Alinha os botões à direita */
+  gap: 10px;
+}
+
+.actions-container-left {
+  display: flex;
+  justify-content: flex-start; /* Alinha os botões à esquerda */
+  gap: 10px;
+}
+
+.actions-container-center {
+  display: flex;
+  justify-content: center; /* Centraliza os botões */
+  gap: 10px;
+}
+
+.actions-container-justified {
+  display: flex;
+  justify-content: space-between; /* Espaço igual entre os botões */
+  gap: 10px;
+}

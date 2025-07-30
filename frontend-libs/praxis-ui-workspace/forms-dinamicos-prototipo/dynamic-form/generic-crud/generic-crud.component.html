@@ -1,0 +1,33 @@
+    <!-- Modo de listagem -->
+<div *ngIf="mode === 'list'" class="table-container">
+<th-dynamic-table
+    #dynamicTable
+    [resourcePath]="resourcePath"
+    [allowEdit]="true"
+    [allowDelete]="true"
+    [allowView]="true"
+    (schemaChange)="onSchemaChange($event)"
+    (rowDoubleClick)="onRowDoubleClick($event)"
+    (editItem)="goToEdit($event.item.id || $event.item.uuid)"
+    (viewItem)="goToView($event.item.id || $event.item.uuid)"
+    (deleteItem)="onDeleteItem($event)"
+    (createItem)="goToCreate()">
+</th-dynamic-table>
+  </div>
+
+  <!-- Modo de formulário (criar/editar/visualizar) -->
+  <div *ngIf="mode !== 'list'" class="form-container">
+    <dynamic-form-builder
+        #formBuilder
+        [resourcePath]="resourcePath"
+        [fieldsMetadataInput]="schema"
+        [formMode]="mode"
+        [entityId]="recordId"
+        [showBackButton]="dashboardMode"
+        [forceHasPreviousRoute]="dashboardMode"
+        (afterSave)="onFormSave($event)"
+        (afterCreate)="onFormCreate($event)"
+        (afterUpdate)="onFormUpdate($event)"
+        (backPageClick)="goToList()">
+    </dynamic-form-builder>
+  </div>

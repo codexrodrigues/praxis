@@ -1,0 +1,165 @@
+.row-editor-card {
+  width: 1200px;
+  margin: 0 auto;
+  background-color: #fff;
+  border-radius: 8px;
+}
+
+.elegant-header {
+  padding: 16px;
+  border-bottom: 1px solid #e6e6e6;
+}
+
+.header-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-icon {
+  font-size: 2rem;
+  color: #1c54b2;
+}
+
+.elegant-title {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.elegant-subtitle {
+  margin: 5px 0 0;
+  color: #666;
+}
+
+.elegant-body {
+  padding: 0;
+}
+
+.tab-content-wrapper {
+  padding: 20px;
+}
+
+.tab-explanation {
+  background-color: #f8f9fa;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.tab-explanation i {
+  margin-right: 8px;
+  color: #1c54b2;
+}
+
+.elegant-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px;
+  gap: 8px;
+  border-top: 1px solid #e6e6e6;
+}
+
+.no-fields-message {
+  color: #888;
+  font-style: italic;
+  padding: 20px;
+  text-align: center;
+}
+
+/* ========================== */
+/* 🔹 Estilos para os campos */
+/* ========================== */
+
+.fields-list .field-item {
+  background-color: #f8f9fa;
+  transition: background-color 0.2s ease-in-out;
+  padding: 16px;
+  margin-bottom: 12px;
+  border-radius: 6px;
+}
+
+.fields-list .field-item:hover {
+  background-color: #e9ecef;
+}
+
+.fields-list .main-info {
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+
+.fields-list .field-label {
+  color: #212529;
+  font-weight: 500;
+  margin-right: 8px;
+}
+
+.fields-list .field-control-type {
+  font-style: italic;
+  color: #495057;
+}
+
+.fields-list .field-icon {
+  font-size: 1.2em;
+  color: #6c757d;
+}
+
+/* Extra info: tipo, width, regex, etc */
+.fields-list .extra-info {
+  font-size: 0.8rem;
+  line-height: 1.4;
+  display: flex;
+  flex-wrap: wrap;
+  row-gap: 6px;
+  column-gap: 16px;
+  margin-bottom: 8px;
+}
+
+.fields-list .extra-info span {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  margin-right: 12px;
+  margin-bottom: 6px;
+}
+
+.fields-list .extra-info i {
+  margin-right: 4px;
+  font-size: 0.95em;
+}
+
+/* Badges */
+.fields-list .field-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.fields-list .field-badges .badge {
+  font-size: 0.8em;
+  padding: 0.4em 0.7em;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+/* Badge cores (usa classes Bootstrap) */
+.badge-info {
+  background-color: #17a2b8;
+  color: white;
+}
+
+.badge-warning {
+  background-color: #ffc107;
+  color: black;
+}
+
+.badge-success {
+  background-color: #28a745;
+  color: white;
+}
+
+.badge-secondary {
+  background-color: #6c757d;
+  color: white;
+}

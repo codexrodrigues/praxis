@@ -1,0 +1,56 @@
+<!--src/app/funcionalidades/form-field-drag/field-item/field-item.component.html-->
+<div [ngClass]="{'edit-mode': editMode}" class="field" (mouseenter)="isHovered = true" (mouseleave)="isHovered = false"
+     [ngStyle]="{'display': isHiddenByCondition ? 'none' : 'block'}">
+
+
+  <div *ngIf="editMode && isHovered" class="field-header" >
+
+<!--    <button (click)="cycleWidth($event)" title="Ajustar largura para {{nextWidth}}">-->
+<!--    <i class="bi bi-arrows-expand-vertical"></i>-->
+<!--    </button>-->
+
+    <button class="edit-icon-button" (click)="toggleWidth($event)" [title]="fieldWidth === '100%' ? 'Reduzir para 50%' : 'Expandir para 100%'">
+      <i class="bi" [ngClass]="fieldWidth === '100%' ? 'bi-arrows-angle-contract' : 'bi-arrows-angle-expand'"></i>
+    </button>
+
+
+
+
+
+    <button *ngIf="canToggleRequired(field)" (click)="toggleRequired($event)"
+            [title]="field.validators?.required ? 'Campo obrigatório - clique para tornar opcional' : 'Tornar obrigatório'"
+            [ngClass]="{'required-active': field.validators?.required}">
+      <i class="bi" [ngClass]="{
+        'bi-exclamation-circle-fill': field.validators?.required,
+      'bi-exclamation-circle': !field.validators?.required
+      }">
+      </i>
+    </button>
+    <button *ngIf="!field.hiddenCondition" (click)="toggleVisibility($event)" title="Visibilidade">
+      <i [ngClass]="{'bi-eye-fill': field.hidden, 'bi-eye-slash-fill': !field.hidden}" class="bi"></i>
+    </button>
+    <button (click)="toggleLock($event)" title="Bloquear/Desbloquear">
+      <i class="bi" [ngClass]="{'bi-lock-fill': field.disabled, 'bi-unlock-fill': !field.disabled}"></i>
+    </button>
+    <button (click)="onRemoveField($event)" title="Remover">
+      <i class="bi bi-trash3-fill"></i>
+    </button>
+    <button (click)="openSettings($event)" title="Configurações">
+      <i class="bi bi-gear-fill"></i>
+    </button>
+
+  </div>
+
+    <!-- Carrega o campo dinamicamente e escuta o evento componentsCreated -->
+    <ng-container dynamicFieldLoader [fields]="[field]" [formGroup]="formGroup" (componentsCreated)="onComponentsCreated($event)"></ng-container>
+
+    <ng-template cdkDragPreview>
+      <div class="drag-preview">
+        {{ field!.label }}
+      </div>
+    </ng-template>
+    <ng-template cdkDragPlaceholder>
+      <div class="drag-placeholder"></div>
+    </ng-template>
+  </div>
+

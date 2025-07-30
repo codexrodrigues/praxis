@@ -1,0 +1,46 @@
+<!--src/app/funcionalidades/form-field-drag/row-header/row-header.component.html-->
+<div class="row-header" *ngIf="editMode && row?.fields?.length >= 0"
+     (mouseenter)="onMouseEnter()"
+     (mouseleave)="onMouseLeave()"
+>
+    <span>{{ rowLabel }}</span>
+    <div class="box-tools">
+        <button
+                *ngIf="row?.fields?.length > 1"
+                class="edit-icon-button"
+                (click)="onToggleOrientation($event)"
+                [title]="row.orientation === 'horizontal' ? 'Mudar para orientação vertical' : 'Mudar para orientação horizontal'">
+            <i
+                    class="bi"
+                    [ngClass]="row.orientation === 'horizontal' ? 'bi-layout-three-columns' : 'bi-layout-split'"
+                    [ngStyle]="{'transform': row.orientation === 'horizontal' ? 'rotate(90deg)' : 'rotate(0deg)'}">
+            </i>
+        </button>
+
+      <!-- Botão para abrir o FieldWizardDialog -->
+      <button class="edit-icon-button" (click)="openFieldWizardDialog()"
+              title="Adicionar Campo">
+        <i class="bi bi-plus-square-dotted"></i>
+      </button>
+
+        <!-- Botão único para adicionar, com ícone dinâmico
+        <button class="edit-icon-button" (click)="onAdd($event)"
+                [title]="row.orientation === 'horizontal' ? 'Nova Coluna' : 'Nova Linha'">
+            <i class="bi bi-plus-circle"
+               [ngStyle]="{'transform': row.orientation === 'horizontal' ? 'none' : 'rotate(90deg)'}">
+            </i>
+        </button>
+        -->
+
+        <!-- Botão para configurações da linha/fieldset -->
+       <button class="edit-icon-button" (click)="openSettings($event)"
+                [title]="row.orientation === 'horizontal' ? 'Configurações da Coluna' : 'Configurações da Linha'">
+          <i class="bi bi-gear-fill"></i>
+        </button>
+
+        <!-- Botão para remover a row -->
+        <button class="edit-icon-button delete-icon-button" (click)="onRemove($event)" title="Remover Linha">
+            <i class="bi bi-trash"></i>
+        </button>
+    </div>
+</div>

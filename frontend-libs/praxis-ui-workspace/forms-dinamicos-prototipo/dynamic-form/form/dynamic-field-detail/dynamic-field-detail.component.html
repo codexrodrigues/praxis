@@ -1,0 +1,122 @@
+<!-- Título -->
+<h3>Campos</h3>
+
+<!-- Filtros -->
+<div class="filter">
+    <kendo-checkbox [(checkedState)]="filterAll" (checkedStateChange)="onFilterChange('all')"></kendo-checkbox>
+    <kendo-label class="filter-item">Todos</kendo-label>
+
+    <kendo-checkbox [(checkedState)]="filterVisible" (checkedStateChange)="onFilterChange('visible')"></kendo-checkbox>
+    <kendo-label class="filter-item">Visível</kendo-label>
+
+    <kendo-checkbox [(checkedState)]="filterRequired"
+        (checkedStateChange)="onFilterChange('required')"></kendo-checkbox>
+    <kendo-label class="filter-item">Obrigatório</kendo-label>
+
+    <kendo-checkbox [(checkedState)]="filterReadOnly"
+        (checkedStateChange)="onFilterChange('readOnly')"></kendo-checkbox>
+    <kendo-label class="filter-item">Somente Leitura</kendo-label>
+</div>
+
+<!-- Body -->
+<div class="row-fields">
+
+    <!-- Coluna da esquerda: Listagem dos campos -->
+    <div class="column-field-list">
+        <kendo-listbox #listBox class="listbox" [data]="listBoxData" [textField]="textField" kendoListBoxDataBinding
+            [toolbar]="toolbar" (selectionChange)="onListBoxSelection($event)">
+
+            <!-- Template personalizado de cada item listado -->
+            <ng-template kendoListBoxItemTemplate kendoTooltip let-dataItem>
+                <div class="k-hstack listbox-item">
+                    <span class="listbox-label">{{ dataItem.label || 'Sem título' }}</span>
+
+                    <div class="listbox-icon-group">
+                        <!-- Visível -->
+                        <button kendoButton title="Visível" *ngIf="dataItem.visible"
+                            class="listbox-icon button-disabled">
+                            <i class="bi bi-eye-fill"></i>
+                        </button>
+
+                        <!-- Obrigatório -->
+                        <button kendoButton title="Obrigatório" *ngIf="dataItem.required"
+                            class="listbox-required-icon button-disabled">
+                            <i class="bi bi-exclamation-circle-fill"></i>
+                        </button>
+
+                        <!-- Somente leitura -->
+                        <button kendoButton title="Somente Leitura" *ngIf="dataItem.readOnly"
+                            class="listbox-icon button-disabled">
+                            <i class="bi bi-book"></i>
+                        </button>
+
+                        <!-- Desativado -->
+                        <button kendoButton title="Desativado" *ngIf="dataItem.disabled"
+                            class="listbox-icon button-disabled">
+                            <i class="bi bi-lock-fill"></i>
+                        </button>
+
+                        <!-- Flexível -->
+                        <button kendoButton title="Flexível" *ngIf="dataItem.isFlex"
+                            class="listbox-icon button-disabled">
+                            <i class="bi bi-lightning"></i>
+                        </button>
+                    </div>
+                </div>
+            </ng-template>
+
+            <!-- Tratamento de mensagens -->
+            <kendo-listbox-messages [noDataText]="noDataText">
+            </kendo-listbox-messages>
+        </kendo-listbox>
+    </div>
+
+    <!-- Coluna da direta: Edição dos campos -->
+    <div class="column-field-edit">
+        <div [formGroup]="selectedFormGroup">
+            <h4>Edição do Campo</h4>
+
+            <!-- Forms -->
+            <div class="form-group">
+                <kendo-label>Nome do campo</kendo-label>
+                <input id="name" type="text" placeholder="Nome do campo" formControlName="name" class="form-control"
+                    readonly>
+            </div>
+
+            <div class="form-group">
+                <kendo-label>Título</kendo-label>
+                <input id="label" type="text" placeholder="Título do campo" formControlName="label" class="form-control"
+                    [ngClass]="(selectedFormGroup.get('label')?.invalid ? 'form-error' : 'form-valid')" 
+                    [readonly]="selectedFormGroup.get('name')?.value === ''">
+                <kendo-formerror *ngIf="selectedFormGroup.get('label')?.hasError('required')">
+                    O título é obrigatório.
+                </kendo-formerror>
+            </div>
+
+            <!-- Checkboxes -->
+            <kendo-label [for]="required" class="checkbox-label">
+                <input kendoCheckBox type="checkbox" #required [disabled]="selectedFormGroup.get('name')?.value === ''"
+                    formControlName="required" />
+                <span>Obrigatório</span>
+            </kendo-label>
+
+            <kendo-label [for]="readOnly" class="checkbox-label">
+                <input kendoCheckBox type="checkbox" #readOnly [disabled]="selectedFormGroup.get('name')?.value === ''"
+                    formControlName="readOnly" />
+                <span>Somente leitura</span>
+            </kendo-label>
+
+            <kendo-label [for]="visible" class="checkbox-label">
+                <input kendoCheckBox type="checkbox" #visible [disabled]="selectedFormGroup.get('name')?.value === ''"
+                    formControlName="visible" />
+                <span>Visível</span>
+            </kendo-label>
+
+            <!-- Botão pra abrir a dialog principal de configurações -->
+            <button kendoButton fillMode="outline" iconClass="bi bi-gear-fill" themeColor="secondary"
+                [disabled]="!(selectedFormGroup.get('name')?.value !== '')" class="config-button"
+                (click)="openSettings($event, selectedIndex!)">Configurações</button>
+
+        </div>
+    </div>
+</div>
