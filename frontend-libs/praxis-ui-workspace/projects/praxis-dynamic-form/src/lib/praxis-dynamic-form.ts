@@ -69,6 +69,7 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   @Input() formId?: string;
   /** Optional layout to use instead of generated one */
   @Input() layout?: FormLayout;
+
   /** Custom endpoints for CRUD operations */
   private _customEndpoints: EndpointConfig = {};
   @Input()
@@ -81,7 +82,6 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
       this.crud.configureEndpoints(value);
     }
   }
-
 
   @Output() formSubmit = new EventEmitter<FormSubmitEvent>();
   @Output() formCancel = new EventEmitter<void>();

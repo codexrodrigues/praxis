@@ -1,7 +1,4 @@
 setup:
-  script: ./setup.sh
-language:
-  node: 20
-  java: 21
-workspace:
-  path: frontend-libs/praxis-ui-workspace
+  script: ./frontend-libs/praxis-ui-workspace/setup.sh
+  env:
+    NPM_CONFIG_REGISTRY: https://registry.npmjs.org

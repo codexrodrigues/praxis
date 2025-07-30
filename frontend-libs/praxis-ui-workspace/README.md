@@ -311,6 +311,7 @@ diversas. Durante a submissão, eventos `FormSubmitEvent` são emitidos indicand
 o resultado das operações de criação ou atualização, cabendo à aplicação exibir
 as mensagens de sucesso ou erro ao usuário.
 
+
 ### Exemplo de Visualização de Registro
 
 No módulo de **Funcionários** existe uma rota de exemplo que abre um formulário
