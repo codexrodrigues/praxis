@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import {Funcionarios} from './features/funcionarios/funcionarios';
+import { FuncionarioView } from './features/funcionarios/funcionario-view';
 import {Departamentos} from './features/departamentos/departamentos';
 import {Enderecos} from './features/enderecos/enderecos';
 import {Dependentes} from './features/dependentes/dependentes';
@@ -11,6 +12,7 @@ import {Cargos} from './features/cargos/cargos';
 
 export const routes: Routes = [
   { path: 'funcionarios', component: Funcionarios },
+  { path: 'funcionarios/view/:id', component: FuncionarioView },
   { path: 'departamentos', component: Departamentos },
   { path: 'cargos', component: Cargos },
   { path: 'enderecos', component: Enderecos },

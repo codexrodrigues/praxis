@@ -1,1 +1,4 @@
-<praxis-table resourcePath="funcionarios"  [editModeEnabled]="true"></praxis-table>
+<praxis-table
+  resourcePath="funcionarios"
+  [editModeEnabled]="true"
+  (rowClick)="onRowClick($event)"></praxis-table>

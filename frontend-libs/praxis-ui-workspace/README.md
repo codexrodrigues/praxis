@@ -288,6 +288,88 @@ entre sessões. O serviço responsável por essa funcionalidade foi estruturado
 para que, futuramente, seja possível substituir o mecanismo de persistência por
 uma chamada REST sem alterar as chamadas no restante da aplicação.
 
+### Contexto e Regras de Formulário
+
+O `FormContextService` gerencia a lista de campos disponíveis, referências de componentes e
+as regras de layout de cada formulário. Ele suporta múltiplos contextos, permitindo
+compartilhar regras entre formulários sem conflitos. Para verificar condições de
+visibilidade ou estilo, utilize as funções utilitárias em `form-rule.utils`.
+
+### Editor de Layout com Drag & Drop
+
+O `FormLayoutEditor` permite reorganizar visualmente fieldsets, linhas e campos
+utilizando o módulo `DragDrop` do Angular CDK. As mudanças são emitidas por
+eventos e podem ser persistidas via `FormLayoutService`. Essa abordagem facilita
+o ajuste fino dos formulários sem modificar o código-fonte.
+
+### Integração CRUD
+
+O `PraxisDynamicForm` utiliza o `GenericCrudService` para buscar o schema e
+persistir dados. É possível definir endpoints customizados para cada operação
+por meio do input `customEndpoints`, permitindo integrar o formulário a APIs
+diversas. Durante a submissão, eventos `FormSubmitEvent` são emitidos indicando
+o resultado das operações de criação ou atualização, cabendo à aplicação exibir
+as mensagens de sucesso ou erro ao usuário.
+
+### Exemplo de Visualização de Registro
+
+No módulo de **Funcionários** existe uma rota de exemplo que abre um formulário
+em modo de visualização quando o usuário clica em uma linha da tabela. O
+componente `Funcionarios` emite o evento `rowClick` para navegar até
+`/funcionarios/view/:id`:
+
+```html
+<praxis-table
+  resourcePath="funcionarios"
+  [editModeEnabled]="true"
+  (rowClick)="onRowClick($event)"></praxis-table>
+```
+
+```typescript
+// funcionarios.ts
+constructor(private router: Router) {}
+onRowClick(event: { row: any }): void {
+  this.router.navigate(['/funcionarios/view', event.row.id]);
+}
+```
+
+A rota declara o componente `FuncionarioView`, que carrega o
+`PraxisDynamicForm` em modo `view` para apresentar os dados do registro
+selecionado:
+
+```typescript
+export const routes: Routes = [
+  { path: 'funcionarios', component: Funcionarios },
+  { path: 'funcionarios/view/:id', component: FuncionarioView },
+  // ...demais rotas
+];
+```
+
+```typescript
+@Component({
+  selector: 'app-funcionario-view',
+  standalone: true,
+  imports: [CommonModule, PraxisDynamicForm],
+  template: `
+    <praxis-dynamic-form
+      resourcePath="funcionarios"
+      [resourceId]="id"
+      mode="view">
+    </praxis-dynamic-form>
+  `,
+  styleUrl: './funcionario-view.scss'
+})
+export class FuncionarioView {
+  id: string | null = null;
+  constructor(private route: ActivatedRoute) {
+    this.route.paramMap.subscribe(p => (this.id = p.get('id')));
+  }
+}
+```
+
+Esse fluxo demonstra como utilizar o `PraxisDynamicForm` para visualizar uma
+entidade e pode servir de base para cenários de edição ou criação.
+
 ## 📚 Documentação
 
 ### Guias Detalhados
