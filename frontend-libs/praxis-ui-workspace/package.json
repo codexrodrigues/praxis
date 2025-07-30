@@ -6,7 +6,7 @@
     "start": "ng serve  --port 4003",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "watch-all": "concurrently -n core,table,spec,dynamic -c blue,green,yellow,red \"ng build praxis-core --watch --configuration development\" \"ng build praxis-table --watch --configuration development\" \"ng build praxis-specification --watch --configuration development\" \"ng build praxis-dynamic-fields --watch --configuration development\"",
+    "watch-all": "concurrently -n core,table,spec,dynamic,form -c blue,green,yellow,red,cyan \"ng build praxis-core --watch --configuration development\" \"ng build praxis-table --watch --configuration development\" \"ng build praxis-specification --watch --configuration development\" \"ng build praxis-dynamic-fields --watch --configuration development\" \"ng build praxis-dynamic-form --watch --configuration development\"",
     "dev": "concurrently -n libs,app -c cyan,magenta \"npm run watch-all\" \"ng serve --configuration development --port 4003\"",
     "test": "ng test"
   },

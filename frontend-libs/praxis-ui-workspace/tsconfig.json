@@ -25,6 +25,9 @@
       ],
       "praxis-visual-builder": [
         "./dist/praxis-visual-builder"
+      ],
+      "praxis-dynamic-form": [
+        "./dist/praxis-dynamic-form"
       ]
     },
     "importHelpers": true,
