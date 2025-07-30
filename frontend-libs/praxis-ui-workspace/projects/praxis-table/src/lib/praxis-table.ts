@@ -4,9 +4,11 @@ import {
   ChangeDetectorRef,
   Component,
   ContentChild,
+  EventEmitter,
   Input,
   OnChanges,
   OnDestroy,
+  Output,
   SimpleChanges,
   ViewChild
 } from '@angular/core';
@@ -67,9 +69,21 @@ import {ColumnDataType} from './data-formatter/data-formatter-types';
             [attr.style]="column.style">{{ getCellValue(element, column) }}
         </td>
       </ng-container>
+      <ng-container *ngIf="config.actions?.row?.enabled" matColumnDef="_actions">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let element">
+          <ng-container *ngFor="let action of config.actions?.row?.actions">
+            <button mat-icon-button
+                    (click)="onRowAction(action.action, element, $event)">
+              <mat-icon>{{ action.icon }}</mat-icon>
+            </button>
+          </ng-container>
+        </td>
+      </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; let i = index; columns: displayedColumns"
+          (click)="onRowClicked(row, i)"></tr>
     </table>
     <mat-paginator *ngIf="getPaginationEnabled()"
                    [length]="getPaginationLength()"
@@ -99,6 +113,9 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit, 
 
   /** Enable edit mode */
   @Input() editModeEnabled = false;
+
+  @Output() rowClick = new EventEmitter<{row: any, index: number}>();
+  @Output() rowAction = new EventEmitter<{action: string, row: any}>();
 
   @ViewChild(MatPaginator) paginator?: MatPaginator;
   @ViewChild(MatSort) sort?: MatSort;
@@ -175,6 +192,15 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit, 
     }
   }
 
+  onRowClicked(row: any, index: number): void {
+    this.rowClick.emit({ row, index });
+  }
+
+  onRowAction(action: string, row: any, event: Event): void {
+    event.stopPropagation();
+    this.rowAction.emit({ action, row });
+  }
+
   openConfigEditor(): void {
     try {
       // Criar cópia profunda da configuração para evitar alterações acidentais
@@ -235,6 +261,9 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit, 
       .filter(c => c.visible !== false)
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     this.displayedColumns = this.visibleColumns.map(c => c.field);
+    if (this.config.actions?.row?.enabled) {
+      this.displayedColumns.push('_actions');
+    }
   }
 
   private loadSchema(): void {

@@ -24,7 +24,8 @@ import { TableConfig } from '@praxis/core';
     <mat-toolbar class="praxis-toolbar">
       <!-- Add button via actions array -->
       <ng-container *ngFor="let action of getStartActions()">
-        <button mat-button [color]="action.color || 'primary'">
+        <button mat-button [color]="action.color || 'primary'"
+                (click)="toolbarAction.emit({action: action.action})">
           <mat-icon *ngIf="action.icon">{{action.icon}}</mat-icon>
           {{ action.label }}
         </button>
@@ -32,7 +33,8 @@ import { TableConfig } from '@praxis/core';
       <ng-container *ngFor="let action of config?.toolbar?.actions">
         <button mat-button
                 [color]="action.color"
-                [disabled]="action.disabled">
+                [disabled]="action.disabled"
+                (click)="toolbarAction.emit({action: action.action})">
           <mat-icon *ngIf="action.icon">{{action.icon}}</mat-icon>
           {{ action.label }}
         </button>
@@ -67,6 +69,7 @@ export class PraxisTableToolbar {
   @Input() config?: TableConfig;
   @Input() showFilter = false;
   @Input() filterValue = '';
+  @Output() toolbarAction = new EventEmitter<{action: string}>();
 
   getStartActions() {
     return this.config?.toolbar?.actions?.filter(action => action.position === 'start') || [];
