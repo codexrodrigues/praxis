@@ -39,4 +39,16 @@ describe('PraxisDynamicForm', () => {
     component.ngOnChanges({ resourcePath: { currentValue: 'usuarios', previousValue: undefined, firstChange: true, isFirstChange: () => true }, resourceId: { currentValue: 1, previousValue: undefined, firstChange: true, isFirstChange: () => true } });
     expect(crudService.get).toHaveBeenCalled();
   });
+
+
+  it('mostra botão de edição quando editModeEnabled é verdadeiro', () => {
+    const schema = [{ name: 'nome', controlType: 'input' }];
+    crudService.getSchema.and.returnValue(of(schema as any));
+    component.resourcePath = 'usuarios';
+    component.editModeEnabled = true;
+    fixture.detectChanges();
+    const button = fixture.nativeElement.querySelector('button[mat-icon-button]');
+    expect(button).toBeTruthy();
+  });
+
 });
