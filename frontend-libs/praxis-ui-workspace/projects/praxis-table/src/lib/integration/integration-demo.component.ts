@@ -12,7 +12,7 @@ import { StylePreviewComponent } from './style-preview.component';
 import { TableRuleEngineService, ConditionalStyle, ValidationResult } from './table-rule-engine.service';
 import { FieldSchemaAdapter } from './field-schema-adapter.service';
 import { StyleRuleTemplatesService } from './style-rule-templates.service';
-import { FieldSchema } from './types';
+import { FieldSchema } from '../visual-formula-builder/formula-types';
 
 @Component({
   selector: 'integration-demo',
