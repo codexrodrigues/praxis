@@ -606,6 +606,27 @@ export class MultiStepFormComponent {
 }
 ```
 
+### 5. MaterialSelect com Busca e Chips
+
+Exemplo de metadata utilizando os novos subcomponentes do `MaterialSelectComponent`:
+
+```typescript
+const fruitField: MaterialSelectMetadata = {
+  name: 'favoriteFruits',
+  label: 'Frutas Favoritas',
+  controlType: 'select',
+  multiple: true,
+  multipleDisplay: 'chips',
+  searchable: true,
+  showSelectAll: true,
+  options: [
+    { value: 'apple', text: 'Maçã', group: 'Comuns' },
+    { value: 'banana', text: 'Banana', group: 'Comuns' },
+    { value: 'grape', text: 'Uva', group: 'Outras' }
+  ]
+};
+```
+
 ## 🔧 Integração com Testes
 
 ### 5. Testando Formulários Dinâmicos

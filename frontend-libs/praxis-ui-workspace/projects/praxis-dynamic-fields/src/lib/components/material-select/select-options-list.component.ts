@@ -23,10 +23,15 @@ import { FieldOption } from '@praxis/core';
 })
 export class SelectOptionsListComponent {
   @Input() options: FieldOption[] = [];
+  @Input() groupedOptions: { [key: string]: FieldOption[] } = {};
   @Input() multiple = false;
   @Input() selectedValues: any[] = [];
   @Input() useVirtualization = false;
   @Output() optionSelected = new EventEmitter<any>();
+
+  trackByGroup(index: number, group: any): string {
+    return group.key;
+  }
 
   trackByValue(index: number, option: FieldOption): any {
     return option.value;
