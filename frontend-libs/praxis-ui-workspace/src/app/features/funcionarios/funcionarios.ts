@@ -13,9 +13,13 @@ import { PraxisTable } from '@praxis/table';
 export class Funcionarios {
   constructor(private router: Router) {}
 
-  onRowClick(event: { row: any }): void {
+  onRowClick(event: any): void {
+    // Temporário: aceitar qualquer tipo de evento até que o PraxisTable seja corrigido
     if (event?.row?.id != null) {
       this.router.navigate(['/funcionarios/view', event.row.id]);
+    } else if (event?.id != null) {
+      // Fallback se o evento vier diretamente com o objeto
+      this.router.navigate(['/funcionarios/view', event.id]);
     }
   }
 }
