@@ -51,4 +51,15 @@ describe('PraxisDynamicForm', () => {
     expect(button).toBeTruthy();
   });
 
+  it('emite formReady após construir o formulário', async () => {
+    const schema = [{ name: 'nome', controlType: 'input' }];
+    crudService.getSchema.and.returnValue(of(schema as any));
+    const readySpy = jasmine.createSpy('formReady');
+    component.formReady.subscribe(readySpy);
+    component.resourcePath = 'usuarios';
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(readySpy).toHaveBeenCalled();
+  });
+
 });
