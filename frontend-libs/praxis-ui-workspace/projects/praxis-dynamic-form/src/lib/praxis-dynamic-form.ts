@@ -5,6 +5,7 @@ import {
   EventEmitter,
   OnChanges,
   OnDestroy,
+  OnInit,
   SimpleChanges,
   ChangeDetectorRef
 } from '@angular/core';
@@ -18,7 +19,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { GenericCrudService, FieldMetadata, mapFieldDefinitionsToMetadata } from '@praxis/core';
 import { DynamicFieldLoaderDirective } from '@praxis/dynamic-fields';
 import { FormConfig } from './models/form-config.model';
-import { FormSubmitEvent } from './models/form-events.model';
+import { FormLayout } from './models/form-layout.model';
+import { FormSubmitEvent, FormReadyEvent, FormValueChangeEvent } from './models/form-events.model';
+import { FormLayoutService } from './services/form-layout.service';
+import { FormContextService } from './services/form-context.service';
 
 @Component({
   selector: 'praxis-dynamic-form',
@@ -54,19 +58,25 @@ import { FormSubmitEvent } from './models/form-events.model';
   `,
   styles: [`:host{display:block;}`]
 })
-export class PraxisDynamicForm implements OnChanges, OnDestroy {
+export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   @Input() resourcePath?: string;
   @Input() resourceId?: string | number;
   @Input() mode: 'create' | 'edit' | 'view' = 'create';
   @Input() config: FormConfig = { sections: [] };
   /** Shows the configuration editor button */
   @Input() editModeEnabled = false;
+  /** Identifier for persisting layouts */
+  @Input() formId?: string;
+  /** Optional layout to use instead of generated one */
+  @Input() layout?: FormLayout;
 
 
   @Output() formSubmit = new EventEmitter<FormSubmitEvent>();
   @Output() formCancel = new EventEmitter<void>();
   @Output() formReset = new EventEmitter<void>();
   @Output() configChange = new EventEmitter<FormConfig>();
+  @Output() formReady = new EventEmitter<FormReadyEvent>();
+  @Output() valueChange = new EventEmitter<FormValueChangeEvent>();
 
   form: FormGroup = this.fb.group({});
   private fieldMetadata: FieldMetadata[] = [];
@@ -74,8 +84,16 @@ export class PraxisDynamicForm implements OnChanges, OnDestroy {
   constructor(
     private crud: GenericCrudService<any>,
     private fb: FormBuilder,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private layoutService: FormLayoutService,
+    private contextService: FormContextService
   ) {}
+
+  ngOnInit(): void {
+    if (!this.layout && this.formId) {
+      this.layout = this.layoutService.loadLayout(this.formId) || undefined;
+    }
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['resourcePath'] && this.resourcePath) {
@@ -113,6 +131,30 @@ export class PraxisDynamicForm implements OnChanges, OnDestroy {
       controls[field.name] = [field.defaultValue ?? null, validators];
     }
     this.form = this.fb.group(controls);
+
+    this.contextService.setAvailableFields(this.fieldMetadata);
+    if (this.layout?.formRules) {
+      this.contextService.setFormRules(this.layout.formRules);
+    }
+
+    this.form.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe(values => {
+        this.valueChange.emit({
+          formData: values,
+          changedFields: Object.keys(values),
+          isValid: this.form.valid,
+          entityId: this.resourceId ?? undefined
+        });
+      });
+
+    this.formReady.emit({
+      formGroup: this.form,
+      fieldsMetadata: this.fieldMetadata,
+      layout: this.layout,
+      hasEntity: this.resourceId != null,
+      entityId: this.resourceId ?? undefined
+    });
   }
 
   getColumnFields(column: { fields: string[] }): FieldMetadata[] {
@@ -132,6 +174,9 @@ export class PraxisDynamicForm implements OnChanges, OnDestroy {
 
   openConfigEditor(): void {
     this.configChange.emit(this.config);
+    if (this.formId && this.layout) {
+      this.layoutService.saveLayout(this.formId, this.layout);
+    }
   }
 
   ngOnDestroy(): void {
