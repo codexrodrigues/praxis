@@ -288,6 +288,29 @@ entre sessões. O serviço responsável por essa funcionalidade foi estruturado
 para que, futuramente, seja possível substituir o mecanismo de persistência por
 uma chamada REST sem alterar as chamadas no restante da aplicação.
 
+### Contexto e Regras de Formulário
+
+O `FormContextService` gerencia a lista de campos disponíveis, referências de componentes e
+as regras de layout de cada formulário. Ele suporta múltiplos contextos, permitindo
+compartilhar regras entre formulários sem conflitos. Para verificar condições de
+visibilidade ou estilo, utilize as funções utilitárias em `form-rule.utils`.
+
+### Editor de Layout com Drag & Drop
+
+O `FormLayoutEditor` permite reorganizar visualmente fieldsets, linhas e campos
+utilizando o módulo `DragDrop` do Angular CDK. As mudanças são emitidas por
+eventos e podem ser persistidas via `FormLayoutService`. Essa abordagem facilita
+o ajuste fino dos formulários sem modificar o código-fonte.
+
+### Integração CRUD
+
+O `PraxisDynamicForm` utiliza o `GenericCrudService` para buscar o schema e
+persistir dados. É possível definir endpoints customizados para cada operação
+por meio do input `customEndpoints`, permitindo integrar o formulário a APIs
+diversas. Durante a submissão, eventos `FormSubmitEvent` são emitidos indicando
+o resultado das operações de criação ou atualização, cabendo à aplicação exibir
+as mensagens de sucesso ou erro ao usuário.
+
 ## 📚 Documentação
 
 ### Guias Detalhados
