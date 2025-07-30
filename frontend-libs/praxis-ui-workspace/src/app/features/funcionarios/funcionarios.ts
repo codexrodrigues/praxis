@@ -22,4 +22,24 @@ export class Funcionarios {
       this.router.navigate(['/funcionarios/view', event.id]);
     }
   }
+
+  onRowAction(event: {action: string, row: any}): void {
+    switch (event.action) {
+      case 'view':
+        this.router.navigate(['/funcionarios/view', event.row.id]);
+        break;
+      case 'edit':
+        this.router.navigate(['/funcionarios/view', event.row.id]);
+        break;
+      case 'delete':
+        // TODO: implementar chamada de deleção
+        break;
+    }
+  }
+
+  onToolbarAction(event: {action: string}): void {
+    if (event.action === 'add') {
+      this.router.navigate(['/funcionarios/view', 'new']);
+    }
+  }
 }
