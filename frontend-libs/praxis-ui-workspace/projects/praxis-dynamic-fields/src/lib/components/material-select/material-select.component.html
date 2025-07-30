@@ -58,31 +58,12 @@
     <!-- Opção de busca no painel -->
     @if (isSearchEnabled()) {
       <mat-option disabled class="pdx-search-option">
-        <mat-form-field 
-          appearance="outline" 
-          subscriptSizing="dynamic"
-          class="pdx-search-field">
-          <mat-icon matPrefix>search</mat-icon>
-          <input
-            #searchInput
-            matInput
-            placeholder="Buscar..."
-            [value]="selectState().searchTerm"
-            (input)="onSearchInput($event)"
-            (keydown)="onSearchKeyDown($event)"
-            (click)="$event.stopPropagation()">
-          @if (selectState().searchTerm) {
-            <button
-              mat-icon-button
-              matSuffix
-              type="button"
-              class="pdx-clear-search"
-              (click)="clearSearch(); $event.stopPropagation()"
-              [attr.aria-label]="'Clear search'">
-              <mat-icon>clear</mat-icon>
-            </button>
-          }
-        </mat-form-field>
+        <pdx-select-search-input
+          [searchTerm]="selectState().searchTerm"
+          (searchInput)="onSearchInput($event)"
+          (searchKeyDown)="onSearchKeyDown($event)"
+          (clear)="clearSearch()">
+        </pdx-select-search-input>
       </mat-option>
     }
 
@@ -112,122 +93,13 @@
       </mat-option>
     }
 
-    <!-- Lista de opções normal -->
-    @if (!shouldUseVirtualization()) {
-      <!-- Opções agrupadas -->
-      @if (metadata()?.enableGroups) {
-        @for (group of groupedOptions() | keyvalue; track trackByGroup($index, group)) {
-          @if (group.key) {
-            <mat-optgroup [label]="group.key">
-              @for (option of group.value; track trackByValue($index, option)) {
-                <mat-option 
-                  [value]="option.value"
-                  [disabled]="option.disabled || false"
-                  [class]="option.class || ''"
-                  [matTooltip]="option.tooltip || ''"
-                  [matTooltipDisabled]="!option.tooltip">
-                  
-                  @if (isMultiple()) {
-                    <mat-checkbox
-                      [checked]="selectState().selectedOptions.some(sel => sel.value === option.value)"
-                      (click)="$event.stopPropagation()">
-                      {{ option.text }}
-                    </mat-checkbox>
-                  } @else {
-                    {{ option.text }}
-                  }
-                  
-                  @if (option.icon) {
-                    <mat-icon class="pdx-option-icon">{{ option.icon }}</mat-icon>
-                  }
-                </mat-option>
-              }
-            </mat-optgroup>
-          } @else {
-            @for (option of group.value; track trackByValue($index, option)) {
-              <mat-option 
-                [value]="option.value"
-                [disabled]="option.disabled || false"
-                [class]="option.class || ''"
-                [matTooltip]="option.tooltip || ''"
-                [matTooltipDisabled]="!option.tooltip">
-                
-                @if (isMultiple()) {
-                  <mat-checkbox
-                    [checked]="selectState().selectedOptions.some(sel => sel.value === option.value)"
-                    (click)="$event.stopPropagation()">
-                    {{ option.text }}
-                  </mat-checkbox>
-                } @else {
-                  {{ option.text }}
-                }
-                
-                @if (option.icon) {
-                  <mat-icon class="pdx-option-icon">{{ option.icon }}</mat-icon>
-                }
-              </mat-option>
-            }
-          }
-        }
-      } @else {
-        <!-- Opções simples (não agrupadas) -->
-        @for (option of filteredOptions(); track trackByValue($index, option)) {
-          <mat-option 
-            [value]="option.value"
-            [disabled]="option.disabled || false"
-            [class]="option.class || ''"
-            [matTooltip]="option.tooltip || ''"
-            [matTooltipDisabled]="!option.tooltip">
-            
-            @if (isMultiple()) {
-              <mat-checkbox
-                [checked]="selectState().selectedOptions.some(sel => sel.value === option.value)"
-                (click)="$event.stopPropagation()">
-                {{ option.text }}
-              </mat-checkbox>
-            } @else {
-              {{ option.text }}
-            }
-            
-            @if (option.icon) {
-              <mat-icon class="pdx-option-icon">{{ option.icon }}</mat-icon>
-            }
-          </mat-option>
-        }
-      }
-    } @else {
-      <!-- Lista virtualizada para muitas opções -->
-      <cdk-virtual-scroll-viewport 
-        itemSize="48" 
-        maxBufferPx="600" 
-        minBufferPx="200"
-        class="pdx-virtual-viewport">
-        
-        @for (option of filteredOptions(); track trackByValue($index, option)) {
-          <mat-option 
-            [value]="option.value"
-            [disabled]="option.disabled || false"
-            [class]="option.class || ''"
-            [matTooltip]="option.tooltip || ''"
-            [matTooltipDisabled]="!option.tooltip">
-            
-            @if (isMultiple()) {
-              <mat-checkbox
-                [checked]="selectState().selectedOptions.some(sel => sel.value === option.value)"
-                (click)="$event.stopPropagation()">
-                {{ option.text }}
-              </mat-checkbox>
-            } @else {
-              {{ option.text }}
-            }
-            
-            @if (option.icon) {
-              <mat-icon class="pdx-option-icon">{{ option.icon }}</mat-icon>
-            }
-          </mat-option>
-        }
-      </cdk-virtual-scroll-viewport>
-    }
+    <pdx-select-options-list
+      [options]="filteredOptions()"
+      [groupedOptions]="groupedOptions()"
+      [multiple]="isMultiple()"
+      [selectedValues]="selectState().selectedOptions.map(o => o.value)"
+      [useVirtualization]="shouldUseVirtualization()">
+    </pdx-select-options-list>
 
     <!-- Estado vazio -->
     @if (!listDataState().loading && filteredOptions().length === 0) {
@@ -265,19 +137,12 @@
 
   <!-- Chips para seleção múltipla (fora do select) -->
   @if (isMultiple() && metadata()?.multipleDisplay === 'chips' && selectState().selectedOptions.length > 0) {
-    <div class="pdx-selected-chips" matSuffix>
-      @for (option of selectState().selectedOptions; track trackByValue($index, option)) {
-        <mat-chip 
-          [removable]="!componentState().disabled"
-          (removed)="onChipRemoved(option)"
-          class="pdx-selection-chip">
-          {{ option.text }}
-          @if (!componentState().disabled) {
-            <mat-icon matChipRemove>cancel</mat-icon>
-          }
-        </mat-chip>
-      }
-    </div>
+    <pdx-select-chips
+      matSuffix
+      [selectedOptions]="selectState().selectedOptions"
+      [disabled]="componentState().disabled"
+      (remove)="onChipRemoved($event)">
+    </pdx-select-chips>
   }
 
   <!-- Botão limpar seleção -->
