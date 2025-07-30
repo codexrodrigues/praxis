@@ -79,5 +79,4 @@ describe('PraxisDynamicForm', () => {
     expect(submitSpy).toHaveBeenCalled();
   });
 
-
 });
