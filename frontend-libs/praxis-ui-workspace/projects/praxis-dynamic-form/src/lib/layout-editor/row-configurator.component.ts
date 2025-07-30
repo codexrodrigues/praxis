@@ -2,7 +2,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { CommonModule } from '@angular/common';
 import { FieldConfiguratorComponent } from './field-configurator.component';
-import { FormRowLayout } from '../models/form-layout.model';
+import { FormRowLayout } from '@praxis/core';
 
 @Component({
   selector: 'praxis-row-configurator',

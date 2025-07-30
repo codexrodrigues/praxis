@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormLayoutEditorComponent } from './form-layout-editor.component';
-import { FormLayout } from '../models/form-layout.model';
+import { FormLayout } from '@praxis/core';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 
 describe('FormLayoutEditorComponent', () => {

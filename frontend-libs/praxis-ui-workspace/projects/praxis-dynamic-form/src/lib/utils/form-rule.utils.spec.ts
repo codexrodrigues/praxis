@@ -1,5 +1,5 @@
 import { SpecificationFactory } from '@praxis/specification';
-import { FormLayoutRule } from '../models/form-layout.model';
+import { FormLayoutRule } from '@praxis/core';
 import { isRuleSatisfied } from './form-rule.utils';
 
 describe('form rule utilities', () => {

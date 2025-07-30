@@ -1,5 +1,5 @@
 import { FormLayoutService, LOCAL_STORAGE_FORM_LAYOUT_PROVIDER } from './form-layout.service';
-import { FormLayout } from '../models/form-layout.model';
+import { FormLayout } from '@praxis/core';
 
 describe('FormLayoutService', () => {
   let service: FormLayoutService;

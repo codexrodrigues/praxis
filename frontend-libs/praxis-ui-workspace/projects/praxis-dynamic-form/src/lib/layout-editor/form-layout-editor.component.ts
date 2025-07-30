@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { CommonModule } from '@angular/common';
-import { FormLayout, FieldsetLayout } from '../models/form-layout.model';
+import { FormLayout, FieldsetLayout } from '@praxis/core';
 import { FieldsetConfiguratorComponent } from './fieldset-configurator.component';
 
 @Component({

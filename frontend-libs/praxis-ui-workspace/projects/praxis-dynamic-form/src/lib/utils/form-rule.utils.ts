@@ -1,4 +1,4 @@
-import { FormLayoutRule } from '../models/form-layout.model';
+import { FormLayoutRule } from '@praxis/core';
 
 /**
  * Evaluates whether a rule's condition is satisfied for the given data.
