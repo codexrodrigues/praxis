@@ -51,7 +51,10 @@ export function mapFieldDefinitionToMetadata(field: FieldDefinition): FieldMetad
   }
 
   if (field.options) {
-    metadata.options = field.options;
+    metadata.options = field.options.map(opt => ({
+      value: opt.key,
+      text: opt.value,
+    }));
   }
 
   const validators: ValidatorOptions = {};
