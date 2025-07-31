@@ -37,6 +37,11 @@ public class ApiRouteDefinitions {
     public static final String HR_FERIAS_AFASTAMENTOS_GROUP = "ferias-afastamentos";
     public static final String HR_FERIAS_AFASTAMENTOS_TAG = "HR - Ferias Afastamentos";
 
+    // HR Dependentes
+    public static final String HR_DEPENDENTES_PATH = "/api/human-resources/dependentes";
+    public static final String HR_DEPENDENTES_GROUP = "dependentes";
+    public static final String HR_DEPENDENTES_TAG = "HR - Dependentes";
+
     private ApiRouteDefinitions() {
         // Prevent instantiation
     }

@@ -137,6 +137,7 @@ O módulo HR expõe APIs REST para interagir com suas entidades. Os endpoints pr
 *   Folhas de Pagamento: `/api/human-resources/folhas-pagamento`
 *   Eventos de Folha: `/api/human-resources/eventos-folha`
 *   Férias/Afastamentos: `/api/human-resources/ferias-afastamentos`
+*   Dependentes: `/api/human-resources/dependentes`
 
 ### Configuração do Banco de Dados
 
