@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectorRef } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { PraxisDynamicForm } from '@praxis/dynamic-form';
@@ -15,9 +15,10 @@ import { MatIconModule } from '@angular/material/icon';
 export class FuncionarioViewComponent {
   id: string | null = null;
 
-  constructor(private route: ActivatedRoute) {
+  constructor(private route: ActivatedRoute, private cdr: ChangeDetectorRef) {
     this.route.paramMap.subscribe(params => {
       this.id = params.get('id');
+      this.cdr.detectChanges();
     });
   }
 }
