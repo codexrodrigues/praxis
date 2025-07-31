@@ -287,6 +287,12 @@ To simplify the creation of RESTful services with UI metadata capabilities, the 
 
 ## Documentation
 
+### External Documentation
+
+You can find the complete documentation at [https://codexrodrigues.github.io/praxis/](https://codexrodrigues.github.io/praxis/).
+
+### Javadoc
+
 Generate Javadoc for this module with Maven:
 
 ```bash
