@@ -37,9 +37,4 @@ export class Funcionarios {
     }
   }
 
-  onToolbarAction(event: {action: string}): void {
-    if (event.action === 'add') {
-      this.router.navigate(['/funcionarios/view', 'new']);
-    }
-  }
 }
