@@ -22,7 +22,8 @@ import {
   ElementRef,
   Renderer2,
   ChangeDetectorRef,
-  ViewContainerRef
+  ViewContainerRef,
+  Directive
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, Subscription, Observable, BehaviorSubject } from 'rxjs';
@@ -81,7 +82,8 @@ export type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error';
 // CLASSE BASE UNIVERSAL
 // =============================================================================
 
-export abstract class BaseDynamicComponent<T extends ComponentMetadata = ComponentMetadata> 
+@Directive()
+export abstract class BaseDynamicComponent<T extends ComponentMetadata = ComponentMetadata>
   implements OnInit, OnDestroy {
 
   // =============================================================================
