@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
-import {Funcionarios} from './features/funcionarios/funcionarios';
-import { FuncionarioView } from './features/funcionarios/funcionario-view';
+import { FuncionariosListComponent } from './features/funcionarios/list/funcionarios-list.component';
+import { FuncionarioViewComponent } from './features/funcionarios/view/funcionario-view.component';
 import {Departamentos} from './features/departamentos/departamentos';
 import {Enderecos} from './features/enderecos/enderecos';
 import {Dependentes} from './features/dependentes/dependentes';
@@ -11,8 +11,8 @@ import {Cargos} from './features/cargos/cargos';
 // import { IntegrationDemoComponent } from '@praxis/table';
 
 export const routes: Routes = [
-  { path: 'funcionarios', component: Funcionarios },
-  { path: 'funcionarios/view/:id', component: FuncionarioView },
+  { path: 'funcionarios', component: FuncionariosListComponent },
+  { path: 'funcionarios/view/:id', component: FuncionarioViewComponent },
   { path: 'departamentos', component: Departamentos },
   { path: 'cargos', component: Cargos },
   { path: 'enderecos', component: Enderecos },

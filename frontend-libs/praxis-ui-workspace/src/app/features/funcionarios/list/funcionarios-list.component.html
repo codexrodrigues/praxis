@@ -1,0 +1,16 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon aria-hidden="true">people</mat-icon>
+      <span>Funcionários</span>
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <praxis-table
+      resourcePath="funcionarios"
+      [editModeEnabled]="true"
+      (rowClick)="onRowClick($event)"
+      (rowAction)="onRowAction($event)">
+    </praxis-table>
+  </mat-card-content>
+</mat-card>

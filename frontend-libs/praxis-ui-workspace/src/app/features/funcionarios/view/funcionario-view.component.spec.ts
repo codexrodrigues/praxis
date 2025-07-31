@@ -1,21 +1,21 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { FuncionarioView } from './funcionario-view';
+import { FuncionarioViewComponent } from './funcionario-view.component';
 import { ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
 
-describe('FuncionarioView', () => {
-  let component: FuncionarioView;
-  let fixture: ComponentFixture<FuncionarioView>;
+describe('FuncionarioViewComponent', () => {
+  let component: FuncionarioViewComponent;
+  let fixture: ComponentFixture<FuncionarioViewComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [FuncionarioView],
+      imports: [FuncionarioViewComponent],
       providers: [
         { provide: ActivatedRoute, useValue: { paramMap: of(new Map()) } }
       ]
     }).compileComponents();
 
-    fixture = TestBed.createComponent(FuncionarioView);
+    fixture = TestBed.createComponent(FuncionarioViewComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

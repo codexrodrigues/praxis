@@ -1,16 +1,17 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { PraxisTable } from '@praxis/table';
+import { MatCardModule } from '@angular/material/card';
+import { MatIconModule } from '@angular/material/icon';
 
 @Component({
-  selector: 'app-funcionarios',
-  imports: [
-    PraxisTable
-  ],
-  templateUrl: './funcionarios.html',
-  styleUrl: './funcionarios.scss'
+  selector: 'app-funcionarios-list',
+  standalone: true,
+  imports: [MatCardModule, MatIconModule, PraxisTable],
+  templateUrl: './funcionarios-list.component.html',
+  styleUrl: './funcionarios-list.component.scss'
 })
-export class Funcionarios {
+export class FuncionariosListComponent {
   constructor(private router: Router) {}
 
   onRowClick(event: any): void {
