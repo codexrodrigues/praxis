@@ -316,7 +316,7 @@ as mensagens de sucesso ou erro ao usuário.
 
 No módulo de **Funcionários** existe uma rota de exemplo que abre um formulário
 em modo de visualização quando o usuário clica em uma linha da tabela. O
-componente `Funcionarios` emite o evento `rowClick` para navegar até
+componente `FuncionariosListComponent` emite o evento `rowClick` para navegar até
 `/funcionarios/view/:id`:
 
 ```html
@@ -327,21 +327,21 @@ componente `Funcionarios` emite o evento `rowClick` para navegar até
 ```
 
 ```typescript
-// funcionarios.ts
+// funcionarios-list.component.ts
 constructor(private router: Router) {}
 onRowClick(event: { row: any }): void {
   this.router.navigate(['/funcionarios/view', event.row.id]);
 }
 ```
 
-A rota declara o componente `FuncionarioView`, que carrega o
+A rota declara o componente `FuncionarioViewComponent`, que carrega o
 `PraxisDynamicForm` em modo `view` para apresentar os dados do registro
 selecionado:
 
 ```typescript
 export const routes: Routes = [
-  { path: 'funcionarios', component: Funcionarios },
-  { path: 'funcionarios/view/:id', component: FuncionarioView },
+  { path: 'funcionarios', component: FuncionariosListComponent },
+  { path: 'funcionarios/view/:id', component: FuncionarioViewComponent },
   // ...demais rotas
 ];
 ```
@@ -350,7 +350,7 @@ export const routes: Routes = [
 @Component({
   selector: 'app-funcionario-view',
   standalone: true,
-  imports: [CommonModule, PraxisDynamicForm],
+  imports: [CommonModule, MatCardModule, MatIconModule, PraxisDynamicForm],
   template: `
     <praxis-dynamic-form
       resourcePath="funcionarios"
@@ -358,9 +358,9 @@ export const routes: Routes = [
       mode="view">
     </praxis-dynamic-form>
   `,
-  styleUrl: './funcionario-view.scss'
+  styleUrl: './funcionario-view.component.scss'
 })
-export class FuncionarioView {
+export class FuncionarioViewComponent {
   id: string | null = null;
   constructor(private route: ActivatedRoute) {
     this.route.paramMap.subscribe(p => (this.id = p.get('id')));
