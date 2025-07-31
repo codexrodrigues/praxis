@@ -67,4 +67,12 @@ public class OpenApiGroupsConfig {
                 .pathsToMatch(ApiRouteDefinitions.HR_FERIAS_AFASTAMENTOS_PATH + "/**")
                 .build();
     }
+
+    @Bean
+    public GroupedOpenApi configureHrDependentesDocumentation() {
+        return GroupedOpenApi.builder()
+                .group(ApiRouteDefinitions.HR_DEPENDENTES_GROUP)
+                .pathsToMatch(ApiRouteDefinitions.HR_DEPENDENTES_PATH + "/**")
+                .build();
+    }
 }
