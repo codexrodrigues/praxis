@@ -54,7 +54,10 @@ export class MaterialDatePickerComponent extends BaseDynamicFieldComponent<Mater
 
   readonly materialAppearance = computed(() => this.metadata()?.materialDesign?.appearance || 'outline');
   readonly materialColor = computed(() => this.metadata()?.materialDesign?.color || 'primary');
-  readonly floatLabelBehavior = computed(() => this.metadata()?.materialDesign?.floatLabel || 'auto');
+  readonly floatLabelBehavior = computed(() => {
+    const label = this.metadata()?.materialDesign?.floatLabel;
+    return label === 'never' ? 'auto' : (label ?? 'auto');
+  });
 
   readonly selectedDate = computed(() => this.state().selectedDate);
   readonly isPickerOpen = computed(() => this.state().isOpen);
@@ -66,9 +69,10 @@ export class MaterialDatePickerComponent extends BaseDynamicFieldComponent<Mater
 
   readonly inputPlaceholder = computed(() => this.metadata()?.placeholder || 'dd/mm/aaaa');
 
+  /** Should show clear button */
   readonly shouldShowClearButton = computed(() => {
-    const hasValue = Boolean(this.selectedDate());
-    return hasValue && !this.componentState().disabled;
+    const meta = this.metadata();
+    return meta?.clearButton?.enabled !== false;
   });
 
   openPicker(): void {
@@ -94,12 +98,15 @@ export class MaterialDatePickerComponent extends BaseDynamicFieldComponent<Mater
   }
 
   onDateInput(event: MatDatepickerInputEvent<Date>): void {
-    const value = event.value;
+    const value = (event.target as HTMLInputElement).value;
     if (!value) {
       this.clearDate();
       return;
     }
-    this.selectDate(value);
+    const parsed = this.dateUtils.parseDate(value);
+    if (parsed) {
+      this.selectDate(parsed);
+    }
   }
 
   isDateDisabled = (date: Date | null): boolean => {

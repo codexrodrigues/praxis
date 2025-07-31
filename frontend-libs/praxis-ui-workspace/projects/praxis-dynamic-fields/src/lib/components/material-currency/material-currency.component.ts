@@ -1,6 +1,6 @@
 /**
  * @fileoverview Componente Material Currency dinâmico especializado
- * 
+ *
  * Input de moeda com suporte a:
  * ✅ Formatação automática de moeda (BRL, USD, EUR, etc.)
  * ✅ Máscara de entrada com separadores
@@ -12,23 +12,25 @@
  * ✅ Acessibilidade WCAG 2.1 AA
  */
 
-import { 
-  Component, 
+import {
+  Component,
   forwardRef,
   computed,
   signal,
   effect
 } from '@angular/core';
-import { NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
+import { NG_VALUE_ACCESSOR } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
 import { BaseDynamicFieldComponent } from '../../base/base-dynamic-field.component';
 import { MaterialCurrencyMetadata, ComponentMetadata } from '@praxis/core';
+import { getErrorStateMatcherForField } from '../../utils/error-state-matcher';
 
 // =============================================================================
 // TYPE HELPERS PARA INDEX SIGNATURE SAFETY
@@ -40,18 +42,11 @@ interface ExtendedCurrencyMetadata extends ComponentMetadata {
   allowNegative?: boolean;
   minimumFractionDigits?: number;
   maximumFractionDigits?: number;
-  currencyDisplay?: 'code' | 'symbol' | 'name';
+  currencyDisplay?: 'code' | 'symbol' | 'narrowSymbol' | 'name';
   showCurrencySymbol?: boolean;
   placeholder?: string;
   min?: number;
   max?: number;
-  materialDesign?: {
-    appearance?: 'fill' | 'outline';
-    color?: 'primary' | 'accent' | 'warn';
-    floatLabel?: 'always' | 'auto';
-  };
-  disabledInteractive?: boolean;
-  description?: string;
 }
 
 function safeCurrencyMetadata(metadata: ComponentMetadata | null | undefined): ExtendedCurrencyMetadata {
@@ -80,12 +75,13 @@ interface CurrencyState {
   styleUrls: ['./material-currency.component.scss'],
   imports: [
     CommonModule,
-    ReactiveFormsModule,
     MatInputModule,
     MatFormFieldModule,
     MatIconModule,
     MatButtonModule,
-    MatTooltipModule
+    MatTooltipModule,
+    FormsModule,
+    ReactiveFormsModule
   ],
   providers: [{
     provide: NG_VALUE_ACCESSOR,
@@ -98,7 +94,7 @@ interface CurrencyState {
     '[attr.data-field-name]': 'metadata()?.name'
   }
 })
-export class MaterialCurrencyComponent 
+export class MaterialCurrencyComponent
   extends BaseDynamicFieldComponent<MaterialCurrencyMetadata> {
 
   // =============================================================================
@@ -150,7 +146,11 @@ export class MaterialCurrencyComponent
   /** Estilo de exibição da moeda */
   readonly currencyDisplay = computed(() => {
     const metadata = safeCurrencyMetadata(this.metadata());
-    return metadata.currencyDisplay || 'symbol';
+    // Older metadata may use "narrow" which maps to "narrowSymbol"
+    if ((metadata as any).currencyDisplay === 'narrow') {
+      return 'narrowSymbol';
+    }
+    return (metadata.currencyDisplay ?? 'symbol') as 'code' | 'symbol' | 'narrowSymbol' | 'name';
   });
 
   /** Deve mostrar símbolo da moeda */
@@ -207,7 +207,7 @@ export class MaterialCurrencyComponent
     if (metadata.placeholder) {
       return metadata.placeholder;
     }
-    
+
     const symbol = this.currencySymbol();
     return `${symbol} 0,00`;
   });
@@ -215,11 +215,11 @@ export class MaterialCurrencyComponent
   /** Valor para display no input */
   readonly displayValue = computed(() => {
     const state = this.currencyState();
-    
+
     if (state.isEditing) {
       return state.formattedValue;
     }
-    
+
     return this.formatCurrency(state.rawValue);
   });
 
@@ -228,10 +228,10 @@ export class MaterialCurrencyComponent
     const classes: string[] = [];
     const metadata = safeCurrencyMetadata(this.metadata());
     const state = this.currencyState();
-    
+
     classes.push('pdx-currency');
     classes.push(`pdx-currency-${this.currencyCode().toLowerCase()}`);
-    
+
     if (state.rawValue < 0) {
       classes.push('pdx-currency-negative');
     } else if (state.rawValue > 0) {
@@ -239,71 +239,63 @@ export class MaterialCurrencyComponent
     } else {
       classes.push('pdx-currency-zero');
     }
-    
+
     if (state.isEditing) {
       classes.push('pdx-currency-editing');
     }
-    
+
     if (this.shouldShowCurrencySymbol()) {
       classes.push('pdx-currency-with-symbol');
     }
-    
+
     return classes.join(' ');
   });
 
-  /** Configuração da aparência do Material */
+  /** Material appearance configuration */
   readonly materialAppearance = computed(() => {
-    const metadata = safeCurrencyMetadata(this.metadata());
-    return metadata.materialDesign?.appearance || 'outline';
+    const design = this.metadata()?.materialDesign;
+    return design?.appearance || 'outline';
   });
 
-  /** Cor do tema Material */
+  /** Material theme color */
   readonly materialColor = computed(() => {
-    const metadata = safeCurrencyMetadata(this.metadata());
-    return metadata.materialDesign?.color || 'primary';
+    const design = this.metadata()?.materialDesign;
+    return (design?.color as any) || 'primary';
   });
 
-  /** Comportamento do float label */
+  /** Float label behavior */
   readonly floatLabelBehavior = computed(() => {
-    const metadata = safeCurrencyMetadata(this.metadata());
-    return metadata.materialDesign?.floatLabel || 'auto';
+    const label = this.metadata()?.materialDesign?.floatLabel;
+    return label === 'never' ? 'auto' : (label ?? 'auto');
   });
 
-  /** Estado desabilitado interativo */
+  /** Disabled interactive mode */
   readonly isDisabledInteractive = computed(() => {
-    const metadata = safeCurrencyMetadata(this.metadata());
-    const componentState = this.componentState();
-    
-    return componentState.disabled && metadata.disabledInteractive === true;
+    const meta = this.metadata();
+    const state = this.componentState();
+    return state.disabled && meta?.disabledInteractive === true;
   });
 
-  /** Error state matcher personalizado */
-  readonly errorStateMatcher = computed(() => {
-    // Retorna um objeto que implementa ErrorStateMatcher
-    return {
-      isErrorState: (control: any) => {
-        return !!(control && control.invalid && (control.dirty || control.touched));
-      }
-    };
-  });
-
-  /** Estado efetivo desabilitado (considerando disabledInteractive) */
+  /** Effective disabled state */
   readonly effectiveDisabled = computed(() => {
-    const componentState = this.componentState();
-    const isDisabledInteractive = this.isDisabledInteractive();
-    
-    // Se disabledInteractive é true, não desabilita realmente o input
-    // mas mantém o estilo desabilitado através de CSS
-    return componentState.disabled && !isDisabledInteractive;
+    const state = this.componentState();
+    return state.disabled && !this.isDisabledInteractive();
   });
 
-  /** Deve mostrar botão limpar */
+  /** Error state matcher */
+  readonly errorStateMatcher = computed(() => {
+    const meta = this.metadata();
+    return getErrorStateMatcherForField(meta);
+  });
+
+  /** Should show clear button */
   readonly shouldShowClearButton = computed(() => {
-    const metadata = safeCurrencyMetadata(this.metadata());
-    const hasValue = this.currencyState().rawValue !== 0;
-    
-    // Por padrão, mostra botão limpar apenas quando tem valor e não está desabilitado
-    return hasValue && !this.componentState().disabled && (metadata.showCurrencySymbol !== false);
+    const meta = this.metadata();
+    const hasValue = !!this.fieldValue();
+    const conf = meta?.clearButton;
+    if (!conf?.enabled || this.componentState().disabled) return false;
+    if (conf.showOnlyWhenFilled !== false) return hasValue;
+    return true;
   });
 
   // =============================================================================
@@ -325,7 +317,7 @@ export class MaterialCurrencyComponent
    */
   formatCurrency(value: number): string {
     if (isNaN(value)) return this.effectivePlaceholder();
-    
+
     try {
       return this.currencyFormatter().format(value);
     } catch (error) {
@@ -339,10 +331,10 @@ export class MaterialCurrencyComponent
    */
   parseCurrency(text: string): number {
     if (!text || text.trim() === '') return 0;
-    
+
     // Remove todos os caracteres não numéricos exceto dígitos, vírgula, ponto e sinal negativo
     let cleanText = text.replace(/[^\\d\\.,\\-]/g, '');
-    
+
     // Trata vírgula como separador decimal para pt-BR
     if (this.locale().startsWith('pt')) {
       // Se tem vírgula e ponto, vírgula é decimal
@@ -354,7 +346,7 @@ export class MaterialCurrencyComponent
         cleanText = cleanText.replace(',', '.');
       }
     }
-    
+
     const parsed = parseFloat(cleanText);
     return isNaN(parsed) ? 0 : parsed;
   }
@@ -366,29 +358,24 @@ export class MaterialCurrencyComponent
     if (!this.allowNegative() && value < 0) {
       return Math.abs(value);
     }
-    
+
     const min = this.minValue();
     const max = this.maxValue();
-    
+
     if (value < min) return min;
     if (value > max) return max;
-    
+
     return value;
   }
 
-  /**
-   * Limpa o valor do campo
-   */
+  /** Clears the current value */
   clearValue(): void {
     this.updateCurrencyState({
       rawValue: 0,
       formattedValue: '',
-      isEditing: false,
       lastValidValue: 0
     });
-    
     this.setValue(0);
-    this.focus();
   }
 
   // =============================================================================
@@ -397,7 +384,7 @@ export class MaterialCurrencyComponent
 
   onInputFocus(): void {
     const state = this.currencyState();
-    this.updateCurrencyState({ 
+    this.updateCurrencyState({
       isEditing: true,
       formattedValue: state.rawValue.toString()
     });
@@ -407,21 +394,21 @@ export class MaterialCurrencyComponent
     const state = this.currencyState();
     const parsedValue = this.parseCurrency(state.formattedValue);
     const validatedValue = this.validateValue(parsedValue);
-    
+
     this.updateCurrencyState({
       isEditing: false,
       rawValue: validatedValue,
       formattedValue: '',
       lastValidValue: validatedValue
     });
-    
+
     this.setValue(validatedValue);
   }
 
   onInputChange(event: Event): void {
     const target = event.target as HTMLInputElement;
     const inputValue = target.value;
-    
+
     this.updateCurrencyState({
       formattedValue: inputValue
     });
@@ -429,7 +416,7 @@ export class MaterialCurrencyComponent
     // Parse e validação em tempo real apenas para feedback visual
     const parsedValue = this.parseCurrency(inputValue);
     const validatedValue = this.validateValue(parsedValue);
-    
+
     // Atualizar apenas se válido
     if (!isNaN(validatedValue)) {
       this.updateCurrencyState({ rawValue: validatedValue });
@@ -438,23 +425,23 @@ export class MaterialCurrencyComponent
 
   onKeyDown(event: KeyboardEvent): void {
     const state = this.currencyState();
-    
+
     // Permitir teclas de controle
     const allowedKeys = ['Backspace', 'Delete', 'Tab', 'Escape', 'Enter', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
     if (allowedKeys.includes(event.key)) {
       return;
     }
-    
+
     // Permitir Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
     if (event.ctrlKey && ['a', 'c', 'v', 'x'].includes(event.key.toLowerCase())) {
       return;
     }
-    
+
     // Permitir dígitos
     if (/^\\d$/.test(event.key)) {
       return;
     }
-    
+
     // Permitir separadores decimais conforme locale
     if (this.locale().startsWith('pt') && event.key === ',') {
       return;
@@ -462,12 +449,12 @@ export class MaterialCurrencyComponent
     if (!this.locale().startsWith('pt') && event.key === '.') {
       return;
     }
-    
+
     // Permitir sinal negativo se habilitado
     if (this.allowNegative() && event.key === '-' && state.formattedValue.indexOf('-') === -1) {
       return;
     }
-    
+
     // Bloquear outras teclas
     event.preventDefault();
   }
@@ -480,14 +467,14 @@ export class MaterialCurrencyComponent
     const currentValue = this.fieldValue();
     const rawValue = typeof currentValue === 'number' ? currentValue : 0;
     const validatedValue = this.validateValue(rawValue);
-    
+
     this.updateCurrencyState({
       rawValue: validatedValue,
       formattedValue: '',
       isEditing: false,
       lastValidValue: validatedValue
     });
-    
+
     // Sincronizar com o campo se necessário
     if (currentValue !== validatedValue) {
       this.setValue(validatedValue);
@@ -499,7 +486,7 @@ export class MaterialCurrencyComponent
     effect(() => {
       const fieldValue = this.fieldValue();
       const state = this.currencyState();
-      
+
       if (typeof fieldValue === 'number' && fieldValue !== state.rawValue && !state.isEditing) {
         const validatedValue = this.validateValue(fieldValue);
         this.updateCurrencyState({
