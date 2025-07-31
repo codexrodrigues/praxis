@@ -17,17 +17,17 @@
       "@praxis/table": [
         "projects/praxis-table/src/public-api.ts"
       ],
-      "praxis-dynamic-fields": [
-        "./dist/praxis-dynamic-fields"
+      "@praxis/dynamic-fields": [
+        "projects/praxis-dynamic-fields/src/public-api.ts"
       ],
-      "praxis-specification": [
-        "./dist/praxis-specification"
+      "@praxis/specification": [
+        "projects/praxis-specification/src/public-api.ts"
       ],
-      "praxis-visual-builder": [
-        "./dist/praxis-visual-builder"
+      "@praxis/visual-builder": [
+        "projects/praxis-visual-builder/src/public-api.ts"
       ],
-      "praxis-dynamic-form": [
-        "./dist/praxis-dynamic-form"
+      "@praxis/dynamic-form": [
+        "projects/praxis-dynamic-form/src/public-api.ts"
       ]
     },
     "importHelpers": true,
