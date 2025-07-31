@@ -37,6 +37,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { DynamicComponentService } from '../services/dynamic-component.service';
 import { FieldControlType, ComponentMetadata } from '@praxis/core';
+import { LogLevel } from './base-dynamic.component';
 
 // =============================================================================
 // TYPE HELPERS PARA INDEX SIGNATURE SAFETY
@@ -126,10 +127,21 @@ export abstract class BaseDynamicFieldComponent<
   protected readonly renderer = inject(Renderer2);
   private readonly destroyRef = inject(DestroyRef);
 
+
+  /** Re-exposed signals and helpers from the base service */
+  protected readonly metadata = this.base.metadataSignal();
+  protected readonly componentId = this.base.componentIdSignal();
+  protected readonly componentState = this.base.componentStateSignal();
+  readonly cssClasses = () => this.base.getCssClasses();
+  readonly isDebugMode = () => this.base.getIsDebugMode();
+  protected readonly log = (level: LogLevel, message: string, data?: any) =>
+    this.base.logMessage(level, message, data);
+
   /** Re-exposed signals from the base service */
   protected readonly metadata = this.base.metadata;
   protected readonly componentId = this.base.componentId;
   protected readonly log = this.base.log.bind(this.base);
+
 
   /** Proxy to BaseDynamicComponent helper */
   protected takeUntilDestroyed() {
@@ -394,6 +406,13 @@ export abstract class BaseDynamicFieldComponent<
     this.base.markAsTouched();
     this.updateFieldState({ touched: true });
     this.onTouched();
+  }
+
+  /**
+   * Encapsulates metadata configuration
+   */
+  protected setMetadata(metadata: T): void {
+    this.base.setComponentMetadata(metadata);
   }
 
   /**
