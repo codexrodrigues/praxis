@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { FormConfig, createDefaultFormConfig } from '@praxis/core';
 import { FormConfigService } from './services/form-config.service';
+import { JsonConfigEditorComponent, JsonValidationResult, JsonEditorEvent } from './json-config-editor/json-config-editor.component';
 
 @Component({
   selector: 'praxis-dynamic-form-config-editor',
@@ -17,7 +18,8 @@ import { FormConfigService } from './services/form-config.service';
     MatTabsModule,
     MatButtonModule,
     MatIconModule,
-    MatCardModule
+    MatCardModule,
+    JsonConfigEditorComponent
   ],
   providers: [FormConfigService],
   styles: [`
@@ -58,9 +60,12 @@ import { FormConfigService } from './services/form-config.service';
           </mat-tab>
           <mat-tab label="JSON">
             <div class="tab-content">
-              <mat-form-field appearance="outline" class="json-field">
-                <textarea matInput [(ngModel)]="jsonText" rows="20"></textarea>
-              </mat-form-field>
+              <form-json-config-editor
+                [config]="editedConfig"
+                (configChange)="onJsonConfigChange($event)"
+                (validationChange)="onJsonValidationChange($event)"
+                (editorEvent)="onJsonEditorEvent($event)">
+              </form-json-config-editor>
             </div>
           </mat-tab>
         </mat-tab-group>
@@ -74,38 +79,40 @@ import { FormConfigService } from './services/form-config.service';
   `
 })
 export class PraxisDynamicFormConfigEditor {
+  @ViewChild(JsonConfigEditorComponent) jsonEditor?: JsonConfigEditorComponent;
+
   editedConfig: FormConfig;
-  jsonText: string;
 
   @Output() configSaved = new EventEmitter<FormConfig>();
   @Output() cancelled = new EventEmitter<void>();
 
   constructor(private configService: FormConfigService) {
     this.editedConfig = { ...this.configService.currentConfig };
-    this.jsonText = JSON.stringify(this.editedConfig, null, 2);
   }
 
   onReset(): void {
     this.editedConfig = createDefaultFormConfig();
-    this.updateJsonText();
+    this.jsonEditor?.updateJsonFromConfig(this.editedConfig);
   }
 
   onSave(): void {
-    try {
-      const parsed = JSON.parse(this.jsonText) as FormConfig;
-      this.configService.loadConfig(parsed);
-      this.editedConfig = parsed;
-      this.configSaved.emit(parsed);
-    } catch {
-      // ignore invalid JSON
-    }
+    this.configService.loadConfig(this.editedConfig);
+    this.configSaved.emit(this.editedConfig);
   }
 
   onCancel(): void {
     this.cancelled.emit();
   }
 
-  private updateJsonText(): void {
-    this.jsonText = JSON.stringify(this.editedConfig, null, 2);
+  onJsonConfigChange(newConfig: FormConfig): void {
+    this.editedConfig = newConfig;
+  }
+
+  onJsonValidationChange(_result: JsonValidationResult): void {
+    // placeholder for future validation status handling
+  }
+
+  onJsonEditorEvent(_event: JsonEditorEvent): void {
+    // no-op for now
   }
 }

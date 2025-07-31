@@ -4,6 +4,7 @@
 
 export * from './lib/praxis-dynamic-form';
 export * from './lib/praxis-dynamic-form-config-editor';
+export * from './lib/json-config-editor/json-config-editor.component';
 
 // Layout editor components
 export * from './lib/layout-editor/form-layout-editor.component';
