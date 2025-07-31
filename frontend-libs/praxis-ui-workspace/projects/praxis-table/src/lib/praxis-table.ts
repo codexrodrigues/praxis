@@ -102,7 +102,7 @@ import {ColumnDataType} from './data-formatter/data-formatter-types';
   }`]
 })
 export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit, OnDestroy {
-  @Input() config: TableConfig = {columns: []};
+  @Input() config: TableConfig = createDefaultTableConfig();
   @Input() resourcePath?: string;
   @Input() filterCriteria: any = {};
   /** Controls toolbar visibility */

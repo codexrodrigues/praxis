@@ -197,12 +197,16 @@ export function createDefaultTableConfig(): TableConfig {
     },
     actions: {
       row: {
-        enabled: false,
+        enabled: true,
         position: 'end',
         width: '120px',
         display: 'icons',
         trigger: 'hover',
-        actions: []
+        actions: [
+          { id: 'view', label: 'Visualizar', icon: 'visibility', action: 'view' },
+          { id: 'edit', label: 'Editar', icon: 'edit', action: 'edit' },
+          { id: 'delete', label: 'Excluir', icon: 'delete', action: 'delete' }
+        ]
       },
       bulk: {
         enabled: false,
