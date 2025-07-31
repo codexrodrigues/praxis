@@ -1,35 +1,30 @@
 package com.example.praxis.humanresources.dto;
 
-import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
 import org.praxisplatform.uischema.extension.annotation.UISchema;
+import org.praxisplatform.uischema.filter.annotation.Filterable;
+import org.praxisplatform.uischema.filter.annotation.Filterable.FilterOperation;
+import org.praxisplatform.uischema.filter.dto.GenericFilterDTO;
 
 import java.time.LocalDate;
+import java.util.List;
 
-public class DependenteDTO {
-
-    @UISchema
-    private Long id;
+public class DependenteFilterDTO implements GenericFilterDTO {
 
     @UISchema
+    @Filterable(operation = FilterOperation.LIKE)
     private String nomeCompleto;
 
     @UISchema
-    private LocalDate dataNascimento;
+    @Filterable(operation = FilterOperation.BETWEEN)
+    private List<LocalDate> dataNascimento;
 
     @UISchema
+    @Filterable(operation = FilterOperation.LIKE)
     private String parentesco;
 
     @UISchema
+    @Filterable(operation = FilterOperation.EQUAL, relation = "funcionario.id")
     private Long funcionarioId;
-
-    // Getters and Setters
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public String getNomeCompleto() {
         return nomeCompleto;
@@ -39,11 +34,11 @@ public class DependenteDTO {
         this.nomeCompleto = nomeCompleto;
     }
 
-    public LocalDate getDataNascimento() {
+    public List<LocalDate> getDataNascimento() {
         return dataNascimento;
     }
 
-    public void setDataNascimento(LocalDate dataNascimento) {
+    public void setDataNascimento(List<LocalDate> dataNascimento) {
         this.dataNascimento = dataNascimento;
     }
 

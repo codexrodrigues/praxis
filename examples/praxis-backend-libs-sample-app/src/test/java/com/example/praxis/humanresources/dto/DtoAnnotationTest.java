@@ -107,6 +107,16 @@ public class DtoAnnotationTest {
         validateFilterDto(FeriasAfastamentoFilterDTO.class, expected);
     }
 
+    @Test
+    public void testDependenteFilterDtoAnnotations() {
+        Map<String, Expectation> expected = new LinkedHashMap<>();
+        expected.put("nomeCompleto", new Expectation(FilterOperation.LIKE, ""));
+        expected.put("dataNascimento", new Expectation(FilterOperation.BETWEEN, ""));
+        expected.put("parentesco", new Expectation(FilterOperation.LIKE, ""));
+        expected.put("funcionarioId", new Expectation(FilterOperation.EQUAL, "funcionario.id"));
+        validateFilterDto(DependenteFilterDTO.class, expected);
+    }
+
     private void validateFilterDto(Class<?> clazz, Map<String, Expectation> expectations) {
         for (Field field : clazz.getDeclaredFields()) {
             assertTrue(clazz.getSimpleName() + "." + field.getName() + " should have @UISchema",
