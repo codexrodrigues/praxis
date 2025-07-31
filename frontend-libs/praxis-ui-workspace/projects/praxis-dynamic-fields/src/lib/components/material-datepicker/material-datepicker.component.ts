@@ -11,12 +11,14 @@
  * ✅ Acessibilidade WCAG 2.1 AA
  */
 
-import { 
-  Component, 
+import {
+  Component,
   forwardRef,
   computed,
   signal,
-  inject
+  inject,
+  ViewChild,
+  ElementRef
 } from '@angular/core';
 import { NG_VALUE_ACCESSOR } from '@angular/forms';
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -129,6 +131,9 @@ export class MaterialDatepickerComponent
 
   private readonly dateAdapter = inject(DateAdapter);
 
+  @ViewChild('labelEditor', { static: false })
+  private labelEditor?: ElementRef<HTMLInputElement>;
+
   // =============================================================================
   // SIGNALS ESPECÍFICOS DO DATEPICKER
   // =============================================================================
@@ -223,6 +228,12 @@ export class MaterialDatepickerComponent
     return metadata?.showClearButton !== false;
   });
 
+  /** Label being edited */
+  readonly editingLabel = computed(() => {
+    const editState = this.labelEditingState();
+    return editState.isEditing ? editState.currentLabel : '';
+  });
+
   /** Tipo do controle (datepicker, datetime, timepicker, daterange) */
   readonly dateControlType = computed(() => {
     const metadata = safeDatepickerMetadata(this.metadata());
@@ -259,6 +270,12 @@ export class MaterialDatepickerComponent
   /** Preset ativo atual */
   readonly activePreset = computed(() => {
     return this.datepickerState().activePreset;
+  });
+
+  /** Details of the active preset */
+  readonly activePresetInfo = computed(() => {
+    const presetId = this.activePreset();
+    return this.rangePresets().find(p => p.id === presetId) || null;
   });
 
   /** CSS classes específicas do datepicker */
@@ -615,9 +632,50 @@ export class MaterialDatepickerComponent
       endDate,
       preset: undefined // Clear preset when manually changed
     };
-    
+
     this.selectDateRange(newRange);
     this.clearPreset();
+  }
+
+  // ===========================================================================
+  // EVENTOS DE LABEL
+  // ===========================================================================
+
+  onLabelDoubleClick(): void {
+    if (!this.componentState().disabled) {
+      this.startLabelEditing();
+
+      setTimeout(() => {
+        if (this.labelEditor) {
+          this.labelEditor.nativeElement.focus();
+          this.labelEditor.nativeElement.select();
+        }
+      });
+    }
+  }
+
+  onLabelEditorBlur(): void {
+    this.finishLabelEditing();
+  }
+
+  onLabelEditorKeyDown(event: KeyboardEvent): void {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      this.finishLabelEditing();
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      this.cancelLabelEditing();
+    }
+  }
+
+  updateLabelText(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const editState = this.labelEditingState();
+
+    this.labelEditingState.set({
+      ...editState,
+      currentLabel: target.value
+    });
   }
 
   // =============================================================================

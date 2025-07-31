@@ -9,11 +9,12 @@
 
 import { Component, forwardRef, computed, signal } from '@angular/core';
 import { NG_VALUE_ACCESSOR, FormControl, ReactiveFormsModule } from '@angular/forms';
-import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatFormFieldModule, MatFormFieldAppearance } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { CommonModule } from '@angular/common';
+import { ThemePalette } from '@angular/material/core';
 
 import { BaseDynamicFieldComponent } from '../../base/base-dynamic-field.component';
 import { MaterialTimePickerMetadata } from '@praxis/core';
@@ -58,6 +59,28 @@ export class MaterialTimepickerComponent
   readonly timeFormat = computed(() => this.metadata()?.timeFormat || 24);
   readonly isPickerOpen = computed(() => this.pickerState().isOpen);
   readonly tempValue = computed(() => this.pickerState().tempValue);
+
+  /** Appearance configuration */
+  readonly materialAppearance = computed(() => {
+    return (this.metadata()?.materialDesign?.appearance || 'outline') as MatFormFieldAppearance;
+  });
+
+  /** Material theme color */
+  readonly materialColor = computed(() => {
+    return (this.metadata()?.materialDesign?.color || 'primary') as ThemePalette;
+  });
+
+  /** Disabled state considering disabledInteractive */
+  readonly isDisabledInteractive = computed(() => {
+    const metadata = this.metadata();
+    const state = this.componentState();
+    return state.disabled && metadata?.disabledInteractive === true;
+  });
+
+  readonly effectiveDisabled = computed(() => {
+    const state = this.componentState();
+    return state.disabled && !this.isDisabledInteractive();
+  });
 
   getTimePlaceholder(): string {
     return this.metadata()?.showSeconds ? 'hh:mm:ss' : 'hh:mm';
