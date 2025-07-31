@@ -44,6 +44,26 @@ export class MaterialRatingComponent extends BaseDynamicFieldComponent<MaterialR
   readonly allowHalf = computed(() => this.metadata()?.allowHalf === true);
   readonly showValueDisplay = computed(() => this.metadata()?.showValue !== false);
 
+  readonly effectiveDisabled = computed(() => {
+    const componentState = this.componentState();
+    return componentState.disabled;
+  });
+
+  getAriaDescribedBy(): string {
+    const parts: string[] = [];
+    const metadata = this.metadata();
+    
+    if (metadata?.hint) {
+      parts.push(`${this.componentId()}-hint`);
+    }
+    
+    if (this.hasValidationError()) {
+      parts.push(`${this.componentId()}-error`);
+    }
+    
+    return parts.join(' ');
+  }
+
   readonly getStars = computed(() => {
     const stars: StarConfig[] = [];
     const currentValue = this.fieldValue() || 0;

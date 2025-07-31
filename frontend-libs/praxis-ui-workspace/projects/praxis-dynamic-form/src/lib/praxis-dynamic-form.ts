@@ -15,7 +15,8 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { GenericCrudService, FieldMetadata, mapFieldDefinitionsToMetadata, EndpointConfig } from '@praxis/core';
 import { DynamicFieldLoaderDirective } from '@praxis/dynamic-fields';
 import { FormConfig, FormLayout, FormSubmitEvent, FormReadyEvent, FormValueChangeEvent, PraxisResizableWindowService } from '@praxis/core';
@@ -92,14 +93,14 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   form!: FormGroup;
   private fieldMetadata: FieldMetadata[] = [];
   private pendingEntityId: string | number | null = null;
+  private destroy$ = new Subject<void>();
 
   constructor(
     private crud: GenericCrudService<any>,
     private fb: FormBuilder,
     private cdr: ChangeDetectorRef,
     private layoutService: FormLayoutService,
-    private contextService: FormContextService,
-    private windowService: PraxisResizableWindowService
+    private contextService: FormContextService
   ) {
     this.form = this.fb.group({});
   }
@@ -124,7 +125,7 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   }
 
   private loadSchema(): void {
-    this.crud.getSchema().pipe(takeUntilDestroyed()).subscribe(defs => {
+    this.crud.getSchema().pipe(takeUntil(this.destroy$)).subscribe(defs => {
       this.fieldMetadata = mapFieldDefinitionsToMetadata(defs);
       this.buildForm();
       if (this.pendingEntityId != null) {
@@ -136,7 +137,7 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
 
   private loadEntity(): void {
     if (this.pendingEntityId == null) { return; }
-    this.crud.getById(this.pendingEntityId).pipe(takeUntilDestroyed()).subscribe((data: any) => {
+    this.crud.getById(this.pendingEntityId).pipe(takeUntil(this.destroy$)).subscribe((data: any) => {
       this.form.patchValue(data);
     });
   }
@@ -159,7 +160,7 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
     }
 
     this.form.valueChanges
-      .pipe(takeUntilDestroyed())
+      .pipe(takeUntil(this.destroy$))
       .subscribe(values => {
         this.valueChange.emit({
           formData: values,
@@ -193,7 +194,7 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
       ? this.crud.update(this.resourceId!, formData)
       : this.crud.create(formData);
 
-    req$.pipe(takeUntilDestroyed()).subscribe({
+    req$.pipe(takeUntil(this.destroy$)).subscribe({
       next: result => {
         this.formSubmit.emit({ stage: 'after', formData, isValid: true, operation, entityId: this.resourceId ?? undefined, result });
       },
@@ -204,44 +205,14 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   }
 
   openConfigEditor(): void {
-    try {
-      const configCopy = JSON.parse(JSON.stringify(this.config)) as FormConfig;
-
-      const ref = this.windowService.open({
-        title: 'Configurações do Formulário Dinâmico',
-        contentComponent: PraxisDynamicFormConfigEditor,
-        data: configCopy,
-        initialWidth: '90vw',
-        initialHeight: '90vh',
-        minWidth: '320px',
-        minHeight: '600px',
-        disableResize: false,
-        disableMaximize: false,
-        enableTouch: true,
-        minDragDistance: 5,
-        enableInertia: true,
-        inertiaFriction: 0.95,
-        inertiaMultiplier: 10,
-        bounceFactor: 0.5,
-        autoCenterAfterResize: false
-      });
-
-      ref.closed.pipe(takeUntilDestroyed()).subscribe(result => {
-        if (result) {
-          this.config = { ...result };
-          this.configChange.emit(this.config);
-          if (this.formId && this.layout) {
-            this.layoutService.saveLayout(this.formId, this.layout);
-          }
-          this.cdr.detectChanges();
-        }
-      });
-    } catch {
-      // TODO: Implement proper error logging service
+    this.configChange.emit(this.config);
+    if (this.formId && this.layout) {
+      this.layoutService.saveLayout(this.formId, this.layout);
     }
   }
 
   ngOnDestroy(): void {
-    // cleanup via takeUntilDestroyed
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

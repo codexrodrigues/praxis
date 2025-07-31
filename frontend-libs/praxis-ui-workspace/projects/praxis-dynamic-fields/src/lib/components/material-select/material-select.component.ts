@@ -142,6 +142,24 @@ export class MaterialSelectComponent
   // COMPUTED PROPERTIES
   // =============================================================================
 
+  /** Configuração da aparência do Material */
+  readonly materialAppearance = computed(() => {
+    const metadata = this.metadata();
+    return metadata?.materialDesign?.appearance || 'outline';
+  });
+
+  /** Cor do tema Material */
+  readonly materialColor = computed(() => {
+    const metadata = this.metadata();
+    return metadata?.materialDesign?.color || 'primary';
+  });
+
+  /** Comportamento do float label */
+  readonly floatLabelBehavior = computed(() => {
+    const metadata = this.metadata();
+    return metadata?.materialDesign?.floatLabel || 'auto';
+  });
+
   /** Verifica se é seleção múltipla */
   readonly isMultiple = computed(() => {
     return this.metadata()?.multiple || false;
@@ -392,6 +410,53 @@ export class MaterialSelectComponent
     const newSelected = currentSelected.filter(sel => sel.value !== option.value);
     
     this.updateSelectedOptions(newSelected);
+  }
+
+  // =============================================================================
+  // EVENTOS DE LABEL
+  // =============================================================================
+
+  updateLabelText(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const editState = this.labelEditingState();
+    
+    this.labelEditingState.set({
+      ...editState,
+      currentLabel: target.value
+    });
+  }
+
+  onLabelDoubleClick(): void {
+    if (!this.componentState().disabled) {
+      this.startLabelEditing();
+    }
+  }
+
+  onLabelEditorBlur(): void {
+    this.finishLabelEditing();
+  }
+
+  onLabelEditorKeyDown(event: KeyboardEvent): void {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      this.finishLabelEditing();
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      this.cancelLabelEditing();
+    }
+  }
+
+  editingLabel = computed(() => {
+    const editState = this.labelEditingState();
+    return editState.isEditing ? editState.currentLabel : '';
+  });
+
+  selectedValues = computed(() => {
+    return this.selectState().selectedOptions.map(o => o.value);
+  });
+
+  retryDataLoad(): void {
+    this.loadData();
   }
 
   // =============================================================================

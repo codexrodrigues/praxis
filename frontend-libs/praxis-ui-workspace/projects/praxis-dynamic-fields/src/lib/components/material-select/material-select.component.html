@@ -97,7 +97,7 @@
       [options]="filteredOptions()"
       [groupedOptions]="groupedOptions()"
       [multiple]="isMultiple()"
-      [selectedValues]="selectState().selectedOptions.map(o => o.value)"
+      [selectedValues]="selectedValues()"
       [useVirtualization]="shouldUseVirtualization()">
     </pdx-select-options-list>
 

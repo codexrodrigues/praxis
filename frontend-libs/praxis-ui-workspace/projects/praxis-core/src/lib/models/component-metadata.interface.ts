@@ -211,11 +211,17 @@ export interface FieldOption {
   /** CSS class for styling */
   cssClass?: string;
   
+  /** Alternative CSS class property name */
+  class?: string;
+  
   /** Icon to display with option */
   icon?: string;
   
   /** Tooltip text for option */
   tooltip?: string;
+  
+  /** Detailed description for the option */
+  description?: string;
 }
 
 /**
@@ -226,13 +232,13 @@ export interface FieldOption {
  */
 export interface MaterialDesignConfig {
   /** Material appearance variant */
-  appearance?: 'fill' | 'outline' | 'legacy' | 'standard';
+  appearance?: 'fill' | 'outline';
   
   /** Material color theme */
-  color?: 'primary' | 'accent' | 'warn' | 'basic';
+  color?: 'primary' | 'accent' | 'warn';
   
   /** Label floating behavior */
-  floatLabel?: 'auto' | 'always' | 'never';
+  floatLabel?: 'auto' | 'always';
   
   /** Subscript sizing strategy */
   subscriptSizing?: 'fixed' | 'dynamic';

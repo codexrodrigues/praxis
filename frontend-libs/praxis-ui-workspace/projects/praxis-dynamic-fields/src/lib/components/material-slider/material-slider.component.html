@@ -23,19 +23,15 @@
       [min]="minValue()"
       [max]="maxValue()"
       [step]="stepValue()"
-      [value]="sliderState().value"
       [disabled]="componentState().disabled"
       [color]="materialColor()"
-      [vertical]="isVertical()"
-      [thumbLabel]="shouldShowThumbLabel()"
-      [displayWith]="thumbLabelFormatter"
-      [tickInterval]="shouldShowTickMarks() ? stepValue() : 0"
       (input)="onSliderInput($event)"
-      (change)="onSliderChange($event)"
-      (slideStart)="onSliderStart()"
-      (slideEnd)="onSliderEnd()"
-      (focus)="onSliderFocus()"
-      (blur)="onSliderBlur()">
+      (change)="onSliderChange($event)">
+      <input 
+        matSliderThumb 
+        [value]="sliderState().value"
+        (focus)="onSliderFocus()"
+        (blur)="onSliderBlur()">
     </mat-slider>
 
     @if (showMinMaxLabels()) {

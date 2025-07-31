@@ -21,13 +21,14 @@ import {
   ElementRef
 } from '@angular/core';
 import { NG_VALUE_ACCESSOR } from '@angular/forms';
-import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatDatepickerModule, MatDatepickerInputEvent } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatSelectModule } from '@angular/material/select';
 import { DateAdapter } from '@angular/material/core';
 import { FormsModule, ReactiveFormsModule, FormGroup, FormControl } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -109,7 +110,8 @@ interface InternalPreset {
     MatIconModule,
     MatButtonModule,
     MatTooltipModule,
-    MatChipsModule
+    MatChipsModule,
+    MatSelectModule
   ],
   providers: [{
     provide: NG_VALUE_ACCESSOR,
@@ -574,18 +576,16 @@ export class MaterialDatepickerComponent
     this.selectDate(date);
   }
 
-  onDateInput(event: Event): void {
-    const target = event.target as HTMLInputElement;
-    const dateString = target.value;
+  onDateInput(event: MatDatepickerInputEvent<Date>): void {
+    const dateValue = event.value;
     
-    if (!dateString) {
+    if (!dateValue) {
       this.clearDate();
       return;
     }
     
-    const parsedDate = this.parseDate(dateString);
-    if (parsedDate && !isNaN(parsedDate.getTime())) {
-      this.selectDate(parsedDate);
+    if (dateValue && !isNaN(dateValue.getTime())) {
+      this.selectDate(dateValue);
     }
   }
 

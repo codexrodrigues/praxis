@@ -25,7 +25,7 @@
     </button>
 
     <mat-chip-set *ngIf="activePreset()" matSuffix class="pdx-active-preset-chip">
-      <mat-chip [removable]="true" (removed)="clearPreset()" class="pdx-preset-chip">{{ rangePresets().find(p => p.id === activePreset())?.label }}<mat-icon matChipRemove>cancel</mat-icon></mat-chip>
+      <mat-chip [removable]="true" (removed)="clearPreset()" class="pdx-preset-chip">{{ activePresetLabel() }}<mat-icon matChipRemove>cancel</mat-icon></mat-chip>
     </mat-chip-set>
 
     <mat-hint *ngIf="metadata()?.hint" align="start" [id]="componentId() + '-hint'">{{ metadata()?.hint }}</mat-hint>

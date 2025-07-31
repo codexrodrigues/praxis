@@ -392,7 +392,7 @@ export interface MaterialInputMetadata extends FieldMetadata {
     /** Cor do tema Material */
     color?: 'primary' | 'accent' | 'warn';
     /** Comportamento do float label */
-    floatLabel?: 'always' | 'never' | 'auto';
+    floatLabel?: 'always' | 'auto';
     /** Dimensionamento do subscript */
     subscriptSizing?: 'fixed' | 'dynamic';
     /** Ocultar marcador de obrigatório */
@@ -676,7 +676,7 @@ export interface MaterialTextareaMetadata extends FieldMetadata {
   materialDesign?: {
     appearance?: 'fill' | 'outline';
     color?: 'primary' | 'accent' | 'warn';
-    floatLabel?: 'always' | 'never' | 'auto';
+    floatLabel?: 'always' | 'auto';
     subscriptSizing?: 'fixed' | 'dynamic';
     hideRequiredMarker?: boolean;
   };
@@ -853,7 +853,7 @@ export interface MaterialButtonMetadata extends FieldMetadata {
   controlType: typeof FieldControlType.BUTTON;
   
   /** Button style variant */
-  variant?: 'basic' | 'raised' | 'stroked' | 'flat' | 'icon' | 'fab' | 'mini-fab';
+  variant?: 'raised' | 'stroked' | 'flat' | 'icon' | 'fab' | 'mini-fab';
   
   /** Button color theme */
   color?: ThemePalette;

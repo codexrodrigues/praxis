@@ -19,11 +19,12 @@ import {
   signal,
   effect
 } from '@angular/core';
-import { NG_VALUE_ACCESSOR } from '@angular/forms';
+import { NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { CommonModule } from '@angular/common';
 
 import { BaseDynamicFieldComponent } from '../../base/base-dynamic-field.component';
@@ -39,11 +40,18 @@ interface ExtendedCurrencyMetadata extends ComponentMetadata {
   allowNegative?: boolean;
   minimumFractionDigits?: number;
   maximumFractionDigits?: number;
-  currencyDisplay?: 'code' | 'symbol' | 'narrow' | 'name';
+  currencyDisplay?: 'code' | 'symbol' | 'name';
   showCurrencySymbol?: boolean;
   placeholder?: string;
   min?: number;
   max?: number;
+  materialDesign?: {
+    appearance?: 'fill' | 'outline';
+    color?: 'primary' | 'accent' | 'warn';
+    floatLabel?: 'always' | 'auto';
+  };
+  disabledInteractive?: boolean;
+  description?: string;
 }
 
 function safeCurrencyMetadata(metadata: ComponentMetadata | null | undefined): ExtendedCurrencyMetadata {
@@ -72,10 +80,12 @@ interface CurrencyState {
   styleUrls: ['./material-currency.component.scss'],
   imports: [
     CommonModule,
+    ReactiveFormsModule,
     MatInputModule,
     MatFormFieldModule,
     MatIconModule,
-    MatButtonModule
+    MatButtonModule,
+    MatTooltipModule
   ],
   providers: [{
     provide: NG_VALUE_ACCESSOR,
@@ -241,6 +251,61 @@ export class MaterialCurrencyComponent
     return classes.join(' ');
   });
 
+  /** Configuração da aparência do Material */
+  readonly materialAppearance = computed(() => {
+    const metadata = safeCurrencyMetadata(this.metadata());
+    return metadata.materialDesign?.appearance || 'outline';
+  });
+
+  /** Cor do tema Material */
+  readonly materialColor = computed(() => {
+    const metadata = safeCurrencyMetadata(this.metadata());
+    return metadata.materialDesign?.color || 'primary';
+  });
+
+  /** Comportamento do float label */
+  readonly floatLabelBehavior = computed(() => {
+    const metadata = safeCurrencyMetadata(this.metadata());
+    return metadata.materialDesign?.floatLabel || 'auto';
+  });
+
+  /** Estado desabilitado interativo */
+  readonly isDisabledInteractive = computed(() => {
+    const metadata = safeCurrencyMetadata(this.metadata());
+    const componentState = this.componentState();
+    
+    return componentState.disabled && metadata.disabledInteractive === true;
+  });
+
+  /** Error state matcher personalizado */
+  readonly errorStateMatcher = computed(() => {
+    // Retorna um objeto que implementa ErrorStateMatcher
+    return {
+      isErrorState: (control: any) => {
+        return !!(control && control.invalid && (control.dirty || control.touched));
+      }
+    };
+  });
+
+  /** Estado efetivo desabilitado (considerando disabledInteractive) */
+  readonly effectiveDisabled = computed(() => {
+    const componentState = this.componentState();
+    const isDisabledInteractive = this.isDisabledInteractive();
+    
+    // Se disabledInteractive é true, não desabilita realmente o input
+    // mas mantém o estilo desabilitado através de CSS
+    return componentState.disabled && !isDisabledInteractive;
+  });
+
+  /** Deve mostrar botão limpar */
+  readonly shouldShowClearButton = computed(() => {
+    const metadata = safeCurrencyMetadata(this.metadata());
+    const hasValue = this.currencyState().rawValue !== 0;
+    
+    // Por padrão, mostra botão limpar apenas quando tem valor e não está desabilitado
+    return hasValue && !this.componentState().disabled && (metadata.showCurrencySymbol !== false);
+  });
+
   // =============================================================================
   // LIFECYCLE
   // =============================================================================
@@ -309,6 +374,21 @@ export class MaterialCurrencyComponent
     if (value > max) return max;
     
     return value;
+  }
+
+  /**
+   * Limpa o valor do campo
+   */
+  clearValue(): void {
+    this.updateCurrencyState({
+      rawValue: 0,
+      formattedValue: '',
+      isEditing: false,
+      lastValidValue: 0
+    });
+    
+    this.setValue(0);
+    this.focus();
   }
 
   // =============================================================================

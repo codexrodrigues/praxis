@@ -94,6 +94,13 @@ export class MaterialDateRangeComponent extends BaseDynamicFieldComponent<Materi
 
   readonly presetDisplayStyle = computed(() => this.metadata()?.rangePresets?.displayStyle || 'buttons');
 
+  readonly activePresetLabel = computed(() => {
+    const activeId = this.activePreset();
+    if (!activeId) return '';
+    const preset = this.rangePresets().find(p => p.id === activeId);
+    return preset?.label || '';
+  });
+
   applyPreset(presetId: string): void {
     const preset = this.rangePresets().find(p => p.id === presetId);
     if (!preset) return;

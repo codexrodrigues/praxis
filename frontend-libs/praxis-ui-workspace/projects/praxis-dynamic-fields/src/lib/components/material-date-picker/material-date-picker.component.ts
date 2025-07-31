@@ -1,6 +1,6 @@
 import { Component, computed, forwardRef, inject, signal } from '@angular/core';
 import { NG_VALUE_ACCESSOR, FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatDatepickerModule, MatDatepickerInputEvent } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
@@ -66,6 +66,11 @@ export class MaterialDatePickerComponent extends BaseDynamicFieldComponent<Mater
 
   readonly inputPlaceholder = computed(() => this.metadata()?.placeholder || 'dd/mm/aaaa');
 
+  readonly shouldShowClearButton = computed(() => {
+    const hasValue = Boolean(this.selectedDate());
+    return hasValue && !this.componentState().disabled;
+  });
+
   openPicker(): void {
     this.updateState({ isOpen: true });
   }
@@ -88,16 +93,13 @@ export class MaterialDatePickerComponent extends BaseDynamicFieldComponent<Mater
     this.selectDate(date);
   }
 
-  onDateInput(event: Event): void {
-    const value = (event.target as HTMLInputElement).value;
+  onDateInput(event: MatDatepickerInputEvent<Date>): void {
+    const value = event.value;
     if (!value) {
       this.clearDate();
       return;
     }
-    const parsed = this.dateUtils.parseDate(value);
-    if (parsed) {
-      this.selectDate(parsed);
-    }
+    this.selectDate(value);
   }
 
   isDateDisabled = (date: Date | null): boolean => {
