@@ -1,6 +1,6 @@
 import { Component, computed, forwardRef, inject, signal } from '@angular/core';
 import { NG_VALUE_ACCESSOR, FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatDatepickerModule, MatDatepickerInputEvent } from '@angular/material/datepicker';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
@@ -54,7 +54,10 @@ export class MaterialDatePickerComponent extends BaseDynamicFieldComponent<Mater
 
   readonly materialAppearance = computed(() => this.metadata()?.materialDesign?.appearance || 'outline');
   readonly materialColor = computed(() => this.metadata()?.materialDesign?.color || 'primary');
-  readonly floatLabelBehavior = computed(() => this.metadata()?.materialDesign?.floatLabel || 'auto');
+  readonly floatLabelBehavior = computed(() => {
+    const label = this.metadata()?.materialDesign?.floatLabel;
+    return label === 'never' ? 'auto' : (label ?? 'auto');
+  });
 
   readonly selectedDate = computed(() => this.state().selectedDate);
   readonly isPickerOpen = computed(() => this.state().isOpen);
@@ -88,7 +91,7 @@ export class MaterialDatePickerComponent extends BaseDynamicFieldComponent<Mater
     this.selectDate(date);
   }
 
-  onDateInput(event: Event): void {
+  onDateInput(event: MatDatepickerInputEvent<Date>): void {
     const value = (event.target as HTMLInputElement).value;
     if (!value) {
       this.clearDate();
