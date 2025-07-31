@@ -9,13 +9,13 @@
  * ✅ Acessibilidade WCAG 2.1 AA
  */
 
-import { 
-  Component, 
+import {
+  Component,
   forwardRef,
   computed,
   signal
 } from '@angular/core';
-import { NG_VALUE_ACCESSOR } from '@angular/forms';
+import { NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
@@ -63,7 +63,8 @@ interface ToggleState {
     CommonModule,
     MatSlideToggleModule,
     MatFormFieldModule,
-    MatIconModule
+    MatIconModule,
+    ReactiveFormsModule
   ],
   providers: [{
     provide: NG_VALUE_ACCESSOR,

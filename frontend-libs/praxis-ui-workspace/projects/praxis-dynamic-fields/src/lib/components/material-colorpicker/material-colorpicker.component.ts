@@ -1,10 +1,11 @@
 import { Component, ElementRef, ViewChild, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatFormFieldModule, MatFormFieldAppearance } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { ThemePalette } from '@angular/material/core';
 
 import { BaseDynamicFieldComponent } from '../../base/base-dynamic-field.component';
 import { MaterialColorPickerMetadata } from '@praxis/core';
@@ -62,6 +63,28 @@ export class MaterialColorPickerComponent extends BaseDynamicFieldComponent<Mate
   readonly hasPresetColors = computed(() => Boolean(this.metadata()?.presetColors?.length));
   readonly allowCustomColors = computed(() => this.metadata()?.allowCustomColors !== false);
   readonly showInput = computed(() => this.metadata()?.showInput !== false);
+
+  /** Appearance configuration */
+  readonly materialAppearance = computed(() => {
+    return (this.metadata()?.materialDesign?.appearance || 'outline') as MatFormFieldAppearance;
+  });
+
+  /** Material theme color */
+  readonly materialColor = computed(() => {
+    return (this.metadata()?.materialDesign?.color || 'primary') as ThemePalette;
+  });
+
+  /** Disabled state considering disabledInteractive */
+  readonly isDisabledInteractive = computed(() => {
+    const metadata = this.metadata();
+    const state = this.componentState();
+    return state.disabled && metadata?.disabledInteractive === true;
+  });
+
+  readonly effectiveDisabled = computed(() => {
+    const state = this.componentState();
+    return state.disabled && !this.isDisabledInteractive();
+  });
 
   openColorPicker(): void {
     if (this.effectiveDisabled()) return;

@@ -89,7 +89,7 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   @Output() formReady = new EventEmitter<FormReadyEvent>();
   @Output() valueChange = new EventEmitter<FormValueChangeEvent>();
 
-  form: FormGroup = this.fb.group({});
+  form!: FormGroup;
   private fieldMetadata: FieldMetadata[] = [];
   private pendingEntityId: string | number | null = null;
 
@@ -100,7 +100,9 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
     private layoutService: FormLayoutService,
     private contextService: FormContextService,
     private windowService: PraxisResizableWindowService
-  ) {}
+  ) {
+    this.form = this.fb.group({});
+  }
 
   ngOnInit(): void {
     if (!this.layout && this.formId) {
@@ -134,7 +136,7 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
 
   private loadEntity(): void {
     if (this.pendingEntityId == null) { return; }
-    this.crud.get(this.pendingEntityId).pipe(takeUntilDestroyed()).subscribe(data => {
+    this.crud.getById(this.pendingEntityId).pipe(takeUntilDestroyed()).subscribe((data: any) => {
       this.form.patchValue(data);
     });
   }

@@ -273,16 +273,16 @@
       }
 
       <!-- Chip do preset ativo -->
-      @if (activePreset()) {
+      @if (activePresetInfo()) {
         <mat-chip-set matSuffix class="pdx-active-preset-chip">
-          <mat-chip 
+          <mat-chip
             [removable]="true"
             (removed)="clearPreset()"
             class="pdx-preset-chip">
-            @if (rangePresets().find(p => p.id === activePreset())?.icon) {
-              <mat-icon matChipAvatar>{{ rangePresets().find(p => p.id === activePreset())!.icon }}</mat-icon>
+            @if (activePresetInfo()?.icon) {
+              <mat-icon matChipAvatar>{{ activePresetInfo()!.icon }}</mat-icon>
             }
-            {{ rangePresets().find(p => p.id === activePreset())?.label }}
+            {{ activePresetInfo()?.label }}
             <mat-icon matChipRemove>cancel</mat-icon>
           </mat-chip>
         </mat-chip-set>
