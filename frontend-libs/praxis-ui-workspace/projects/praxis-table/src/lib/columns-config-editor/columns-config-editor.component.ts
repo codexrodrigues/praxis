@@ -26,10 +26,10 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatBadgeModule } from '@angular/material/badge';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
-import { 
-  TableConfig, 
+import {
+  TableConfig,
   ColumnDefinition,
-  isTableConfigV2 
+  isTableConfigV2
 } from '@praxis/core';
 import { Subject, debounceTime } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -119,9 +119,9 @@ interface ExtendedColumnDefinition extends ColumnDefinition {
                     Visibilidade
                     <span class="control-status">({{ getVisibleColumnsCount() }}/{{ columns.length }} visíveis)</span>
                   </label>
-                  <mat-button-toggle-group 
-                    [(ngModel)]="visibilityState" 
-                    (ngModelChange)="onVisibilityChange($event)" 
+                  <mat-button-toggle-group
+                    [(ngModel)]="visibilityState"
+                    (ngModelChange)="onVisibilityChange($event)"
                     class="visibility-toggle-group">
                     <mat-button-toggle value="all" [disabled]="areAllColumnsVisible()">
                       <mat-icon>visibility</mat-icon>
@@ -139,9 +139,9 @@ interface ExtendedColumnDefinition extends ColumnDefinition {
               <div class="config-group">
                 <div class="control-section">
                   <label class="control-label">Alinhamento Padrão</label>
-                  <mat-button-toggle-group 
-                    [(ngModel)]="globalAlignment" 
-                    (ngModelChange)="applyGlobalAlignment($event)" 
+                  <mat-button-toggle-group
+                    [(ngModel)]="globalAlignment"
+                    (ngModelChange)="applyGlobalAlignment($event)"
                     class="alignment-toggle-group">
                     <mat-button-toggle value="left" matTooltip="Esquerda">
                       <mat-icon>format_align_left</mat-icon>
@@ -161,30 +161,30 @@ interface ExtendedColumnDefinition extends ColumnDefinition {
                 <div class="control-section">
                   <label class="control-label">Recursos</label>
                   <div class="features-grid">
-                    <mat-checkbox 
-                      [(ngModel)]="globalSortableEnabled" 
+                    <mat-checkbox
+                      [(ngModel)]="globalSortableEnabled"
                       (ngModelChange)="applyGlobalSortable($event)"
                       class="feature-checkbox">
                       Ordenação
                     </mat-checkbox>
-                    
+
                     @if (isV2Config) {
-                      <mat-checkbox 
-                        [(ngModel)]="globalResizable" 
+                      <mat-checkbox
+                        [(ngModel)]="globalResizable"
                         (ngModelChange)="applyGlobalResizable($event)"
                         class="feature-checkbox">
                         Redimensionáveis
                       </mat-checkbox>
-                      
-                      <mat-checkbox 
-                        [(ngModel)]="globalFilterable" 
+
+                      <mat-checkbox
+                        [(ngModel)]="globalFilterable"
                         (ngModelChange)="applyGlobalFilterable($event)"
                         class="feature-checkbox">
                         Filtros
                       </mat-checkbox>
-                      
-                      <mat-checkbox 
-                        [(ngModel)]="globalStickyEnabled" 
+
+                      <mat-checkbox
+                        [(ngModel)]="globalStickyEnabled"
                         (ngModelChange)="applyGlobalSticky($event)"
                         class="feature-checkbox">
                         Fixar colunas
@@ -242,7 +242,8 @@ interface ExtendedColumnDefinition extends ColumnDefinition {
                                   matBadgeColor="accent"
                                   matBadgeSize="small"
                                   [matTooltip]="getMappingTooltip(column)"
-                                  [attr.aria-hidden]="getMappingCount(column) === 0">
+                                  [attr.aria-hidden]="getMappingCount(column) === 0 ? 'true' : 'false'"
+                                  [attr.aria-label]="getMappingCount(column) > 0 ? getMappingTooltip(column) : null">
                           swap_horiz
                         </mat-icon>
                         <mat-checkbox [(ngModel)]="column.visible"
@@ -504,7 +505,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
   globalSortableEnabled = true;
   globalAlignment: 'left' | 'center' | 'right' | null = null;
   visibilityState: 'all' | 'none' | null = null;
-  
+
   // V2 specific features
   globalResizable = false;
   globalFilterable = false;
@@ -513,7 +514,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
   // Race condition prevention
   private operationInProgress = false;
   private columnOperationSubject = new Subject<() => void>();
-  
+
   // Dependency injection
   private readonly destroyRef = inject(DestroyRef);
 
@@ -528,14 +529,14 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.isV2Config = isTableConfigV2(this.config);
-    
+
     if (this.config?.columns) {
       this.columns = [...this.config.columns] as ExtendedColumnDefinition[];
       this.updateGlobalSettings();
       this.generateAvailableDataSchema();
       // this.initializeStyleRules();
     }
-    
+
     // Setup debounced column operations to prevent race conditions
     this.columnOperationSubject.pipe(
       debounceTime(100),
@@ -563,10 +564,10 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
     const alignments = this.columns.map(col => col.align).filter(Boolean);
     const uniqueAlignments = [...new Set(alignments)];
     this.globalAlignment = uniqueAlignments.length === 1 ? uniqueAlignments[0] as any : null;
-    
+
     // Update visibility state
     this.updateVisibilityState();
-    
+
     // V2 specific global settings
     if (this.isV2Config) {
       this.globalResizable = this.columns.every(col => (col as any).resizable !== false);
@@ -636,7 +637,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
     });
     this.emitConfigChange('global');
   }
-  
+
   // V2 Global Actions
   applyGlobalResizable(enabled: boolean): void {
     if (this.isV2Config) {
@@ -648,7 +649,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
       this.emitConfigChange('global');
     }
   }
-  
+
   applyGlobalFilterable(enabled: boolean): void {
     if (this.isV2Config) {
       this.columns.forEach(column => {
@@ -659,7 +660,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
       this.emitConfigChange('global');
     }
   }
-  
+
   applyGlobalSticky(enabled: boolean): void {
     if (this.isV2Config) {
       this.columns.forEach(column => {
@@ -682,7 +683,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
       console.warn('Invalid column index for selection:', index);
       index = -1;
     }
-    
+
     this.selectedColumnIndex = index;
     this.selectedColumn = index >= 0 && index < this.columns.length ? this.columns[index] : null;
     this.cdr.markForCheck();
@@ -691,18 +692,18 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
   // Column Management
   addNewColumn(): void {
     if (this.operationInProgress) return;
-    
+
     this.columnOperationSubject.next(() => {
       // Generate unique field name
       let fieldIndex = this.columns.length + 1;
       let fieldName = `calculatedField${fieldIndex}`;
-      
+
       // Ensure field name is unique
       while (this.columns.some(col => col.field === fieldName)) {
         fieldIndex++;
         fieldName = `calculatedField${fieldIndex}`;
       }
-      
+
       const newColumn: ExtendedColumnDefinition = {
         field: fieldName,
         header: `Nova Coluna Calculada ${fieldIndex}`,
@@ -725,22 +726,22 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
 
   removeColumn(index: number, event: Event): void {
     event.stopPropagation();
-    
+
     if (this.operationInProgress) return;
-    
+
     // Validate bounds
     if (index < 0 || index >= this.columns.length) {
       console.warn('Invalid column index for removal:', index);
       return;
     }
-    
+
     this.columnOperationSubject.next(() => {
       // Create new array without the removed column
       this.columns = this.columns.filter((_, i) => i !== index);
-      
+
       // Update orders
       this.updateColumnOrders();
-      
+
       // Adjust selection properly
       if (this.selectedColumnIndex === index) {
         // Column being removed was selected - clear selection
@@ -759,7 +760,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
         }
       }
       // If selectedColumnIndex < index, no adjustment needed
-      
+
       this.emitConfigChange('remove');
       this.cdr.markForCheck();
     });
@@ -769,25 +770,25 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
     if (event.previousIndex === event.currentIndex || this.operationInProgress) {
       return;
     }
-    
+
     // Validate indices
     if (event.previousIndex < 0 || event.previousIndex >= this.columns.length ||
         event.currentIndex < 0 || event.currentIndex >= this.columns.length) {
       console.warn('Invalid indices for reorder:', event.previousIndex, event.currentIndex);
       return;
     }
-    
+
     this.columnOperationSubject.next(() => {
       // Create a new array to avoid direct mutation
       const newColumns = [...this.columns];
       moveItemInArray(newColumns, event.previousIndex, event.currentIndex);
       this.columns = newColumns;
-      
+
       this.updateColumnOrders();
-      
+
       // Update selection index if needed
       let newSelectedIndex = this.selectedColumnIndex;
-      
+
       if (this.selectedColumnIndex === event.previousIndex) {
         // The selected item was moved
         newSelectedIndex = event.currentIndex;
@@ -802,7 +803,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
           newSelectedIndex++;
         }
       }
-      
+
       // Update selection with validation
       if (newSelectedIndex !== this.selectedColumnIndex) {
         this.selectedColumnIndex = newSelectedIndex;
@@ -810,7 +811,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
           this.selectedColumn = this.columns[this.selectedColumnIndex];
         }
       }
-      
+
       this.emitConfigChange('reorder');
       this.cdr.markForCheck();
     });
@@ -839,12 +840,12 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
     // Simplified logic: A column is calculated if:
     // 1. It was created manually in the editor (_isApiField === false), OR
     // 2. It's an API field but has a formula applied to it
-    
+
     if (column._isApiField !== true) {
       // Column created manually in editor - always calculated
       return true;
     }
-    
+
     // API field with applied formula/calculation
     const extendedColumn = column as any;
     return !!(extendedColumn.calculationType && extendedColumn.calculationType !== 'none') ||
@@ -926,7 +927,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
 
   onFormulaChange(formula: FormulaDefinition): void {
     if (!this.selectedColumn || this.selectedColumnIndex < 0) return;
-    
+
     // Verify column still exists in array
     if (this.selectedColumnIndex >= this.columns.length ||
         this.columns[this.selectedColumnIndex] !== this.selectedColumn) {
@@ -934,7 +935,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
       this.selectColumn(-1);
       return;
     }
-    
+
     this.selectedColumn.calculationType = formula.type;
     this.selectedColumn.calculationParams = formula.params;
     this.onColumnPropertyChange();
@@ -942,7 +943,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
 
   onGeneratedExpressionChange(expression: string): void {
     if (!this.selectedColumn || this.selectedColumnIndex < 0) return;
-    
+
     // Verify column still exists
     if (this.selectedColumnIndex >= this.columns.length ||
         this.columns[this.selectedColumnIndex] !== this.selectedColumn) {
@@ -950,7 +951,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
       this.selectColumn(-1);
       return;
     }
-    
+
     this.selectedColumn._generatedValueGetter = expression;
     this.onColumnPropertyChange();
   }
@@ -1016,7 +1017,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
     if (!this.selectedColumn || this.selectedColumnIndex < 0) {
       return;
     }
-    
+
     // Verify column still exists
     if (this.selectedColumnIndex >= this.columns.length ||
         this.columns[this.selectedColumnIndex] !== this.selectedColumn) {
@@ -1024,7 +1025,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
       this.selectColumn(-1);
       return;
     }
-    
+
     this.selectedColumn.valueMapping = mapping;
     this.onColumnPropertyChange();
   }
@@ -1041,7 +1042,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
     if (!column) return 'string';
 
     // Priority order: user-configured type > original API type > field name inference
-    
+
     // 1. Use the user-configured type if available (highest priority)
     if (column.type) {
       return column.type;
@@ -1114,7 +1115,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
 
   onDataTypeChange(dataType: ColumnDataType): void {
     if (!this.selectedColumn || this.selectedColumnIndex < 0) return;
-    
+
     // Verify column still exists
     if (this.selectedColumnIndex >= this.columns.length ||
         this.columns[this.selectedColumnIndex] !== this.selectedColumn) {
@@ -1122,7 +1123,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
       this.selectColumn(-1);
       return;
     }
-    
+
     // Store the user-selected type in the standard 'type' property
     this.selectedColumn.type = dataType;
 
@@ -1187,7 +1188,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
 
   onFormatChange(format: string): void {
     if (!this.selectedColumn || this.selectedColumnIndex < 0) return;
-    
+
     // Verify column still exists
     if (this.selectedColumnIndex >= this.columns.length ||
         this.columns[this.selectedColumnIndex] !== this.selectedColumn) {
@@ -1195,7 +1196,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
       this.selectColumn(-1);
       return;
     }
-    
+
     this.selectedColumn.format = format;
     this.onColumnPropertyChange();
   }
@@ -1203,10 +1204,10 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
   // Data Synchronization
   private emitConfigChange(changeType: ColumnChange['type']): void {
     if (!this.config) return;
-    
+
     // Deep clone columns to prevent external mutations
     const clonedColumns = this.columns.map(col => ({ ...col }));
-    
+
     const updatedConfig: TableConfig = {
       ...this.config,
       columns: clonedColumns
@@ -1230,9 +1231,9 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
    */
   updateColumnsFromConfig(config: TableConfig): void {
     if (!config) return;
-    
+
     this.isV2Config = isTableConfigV2(config);
-    
+
     if (config.columns && Array.isArray(config.columns)) {
       this.columns = [...config.columns] as ExtendedColumnDefinition[];
       this.updateGlobalSettings();
@@ -1264,7 +1265,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
     // this.currentFieldSchemas = this.fieldSchemaAdapter.adaptTableConfigToFieldSchema(
     //   !isTableConfigV2(this.config) ? fallbackConfig : this.config
     // );
-    
+
     // Generate sample data for preview (in real app, this would come from actual data)
     // this.generateSampleData();
   }
@@ -1272,14 +1273,14 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
   private generateSampleData(): void {
     // Generate realistic sample data based on columns
     this.sampleTableData = [];
-    
+
     for (let i = 0; i < 5; i++) {
       const sampleRow: any = {};
-      
+
       this.columns.forEach(column => {
         const fieldName = column.field;
         const dataType = this.getColumnDataType(column);
-        
+
         // Generate sample values based on data type and field name
         switch (dataType) {
           case 'number':
@@ -1291,25 +1292,25 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
               sampleRow[fieldName] = Math.floor(Math.random() * 1000);
             }
             break;
-            
+
           case 'currency':
             sampleRow[fieldName] = (Math.random() * 10000).toFixed(2);
             break;
-            
+
           case 'percentage':
             sampleRow[fieldName] = (Math.random() * 100).toFixed(1);
             break;
-            
+
           case 'date':
             const date = new Date();
             date.setDate(date.getDate() - Math.floor(Math.random() * 365));
             sampleRow[fieldName] = date.toISOString().split('T')[0];
             break;
-            
+
           case 'boolean':
             sampleRow[fieldName] = Math.random() > 0.5;
             break;
-            
+
           default: // string
             if (fieldName.toLowerCase().includes('name')) {
               sampleRow[fieldName] = `Nome ${i + 1}`;
@@ -1324,17 +1325,17 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
             break;
         }
       });
-      
+
       this.sampleTableData.push(sampleRow);
     }
   }
 
   getStyleRulesPanelDescription(column: ColumnDefinition | null): string {
     if (!column) return 'Nenhuma coluna selecionada';
-    
+
     const extendedColumn = column as any;
     const rulesCount = extendedColumn.conditionalStyles ? extendedColumn.conditionalStyles.length : 0;
-    
+
     if (rulesCount === 0) {
       return 'Configure formatação condicional baseada em regras';
     } else if (rulesCount === 1) {
@@ -1346,7 +1347,7 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
 
   onConditionalStylesChanged(styles: any[]): void {
     if (!this.selectedColumn || this.selectedColumnIndex < 0) return;
-    
+
     // Verify column still exists
     if (this.selectedColumnIndex >= this.columns.length ||
         this.columns[this.selectedColumnIndex] !== this.selectedColumn) {
@@ -1354,16 +1355,16 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
       this.selectColumn(-1);
       return;
     }
-    
+
     this.selectedColumn.conditionalStyles = styles;
-    
+
     // Compile rules for execution in the table
     // if (styles.length > 0) {
     //   this.selectedColumn.cellClassCondition = this.tableRuleEngine.compileConditionalStyles(styles);
     // } else {
     //   delete this.selectedColumn.cellClassCondition;
     // }
-    
+
     this.onColumnPropertyChange();
   }
 

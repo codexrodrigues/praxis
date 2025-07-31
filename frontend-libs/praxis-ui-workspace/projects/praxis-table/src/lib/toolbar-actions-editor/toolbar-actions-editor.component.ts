@@ -20,7 +20,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
 import { MatChipsModule } from '@angular/material/chips';
 import { DragDropModule, CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
-import { 
+import {
   TableConfig
 } from '@praxis/core';
 import { Subject, takeUntil } from 'rxjs';
@@ -97,7 +97,7 @@ export interface ToolbarActionsChange {
   template: `
     <div class="toolbar-actions-container">
       <form [formGroup]="toolbarForm">
-        
+
         <!-- Barra de Ferramentas -->
         <mat-expansion-panel expanded>
           <mat-expansion-panel-header>
@@ -109,25 +109,25 @@ export interface ToolbarActionsChange {
               Configure a barra superior da tabela
             </mat-panel-description>
           </mat-expansion-panel-header>
-          
+
           <div class="config-section">
             <mat-slide-toggle formControlName="toolbarVisible" class="toggle-field">
               Mostrar barra de ferramentas
             </mat-slide-toggle>
-            
+
             <div class="config-fields" *ngIf="toolbarForm.get('toolbarVisible')?.value">
               <mat-form-field appearance="outline">
                 <mat-label>Título da barra</mat-label>
                 <input matInput formControlName="toolbarTitle" placeholder="Ex: Gerenciar Usuários">
                 <mat-hint>Título exibido na barra de ferramentas</mat-hint>
               </mat-form-field>
-              
+
               <mat-form-field appearance="outline">
                 <mat-label>Subtítulo</mat-label>
                 <input matInput formControlName="toolbarSubtitle" placeholder="Ex: Lista completa de usuários do sistema">
                 <mat-hint>Texto de apoio abaixo do título</mat-hint>
               </mat-form-field>
-              
+
               <mat-form-field appearance="outline">
                 <mat-label>Posição</mat-label>
                 <mat-select formControlName="toolbarPosition">
@@ -136,26 +136,26 @@ export interface ToolbarActionsChange {
                   <mat-option value="both">Ambos</mat-option>
                 </mat-select>
               </mat-form-field>
-              
+
               <mat-form-field appearance="outline">
                 <mat-label>Altura da barra (px)</mat-label>
                 <input matInput type="number" formControlName="toolbarHeight" min="40" max="120">
                 <mat-hint>Altura em pixels da barra de ferramentas</mat-hint>
               </mat-form-field>
-              
+
               <!-- Busca Integrada -->
               <div class="subsection">
                 <h4>Busca Integrada</h4>
                 <mat-slide-toggle formControlName="searchEnabled" class="toggle-field">
                   Habilitar busca na toolbar
                 </mat-slide-toggle>
-                
+
                 <div class="nested-fields" *ngIf="toolbarForm.get('searchEnabled')?.value">
                   <mat-form-field appearance="outline">
                     <mat-label>Placeholder da busca</mat-label>
                     <input matInput formControlName="searchPlaceholder">
                   </mat-form-field>
-                  
+
                   <mat-form-field appearance="outline">
                     <mat-label>Posição da busca</mat-label>
                     <mat-select formControlName="searchPosition">
@@ -164,12 +164,12 @@ export interface ToolbarActionsChange {
                       <mat-option value="end">Fim</mat-option>
                     </mat-select>
                   </mat-form-field>
-                  
+
                   <mat-form-field appearance="outline">
                     <mat-label>Largura da busca</mat-label>
                     <input matInput formControlName="searchWidth" placeholder="300px">
                   </mat-form-field>
-                  
+
                   <mat-slide-toggle formControlName="searchRealtime" class="toggle-field">
                     Busca em tempo real
                   </mat-slide-toggle>
@@ -178,7 +178,7 @@ export interface ToolbarActionsChange {
             </div>
           </div>
         </mat-expansion-panel>
-        
+
         <!-- Ações da Toolbar -->
         <mat-expansion-panel>
           <mat-expansion-panel-header>
@@ -190,7 +190,7 @@ export interface ToolbarActionsChange {
               Botões e menus personalizados na barra
             </mat-panel-description>
           </mat-expansion-panel-header>
-          
+
           <div class="config-section">
             <div class="actions-header">
               <button mat-raised-button color="primary" (click)="addToolbarAction()" type="button">
@@ -198,10 +198,10 @@ export interface ToolbarActionsChange {
                 Adicionar Ação
               </button>
             </div>
-            
+
             <div class="actions-list" cdkDropList (cdkDropListDropped)="dropToolbarAction($event)">
-              <div class="action-item" 
-                   *ngFor="let action of toolbarActions; let i = index" 
+              <div class="action-item"
+                   *ngFor="let action of toolbarActions; let i = index"
                    cdkDrag>
                 <div class="action-header" cdkDragHandle>
                   <mat-icon class="drag-handle">drag_indicator</mat-icon>
@@ -216,69 +216,70 @@ export interface ToolbarActionsChange {
                     </button>
                   </div>
                 </div>
-                
+
                 <div class="action-details" *ngIf="editingToolbarActionIndex === i">
                   <div class="action-form">
                     <mat-form-field appearance="outline">
                       <mat-label>ID da ação</mat-label>
-                      <input matInput [(ngModel)]="action.id" (ngModelChange)="updateToolbarActions()">
+                      <input matInput [(ngModel)]="action.id" (ngModelChange)="updateToolbarActions()" [ngModelOptions]="{standalone: true}">
                     </mat-form-field>
-                    
+
                     <mat-form-field appearance="outline">
                       <mat-label>Label</mat-label>
-                      <input matInput [(ngModel)]="action.label" (ngModelChange)="updateToolbarActions()">
+                      <input matInput [(ngModel)]="action.label" (ngModelChange)="updateToolbarActions()" [ngModelOptions]="{standalone: true}">
                     </mat-form-field>
-                    
+
                     <mat-form-field appearance="outline">
                       <mat-label>Ícone</mat-label>
-                      <input matInput [(ngModel)]="action.icon" (ngModelChange)="updateToolbarActions()">
+                      <input matInput [(ngModel)]="action.icon" (ngModelChange)="updateToolbarActions()" [ngModelOptions]="{standalone: true}">
                       <mat-hint>Nome do Material Icon (ex: add, edit, delete)</mat-hint>
                     </mat-form-field>
-                    
+
                     <mat-form-field appearance="outline">
                       <mat-label>Tipo</mat-label>
-                      <mat-select [(ngModel)]="action.type" (ngModelChange)="updateToolbarActions()">
+                      <mat-select [(ngModel)]="action.type" (ngModelChange)="updateToolbarActions()" [ngModelOptions]="{standalone: true}">
                         <mat-option value="button">Botão</mat-option>
                         <mat-option value="menu">Menu</mat-option>
                         <mat-option value="toggle">Toggle</mat-option>
                         <mat-option value="input">Input</mat-option>
                       </mat-select>
                     </mat-form-field>
-                    
+
                     <mat-form-field appearance="outline">
                       <mat-label>Ação/Função</mat-label>
-                      <input matInput [(ngModel)]="action.action" (ngModelChange)="updateToolbarActions()">
+                      <input matInput [(ngModel)]="action.action" (ngModelChange)="updateToolbarActions()" [ngModelOptions]="{standalone: true}">
                       <mat-hint>Nome da função a ser chamada</mat-hint>
                     </mat-form-field>
-                    
+
                     <mat-form-field appearance="outline">
                       <mat-label>Posição</mat-label>
-                      <mat-select [(ngModel)]="action.position" (ngModelChange)="updateToolbarActions()">
+                      <mat-select [(ngModel)]="action.position" (ngModelChange)="updateToolbarActions()" [ngModelOptions]="{standalone: true}">
                         <mat-option value="start">Início</mat-option>
                         <mat-option value="center">Centro</mat-option>
                         <mat-option value="end">Fim</mat-option>
                       </mat-select>
                     </mat-form-field>
-                    
+
                     <mat-form-field appearance="outline">
                       <mat-label>Cor</mat-label>
-                      <mat-select [(ngModel)]="action.color" (ngModelChange)="updateToolbarActions()">
+                      <mat-select [(ngModel)]="action.color" (ngModelChange)="updateToolbarActions()" [ngModelOptions]="{standalone: true}">
                         <mat-option value="">Padrão</mat-option>
                         <mat-option value="primary">Primary</mat-option>
                         <mat-option value="accent">Accent</mat-option>
                         <mat-option value="warn">Warn</mat-option>
                       </mat-select>
                     </mat-form-field>
-                    
+
                     <mat-form-field appearance="outline">
                       <mat-label>Atalho de teclado</mat-label>
-                      <input matInput [(ngModel)]="action.shortcut" (ngModelChange)="updateToolbarActions()" 
+                      <input matInput [(ngModel)]="action.shortcut" (ngModelChange)="updateToolbarActions()"
+                             [ngModelOptions]="{standalone: true}"
                              placeholder="Ex: Ctrl+N">
                     </mat-form-field>
-                    
+
                     <mat-form-field appearance="outline">
                       <mat-label>Tooltip</mat-label>
-                      <input matInput [(ngModel)]="action.tooltip" (ngModelChange)="updateToolbarActions()">
+                      <input matInput [(ngModel)]="action.tooltip" (ngModelChange)="updateToolbarActions()" [ngModelOptions]="{standalone: true}">
                     </mat-form-field>
                   </div>
                 </div>
@@ -286,7 +287,7 @@ export interface ToolbarActionsChange {
             </div>
           </div>
         </mat-expansion-panel>
-        
+
         <!-- Ações por Linha -->
         <mat-expansion-panel>
           <mat-expansion-panel-header>
@@ -298,12 +299,12 @@ export interface ToolbarActionsChange {
               Ações específicas para cada registro
             </mat-panel-description>
           </mat-expansion-panel-header>
-          
+
           <div class="config-section">
             <mat-slide-toggle formControlName="rowActionsEnabled" class="toggle-field">
               Habilitar ações por linha
             </mat-slide-toggle>
-            
+
             <div class="config-fields" *ngIf="toolbarForm.get('rowActionsEnabled')?.value">
               <mat-form-field appearance="outline">
                 <mat-label>Modo de exibição</mat-label>
@@ -313,7 +314,7 @@ export interface ToolbarActionsChange {
                   <mat-option value="hybrid">Híbrido (botões + menu)</mat-option>
                 </mat-select>
               </mat-form-field>
-              
+
               <mat-form-field appearance="outline">
                 <mat-label>Quando mostrar</mat-label>
                 <mat-select formControlName="rowActionsTrigger">
@@ -322,23 +323,23 @@ export interface ToolbarActionsChange {
                   <mat-option value="focus">Apenas com foco</mat-option>
                 </mat-select>
               </mat-form-field>
-              
+
               <mat-form-field appearance="outline">
                 <mat-label>Máximo de ações visíveis</mat-label>
                 <input matInput type="number" formControlName="maxVisibleRowActions" min="1" max="5">
                 <mat-hint>Demais ações ficam no menu "Mais"</mat-hint>
               </mat-form-field>
-              
+
               <div class="actions-header">
                 <button mat-raised-button color="primary" (click)="addRowAction()" type="button">
                   <mat-icon>add</mat-icon>
                   Adicionar Ação de Linha
                 </button>
               </div>
-              
+
               <div class="actions-list" cdkDropList (cdkDropListDropped)="dropRowAction($event)">
-                <div class="action-item" 
-                     *ngFor="let action of rowActions; let i = index" 
+                <div class="action-item"
+                     *ngFor="let action of rowActions; let i = index"
                      cdkDrag>
                   <div class="action-header" cdkDragHandle>
                     <mat-icon class="drag-handle">drag_indicator</mat-icon>
@@ -353,53 +354,55 @@ export interface ToolbarActionsChange {
                       </button>
                     </div>
                   </div>
-                  
+
                   <div class="action-details" *ngIf="editingRowActionIndex === i">
                     <div class="action-form">
                       <mat-form-field appearance="outline">
                         <mat-label>ID da ação</mat-label>
-                        <input matInput [(ngModel)]="action.id" (ngModelChange)="updateRowActions()">
+                        <input matInput [(ngModel)]="action.id" (ngModelChange)="updateRowActions()" [ngModelOptions]="{standalone: true}">
                       </mat-form-field>
-                      
+
                       <mat-form-field appearance="outline">
                         <mat-label>Label</mat-label>
-                        <input matInput [(ngModel)]="action.label" (ngModelChange)="updateRowActions()">
+                        <input matInput [(ngModel)]="action.label" (ngModelChange)="updateRowActions()" [ngModelOptions]="{standalone: true}">
                       </mat-form-field>
-                      
+
                     <mat-form-field appearance="outline">
                       <mat-label>Ícone</mat-label>
-                      <input matInput [(ngModel)]="action.icon" (ngModelChange)="updateRowActions()">
+                      <input matInput [(ngModel)]="action.icon" (ngModelChange)="updateRowActions()" [ngModelOptions]="{standalone: true}">
                       <mat-hint>Nome do Material Icon (ex: add, edit, delete)</mat-hint>
                     </mat-form-field>
-                      
+
                       <mat-form-field appearance="outline">
                         <mat-label>Ação/Função</mat-label>
-                        <input matInput [(ngModel)]="action.action" (ngModelChange)="updateRowActions()">
+                        <input matInput [(ngModel)]="action.action" (ngModelChange)="updateRowActions()" [ngModelOptions]="{standalone: true}">
                       </mat-form-field>
-                      
+
                       <mat-form-field appearance="outline">
                         <mat-label>Cor</mat-label>
-                        <mat-select [(ngModel)]="action.color" (ngModelChange)="updateRowActions()">
+                        <mat-select [(ngModel)]="action.color" (ngModelChange)="updateRowActions()" [ngModelOptions]="{standalone: true}">
                           <mat-option value="">Padrão</mat-option>
                           <mat-option value="primary">Primary</mat-option>
                           <mat-option value="accent">Accent</mat-option>
                           <mat-option value="warn">Warn</mat-option>
                         </mat-select>
                       </mat-form-field>
-                      
+
                       <mat-form-field appearance="outline">
                         <mat-label>Tooltip</mat-label>
-                        <input matInput [(ngModel)]="action.tooltip" (ngModelChange)="updateRowActions()">
+                        <input matInput [(ngModel)]="action.tooltip" (ngModelChange)="updateRowActions()" [ngModelOptions]="{standalone: true}">
                       </mat-form-field>
-                      
-                      <mat-slide-toggle [(ngModel)]="action.requiresConfirmation" 
-                                       (ngModelChange)="updateRowActions()" 
+
+                      <mat-slide-toggle [(ngModel)]="action.requiresConfirmation"
+                                       (ngModelChange)="updateRowActions()"
+                                       [ngModelOptions]="{standalone: true}"
                                        class="toggle-field">
                         Requer confirmação
                       </mat-slide-toggle>
-                      
-                      <mat-slide-toggle [(ngModel)]="action.separator" 
-                                       (ngModelChange)="updateRowActions()" 
+
+                      <mat-slide-toggle [(ngModel)]="action.separator"
+                                       (ngModelChange)="updateRowActions()"
+                                       [ngModelOptions]="{standalone: true}"
                                        class="toggle-field">
                         Separador após esta ação
                       </mat-slide-toggle>
@@ -410,7 +413,7 @@ export interface ToolbarActionsChange {
             </div>
           </div>
         </mat-expansion-panel>
-        
+
         <!-- Ações em Lote -->
         <mat-expansion-panel *ngIf="isV2">
           <mat-expansion-panel-header>
@@ -422,12 +425,12 @@ export interface ToolbarActionsChange {
               Ações para múltiplas seleções (V2 only)
             </mat-panel-description>
           </mat-expansion-panel-header>
-          
+
           <div class="config-section">
             <mat-slide-toggle formControlName="bulkActionsEnabled" class="toggle-field">
               Habilitar ações em lote
             </mat-slide-toggle>
-            
+
             <div class="config-fields" *ngIf="toolbarForm.get('bulkActionsEnabled')?.value">
               <mat-form-field appearance="outline">
                 <mat-label>Posição das ações em lote</mat-label>
@@ -437,17 +440,17 @@ export interface ToolbarActionsChange {
                   <mat-option value="bottom">Barra inferior</mat-option>
                 </mat-select>
               </mat-form-field>
-              
+
               <div class="actions-header">
                 <button mat-raised-button color="primary" (click)="addBulkAction()" type="button">
                   <mat-icon>add</mat-icon>
                   Adicionar Ação em Lote
                 </button>
               </div>
-              
+
               <div class="actions-list" cdkDropList (cdkDropListDropped)="dropBulkAction($event)">
-                <div class="action-item" 
-                     *ngFor="let action of bulkActions; let i = index" 
+                <div class="action-item"
+                     *ngFor="let action of bulkActions; let i = index"
                      cdkDrag>
                   <div class="action-header" cdkDragHandle>
                     <mat-icon class="drag-handle">drag_indicator</mat-icon>
@@ -462,54 +465,55 @@ export interface ToolbarActionsChange {
                       </button>
                     </div>
                   </div>
-                  
+
                   <div class="action-details" *ngIf="editingBulkActionIndex === i">
                     <div class="action-form">
                       <mat-form-field appearance="outline">
                         <mat-label>ID da ação</mat-label>
-                        <input matInput [(ngModel)]="action.id" (ngModelChange)="updateBulkActions()">
+                        <input matInput [(ngModel)]="action.id" (ngModelChange)="updateBulkActions()" [ngModelOptions]="{standalone: true}">
                       </mat-form-field>
-                      
+
                       <mat-form-field appearance="outline">
                         <mat-label>Label</mat-label>
-                        <input matInput [(ngModel)]="action.label" (ngModelChange)="updateBulkActions()">
+                        <input matInput [(ngModel)]="action.label" (ngModelChange)="updateBulkActions()" [ngModelOptions]="{standalone: true}">
                       </mat-form-field>
-                      
+
                       <mat-form-field appearance="outline">
                         <mat-label>Ícone</mat-label>
-                        <input matInput [(ngModel)]="action.icon" (ngModelChange)="updateBulkActions()">
+                        <input matInput [(ngModel)]="action.icon" (ngModelChange)="updateBulkActions()" [ngModelOptions]="{standalone: true}">
                         <mat-hint>Nome do Material Icon (ex: add, edit, delete)</mat-hint>
                       </mat-form-field>
-                      
+
                       <mat-form-field appearance="outline">
                         <mat-label>Ação/Função</mat-label>
-                        <input matInput [(ngModel)]="action.action" (ngModelChange)="updateBulkActions()">
+                        <input matInput [(ngModel)]="action.action" (ngModelChange)="updateBulkActions()" [ngModelOptions]="{standalone: true}">
                       </mat-form-field>
-                      
+
                       <mat-form-field appearance="outline">
                         <mat-label>Cor</mat-label>
-                        <mat-select [(ngModel)]="action.color" (ngModelChange)="updateBulkActions()">
+                        <mat-select [(ngModel)]="action.color" (ngModelChange)="updateBulkActions()" [ngModelOptions]="{standalone: true}">
                           <mat-option value="">Padrão</mat-option>
                           <mat-option value="primary">Primary</mat-option>
                           <mat-option value="accent">Accent</mat-option>
                           <mat-option value="warn">Warn</mat-option>
                         </mat-select>
                       </mat-form-field>
-                      
+
                       <mat-form-field appearance="outline">
                         <mat-label>Mínimo de seleções</mat-label>
-                        <input matInput type="number" [(ngModel)]="action.minSelections" 
-                               (ngModelChange)="updateBulkActions()" min="1">
+                        <input matInput type="number" [(ngModel)]="action.minSelections"
+                               (ngModelChange)="updateBulkActions()" [ngModelOptions]="{standalone: true}" min="1">
                       </mat-form-field>
-                      
+
                       <mat-form-field appearance="outline">
                         <mat-label>Máximo de seleções</mat-label>
-                        <input matInput type="number" [(ngModel)]="action.maxSelections" 
-                               (ngModelChange)="updateBulkActions()" min="1">
+                        <input matInput type="number" [(ngModel)]="action.maxSelections"
+                               (ngModelChange)="updateBulkActions()" [ngModelOptions]="{standalone: true}" min="1">
                       </mat-form-field>
-                      
-                      <mat-slide-toggle [(ngModel)]="action.requiresConfirmation" 
-                                       (ngModelChange)="updateBulkActions()" 
+
+                      <mat-slide-toggle [(ngModel)]="action.requiresConfirmation"
+                                       (ngModelChange)="updateBulkActions()"
+                                       [ngModelOptions]="{standalone: true}"
                                        class="toggle-field">
                         Requer confirmação
                       </mat-slide-toggle>
@@ -520,7 +524,7 @@ export interface ToolbarActionsChange {
             </div>
           </div>
         </mat-expansion-panel>
-        
+
         <!-- Exportação -->
         <mat-expansion-panel *ngIf="isV2">
           <mat-expansion-panel-header>
@@ -532,12 +536,12 @@ export interface ToolbarActionsChange {
               Configurações de exportação de dados (V2 only)
             </mat-panel-description>
           </mat-expansion-panel-header>
-          
+
           <div class="config-section">
             <mat-slide-toggle formControlName="exportEnabled" class="toggle-field">
               Habilitar exportação
             </mat-slide-toggle>
-            
+
             <div class="config-fields" *ngIf="toolbarForm.get('exportEnabled')?.value">
               <mat-form-field appearance="outline">
                 <mat-label>Formatos disponíveis</mat-label>
@@ -549,24 +553,24 @@ export interface ToolbarActionsChange {
                 </mat-select>
                 <mat-hint>Segure Ctrl para selecionar múltiplos formatos</mat-hint>
               </mat-form-field>
-              
+
               <mat-form-field appearance="outline">
                 <mat-label>Nome padrão do arquivo</mat-label>
                 <input matInput formControlName="exportFileName" placeholder="dados-export">
               </mat-form-field>
-              
+
               <mat-slide-toggle formControlName="exportIncludeHeaders" class="toggle-field">
                 Incluir cabeçalhos
               </mat-slide-toggle>
-              
+
               <mat-slide-toggle formControlName="exportRespectFilters" class="toggle-field">
                 Respeitar filtros aplicados
               </mat-slide-toggle>
-              
+
               <mat-slide-toggle formControlName="exportSelectedOnly" class="toggle-field">
                 Apenas linhas selecionadas
               </mat-slide-toggle>
-              
+
               <mat-form-field appearance="outline">
                 <mat-label>Máximo de linhas</mat-label>
                 <input matInput type="number" formControlName="exportMaxRows" min="1" max="100000">
@@ -575,7 +579,7 @@ export interface ToolbarActionsChange {
             </div>
           </div>
         </mat-expansion-panel>
-        
+
       </form>
     </div>
   `,
@@ -584,18 +588,18 @@ export interface ToolbarActionsChange {
       width: 100%;
       padding: 8px;
     }
-    
+
     .config-section {
       padding: 16px;
     }
-    
+
     .config-fields {
       display: flex;
       flex-direction: column;
       gap: 16px;
       margin-top: 16px;
     }
-    
+
     .nested-fields {
       display: flex;
       flex-direction: column;
@@ -606,51 +610,51 @@ export interface ToolbarActionsChange {
       background-color: var(--mat-sys-surface-variant);
       border-radius: 8px;
     }
-    
+
     .toggle-field {
       display: flex;
       align-items: center;
       gap: 8px;
     }
-    
+
     .section-icon {
       margin-right: 8px;
       color: var(--mat-sys-primary);
     }
-    
+
     .subsection {
       margin-top: 24px;
       padding: 16px;
       border: 1px solid var(--mat-sys-outline-variant);
       border-radius: 8px;
     }
-    
+
     .subsection h4 {
       margin: 0 0 16px 0;
       color: var(--mat-sys-on-surface);
       font-weight: 500;
     }
-    
+
     .actions-header {
       margin: 16px 0;
       display: flex;
       justify-content: flex-start;
     }
-    
+
     .actions-list {
       display: flex;
       flex-direction: column;
       gap: 8px;
       min-height: 60px;
     }
-    
+
     .action-item {
       border: 1px solid var(--mat-sys-outline-variant);
       border-radius: 8px;
       background-color: var(--mat-sys-surface);
       overflow: hidden;
     }
-    
+
     .action-header {
       display: flex;
       align-items: center;
@@ -658,58 +662,58 @@ export interface ToolbarActionsChange {
       background-color: var(--mat-sys-surface-container-low);
       cursor: move;
     }
-    
+
     .drag-handle {
       margin-right: 8px;
       color: var(--mat-sys-on-surface-variant);
       cursor: grab;
     }
-    
+
     .drag-handle:active {
       cursor: grabbing;
     }
-    
+
     .action-label {
       flex: 1;
       margin-left: 8px;
       font-weight: 500;
     }
-    
+
     .action-controls {
       display: flex;
       gap: 4px;
     }
-    
+
     .action-details {
       padding: 16px;
       border-top: 1px solid var(--mat-sys-outline-variant);
       background-color: var(--mat-sys-surface);
     }
-    
+
     .action-form {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 16px;
     }
-    
+
     mat-form-field {
       width: 100%;
     }
-    
+
     mat-expansion-panel {
       margin-bottom: 8px;
       border-radius: 8px;
       overflow: hidden;
     }
-    
+
     mat-expansion-panel-header {
       min-height: 56px;
     }
-    
+
     mat-panel-description {
       color: var(--mat-sys-on-surface-variant);
     }
-    
+
     .cdk-drag-preview {
       box-sizing: border-box;
       border-radius: 4px;
@@ -717,15 +721,15 @@ export interface ToolbarActionsChange {
                   0 8px 10px 1px rgba(0, 0, 0, 0.14),
                   0 3px 14px 2px rgba(0, 0, 0, 0.12);
     }
-    
+
     .cdk-drag-placeholder {
       opacity: 0;
     }
-    
+
     .cdk-drag-animating {
       transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
     }
-    
+
     .actions-list.cdk-drop-list-dragging .action-item:not(.cdk-drag-placeholder) {
       transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
     }
@@ -735,41 +739,41 @@ export class ToolbarActionsEditorComponent implements OnInit, OnDestroy {
   @Input() config: TableConfig = { columns: [] };
   @Output() configChange = new EventEmitter<TableConfig>();
   @Output() toolbarActionsChange = new EventEmitter<ToolbarActionsChange>();
-  
+
   toolbarForm!: FormGroup;
   isV2 = false;
-  
+
   // Actions arrays
   toolbarActions: ToolbarAction[] = [];
   rowActions: RowAction[] = [];
   bulkActions: BulkAction[] = [];
-  
+
   // Editing state
   editingToolbarActionIndex: number | null = null;
   editingRowActionIndex: number | null = null;
   editingBulkActionIndex: number | null = null;
-  
+
   private destroy$ = new Subject<void>();
-  
+
   constructor(private fb: FormBuilder) {}
-  
+
   ngOnInit(): void {
     this.isV2 = true; // Always V2 in unified architecture
     this.initializeForm();
     this.setupFormListeners();
     this.loadActionsFromConfig();
   }
-  
+
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
   }
-  
+
   private initializeForm(): void {
     // Use type guards to safely access properties
     const v1Config = this.isV2 ? null : this.config as any;
     const toolbar = v1Config?.toolbar || {};
-    
+
     this.toolbarForm = this.fb.group({
       // Toolbar settings
       toolbarVisible: [toolbar.visible || false],
@@ -777,24 +781,24 @@ export class ToolbarActionsEditorComponent implements OnInit, OnDestroy {
       toolbarSubtitle: [toolbar.subtitle || ''],
       toolbarPosition: [toolbar.position || 'top'],
       toolbarHeight: [toolbar.height || 64],
-      
+
       // Search settings
       searchEnabled: [false],
       searchPlaceholder: ['Buscar...'],
       searchPosition: ['center'],
       searchWidth: ['300px'],
       searchRealtime: [true],
-      
+
       // Row actions
       rowActionsEnabled: [!!v1Config?.showActionsColumn],
       rowActionsDisplay: ['menu'],
       rowActionsTrigger: ['always'],
       maxVisibleRowActions: [3],
-      
+
       // Bulk actions (V2 only)
       bulkActionsEnabled: [false],
       bulkActionsPosition: ['toolbar'],
-      
+
       // Export (V2 only)
       exportEnabled: [false],
       exportFormats: [['excel', 'csv']],
@@ -804,11 +808,11 @@ export class ToolbarActionsEditorComponent implements OnInit, OnDestroy {
       exportSelectedOnly: [false],
       exportMaxRows: [10000]
     });
-    
+
     // If V2, load advanced settings
     if (this.isV2) {
       const v2Config = this.config as TableConfig;
-      
+
       if (v2Config.toolbar) {
         this.toolbarForm.patchValue({
           toolbarVisible: v2Config.toolbar.visible !== false,
@@ -823,7 +827,7 @@ export class ToolbarActionsEditorComponent implements OnInit, OnDestroy {
           searchRealtime: v2Config.toolbar.search?.realtime !== false
         });
       }
-      
+
       if (v2Config.actions) {
         this.toolbarForm.patchValue({
           rowActionsEnabled: v2Config.actions.row?.enabled || false,
@@ -834,7 +838,7 @@ export class ToolbarActionsEditorComponent implements OnInit, OnDestroy {
           bulkActionsPosition: v2Config.actions.bulk?.position || 'toolbar'
         });
       }
-      
+
       if (v2Config.export) {
         this.toolbarForm.patchValue({
           exportEnabled: v2Config.export.enabled || false,
@@ -848,7 +852,7 @@ export class ToolbarActionsEditorComponent implements OnInit, OnDestroy {
       }
     }
   }
-  
+
   private setupFormListeners(): void {
     this.toolbarForm.valueChanges
       .pipe(
@@ -860,21 +864,21 @@ export class ToolbarActionsEditorComponent implements OnInit, OnDestroy {
         this.updateConfig(values);
       });
   }
-  
+
   private loadActionsFromConfig(): void {
     if (this.isV2) {
       const v2Config = this.config as TableConfig;
-      
+
       // Load toolbar actions
       if (v2Config.toolbar?.actions) {
         this.toolbarActions = [...v2Config.toolbar.actions] as ToolbarAction[];
       }
-      
+
       // Load row actions
       if (v2Config.actions?.row?.actions) {
         this.rowActions = [...v2Config.actions.row.actions] as RowAction[];
       }
-      
+
       // Load bulk actions
       if (v2Config.actions?.bulk?.actions) {
         this.bulkActions = [...v2Config.actions.bulk.actions] as BulkAction[];
@@ -890,14 +894,14 @@ export class ToolbarActionsEditorComponent implements OnInit, OnDestroy {
       }
     }
   }
-  
+
   private updateConfig(values: any): void {
     const updatedConfig = { ...this.config };
-    
+
     if (this.isV2) {
       // Update V2 config structure
       const v2Config = updatedConfig as TableConfig;
-      
+
       // Toolbar
       if (!v2Config.toolbar) {
         v2Config.toolbar = {
@@ -909,7 +913,7 @@ export class ToolbarActionsEditorComponent implements OnInit, OnDestroy {
       v2Config.toolbar.title = values.toolbarTitle;
       v2Config.toolbar.subtitle = values.toolbarSubtitle;
       v2Config.toolbar.position = values.toolbarPosition;
-      
+
       if (!v2Config.toolbar.layout) {
         v2Config.toolbar.layout = {
           alignment: 'space-between',
@@ -917,7 +921,7 @@ export class ToolbarActionsEditorComponent implements OnInit, OnDestroy {
         };
       }
       v2Config.toolbar.layout.height = values.toolbarHeight;
-      
+
       v2Config.toolbar.search = {
         enabled: values.searchEnabled,
         placeholder: values.searchPlaceholder,
@@ -926,9 +930,9 @@ export class ToolbarActionsEditorComponent implements OnInit, OnDestroy {
         realtime: values.searchRealtime,
         delay: values.searchRealtime ? 300 : 0
       };
-      
+
       v2Config.toolbar.actions = this.toolbarActions;
-      
+
       // Actions
       v2Config.actions = v2Config.actions || {};
       v2Config.actions.row = {
@@ -940,13 +944,13 @@ export class ToolbarActionsEditorComponent implements OnInit, OnDestroy {
         trigger: values.rowActionsTrigger,
         maxVisibleActions: values.maxVisibleRowActions
       };
-      
+
       v2Config.actions.bulk = {
         enabled: values.bulkActionsEnabled,
         position: values.bulkActionsPosition,
         actions: this.bulkActions
       };
-      
+
       // Export
       v2Config.export = {
         enabled: values.exportEnabled,
@@ -961,11 +965,11 @@ export class ToolbarActionsEditorComponent implements OnInit, OnDestroy {
           applyFormatting: true
         }
       };
-      
+
     } else {
       // Update V1 config structure
       const v1UpdatedConfig = updatedConfig as any;
-      
+
       if (values.toolbarVisible) {
         v1UpdatedConfig.toolbar = {
           visible: true,
@@ -975,14 +979,14 @@ export class ToolbarActionsEditorComponent implements OnInit, OnDestroy {
       } else {
         delete v1UpdatedConfig.toolbar;
       }
-      
+
       v1UpdatedConfig.showActionsColumn = values.rowActionsEnabled;
       v1UpdatedConfig.rowActions = this.rowActions;
     }
-    
+
     this.configChange.emit(updatedConfig);
   }
-  
+
   // Toolbar Actions Management
   addToolbarAction(): void {
     const newAction: ToolbarAction = {
@@ -994,37 +998,37 @@ export class ToolbarActionsEditorComponent implements OnInit, OnDestroy {
       position: 'end',
       order: this.toolbarActions.length
     };
-    
+
     this.toolbarActions.push(newAction);
     this.editingToolbarActionIndex = this.toolbarActions.length - 1;
     this.updateToolbarActions();
   }
-  
+
   editToolbarAction(index: number): void {
     this.editingToolbarActionIndex = this.editingToolbarActionIndex === index ? null : index;
   }
-  
+
   removeToolbarAction(index: number): void {
     this.toolbarActions.splice(index, 1);
     this.editingToolbarActionIndex = null;
     this.updateToolbarActions();
   }
-  
+
   dropToolbarAction(event: CdkDragDrop<ToolbarAction[]>): void {
     moveItemInArray(this.toolbarActions, event.previousIndex, event.currentIndex);
     this.updateToolbarActions();
   }
-  
+
   updateToolbarActions(): void {
     // Update order based on array position
     this.toolbarActions.forEach((action, index) => {
       action.order = index;
     });
-    
+
     const values = this.toolbarForm.value;
     this.updateConfig(values);
   }
-  
+
   // Row Actions Management
   addRowAction(): void {
     const newAction: RowAction = {
@@ -1033,33 +1037,33 @@ export class ToolbarActionsEditorComponent implements OnInit, OnDestroy {
       icon: 'edit',
       action: 'editRow'
     };
-    
+
     this.rowActions.push(newAction);
     this.editingRowActionIndex = this.rowActions.length - 1;
     this.updateRowActions();
   }
-  
+
   editRowAction(index: number): void {
     this.editingRowActionIndex = this.editingRowActionIndex === index ? null : index;
   }
-  
+
   removeRowAction(index: number): void {
     this.rowActions.splice(index, 1);
     this.editingRowActionIndex = null;
     this.updateRowActions();
   }
-  
+
   dropRowAction(event: CdkDragDrop<RowAction[]>): void {
     moveItemInArray(this.rowActions, event.previousIndex, event.currentIndex);
     this.updateRowActions();
   }
-  
+
   updateRowActions(): void {
     const values = this.toolbarForm.value;
     this.updateConfig(values);
   }
-  
-  // Bulk Actions Management  
+
+  // Bulk Actions Management
   addBulkAction(): void {
     const newAction: BulkAction = {
       id: `bulk-action-${Date.now()}`,
@@ -1068,27 +1072,27 @@ export class ToolbarActionsEditorComponent implements OnInit, OnDestroy {
       action: 'bulkDelete',
       minSelections: 1
     };
-    
+
     this.bulkActions.push(newAction);
     this.editingBulkActionIndex = this.bulkActions.length - 1;
     this.updateBulkActions();
   }
-  
+
   editBulkAction(index: number): void {
     this.editingBulkActionIndex = this.editingBulkActionIndex === index ? null : index;
   }
-  
+
   removeBulkAction(index: number): void {
     this.bulkActions.splice(index, 1);
     this.editingBulkActionIndex = null;
     this.updateBulkActions();
   }
-  
+
   dropBulkAction(event: CdkDragDrop<BulkAction[]>): void {
     moveItemInArray(this.bulkActions, event.previousIndex, event.currentIndex);
     this.updateBulkActions();
   }
-  
+
   updateBulkActions(): void {
     const values = this.toolbarForm.value;
     this.updateConfig(values);
