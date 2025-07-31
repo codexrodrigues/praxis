@@ -1,9 +1,13 @@
 import { Injectable } from '@angular/core';
+
 import {
   BaseDynamicComponent,
   ComponentState,
   LogLevel,
 } from '../base/base-dynamic.component';
+
+import { BaseDynamicComponent } from '../base/base-dynamic.component';
+
 import { ComponentMetadata } from '@praxis/core';
 
 /**
@@ -17,6 +21,7 @@ export class DynamicComponentService<
   T extends ComponentMetadata = ComponentMetadata,
 > extends BaseDynamicComponent<T> {
   protected onComponentInit(): void {}
+
 
   /** Exposes the metadata signal */
   metadataSignal() {
@@ -70,4 +75,5 @@ export class DynamicComponentService<
   blurPublic(): void {
     this.blur();
   }
+
 }
