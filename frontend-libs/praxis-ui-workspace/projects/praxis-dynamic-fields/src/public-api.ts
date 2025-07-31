@@ -2,7 +2,6 @@
  * Public API Surface of praxis-dynamic-fields
  */
 
-export * from './lib/temp-interface';
 
 // Base components
 export * from './lib/base/base-dynamic.component';
