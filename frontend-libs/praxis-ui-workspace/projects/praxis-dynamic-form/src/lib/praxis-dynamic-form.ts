@@ -90,6 +90,7 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
 
   form: FormGroup = this.fb.group({});
   private fieldMetadata: FieldMetadata[] = [];
+  private pendingEntityId: string | number | null = null;
 
   constructor(
     private crud: GenericCrudService<any>,
@@ -110,8 +111,11 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
       this.crud.configure(this.resourcePath);
       this.loadSchema();
     }
-    if (changes['resourceId'] && this.resourceId != null) {
-      this.loadEntity();
+    if (changes['resourceId']) {
+      this.pendingEntityId = this.resourceId ?? null;
+      if (this.fieldMetadata.length > 0 && this.pendingEntityId != null) {
+        this.loadEntity();
+      }
     }
   }
 
@@ -119,13 +123,16 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
     this.crud.getSchema().pipe(takeUntilDestroyed()).subscribe(defs => {
       this.fieldMetadata = mapFieldDefinitionsToMetadata(defs);
       this.buildForm();
+      if (this.pendingEntityId != null) {
+        this.loadEntity();
+      }
       this.cdr.detectChanges();
     });
   }
 
   private loadEntity(): void {
-    if (!this.resourceId) { return; }
-    this.crud.get(this.resourceId).pipe(takeUntilDestroyed()).subscribe(data => {
+    if (this.pendingEntityId == null) { return; }
+    this.crud.get(this.pendingEntityId).pipe(takeUntilDestroyed()).subscribe(data => {
       this.form.patchValue(data);
     });
   }
