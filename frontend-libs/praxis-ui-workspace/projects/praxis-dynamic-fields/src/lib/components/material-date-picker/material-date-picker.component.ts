@@ -69,6 +69,12 @@ export class MaterialDatePickerComponent extends BaseDynamicFieldComponent<Mater
 
   readonly inputPlaceholder = computed(() => this.metadata()?.placeholder || 'dd/mm/aaaa');
 
+  /** Should show clear button */
+  readonly shouldShowClearButton = computed(() => {
+    const meta = this.metadata();
+    return meta?.clearButton?.enabled !== false;
+  });
+
   openPicker(): void {
     this.updateState({ isOpen: true });
   }
