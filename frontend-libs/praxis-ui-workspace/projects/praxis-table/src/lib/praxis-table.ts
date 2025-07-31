@@ -21,11 +21,11 @@ import {MatIconModule} from '@angular/material/icon';
 import {MatMenuModule} from '@angular/material/menu';
 import {PraxisResizableWindowService} from '@praxis/core';
 import {
-  ColumnDefinition, 
-  FieldDefinition, 
-  GenericCrudService, 
-  Page, 
-  Pageable, 
+  ColumnDefinition,
+  FieldDefinition,
+  GenericCrudService,
+  Page,
+  Pageable,
   TableConfig,
   createDefaultTableConfig
 } from '@praxis/core';
@@ -133,8 +133,8 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit, 
   private subscriptions: Subscription[] = [];
 
   constructor(
-    private crudService: GenericCrudService<any>, 
-    private cdr: ChangeDetectorRef, 
+    private crudService: GenericCrudService<any>,
+    private cdr: ChangeDetectorRef,
     private windowService: PraxisResizableWindowService,
     private formattingService: DataFormattingService
   ) {
@@ -281,7 +281,7 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit, 
   private convertFieldToColumn(field: FieldDefinition): ColumnDefinition {
     // Prioritize API type over inference - only use inference as last resort
     let apiType: ColumnDataType;
-    
+
     if (field.type && this.isValidColumnDataType(field.type)) {
       // Use API type if it's valid
       apiType = field.type as ColumnDataType;
@@ -289,7 +289,7 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit, 
       // Fall back to inference only if API type is not available or invalid
       apiType = this.inferFieldTypeFromFieldName(field.name);
     }
-    
+
     return {
       field: field.name,
       header: field.label ?? field.name,
@@ -420,7 +420,7 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit, 
     }
 
     // Step 3: Apply data formatting if defined
-    if (column.type && column.format && 
+    if (column.type && column.format &&
         this.formattingService.needsFormatting(column.type, column.format)) {
       try {
         value = this.formattingService.formatValue(value, column.type, column.format);
@@ -568,7 +568,7 @@ export class PraxisTable implements OnChanges, AfterViewInit, AfterContentInit, 
     // Clean up subscriptions to prevent memory leaks
     this.subscriptions.forEach(sub => sub.unsubscribe());
     this.subscriptions = [];
-    
+
     // Complete the data subject
     this.dataSubject.complete();
   }
