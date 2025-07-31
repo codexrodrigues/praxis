@@ -24,10 +24,13 @@ import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
 import { BaseDynamicFieldComponent } from '../../base/base-dynamic-field.component';
 import { MaterialCurrencyMetadata, ComponentMetadata } from '@praxis/core';
+import { getErrorStateMatcherForField } from '../../utils/error-state-matcher';
 
 // =============================================================================
 // TYPE HELPERS PARA INDEX SIGNATURE SAFETY
@@ -75,7 +78,10 @@ interface CurrencyState {
     MatInputModule,
     MatFormFieldModule,
     MatIconModule,
-    MatButtonModule
+    MatButtonModule,
+    MatTooltipModule,
+    FormsModule,
+    ReactiveFormsModule
   ],
   providers: [{
     provide: NG_VALUE_ACCESSOR,
@@ -140,7 +146,8 @@ export class MaterialCurrencyComponent
   /** Estilo de exibição da moeda */
   readonly currencyDisplay = computed(() => {
     const metadata = safeCurrencyMetadata(this.metadata());
-    if (metadata.currencyDisplay === 'narrow') {
+    // Older metadata may use "narrow" which maps to "narrowSymbol"
+    if ((metadata as any).currencyDisplay === 'narrow') {
       return 'narrowSymbol';
     }
     return (metadata.currencyDisplay ?? 'symbol') as 'code' | 'symbol' | 'narrowSymbol' | 'name';
@@ -240,8 +247,55 @@ export class MaterialCurrencyComponent
     if (this.shouldShowCurrencySymbol()) {
       classes.push('pdx-currency-with-symbol');
     }
-    
+
     return classes.join(' ');
+  });
+
+  /** Material appearance configuration */
+  readonly materialAppearance = computed(() => {
+    const design = this.metadata()?.materialDesign;
+    return design?.appearance || 'outline';
+  });
+
+  /** Material theme color */
+  readonly materialColor = computed(() => {
+    const design = this.metadata()?.materialDesign;
+    return (design?.color as any) || 'primary';
+  });
+
+  /** Float label behavior */
+  readonly floatLabelBehavior = computed(() => {
+    const label = this.metadata()?.materialDesign?.floatLabel;
+    return label === 'never' ? 'auto' : (label ?? 'auto');
+  });
+
+  /** Disabled interactive mode */
+  readonly isDisabledInteractive = computed(() => {
+    const meta = this.metadata();
+    const state = this.componentState();
+    return state.disabled && meta?.disabledInteractive === true;
+  });
+
+  /** Effective disabled state */
+  readonly effectiveDisabled = computed(() => {
+    const state = this.componentState();
+    return state.disabled && !this.isDisabledInteractive();
+  });
+
+  /** Error state matcher */
+  readonly errorStateMatcher = computed(() => {
+    const meta = this.metadata();
+    return getErrorStateMatcherForField(meta);
+  });
+
+  /** Should show clear button */
+  readonly shouldShowClearButton = computed(() => {
+    const meta = this.metadata();
+    const hasValue = !!this.fieldValue();
+    const conf = meta?.clearButton;
+    if (!conf?.enabled || this.componentState().disabled) return false;
+    if (conf.showOnlyWhenFilled !== false) return hasValue;
+    return true;
   });
 
   // =============================================================================
@@ -310,8 +364,18 @@ export class MaterialCurrencyComponent
     
     if (value < min) return min;
     if (value > max) return max;
-    
+
     return value;
+  }
+
+  /** Clears the current value */
+  clearValue(): void {
+    this.updateCurrencyState({
+      rawValue: 0,
+      formattedValue: '',
+      lastValidValue: 0
+    });
+    this.setValue(0);
   }
 
   // =============================================================================
