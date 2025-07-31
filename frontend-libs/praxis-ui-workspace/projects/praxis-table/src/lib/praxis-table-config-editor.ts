@@ -158,17 +158,19 @@ import { EducationalCardsService, TabCardKey } from './services/educational-card
                 tabKey="toolbar"
                 icon="handyman"
                 title="Ferramentas e Ações Personalizadas"
-                description="Adicione poder e praticidade à sua tabela com uma barra de ferramentas personalizada e ações específicas por linha."
+                description="Adicione poder e praticidade à sua tabela com uma barra de ferramentas personalizada e ações específicas por linha. Configure também os ícones das ações CRUD para maior clareza."
                 [benefits]="[
                   'Criar botões personalizados na barra superior',
                   'Configurar ações rápidas para cada linha (editar, excluir, etc.)',
+                  'Personalizar ícones das ações para fácil identificação',
                   'Ativar exportação para Excel e PDF',
                   'Adicionar botão Novo registro personalizado',
                   'Controlar visibilidade da barra de ferramentas'
                 ]"
                 [tips]="[
                   'Limite a 3-5 ações principais para evitar sobrecarga visual',
-                  'Use ícones intuitivos para ações comuns',
+                  'Use ícones intuitivos para ações comuns (ex: add, edit, delete)',
+                  'Consulte material.io/icons para os nomes corretos',
                   'Ações destrutivas (excluir) devem ter confirmação'
                 ]"
                 (cardHidden)="onCardHidden($event)">

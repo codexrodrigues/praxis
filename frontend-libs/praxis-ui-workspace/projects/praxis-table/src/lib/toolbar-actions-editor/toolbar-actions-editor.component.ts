@@ -366,10 +366,11 @@ export interface ToolbarActionsChange {
                         <input matInput [(ngModel)]="action.label" (ngModelChange)="updateRowActions()">
                       </mat-form-field>
                       
-                      <mat-form-field appearance="outline">
-                        <mat-label>Ícone</mat-label>
-                        <input matInput [(ngModel)]="action.icon" (ngModelChange)="updateRowActions()">
-                      </mat-form-field>
+                    <mat-form-field appearance="outline">
+                      <mat-label>Ícone</mat-label>
+                      <input matInput [(ngModel)]="action.icon" (ngModelChange)="updateRowActions()">
+                      <mat-hint>Nome do Material Icon (ex: add, edit, delete)</mat-hint>
+                    </mat-form-field>
                       
                       <mat-form-field appearance="outline">
                         <mat-label>Ação/Função</mat-label>
@@ -477,6 +478,7 @@ export interface ToolbarActionsChange {
                       <mat-form-field appearance="outline">
                         <mat-label>Ícone</mat-label>
                         <input matInput [(ngModel)]="action.icon" (ngModelChange)="updateBulkActions()">
+                        <mat-hint>Nome do Material Icon (ex: add, edit, delete)</mat-hint>
                       </mat-form-field>
                       
                       <mat-form-field appearance="outline">
