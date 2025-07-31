@@ -24,7 +24,8 @@ import {
   WritableSignal,
   input,
   output,
-  model
+  model,
+  Directive
 } from '@angular/core';
 import { debounceTime, distinctUntilChanged, startWith } from 'rxjs/operators';
 
@@ -103,6 +104,7 @@ export interface AccessibilityConfig {
 // CLASSE BASE PARA CAMPOS DE FORMULÁRIO
 // =============================================================================
 
+@Directive()
 export abstract class BaseDynamicFieldComponent<T extends ComponentMetadata = ComponentMetadata>
   extends BaseDynamicComponent<T>
   implements ControlValueAccessor {
