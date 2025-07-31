@@ -26,7 +26,7 @@
       [value]="sliderState().value"
       [disabled]="componentState().disabled"
       [color]="materialColor()"
-      [vertical]="isVertical()"
+      [orientation]="isVertical() ? 'vertical' : 'horizontal'"
       [thumbLabel]="shouldShowThumbLabel()"
       [displayWith]="thumbLabelFormatter"
       [tickInterval]="shouldShowTickMarks() ? stepValue() : 0"

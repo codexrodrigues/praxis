@@ -39,7 +39,7 @@ interface ExtendedCurrencyMetadata extends ComponentMetadata {
   allowNegative?: boolean;
   minimumFractionDigits?: number;
   maximumFractionDigits?: number;
-  currencyDisplay?: 'code' | 'symbol' | 'narrow' | 'name';
+  currencyDisplay?: 'code' | 'symbol' | 'narrowSymbol' | 'name';
   showCurrencySymbol?: boolean;
   placeholder?: string;
   min?: number;
@@ -140,7 +140,10 @@ export class MaterialCurrencyComponent
   /** Estilo de exibição da moeda */
   readonly currencyDisplay = computed(() => {
     const metadata = safeCurrencyMetadata(this.metadata());
-    return metadata.currencyDisplay || 'symbol';
+    if (metadata.currencyDisplay === 'narrow') {
+      return 'narrowSymbol';
+    }
+    return (metadata.currencyDisplay ?? 'symbol') as 'code' | 'symbol' | 'narrowSymbol' | 'name';
   });
 
   /** Deve mostrar símbolo da moeda */

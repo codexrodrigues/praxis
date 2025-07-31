@@ -144,7 +144,8 @@ export class MaterialInputComponent
   /** Comportamento do float label */
   readonly floatLabelBehavior = computed(() => {
     const materialDesign = this.metadata()?.materialDesign;
-    return materialDesign?.floatLabel || 'auto';
+    const label = materialDesign?.floatLabel;
+    return label === 'never' ? 'auto' : (label ?? 'auto');
   });
 
   /** Error state matcher personalizado */

@@ -226,7 +226,7 @@ export interface FieldOption {
  */
 export interface MaterialDesignConfig {
   /** Material appearance variant */
-  appearance?: 'fill' | 'outline' | 'legacy' | 'standard';
+  appearance?: 'fill' | 'outline';
   
   /** Material color theme */
   color?: 'primary' | 'accent' | 'warn' | 'basic';

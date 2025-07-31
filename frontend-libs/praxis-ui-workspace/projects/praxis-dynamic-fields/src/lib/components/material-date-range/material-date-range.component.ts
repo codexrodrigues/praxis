@@ -69,7 +69,10 @@ export class MaterialDateRangeComponent extends BaseDynamicFieldComponent<Materi
 
   readonly materialAppearance = computed(() => this.metadata()?.materialDesign?.appearance || 'outline');
   readonly materialColor = computed(() => this.metadata()?.materialDesign?.color || 'primary');
-  readonly floatLabelBehavior = computed(() => this.metadata()?.materialDesign?.floatLabel || 'auto');
+  readonly floatLabelBehavior = computed(() => {
+    const label = this.metadata()?.materialDesign?.floatLabel;
+    return label === 'never' ? 'auto' : (label ?? 'auto');
+  });
 
   readonly selectedRange = computed(() => this.state().selectedRange);
   readonly activePreset = computed(() => this.state().activePreset);

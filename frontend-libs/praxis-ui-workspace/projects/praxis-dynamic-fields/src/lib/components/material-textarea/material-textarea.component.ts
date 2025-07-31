@@ -121,7 +121,8 @@ export class MaterialTextareaComponent
   /** Comportamento do float label */
   readonly floatLabelBehavior = computed(() => {
     const materialDesign = this.metadata()?.materialDesign;
-    return materialDesign?.floatLabel || 'auto';
+    const label = materialDesign?.floatLabel;
+    return label === 'never' ? 'auto' : (label ?? 'auto');
   });
 
   /** Deve mostrar contador de caracteres */
