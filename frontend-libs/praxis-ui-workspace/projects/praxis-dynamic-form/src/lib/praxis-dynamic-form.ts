@@ -19,7 +19,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { GenericCrudService, FieldMetadata, mapFieldDefinitionsToMetadata, EndpointConfig } from '@praxis/core';
 import { DynamicFieldLoaderDirective } from '@praxis/dynamic-fields';
-import { FormConfig, FormLayout, FormSubmitEvent, FormReadyEvent, FormValueChangeEvent, PraxisResizableWindowService } from '@praxis/core';
+import { FormConfig, FormLayout, FormSubmitEvent, FormReadyEvent, FormValueChangeEvent, FormSection, FormRow, FormColumn, PraxisResizableWindowService } from '@praxis/core';
 import { FormLayoutService } from './services/form-layout.service';
 import { FormContextService } from './services/form-context.service';
 import { PraxisDynamicFormConfigEditor } from './praxis-dynamic-form-config-editor';
@@ -154,6 +154,9 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
     }
     this.form = this.fb.group(controls);
 
+    // Auto-generate layout if config is empty and we have metadata
+    this.generateDefaultLayoutIfNeeded();
+
     this.contextService.setAvailableFields(this.fieldMetadata);
     if (this.layout?.formRules) {
       this.contextService.setFormRules(this.layout.formRules);
@@ -177,6 +180,86 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
       hasEntity: this.resourceId != null,
       entityId: this.resourceId ?? undefined
     });
+  }
+
+  /**
+   * Generates a default layout if the current config has no sections
+   * and we have field metadata available
+   */
+  private generateDefaultLayoutIfNeeded(): void {
+    if (this.config.sections.length === 0 && this.fieldMetadata.length > 0) {
+      this.config = this.generateFormConfigFromMetadata(this.fieldMetadata);
+    }
+  }
+
+  /**
+   * Generates a FormConfig from FieldMetadata array
+   * Groups fields by their 'group' property or creates a single default section
+   */
+  private generateFormConfigFromMetadata(fields: FieldMetadata[], options?: {
+    fieldsPerRow?: number;
+    defaultSectionTitle?: string;
+  }): FormConfig {
+    const fieldsPerRow = options?.fieldsPerRow ?? 2;
+    const defaultSectionTitle = options?.defaultSectionTitle ?? 'Informações';
+
+    // Group fields by their 'group' property
+    const groupedFields = new Map<string, FieldMetadata[]>();
+    
+    for (const field of fields) {
+      const groupName = field.group || 'default';
+      if (!groupedFields.has(groupName)) {
+        groupedFields.set(groupName, []);
+      }
+      groupedFields.get(groupName)!.push(field);
+    }
+
+    // Sort fields within each group by order property
+    groupedFields.forEach((fieldList) => {
+      fieldList.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    });
+
+    // Create sections from grouped fields
+    const sections: FormSection[] = [];
+    
+    groupedFields.forEach((groupFields, groupName) => {
+      const sectionTitle = groupName === 'default' 
+        ? defaultSectionTitle 
+        : this.capitalizeFirstLetter(groupName);
+
+      sections.push({
+        id: groupName,
+        title: sectionTitle,
+        rows: this.createRowsFromFields(groupFields, fieldsPerRow)
+      });
+    });
+
+    return { sections };
+  }
+
+  /**
+   * Creates rows from a list of fields, organizing them into columns
+   */
+  private createRowsFromFields(fields: FieldMetadata[], fieldsPerRow: number = 2): FormRow[] {
+    const rows: FormRow[] = [];
+    
+    for (let i = 0; i < fields.length; i += fieldsPerRow) {
+      const rowFields = fields.slice(i, i + fieldsPerRow);
+      const columns: FormColumn[] = rowFields.map(field => ({
+        fields: [field.name]
+      }));
+      
+      rows.push({ columns });
+    }
+    
+    return rows;
+  }
+
+  /**
+   * Utility method to capitalize first letter of a string
+   */
+  private capitalizeFirstLetter(str: string): string {
+    return str.charAt(0).toUpperCase() + str.slice(1);
   }
 
   getColumnFields(column: { fields: string[] }): FieldMetadata[] {

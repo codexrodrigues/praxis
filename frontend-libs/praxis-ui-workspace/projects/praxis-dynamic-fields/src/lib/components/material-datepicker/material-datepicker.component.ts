@@ -178,7 +178,7 @@ export class MaterialDatepickerComponent
   readonly floatLabelBehavior = computed(() => {
     const materialDesign = this.metadata()?.materialDesign;
     const label = materialDesign?.floatLabel;
-    return label === 'never' ? 'auto' : (label ?? 'auto');
+    return label ?? 'auto';
   });
 
   /** Data mínima permitida */

@@ -266,7 +266,7 @@ export class MaterialCurrencyComponent
   /** Float label behavior */
   readonly floatLabelBehavior = computed(() => {
     const label = this.metadata()?.materialDesign?.floatLabel;
-    return label === 'never' ? 'auto' : (label ?? 'auto');
+    return label ?? 'auto';
   });
 
   /** Disabled interactive mode */

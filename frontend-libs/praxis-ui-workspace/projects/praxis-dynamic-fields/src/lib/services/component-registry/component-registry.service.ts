@@ -310,6 +310,12 @@ export class ComponentRegistryService implements IComponentRegistry {
       () => import('../../components/material-colorpicker/material-colorpicker.component').then(m => m.MaterialColorPickerComponent)
     );
 
+    // Array Input - using textarea as fallback for now
+    this.register(
+      'array' as FieldControlType,
+      () => import('../../components/material-textarea/material-textarea.component').then(m => m.MaterialTextareaComponent)
+    );
+
     // COMPONENTES PLANEJADOS PARA IMPLEMENTAÇÃO FUTURA
 
     // Rating (futura implementação)

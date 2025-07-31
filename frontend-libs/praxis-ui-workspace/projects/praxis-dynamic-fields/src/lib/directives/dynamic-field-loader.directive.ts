@@ -182,6 +182,9 @@ export class DynamicFieldLoaderDirective implements OnInit, OnDestroy, OnChanges
   /** Flag para evitar múltiplas renderizações simultâneas */
   private isRendering = false;
 
+  /** Cache do último snapshot dos fields para evitar re-renderizações desnecessárias */
+  private lastFieldsSnapshot: string | null = null;
+
   // =============================================================================
   // LIFECYCLE HOOKS
   // =============================================================================
@@ -194,8 +197,11 @@ export class DynamicFieldLoaderDirective implements OnInit, OnDestroy, OnChanges
   ngOnChanges(changes: SimpleChanges): void {
     // Re-renderizar apenas se fields ou formGroup mudaram
     if (changes['fields'] || changes['formGroup']) {
-      this.validateInputs();
-      this.renderFields();
+      // Only re-render if there's an actual change in content, not just reference
+      if (this.hasActualFieldChanges(changes)) {
+        this.validateInputs();
+        this.renderFields();
+      }
     }
   }
 
@@ -258,6 +264,54 @@ export class DynamicFieldLoaderDirective implements OnInit, OnDestroy, OnChanges
    */
   getAllComponents(): Map<string, ComponentRef<BaseDynamicFieldComponent>> {
     return new Map(this.componentRefs);
+  }
+
+  // =============================================================================
+  // PRIVATE METHODS - CHANGE DETECTION
+  // =============================================================================
+
+  /**
+   * Verifica se houve mudança real no conteúdo dos fields, não apenas na referência.
+   * Previne re-renderizações desnecessárias que podem causar loops infinitos.
+   */
+  private hasActualFieldChanges(changes: SimpleChanges): boolean {
+    if (changes['fields']) {
+      const fieldsChange = changes['fields'];
+      
+      // Se é primeira renderização, sempre renderizar
+      if (fieldsChange.isFirstChange()) {
+        return true;
+      }
+
+      const previousFields = fieldsChange.previousValue as FieldMetadata[] || [];
+      const currentFields = fieldsChange.currentValue as FieldMetadata[] || [];
+
+      // Se o número de campos mudou, re-renderizar
+      if (previousFields.length !== currentFields.length) {
+        return true;
+      }
+
+      // Verificar se algum campo mudou de fato
+      for (let i = 0; i < currentFields.length; i++) {
+        const current = currentFields[i];
+        const previous = previousFields[i];
+
+        if (!previous || current.name !== previous.name || current.controlType !== previous.controlType) {
+          return true;
+        }
+      }
+
+      // Se chegou até aqui, não houve mudança real
+      console.debug('[DynamicFieldLoader] No actual field changes detected, skipping re-render');
+      return false;
+    }
+
+    if (changes['formGroup']) {
+      const formGroupChange = changes['formGroup'];
+      return formGroupChange.isFirstChange() || formGroupChange.previousValue !== formGroupChange.currentValue;
+    }
+
+    return true;
   }
 
   // =============================================================================
@@ -358,6 +412,13 @@ export class DynamicFieldLoaderDirective implements OnInit, OnDestroy, OnChanges
    */
   private async executeRendering(): Promise<void> {
     const fieldsSnapshot = [...this.fields]; // Snapshot para consistência
+    const currentFieldsSignature = JSON.stringify(fieldsSnapshot.map(f => ({ name: f.name, controlType: f.controlType })));
+    
+    // Verificar se já não renderizamos este mesmo conjunto de fields
+    if (this.lastFieldsSnapshot === currentFieldsSignature) {
+      console.debug('[DynamicFieldLoader] Fields snapshot unchanged, skipping render');
+      return;
+    }
     
     try {
       // Limpar componentes existentes
@@ -393,6 +454,9 @@ export class DynamicFieldLoaderDirective implements OnInit, OnDestroy, OnChanges
 
       // Emitir mapa de componentes criados apenas se tudo deu certo
       this.componentsCreated.emit(new Map(this.componentRefs));
+
+      // Armazenar snapshot apenas após sucesso
+      this.lastFieldsSnapshot = currentFieldsSignature;
 
       console.debug(`[DynamicFieldLoader] Successfully rendered ${this.componentRefs.size} components`);
 
@@ -534,5 +598,6 @@ export class DynamicFieldLoaderDirective implements OnInit, OnDestroy, OnChanges
     });
 
     this.componentRefs.clear();
+    this.lastFieldsSnapshot = null; // Reset snapshot quando destruir componentes
   }
 }

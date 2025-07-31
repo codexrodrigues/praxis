@@ -56,7 +56,7 @@ export class MaterialDatePickerComponent extends BaseDynamicFieldComponent<Mater
   readonly materialColor = computed(() => this.metadata()?.materialDesign?.color || 'primary');
   readonly floatLabelBehavior = computed(() => {
     const label = this.metadata()?.materialDesign?.floatLabel;
-    return label === 'never' ? 'auto' : (label ?? 'auto');
+    return label ?? 'auto';
   });
 
   readonly selectedDate = computed(() => this.state().selectedDate);
@@ -98,14 +98,13 @@ export class MaterialDatePickerComponent extends BaseDynamicFieldComponent<Mater
   }
 
   onDateInput(event: MatDatepickerInputEvent<Date>): void {
-    const value = (event.target as HTMLInputElement).value;
-    if (!value) {
+    const dateValue = event.value;
+    if (!dateValue) {
       this.clearDate();
       return;
     }
-    const parsed = this.dateUtils.parseDate(value);
-    if (parsed) {
-      this.selectDate(parsed);
+    if (dateValue && !isNaN(dateValue.getTime())) {
+      this.selectDate(dateValue);
     }
   }
 
