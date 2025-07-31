@@ -18,9 +18,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { GenericCrudService, FieldMetadata, mapFieldDefinitionsToMetadata, EndpointConfig } from '@praxis/core';
 import { DynamicFieldLoaderDirective } from '@praxis/dynamic-fields';
-import { FormConfig, FormLayout, FormSubmitEvent, FormReadyEvent, FormValueChangeEvent } from '@praxis/core';
+import { FormConfig, FormLayout, FormSubmitEvent, FormReadyEvent, FormValueChangeEvent, PraxisResizableWindowService } from '@praxis/core';
 import { FormLayoutService } from './services/form-layout.service';
 import { FormContextService } from './services/form-context.service';
+import { PraxisDynamicFormConfigEditor } from './praxis-dynamic-form-config-editor';
 
 @Component({
   selector: 'praxis-dynamic-form',
@@ -97,7 +98,8 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
     private fb: FormBuilder,
     private cdr: ChangeDetectorRef,
     private layoutService: FormLayoutService,
-    private contextService: FormContextService
+    private contextService: FormContextService,
+    private windowService: PraxisResizableWindowService
   ) {}
 
   ngOnInit(): void {
@@ -200,9 +202,40 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   }
 
   openConfigEditor(): void {
-    this.configChange.emit(this.config);
-    if (this.formId && this.layout) {
-      this.layoutService.saveLayout(this.formId, this.layout);
+    try {
+      const configCopy = JSON.parse(JSON.stringify(this.config)) as FormConfig;
+
+      const ref = this.windowService.open({
+        title: 'Configurações do Formulário Dinâmico',
+        contentComponent: PraxisDynamicFormConfigEditor,
+        data: configCopy,
+        initialWidth: '90vw',
+        initialHeight: '90vh',
+        minWidth: '320px',
+        minHeight: '600px',
+        disableResize: false,
+        disableMaximize: false,
+        enableTouch: true,
+        minDragDistance: 5,
+        enableInertia: true,
+        inertiaFriction: 0.95,
+        inertiaMultiplier: 10,
+        bounceFactor: 0.5,
+        autoCenterAfterResize: false
+      });
+
+      ref.closed.pipe(takeUntilDestroyed()).subscribe(result => {
+        if (result) {
+          this.config = { ...result };
+          this.configChange.emit(this.config);
+          if (this.formId && this.layout) {
+            this.layoutService.saveLayout(this.formId, this.layout);
+          }
+          this.cdr.detectChanges();
+        }
+      });
+    } catch {
+      // TODO: Implement proper error logging service
     }
   }
 
