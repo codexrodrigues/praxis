@@ -2,5 +2,19 @@
  * Public API Surface of praxis-dynamic-form
  */
 
-// Working dynamic form component
-export * from './lib/praxis-dynamic-form-working';
+export * from './lib/praxis-dynamic-form';
+export * from './lib/praxis-dynamic-form-config-editor';
+
+// Layout editor components
+export * from './lib/layout-editor/form-layout-editor.component';
+export * from './lib/layout-editor/row-configurator.component';
+export * from './lib/layout-editor/fieldset-configurator.component';
+export * from './lib/layout-editor/field-configurator.component';
+
+// Services
+export * from './lib/services/form-config.service';
+export * from './lib/services/form-layout.service';
+export * from './lib/services/form-context.service';
+
+// Utilities
+export * from './lib/utils/form-rule.utils';

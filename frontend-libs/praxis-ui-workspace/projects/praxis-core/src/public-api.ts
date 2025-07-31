@@ -3,19 +3,26 @@
  */
 
 export * from './lib/praxis-core';
-//GenericCrudService
+
+// Services
 export * from './lib/services/generic-crud.service';
-//ApiUrlConfig
+export * from './lib/services/schema-normalizer.service';
+export * from './lib/services/table-config.service';
+
+// Tokens
 export * from './lib/tokens/api-url.token';
-// Table configuration models (V1 + V2 unified)
+
+// Models
 export * from './lib/models/table-config.model';
 export * from './lib/models/table-config-v2.model';
 export * from './lib/models/page.model';
 export * from './lib/models/field-definition.model';
-
-// Component Metadata Interfaces (Angular Material Integration)
+export * from './lib/models/rest-api-response.model';
 export * from './lib/models/component-metadata.interface';
 export * from './lib/models/material-field-metadata.interface';
+export * from './lib/models/form/form-config.model';
+export * from './lib/models/form/form-events.model';
+export * from './lib/models/form/form-layout.model';
 
 // Metadata constants
 export * from './lib/metadata/field-control-type.constants';
@@ -26,14 +33,10 @@ export * from './lib/metadata/icon-size.constants';
 export * from './lib/metadata/numeric-format.constants';
 export * from './lib/metadata/validation-pattern.constants';
 
-// Table configuration services
-export * from './lib/services/table-config.service';
+// Helpers
+export * from './lib/helpers/field-definition-mapper';
+export * from './lib/helpers/version.helper';
 
-// Resizable Window Component
+// Components
 export * from './lib/components/resizable-window/praxis-resizable-window.component';
 export * from './lib/components/resizable-window/services/praxis-resizable-window.service';
-export * from './lib/helpers/field-definition-mapper';
-// Dynamic form models
-export * from './lib/models/form/form-config.model';
-export * from './lib/models/form/form-events.model';
-export * from './lib/models/form/form-layout.model';
