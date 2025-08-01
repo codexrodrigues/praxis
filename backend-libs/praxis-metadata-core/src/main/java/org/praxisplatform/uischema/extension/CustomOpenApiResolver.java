@@ -807,10 +807,8 @@ public class CustomOpenApiResolver extends ModelResolver {
             if ("string".equals(itemType)) {
                 if ("date".equals(itemFormat)) {
                     detectedControlType = FieldControlType.DATE_RANGE.getValue();
-                    detectedDataType = FieldDataType.DATE.getValue();
                 } else if ("date-time".equals(itemFormat)) {
-                    detectedControlType = FieldControlType.DATE_TIME_RANGE.getValue();
-                    detectedDataType = FieldDataType.DATE.getValue();
+                    detectedControlType = FieldControlType.DATE_TIME_RANGE.getValue();                    
                 }
             }
         }

@@ -138,7 +138,6 @@ class FilterableBetweenListDetectionTest {
 
         Map<String, Object> xUi = applyAnnotations(schema, new Annotation[]{defaultUISchema(), betweenFilterable()});
         assertEquals(FieldControlType.DATE_RANGE.getValue(), xUi.get(FieldConfigProperties.CONTROL_TYPE.getValue()));
-        assertEquals(FieldDataType.DATE.getValue(), xUi.get(FieldConfigProperties.TYPE.getValue()));
     }
 
     @Test
@@ -153,7 +152,6 @@ class FilterableBetweenListDetectionTest {
 
         Map<String, Object> xUi = applyAnnotations(schema, new Annotation[]{defaultUISchema(), betweenFilterable()});
         assertEquals(FieldControlType.DATE_TIME_RANGE.getValue(), xUi.get(FieldConfigProperties.CONTROL_TYPE.getValue()));
-        assertEquals(FieldDataType.DATE.getValue(), xUi.get(FieldConfigProperties.TYPE.getValue()));
     }
 
     @Test
@@ -168,7 +166,6 @@ class FilterableBetweenListDetectionTest {
 
         Map<String, Object> xUi = applyAnnotations(schema, new Annotation[]{defaultUISchema(), betweenFilterable()});
         assertEquals(FieldControlType.DATE_RANGE.getValue(), xUi.get(FieldConfigProperties.CONTROL_TYPE.getValue()));
-        assertEquals(FieldDataType.DATE.getValue(), xUi.get(FieldConfigProperties.TYPE.getValue()));
     }
 
     @Test
@@ -183,6 +180,5 @@ class FilterableBetweenListDetectionTest {
 
         Map<String, Object> xUi = applyAnnotations(schema, new Annotation[]{defaultUISchema(), betweenFilterable()});
         assertEquals(FieldControlType.DATE_TIME_RANGE.getValue(), xUi.get(FieldConfigProperties.CONTROL_TYPE.getValue()));
-        assertEquals(FieldDataType.DATE.getValue(), xUi.get(FieldConfigProperties.TYPE.getValue()));
     }
 }
