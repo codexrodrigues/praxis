@@ -8,6 +8,7 @@ import org.praxisplatform.uischema.*;
 import org.praxisplatform.uischema.extension.annotation.UISchema;
 import org.praxisplatform.uischema.numeric.NumberFormatStyle;
 import org.praxisplatform.uischema.util.OpenApiUiUtils;
+import org.praxisplatform.uischema.filter.annotation.Filterable;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -71,7 +72,7 @@ public class CustomOpenApiResolver extends ModelResolver {
 
         // === ETAPA 2: Detecção AUTOMÁTICA baseada no OpenAPI Schema ===
         // Sobrescreve padrões com detecção inteligente baseada em type/format
-        applySchemaBasedDetection(property, uiExtension, fieldName);
+        applySchemaBasedDetection(property, uiExtension, fieldName, annotations);
 
         // === ETAPA 3: Valores EXPLÍCITOS da anotação @UISchema ===
         // Sobrescreve detecção automática com valores explicitamente definidos
@@ -690,7 +691,11 @@ public class CustomOpenApiResolver extends ModelResolver {
      * ETAPA 2: Detecção AUTOMÁTICA baseada no OpenAPI Schema
      * Esta é nossa lógica principal de detecção inteligente
      */
-    private void applySchemaBasedDetection(Schema<?> property, Map<String, Object> uiExtension, String fieldName) {
+    private void applySchemaBasedDetection(
+            Schema<?> property,
+            Map<String, Object> uiExtension,
+            String fieldName,
+            Annotation[] annotations) {
         String openApiType = property.getType();
         String openApiFormat = property.getFormat();
         boolean hasEnum = property.getEnum() != null && !property.getEnum().isEmpty();
@@ -789,6 +794,25 @@ public class CustomOpenApiResolver extends ModelResolver {
             case "object":
                 detectedControlType = FieldControlType.EXPANSION_PANEL.getValue();
                 break;
+        }
+
+        // Extra detection based on @Filterable annotation for array fields
+        Filterable filterable = ResolverUtils.getAnnotation(Filterable.class, annotations);
+        if (filterable != null
+                && filterable.operation() == Filterable.FilterOperation.BETWEEN
+                && "array".equals(openApiType)
+                && property.getItems() != null) {
+            String itemType = property.getItems().getType();
+            String itemFormat = property.getItems().getFormat();
+            if ("string".equals(itemType)) {
+                if ("date".equals(itemFormat)) {
+                    detectedControlType = FieldControlType.DATE_RANGE.getValue();
+                    detectedDataType = FieldDataType.DATE.getValue();
+                } else if ("date-time".equals(itemFormat)) {
+                    detectedControlType = FieldControlType.DATE_TIME_RANGE.getValue();
+                    detectedDataType = FieldDataType.DATE.getValue();
+                }
+            }
         }
         
         // Aplicar detecções (sobrescreve valores padrão)
