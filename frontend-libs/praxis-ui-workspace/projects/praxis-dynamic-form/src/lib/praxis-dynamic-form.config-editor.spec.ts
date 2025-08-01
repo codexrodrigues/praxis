@@ -14,10 +14,25 @@ describe('PraxisDynamicForm openConfigEditor', () => {
   let layoutService: jasmine.SpyObj<FormLayoutService>;
 
   beforeEach(async () => {
-    const crud = jasmine.createSpyObj('GenericCrudService', ['configure', 'configureEndpoints', 'getSchema', 'get', 'create', 'update']);
-    layoutService = jasmine.createSpyObj('FormLayoutService', ['saveLayout', 'loadLayout']);
-    const contextService = jasmine.createSpyObj('FormContextService', ['setAvailableFields', 'setFormRules']);
-    windowService = jasmine.createSpyObj('PraxisResizableWindowService', ['open']);
+    const crud = jasmine.createSpyObj('GenericCrudService', [
+      'configure',
+      'configureEndpoints',
+      'getSchema',
+      'get',
+      'create',
+      'update',
+    ]);
+    layoutService = jasmine.createSpyObj('FormLayoutService', [
+      'saveLayout',
+      'loadLayout',
+    ]);
+    const contextService = jasmine.createSpyObj('FormContextService', [
+      'setAvailableFields',
+      'setFormRules',
+    ]);
+    windowService = jasmine.createSpyObj('PraxisResizableWindowService', [
+      'open',
+    ]);
 
     await TestBed.configureTestingModule({
       imports: [PraxisDynamicForm, DynamicFieldLoaderDirective],
@@ -25,8 +40,8 @@ describe('PraxisDynamicForm openConfigEditor', () => {
         { provide: GenericCrudService, useValue: crud },
         { provide: FormLayoutService, useValue: layoutService },
         { provide: FormContextService, useValue: contextService },
-        { provide: PraxisResizableWindowService, useValue: windowService }
-      ]
+        { provide: PraxisResizableWindowService, useValue: windowService },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PraxisDynamicForm);
@@ -46,7 +61,10 @@ describe('PraxisDynamicForm openConfigEditor', () => {
 
     expect(windowService.open).toHaveBeenCalled();
     expect(component.config).toEqual(returned);
-    expect(layoutService.saveLayout).toHaveBeenCalledWith('f1', component.layout as any);
+    expect(layoutService.saveLayout).toHaveBeenCalledWith(
+      'f1',
+      component.layout as any,
+    );
   });
 
   it('ignores close event without result', () => {

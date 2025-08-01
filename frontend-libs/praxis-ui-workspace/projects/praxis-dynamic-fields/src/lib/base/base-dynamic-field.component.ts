@@ -1,7 +1,8 @@
 /**
  * @fileoverview Componente base especializado para campos de formulário dinâmicos
  *
- * Extensão do BaseDynamicComponent com funcionalidades específicas para campos:
+ * Utiliza {@link DynamicComponentService} para compor funcionalidades
+ * originalmente oferecidas por `BaseDynamicComponent`, incluindo:
  * ✅ ControlValueAccessor nativo para integração com Angular Forms
  * ✅ Sistema de validação enterprise integrado
  * ✅ Edição inline de labels com UX otimizada
@@ -14,23 +15,29 @@ import {
   ControlValueAccessor,
   FormControl,
   ValidationErrors,
-  AbstractControl,
-  Validators
+  Validators,
 } from '@angular/forms';
 import {
   computed,
   effect,
   signal,
-  WritableSignal,
   input,
   output,
   model,
-  Directive
+  Directive,
+  inject,
+  OnInit,
+  OnDestroy,
+  ElementRef,
+  Renderer2,
+  DestroyRef,
 } from '@angular/core';
 import { debounceTime, distinctUntilChanged, startWith } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
-import { BaseDynamicComponent } from './base-dynamic.component';
+import { DynamicComponentService } from '../services/dynamic-component.service';
 import { FieldControlType, ComponentMetadata } from '@praxis/core';
+import { LogLevel } from './base-dynamic.component';
 
 // =============================================================================
 // TYPE HELPERS PARA INDEX SIGNATURE SAFETY
@@ -62,7 +69,9 @@ interface ExtendedFieldMetadata extends ComponentMetadata {
 /**
  * Helper para acessar metadata de forma type-safe
  */
-function safeMetadata(metadata: ComponentMetadata | null | undefined): ExtendedFieldMetadata {
+function safeMetadata(
+  metadata: ComponentMetadata | null | undefined,
+): ExtendedFieldMetadata {
   return (metadata || {}) as ExtendedFieldMetadata;
 }
 
@@ -104,10 +113,33 @@ export interface AccessibilityConfig {
 // CLASSE BASE PARA CAMPOS DE FORMULÁRIO
 // =============================================================================
 
-@Directive()
-export abstract class BaseDynamicFieldComponent<T extends ComponentMetadata = ComponentMetadata>
-  extends BaseDynamicComponent<T>
-  implements ControlValueAccessor {
+@Directive({ providers: [DynamicComponentService] })
+export abstract class BaseDynamicFieldComponent<
+    T extends ComponentMetadata = ComponentMetadata,
+  >
+  implements ControlValueAccessor, OnInit, OnDestroy
+{
+  /** Composition service providing base component features */
+  private readonly base = inject(DynamicComponentService<T>);
+
+  /** Element reference and renderer injected directly */
+  protected readonly elementRef = inject(ElementRef);
+  protected readonly renderer = inject(Renderer2);
+  private readonly destroyRef = inject(DestroyRef);
+
+  /** Re-exposed signals and helpers from the base service */
+  protected readonly metadata = this.base.metadataSignal();
+  protected readonly componentId = this.base.componentIdSignal();
+  protected readonly componentState = this.base.componentStateSignal();
+  readonly cssClasses = () => this.base.getCssClasses();
+  readonly isDebugMode = () => this.base.getIsDebugMode();
+  protected readonly log = (level: LogLevel, message: string, data?: any) =>
+    this.base.logMessage(level, message, data);
+
+  /** Proxy to BaseDynamicComponent helper */
+  protected takeUntilDestroyed() {
+    return takeUntilDestroyed(this.destroyRef);
+  }
 
   // =============================================================================
   // SIGNALS REACTIVOS PARA FORMULÁRIO
@@ -125,7 +157,7 @@ export abstract class BaseDynamicFieldComponent<T extends ComponentMetadata = Co
     valid: true,
     pending: false,
     errors: null,
-    focused: false
+    focused: false,
   });
 
   /** Flag para prevenção de race conditions na sincronização */
@@ -139,15 +171,15 @@ export abstract class BaseDynamicFieldComponent<T extends ComponentMetadata = Co
     enterprise: {
       policies: [],
       warnings: [],
-      transformations: []
-    }
+      transformations: [],
+    },
   });
 
   /** Estado de edição de label */
   protected readonly labelEditingState = signal({
     isEditing: false,
     originalLabel: '',
-    currentLabel: ''
+    currentLabel: '',
   });
 
   /** Configuração de acessibilidade */
@@ -160,7 +192,9 @@ export abstract class BaseDynamicFieldComponent<T extends ComponentMetadata = Co
   /** Verifica se há erro de validação */
   readonly hasValidationError = computed(() => {
     const state = this.fieldState();
-    return !state.valid && (state.dirty || state.touched) && state.errors !== null;
+    return (
+      !state.valid && (state.dirty || state.touched) && state.errors !== null
+    );
   });
 
   /** Primeira mensagem de erro */
@@ -178,7 +212,7 @@ export abstract class BaseDynamicFieldComponent<T extends ComponentMetadata = Co
     if (!errors) return [];
 
     return Object.entries(errors).map(([key, value]) =>
-      this.getErrorMessage(key, value)
+      this.getErrorMessage(key, value),
     );
   });
 
@@ -209,8 +243,8 @@ export abstract class BaseDynamicFieldComponent<T extends ComponentMetadata = Co
       'aria-describedby': this.buildAriaDescribedBy(),
       'aria-invalid': hasError ? 'true' : 'false',
       'aria-required': metadata.required ? 'true' : 'false',
-      'role': config.role || 'textbox',
-      'tabindex': config.tabIndex || 0
+      role: config.role || 'textbox',
+      tabindex: config.tabIndex || 0,
     };
   });
 
@@ -246,14 +280,24 @@ export abstract class BaseDynamicFieldComponent<T extends ComponentMetadata = Co
   // =============================================================================
 
   constructor() {
-    super();
     this.setupFormControlIntegration();
     this.setupValidationSystem();
     this.setupAccessibilityFeatures();
   }
 
-  protected override onComponentInit(): void {
+  ngOnInit(): void {
+    this.base.ngOnInit();
     this.initializeField();
+    this.onComponentInit();
+  }
+
+  ngOnDestroy(): void {
+    this.base.ngOnDestroy();
+  }
+
+  /** Lifecycle hook for subclasses */
+  protected onComponentInit(): void {
+    // default implementation
   }
 
   // =============================================================================
@@ -263,7 +307,7 @@ export abstract class BaseDynamicFieldComponent<T extends ComponentMetadata = Co
   writeValue(value: any): void {
     if (value !== this.fieldValue() && !this.syncInProgress) {
       this.syncInProgress = true;
-      
+
       try {
         this.fieldValue.set(value);
         this.formControl.setValue(value, { emitEvent: false });
@@ -285,7 +329,7 @@ export abstract class BaseDynamicFieldComponent<T extends ComponentMetadata = Co
   }
 
   setDisabledState(isDisabled: boolean): void {
-    this.updateComponentState({ loading: isDisabled });
+    this.base.updateComponentState({ loading: isDisabled });
 
     if (isDisabled) {
       this.formControl.disable({ emitEvent: false });
@@ -301,7 +345,10 @@ export abstract class BaseDynamicFieldComponent<T extends ComponentMetadata = Co
   /**
    * Define o valor do campo com transformação opcional
    */
-  setValue(value: any, options?: { emitEvent?: boolean; transform?: boolean }): void {
+  setValue(
+    value: any,
+    options?: { emitEvent?: boolean; transform?: boolean },
+  ): void {
     if (this.syncInProgress) {
       return; // Evita loops infinitos durante sincronização
     }
@@ -315,7 +362,7 @@ export abstract class BaseDynamicFieldComponent<T extends ComponentMetadata = Co
     }
 
     this.syncInProgress = true;
-    
+
     try {
       this.fieldValue.set(processedValue);
       this.formControl.setValue(processedValue, { emitEvent: false }); // Sempre false para evitar loops
@@ -331,7 +378,7 @@ export abstract class BaseDynamicFieldComponent<T extends ComponentMetadata = Co
     this.updateFieldState({
       value: processedValue,
       dirty: true,
-      pristine: false
+      pristine: false,
     });
   }
 
@@ -348,10 +395,18 @@ export abstract class BaseDynamicFieldComponent<T extends ComponentMetadata = Co
   /**
    * Marca o campo como tocado
    */
-  override markAsTouched(): void {
-    super.markAsTouched();
+  markAsTouched(): void {
+    this.base.markAsTouched();
     this.updateFieldState({ touched: true });
     this.onTouched();
+  }
+
+  /**
+   * Encapsulates metadata configuration
+   */
+  protected setMetadata(metadata: T): void {
+    this.base.updateMetadata(metadata);
+    this.base.setComponentMetadata(metadata);
   }
 
   /**
@@ -367,7 +422,7 @@ export abstract class BaseDynamicFieldComponent<T extends ComponentMetadata = Co
       dirty: false,
       touched: false,
       errors: null,
-      valid: true
+      valid: true,
     });
 
     this.formControl.markAsPristine();
@@ -394,19 +449,18 @@ export abstract class BaseDynamicFieldComponent<T extends ComponentMetadata = Co
 
       this.updateFieldState({
         errors: hasErrors ? combinedErrors : null,
-        valid: !hasErrors
+        valid: !hasErrors,
       });
 
       this.updateValidationState({
         isValidating: false,
         lastValidationTime: Date.now(),
-        validationCount: this.validationState().validationCount + 1
+        validationCount: this.validationState().validationCount + 1,
       });
 
       this.validationChange.emit(hasErrors ? combinedErrors : null);
 
       return hasErrors ? combinedErrors : null;
-
     } catch (error) {
       this.updateValidationState({ isValidating: false });
       this.log('error', 'Validation failed', { error });
@@ -428,7 +482,7 @@ export abstract class BaseDynamicFieldComponent<T extends ComponentMetadata = Co
     this.labelEditingState.set({
       isEditing: true,
       originalLabel: metadata.label || '',
-      currentLabel: metadata.label || ''
+      currentLabel: metadata.label || '',
     });
 
     this.log('debug', 'Label editing started');
@@ -441,23 +495,27 @@ export abstract class BaseDynamicFieldComponent<T extends ComponentMetadata = Co
     const editState = this.labelEditingState();
     const metadata = this.metadata();
 
-    if (save && metadata && editState.currentLabel !== editState.originalLabel) {
+    if (
+      save &&
+      metadata &&
+      editState.currentLabel !== editState.originalLabel
+    ) {
       // Atualizar metadata com novo label
       this.setMetadata({
         ...metadata,
-        label: editState.currentLabel
+        label: editState.currentLabel,
       } as T);
 
       this.log('debug', 'Label updated', {
         from: editState.originalLabel,
-        to: editState.currentLabel
+        to: editState.currentLabel,
       });
     }
 
     this.labelEditingState.set({
       isEditing: false,
       originalLabel: '',
-      currentLabel: ''
+      currentLabel: '',
     });
   }
 
@@ -525,12 +583,11 @@ export abstract class BaseDynamicFieldComponent<T extends ComponentMetadata = Co
         timestamp: Date.now(),
         applicationContext: 'form',
         userId: 'current_user', // Seria obtido do contexto
-        formData: { [metadata.name || 'unknown']: this.fieldValue() }
+        formData: { [metadata.name || 'unknown']: this.fieldValue() },
       };
 
       // Placeholder para validação enterprise real
       return null;
-
     } catch (error) {
       this.log('error', 'Enterprise validation failed', { error });
       return null;
@@ -550,11 +607,15 @@ export abstract class BaseDynamicFieldComponent<T extends ComponentMetadata = Co
       case 'required':
         return validators?.requiredMessage || 'Este campo é obrigatório';
       case 'minlength':
-        return validators?.minLengthMessage ||
-          `Mínimo de ${errorValue.requiredLength} caracteres`;
+        return (
+          validators?.minLengthMessage ||
+          `Mínimo de ${errorValue.requiredLength} caracteres`
+        );
       case 'maxlength':
-        return validators?.maxLengthMessage ||
-          `Máximo de ${errorValue.requiredLength} caracteres`;
+        return (
+          validators?.maxLengthMessage ||
+          `Máximo de ${errorValue.requiredLength} caracteres`
+        );
       case 'min':
         return validators?.minMessage || `Valor mínimo: ${errorValue.min}`;
       case 'max':
@@ -579,12 +640,12 @@ export abstract class BaseDynamicFieldComponent<T extends ComponentMetadata = Co
         startWith(this.formControl.value),
         distinctUntilChanged(),
         debounceTime(this.getDebounceTime()),
-        this.takeUntilDestroyed()
+        this.takeUntilDestroyed(),
       )
-      .subscribe(value => {
+      .subscribe((value) => {
         if (value !== this.fieldValue() && !this.syncInProgress) {
           this.syncInProgress = true;
-          
+
           try {
             this.fieldValue.set(value);
             this.onChange(value);
@@ -599,11 +660,11 @@ export abstract class BaseDynamicFieldComponent<T extends ComponentMetadata = Co
     // Sincronizar status do FormControl
     this.formControl.statusChanges
       .pipe(this.takeUntilDestroyed())
-      .subscribe(status => {
+      .subscribe((status) => {
         this.updateFieldState({
           valid: status === 'VALID',
           pending: status === 'PENDING',
-          errors: this.formControl.errors
+          errors: this.formControl.errors,
         });
       });
   }
@@ -639,7 +700,7 @@ export abstract class BaseDynamicFieldComponent<T extends ComponentMetadata = Co
     if (metadata) {
       // Inicialização thread-safe do valor inicial
       const initialValue = metadata.defaultValue ?? null;
-      
+
       // Forçar inicialização direta sem setValue para evitar race condition na inicialização
       this.fieldValue.set(initialValue);
       this.formControl.setValue(initialValue, { emitEvent: false });
@@ -649,10 +710,13 @@ export abstract class BaseDynamicFieldComponent<T extends ComponentMetadata = Co
       this.accessibilityConfig.set({
         ariaLabel: metadata.ariaLabel || metadata.label || '',
         role: this.getAriaRole(),
-        announce: true
+        announce: true,
       });
-      
-      this.log('debug', 'Field initialized', { initialValue, metadata: metadata.name });
+
+      this.log('debug', 'Field initialized', {
+        initialValue,
+        metadata: metadata.name,
+      });
     }
   }
 
@@ -705,7 +769,9 @@ export abstract class BaseDynamicFieldComponent<T extends ComponentMetadata = Co
 
   private getDebounceTime(): number {
     const metadata = safeMetadata(this.metadata());
-    return metadata.debounceTime || metadata.performance?.debouncing?.input || 300;
+    return (
+      metadata.debounceTime || metadata.performance?.debouncing?.input || 300
+    );
   }
 
   private buildAriaDescribedBy(): string {
@@ -745,14 +811,14 @@ export abstract class BaseDynamicFieldComponent<T extends ComponentMetadata = Co
   // MÉTODO ABSTRATO PARA FOCO
   // =============================================================================
 
-  override focus(): void {
-    super.focus();
+  focus(): void {
+    this.base.focus();
     this.updateFieldState({ focused: true });
     this.focusChange.emit(true);
   }
 
-  override blur(): void {
-    super.blur();
+  blur(): void {
+    this.base.blur();
     this.updateFieldState({ focused: false });
     this.focusChange.emit(false);
     this.markAsTouched();
