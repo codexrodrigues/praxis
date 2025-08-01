@@ -10,11 +10,13 @@ describe('PraxisDynamicFormConfigEditor', () => {
   let service: jasmine.SpyObj<FormConfigService>;
 
   beforeEach(async () => {
-    service = jasmine.createSpyObj('FormConfigService', ['loadConfig'], { currentConfig: { sections: [] } });
+    service = jasmine.createSpyObj('FormConfigService', ['loadConfig'], {
+      currentConfig: { sections: [] },
+    });
 
     await TestBed.configureTestingModule({
       imports: [PraxisDynamicFormConfigEditor],
-      providers: [{ provide: FormConfigService, useValue: service }]
+      providers: [{ provide: FormConfigService, useValue: service }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PraxisDynamicFormConfigEditor);
@@ -27,14 +29,19 @@ describe('PraxisDynamicFormConfigEditor', () => {
   });
 
   it('onReset sets default config and syncs editor', () => {
-    const editorSpy = jasmine.createSpyObj<JsonConfigEditorComponent>('JsonConfigEditorComponent', ['updateJsonFromConfig']);
+    const editorSpy = jasmine.createSpyObj<JsonConfigEditorComponent>(
+      'JsonConfigEditorComponent',
+      ['updateJsonFromConfig'],
+    );
     component.jsonEditor = editorSpy;
     component.editedConfig = { sections: [{ id: 'x', rows: [] }] } as any;
 
     component.onReset();
 
     expect(component.editedConfig).toEqual(createDefaultFormConfig());
-    expect(editorSpy.updateJsonFromConfig).toHaveBeenCalledWith(component.editedConfig);
+    expect(editorSpy.updateJsonFromConfig).toHaveBeenCalledWith(
+      component.editedConfig,
+    );
   });
 
   it('onSave persists config via service and emits', () => {
