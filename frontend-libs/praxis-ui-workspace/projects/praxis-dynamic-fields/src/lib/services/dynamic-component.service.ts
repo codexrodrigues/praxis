@@ -6,9 +6,6 @@ import {
   LogLevel,
 } from '../base/base-dynamic.component';
 
-import { BaseDynamicComponent } from '../base/base-dynamic.component';
-
-
 import { ComponentMetadata } from '@praxis/core';
 
 /**
