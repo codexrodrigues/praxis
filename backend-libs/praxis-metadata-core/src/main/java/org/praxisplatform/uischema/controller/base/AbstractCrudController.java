@@ -128,7 +128,7 @@ public abstract class AbstractCrudController<E, D, ID, FD extends GenericFilterD
                             description = "Lista de registros filtrados retornada com sucesso.",
                             content = @Content(
                                     mediaType = "application/json",
-                                    schema = @Schema(implementation = Page.class) // Página de EntityModel<D>
+                                    schema = @Schema(implementation = RestApiResponse.class)
                             )
                     )
             }
