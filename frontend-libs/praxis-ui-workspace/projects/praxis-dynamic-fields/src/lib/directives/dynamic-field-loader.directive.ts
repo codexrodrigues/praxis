@@ -49,6 +49,7 @@ import { takeUntil } from 'rxjs/operators';
 import { FieldMetadata } from '@praxis/core';
 import { ComponentRegistryService } from '../services/component-registry/component-registry.service';
 import { BaseDynamicFieldComponent } from '../base/base-dynamic-field.component';
+import { logger } from '../utils/logger';
 
 /**
  * Diretiva que renderiza campos de formulário dinamicamente baseado em metadados.
@@ -185,6 +186,12 @@ export class DynamicFieldLoaderDirective implements OnInit, OnDestroy, OnChanges
   /** Cache do último snapshot dos fields para evitar re-renderizações desnecessárias */
   private lastFieldsSnapshot: string | null = null;
 
+  /** Contador de detecções consecutivas sem mudanças (para throttling de logs) */
+  private consecutiveNoChanges = 0;
+
+  /** Threshold para reduzir frequência de logs repetitivos */
+  private readonly LOG_THROTTLE_THRESHOLD = 10;
+
   // =============================================================================
   // LIFECYCLE HOOKS
   // =============================================================================
@@ -280,6 +287,7 @@ export class DynamicFieldLoaderDirective implements OnInit, OnDestroy, OnChanges
       
       // Se é primeira renderização, sempre renderizar
       if (fieldsChange.isFirstChange()) {
+        this.consecutiveNoChanges = 0; // Reset counter on actual changes
         return true;
       }
 
@@ -288,6 +296,7 @@ export class DynamicFieldLoaderDirective implements OnInit, OnDestroy, OnChanges
 
       // Se o número de campos mudou, re-renderizar
       if (previousFields.length !== currentFields.length) {
+        this.consecutiveNoChanges = 0; // Reset counter on actual changes
         return true;
       }
 
@@ -297,12 +306,22 @@ export class DynamicFieldLoaderDirective implements OnInit, OnDestroy, OnChanges
         const previous = previousFields[i];
 
         if (!previous || current.name !== previous.name || current.controlType !== previous.controlType) {
+          this.consecutiveNoChanges = 0; // Reset counter on actual changes
           return true;
         }
       }
 
       // Se chegou até aqui, não houve mudança real
-      console.debug('[DynamicFieldLoader] No actual field changes detected, skipping re-render');
+      this.consecutiveNoChanges++;
+      
+      // Log throttling: só fazer log a cada N detecções consecutivas ou na primeira
+      if (this.consecutiveNoChanges === 1 || this.consecutiveNoChanges % this.LOG_THROTTLE_THRESHOLD === 0) {
+        logger.debug(
+          `[DynamicFieldLoader] No actual field changes detected, skipping re-render ` +
+          `(${this.consecutiveNoChanges} consecutive detections)`
+        );
+      }
+      
       return false;
     }
 
@@ -458,10 +477,13 @@ export class DynamicFieldLoaderDirective implements OnInit, OnDestroy, OnChanges
       // Armazenar snapshot apenas após sucesso
       this.lastFieldsSnapshot = currentFieldsSignature;
 
-      console.debug(`[DynamicFieldLoader] Successfully rendered ${this.componentRefs.size} components`);
+      // Log apenas quando há mudanças significativas (não para cache hits)
+      if (this.componentRefs.size > 0) {
+        logger.info(`[DynamicFieldLoader] ✅ Renderizados ${this.componentRefs.size} componentes`);
+      }
 
     } catch (error) {
-      console.error('[DynamicFieldLoader] Error during field rendering:', error);
+      logger.error('[DynamicFieldLoader] Error during field rendering:', error);
       throw error;
     } finally {
       this.cdr.detectChanges();
@@ -486,7 +508,10 @@ export class DynamicFieldLoaderDirective implements OnInit, OnDestroy, OnChanges
       
       this.configureComponent(componentRef as any, field);
 
-      console.debug(`[DynamicFieldLoader] Created component for field '${field.name}' with controlType '${field.controlType}'`);
+      // Log reduzido - apenas para debug quando necessário
+      if (console.debug.length) { // Verificar se debug está ativo
+        console.debug(`[DynamicFieldLoader] Campo '${field.name}' (${field.controlType}) criado`);
+      }
 
       return componentRef as any;
 
