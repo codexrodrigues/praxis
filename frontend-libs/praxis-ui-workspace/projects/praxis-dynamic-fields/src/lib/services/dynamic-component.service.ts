@@ -8,6 +8,7 @@ import {
 
 import { BaseDynamicComponent } from '../base/base-dynamic.component';
 
+
 import { ComponentMetadata } from '@praxis/core';
 
 /**
@@ -16,12 +17,12 @@ import { ComponentMetadata } from '@praxis/core';
  * empty implementation of the {@code onComponentInit} lifecycle hook so it can
  * be injected and used by other classes without inheritance.
  */
-@Injectable({ providedIn: 'root' })
+
+@Injectable()
 export class DynamicComponentService<
   T extends ComponentMetadata = ComponentMetadata,
 > extends BaseDynamicComponent<T> {
   protected onComponentInit(): void {}
-
 
   /** Exposes the metadata signal */
   metadataSignal() {
@@ -54,6 +55,12 @@ export class DynamicComponentService<
   }
 
   /**
+   * Updates the underlying component metadata
+   */
+  updateMetadata(metadata: T): void {
+    this.setMetadata(metadata);
+  }
+  /**
    * Forwarding wrappers for mutation helpers
    */
   setComponentMetadata(metadata: T): void {
@@ -75,5 +82,4 @@ export class DynamicComponentService<
   blurPublic(): void {
     this.blur();
   }
-
 }

@@ -412,6 +412,7 @@ export abstract class BaseDynamicFieldComponent<
    * Encapsulates metadata configuration
    */
   protected setMetadata(metadata: T): void {
+    this.base.updateMetadata(metadata);
     this.base.setComponentMetadata(metadata);
   }
 
