@@ -1,9 +1,14 @@
 import { Injectable } from '@angular/core';
+
 import {
   BaseDynamicComponent,
   ComponentState,
   LogLevel,
 } from '../base/base-dynamic.component';
+
+import { BaseDynamicComponent } from '../base/base-dynamic.component';
+
+
 import { ComponentMetadata } from '@praxis/core';
 
 /**
@@ -12,6 +17,7 @@ import { ComponentMetadata } from '@praxis/core';
  * empty implementation of the {@code onComponentInit} lifecycle hook so it can
  * be injected and used by other classes without inheritance.
  */
+
 @Injectable()
 export class DynamicComponentService<
   T extends ComponentMetadata = ComponentMetadata,
@@ -53,5 +59,27 @@ export class DynamicComponentService<
    */
   updateMetadata(metadata: T): void {
     this.setMetadata(metadata);
+  }
+  /**
+   * Forwarding wrappers for mutation helpers
+   */
+  setComponentMetadata(metadata: T): void {
+    this.setMetadata(metadata);
+  }
+
+  updateComponentStatePublic(changes: Partial<ComponentState>): void {
+    this.updateComponentState(changes);
+  }
+
+  markAsTouchedPublic(): void {
+    this.markAsTouched();
+  }
+
+  focusPublic(): void {
+    this.focus();
+  }
+
+  blurPublic(): void {
+    this.blur();
   }
 }

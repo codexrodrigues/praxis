@@ -8,6 +8,7 @@ export * from './lib/praxis-core';
 export * from './lib/services/generic-crud.service';
 export * from './lib/services/schema-normalizer.service';
 export * from './lib/services/table-config.service';
+export * from './lib/services/config-storage.service';
 
 // Tokens
 export * from './lib/tokens/api-url.token';
