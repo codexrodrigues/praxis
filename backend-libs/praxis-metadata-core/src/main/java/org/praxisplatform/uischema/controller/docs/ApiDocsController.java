@@ -294,11 +294,24 @@ public class ApiDocsController {
             okResponse = responses.path("200").path("content").path("application/json").path("schema");
         }
 
-        if (!okResponse.isMissingNode()) {
-            String schemaName = extractRealTypeFromSchema(okResponse, rootNode.path(COMPONENTS).path(SCHEMAS));
-            if (schemaName != null) {
-                LOGGER.info("Schema de DTO encontrado: {}", schemaName);
-                return schemaName;
+        if (!okResponse.isMissingNode() && okResponse.has("$ref")) {
+            String schemaRef = okResponse.path("$ref").asText();
+            String wrapperSchemaName = extractSchemaNameFromRef(schemaRef);
+            LOGGER.info("Schema wrapper encontrado: {}", wrapperSchemaName);
+
+            // Agora temos o nome do schema wrapper, vamos localizar o tipo real dentro do wrapper
+            JsonNode wrapperSchema = rootNode.path(COMPONENTS).path(SCHEMAS).path(wrapperSchemaName);
+
+            if (!wrapperSchema.isMissingNode()) {
+                // Verificar se é RestApiResponseTestDTO ou RestApiResponseListTestDTO
+                if (wrapperSchemaName.startsWith("RestApiResponse")) {
+                    // Encontrar o tipo genérico dentro do RestApiResponse
+                    String realTypeName = extractRealTypeFromRestApiResponse(wrapperSchema, wrapperSchemaName);
+                    if (realTypeName != null) {
+                        LOGGER.info("Tipo real extraído de {}: {}", wrapperSchemaName, realTypeName);
+                        return realTypeName;
+                    }
+                }
             }
         }
 
@@ -331,41 +344,57 @@ public class ApiDocsController {
     /**
      * Extrai o tipo real contido dentro de um RestApiResponse ou coleção
      */
-    private String extractRealTypeFromSchema(JsonNode currentNode, JsonNode allSchemas) {
-        if (currentNode == null || currentNode.isMissingNode()) {
-            return null;
-        }
+    private String extractRealTypeFromRestApiResponse(JsonNode wrapperSchema, String wrapperSchemaName) {
+        // Análise do nome para casos comuns como "RestApiResponseTestDTO" ou "RestApiResponseListTestDTO"
+        if (wrapperSchemaName.startsWith("RestApiResponse")) {
+            String remaining = wrapperSchemaName.substring("RestApiResponse".length());
 
-        if (currentNode.has("$ref")) {
-            String schemaName = extractSchemaNameFromRef(currentNode.path("$ref").asText());
-            JsonNode nextNode = allSchemas.path(schemaName);
-
-            String deeperDto = extractRealTypeFromSchema(nextNode, allSchemas);
-            if (deeperDto != null) {
-                return deeperDto;
-            }
-
-            if (schemaName.endsWith("DTO")) {
-                return schemaName;
-            }
-
-            return null;
-        }
-
-        if ("array".equals(currentNode.path("type").asText()) && currentNode.has("items")) {
-            return extractRealTypeFromSchema(currentNode.path("items"), allSchemas);
-        }
-
-        if (currentNode.has("properties")) {
-            JsonNode properties = currentNode.path("properties");
-            if (properties.has("data")) {
-                return extractRealTypeFromSchema(properties.path("data"), allSchemas);
-            }
-            if (properties.has("content")) {
-                return extractRealTypeFromSchema(properties.path("content"), allSchemas);
+            // Verifica se é uma lista (RestApiResponseListXXX)
+            if (remaining.startsWith("List")) {
+                String typeName = remaining.substring("List".length());
+                return typeName; // Retorna o tipo contido na lista (ex: "TestDTO")
+            } else {
+                return remaining; // Retorna o tipo direto (ex: "TestDTO")
             }
         }
 
+        // Se a análise pelo nome não funcionar, tenta analisar a estrutura do schema
+        // Especificamente, buscamos a propriedade "data" do RestApiResponse
+        JsonNode dataSchema = wrapperSchema.path("properties").path("data").path("schema");
+
+        // Verifica se data é um array
+        if (dataSchema.has("type") && "array".equals(dataSchema.path("type").asText()) && dataSchema.has("items") && dataSchema.path("items").has("$ref")) {
+            // É um array, extrai o tipo dos items
+            return extractSchemaNameFromRef(dataSchema.path("items").path("$ref").asText());
+        }
+        // Se data tem referência direta
+        else if (dataSchema.has("$ref")) {
+            return extractSchemaNameFromRef(dataSchema.path("$ref").asText());
+        }
+
+        // Segunda tentativa: olhar propriedades do schema wrapper
+        JsonNode properties = wrapperSchema.path("properties");
+        if (!properties.isMissingNode()) {
+            JsonNode dataProperty = properties.path("data");
+
+            // Verifica se data é um objeto ou array
+            if (!dataProperty.isMissingNode()) {
+                // Se data é um array
+                if (dataProperty.has("type") && "array".equals(dataProperty.path("type").asText())) {
+                    // Verifica se o array tem referência para o tipo dos itens
+                    if (dataProperty.has("items") && dataProperty.path("items").has("$ref")) {
+                        String itemRef = dataProperty.path("items").path("$ref").asText();
+                        return extractSchemaNameFromRef(itemRef);
+                    }
+                }
+                // Se data tem referência direta
+                else if (dataProperty.has("$ref")) {
+                    return extractSchemaNameFromRef(dataProperty.path("$ref").asText());
+                }
+            }
+        }
+
+        // Não conseguiu extrair o tipo
         return null;
     }
 
