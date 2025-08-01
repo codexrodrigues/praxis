@@ -256,6 +256,7 @@ export class PraxisResizableWindowComponent implements OnInit, AfterViewInit, On
     this.velocityYResize = 0;
 
     this.renderer.addClass(this.document.body, 'resizing');
+    this.renderer.addClass(this.getPaneElement(), 'no-transition');
 
     const moveEvent = (event instanceof MouseEvent) ? 'mousemove' : 'touchmove';
     const upEvent = (event instanceof MouseEvent) ? 'mouseup' : 'touchend';
@@ -317,6 +318,7 @@ export class PraxisResizableWindowComponent implements OnInit, AfterViewInit, On
     this.globalCancelListener = null;
     this.resizeDirection = null;
     this.renderer.removeClass(this.document.body, 'resizing');
+    this.renderer.removeClass(this.getPaneElement(), 'no-transition');
     const pane = this.getPaneElement();
     if (this.autoCenterAfterResize) {
       if (this.overlayRef) {
@@ -428,6 +430,7 @@ export class PraxisResizableWindowComponent implements OnInit, AfterViewInit, On
     this.velocityYDrag = 0;
 
     this.renderer.addClass(this.document.body, 'dragging');
+    this.renderer.addClass(this.getPaneElement(), 'no-transition');
 
     const moveEvent = (event instanceof MouseEvent) ? 'mousemove' : 'touchmove';
     const upEvent = (event instanceof MouseEvent) ? 'mouseup' : 'touchend';
@@ -488,6 +491,7 @@ export class PraxisResizableWindowComponent implements OnInit, AfterViewInit, On
     this.globalUpListener = null;
     this.globalCancelListener = null;
     this.renderer.removeClass(this.document.body, 'dragging');
+    this.renderer.removeClass(this.getPaneElement(), 'no-transition');
     const pane = this.getPaneElement();
     if (this.autoCenterAfterResize) {
       if (this.overlayRef) {
