@@ -1,6 +1,7 @@
 import {
   ApplicationConfig,
   LOCALE_ID,
+  APP_INITIALIZER,
   provideBrowserGlobalErrorListeners,
   provideZonelessChangeDetection
 } from '@angular/core';
@@ -21,6 +22,7 @@ import {
   TitleCasePipe,
   UpperCasePipe
 } from '@angular/common';
+import { initializeComponentSystem, configureDynamicFieldsLogger, LoggerPresets } from '@praxis/dynamic-fields';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -31,6 +33,16 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     { provide: API_URL, useValue: environment.apiUrl },
     { provide: LOCALE_ID, useValue: "pt-BR" },
+    { 
+      provide: APP_INITIALIZER, 
+      useFactory: () => {
+        // Configurar logger para reduzir spam
+        configureDynamicFieldsLogger(LoggerPresets.DEVELOPMENT);
+        // Retornar a função de inicialização dos componentes
+        return initializeComponentSystem();
+      }, 
+      multi: true 
+    },
     DatePipe,UpperCasePipe,DecimalPipe,CurrencyPipe,PercentPipe,LowerCasePipe,TitleCasePipe,
     // provideMonacoEditor({
     //   defaultOptions: {

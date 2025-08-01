@@ -31,6 +31,7 @@ export * from './lib/components/material-textarea/material-textarea.component';
 export * from './lib/components/material-timepicker/material-timepicker.component';
 export * from './lib/components/material-toggle/material-toggle.component';
 export * from './lib/components/text-input/text-input.component';
+export * from './lib/components/preload-status/preload-status.component';
 
 // Services
 export * from './lib/services/action-resolver.service';
@@ -39,6 +40,7 @@ export * from './lib/services/dynamic-component.service';
 export * from './lib/services/keyboard-shortcut.service';
 export * from './lib/services/component-registry/component-registry.service';
 export * from './lib/services/component-registry/component-registry.interface';
+export * from './lib/services/component-preloader.service';
 
 // Providers
 export {
@@ -48,3 +50,4 @@ export {
 
 // Utilities
 export * from './lib/utils/error-state-matcher';
+export * from './lib/utils/logger';
