@@ -7,19 +7,39 @@ import {
   OnDestroy,
   OnInit,
   SimpleChanges,
-  ChangeDetectorRef
+  ChangeDetectorRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { GenericCrudService, FieldMetadata, mapFieldDefinitionsToMetadata, EndpointConfig } from '@praxis/core';
+import {
+  GenericCrudService,
+  FieldMetadata,
+  mapFieldDefinitionsToMetadata,
+  EndpointConfig,
+} from '@praxis/core';
 import { DynamicFieldLoaderDirective } from '@praxis/dynamic-fields';
-import { FormConfig, FormLayout, FormSubmitEvent, FormReadyEvent, FormValueChangeEvent, FormSection, FormRow, FormColumn, PraxisResizableWindowService } from '@praxis/core';
+import {
+  FormConfig,
+  FormLayout,
+  FormSubmitEvent,
+  FormReadyEvent,
+  FormValueChangeEvent,
+  FormSection,
+  FormRow,
+  FormColumn,
+  PraxisResizableWindowService,
+} from '@praxis/core';
 import { FormLayoutService } from './services/form-layout.service';
 import { FormContextService } from './services/form-context.service';
 import { PraxisDynamicFormConfigEditor } from './praxis-dynamic-form-config-editor';
@@ -28,9 +48,19 @@ import { PraxisDynamicFormConfigEditor } from './praxis-dynamic-form-config-edit
   selector: 'praxis-dynamic-form',
   standalone: true,
   providers: [GenericCrudService],
-  imports: [CommonModule, ReactiveFormsModule, DynamicFieldLoaderDirective, MatIconModule, MatButtonModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    DynamicFieldLoaderDirective,
+    MatIconModule,
+    MatButtonModule,
+  ],
   template: `
-    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="praxis-dynamic-form">
+    <form
+      [formGroup]="form"
+      (ngSubmit)="onSubmit()"
+      class="praxis-dynamic-form"
+    >
       <ng-container *ngFor="let section of config.sections">
         <div class="form-section">
           <h3 *ngIf="section.title">{{ section.title }}</h3>
@@ -39,24 +69,41 @@ import { PraxisDynamicFormConfigEditor } from './praxis-dynamic-form-config-edit
               <ng-container
                 dynamicFieldLoader
                 [fields]="getColumnFields(column)"
-                [formGroup]="form">
+                [formGroup]="form"
+              >
               </ng-container>
             </div>
           </div>
         </div>
       </ng-container>
       <div class="form-actions">
-        <button type="submit" mat-raised-button color="primary" [disabled]="form.invalid">
+        <button
+          type="submit"
+          mat-raised-button
+          color="primary"
+          [disabled]="form.invalid"
+        >
           {{ mode === 'edit' ? 'Atualizar' : 'Criar' }}
         </button>
 
-        <button *ngIf="editModeEnabled" type="button" mat-icon-button (click)="openConfigEditor()">
+        <button
+          *ngIf="editModeEnabled"
+          type="button"
+          mat-icon-button
+          (click)="openConfigEditor()"
+        >
           <mat-icon>settings</mat-icon>
         </button>
       </div>
     </form>
   `,
-  styles: [`:host{display:block;}`]
+  styles: [
+    `
+      :host {
+        display: block;
+      }
+    `,
+  ],
 })
 export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   @Input() resourcePath?: string;
@@ -100,7 +147,8 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
     private fb: FormBuilder,
     private cdr: ChangeDetectorRef,
     private layoutService: FormLayoutService,
-    private contextService: FormContextService
+    private contextService: FormContextService,
+    private windowService: PraxisResizableWindowService,
   ) {
     this.form = this.fb.group({});
   }
@@ -125,31 +173,47 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   }
 
   private loadSchema(): void {
-    this.crud.getSchema().pipe(takeUntil(this.destroy$)).subscribe(defs => {
-      this.fieldMetadata = mapFieldDefinitionsToMetadata(defs);
-      this.buildForm();
-      if (this.pendingEntityId != null) {
-        this.loadEntity();
-      }
-      this.cdr.detectChanges();
-    });
+    this.crud
+      .getSchema()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((defs) => {
+        this.fieldMetadata = mapFieldDefinitionsToMetadata(defs);
+        this.buildForm();
+        if (this.pendingEntityId != null) {
+          this.loadEntity();
+        }
+        this.cdr.detectChanges();
+      });
   }
 
   private loadEntity(): void {
-    if (this.pendingEntityId == null) { return; }
-    this.crud.getById(this.pendingEntityId).pipe(takeUntil(this.destroy$)).subscribe((data: any) => {
-      this.form.patchValue(data);
-    });
+    if (this.pendingEntityId == null) {
+      return;
+    }
+    this.crud
+      .getById(this.pendingEntityId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((data: any) => {
+        this.form.patchValue(data);
+      });
   }
 
   private buildForm(): void {
     const controls: any = {};
     for (const field of this.fieldMetadata) {
       const validators = [];
-      if (field.required) { validators.push(Validators.required); }
-      if (field.validators?.minLength) { validators.push(Validators.minLength(field.validators.minLength)); }
-      if (field.validators?.maxLength) { validators.push(Validators.maxLength(field.validators.maxLength)); }
-      if (field.validators?.pattern) { validators.push(Validators.pattern(field.validators.pattern)); }
+      if (field.required) {
+        validators.push(Validators.required);
+      }
+      if (field.validators?.minLength) {
+        validators.push(Validators.minLength(field.validators.minLength));
+      }
+      if (field.validators?.maxLength) {
+        validators.push(Validators.maxLength(field.validators.maxLength));
+      }
+      if (field.validators?.pattern) {
+        validators.push(Validators.pattern(field.validators.pattern));
+      }
       controls[field.name] = [field.defaultValue ?? null, validators];
     }
     this.form = this.fb.group(controls);
@@ -164,12 +228,12 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
 
     this.form.valueChanges
       .pipe(takeUntil(this.destroy$))
-      .subscribe(values => {
+      .subscribe((values) => {
         this.valueChange.emit({
           formData: values,
           changedFields: Object.keys(values),
           isValid: this.form.valid,
-          entityId: this.resourceId ?? undefined
+          entityId: this.resourceId ?? undefined,
         });
       });
 
@@ -178,7 +242,7 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
       fieldsMetadata: this.fieldMetadata,
       layout: this.layout,
       hasEntity: this.resourceId != null,
-      entityId: this.resourceId ?? undefined
+      entityId: this.resourceId ?? undefined,
     });
   }
 
@@ -196,16 +260,19 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
    * Generates a FormConfig from FieldMetadata array
    * Groups fields by their 'group' property or creates a single default section
    */
-  private generateFormConfigFromMetadata(fields: FieldMetadata[], options?: {
-    fieldsPerRow?: number;
-    defaultSectionTitle?: string;
-  }): FormConfig {
+  private generateFormConfigFromMetadata(
+    fields: FieldMetadata[],
+    options?: {
+      fieldsPerRow?: number;
+      defaultSectionTitle?: string;
+    },
+  ): FormConfig {
     const fieldsPerRow = options?.fieldsPerRow ?? 2;
     const defaultSectionTitle = options?.defaultSectionTitle ?? 'Informações';
 
     // Group fields by their 'group' property
     const groupedFields = new Map<string, FieldMetadata[]>();
-    
+
     for (const field of fields) {
       const groupName = field.group || 'default';
       if (!groupedFields.has(groupName)) {
@@ -221,16 +288,17 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
 
     // Create sections from grouped fields
     const sections: FormSection[] = [];
-    
+
     groupedFields.forEach((groupFields, groupName) => {
-      const sectionTitle = groupName === 'default' 
-        ? defaultSectionTitle 
-        : this.capitalizeFirstLetter(groupName);
+      const sectionTitle =
+        groupName === 'default'
+          ? defaultSectionTitle
+          : this.capitalizeFirstLetter(groupName);
 
       sections.push({
         id: groupName,
         title: sectionTitle,
-        rows: this.createRowsFromFields(groupFields, fieldsPerRow)
+        rows: this.createRowsFromFields(groupFields, fieldsPerRow),
       });
     });
 
@@ -240,18 +308,21 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   /**
    * Creates rows from a list of fields, organizing them into columns
    */
-  private createRowsFromFields(fields: FieldMetadata[], fieldsPerRow: number = 2): FormRow[] {
+  private createRowsFromFields(
+    fields: FieldMetadata[],
+    fieldsPerRow: number = 2,
+  ): FormRow[] {
     const rows: FormRow[] = [];
-    
+
     for (let i = 0; i < fields.length; i += fieldsPerRow) {
       const rowFields = fields.slice(i, i + fieldsPerRow);
-      const columns: FormColumn[] = rowFields.map(field => ({
-        fields: [field.name]
+      const columns: FormColumn[] = rowFields.map((field) => ({
+        fields: [field.name],
       }));
-      
+
       rows.push({ columns });
     }
-    
+
     return rows;
   }
 
@@ -263,32 +334,78 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   }
 
   getColumnFields(column: { fields: string[] }): FieldMetadata[] {
-    return this.fieldMetadata.filter(f => column.fields.includes(f.name));
+    return this.fieldMetadata.filter((f) => column.fields.includes(f.name));
   }
 
   onSubmit(): void {
-    if (this.form.invalid) { return; }
+    if (this.form.invalid) {
+      return;
+    }
     const formData = this.form.value;
-    const operation: 'create' | 'update' = this.mode === 'edit' && this.resourceId != null ? 'update' : 'create';
+    const operation: 'create' | 'update' =
+      this.mode === 'edit' && this.resourceId != null ? 'update' : 'create';
 
-    this.formSubmit.emit({ stage: 'before', formData, isValid: true, operation, entityId: this.resourceId ?? undefined });
+    this.formSubmit.emit({
+      stage: 'before',
+      formData,
+      isValid: true,
+      operation,
+      entityId: this.resourceId ?? undefined,
+    });
 
-    const req$ = operation === 'update'
-      ? this.crud.update(this.resourceId!, formData)
-      : this.crud.create(formData);
+    const req$ =
+      operation === 'update'
+        ? this.crud.update(this.resourceId!, formData)
+        : this.crud.create(formData);
 
     req$.pipe(takeUntil(this.destroy$)).subscribe({
-      next: result => {
-        this.formSubmit.emit({ stage: 'after', formData, isValid: true, operation, entityId: this.resourceId ?? undefined, result });
+      next: (result) => {
+        this.formSubmit.emit({
+          stage: 'after',
+          formData,
+          isValid: true,
+          operation,
+          entityId: this.resourceId ?? undefined,
+          result,
+        });
       },
-      error: error => {
-        this.formSubmit.emit({ stage: 'error', formData, isValid: false, operation, entityId: this.resourceId ?? undefined, error });
-      }
+      error: (error) => {
+        this.formSubmit.emit({
+          stage: 'error',
+          formData,
+          isValid: false,
+          operation,
+          entityId: this.resourceId ?? undefined,
+          error,
+        });
+      },
     });
   }
 
   openConfigEditor(): void {
-    this.configChange.emit(this.config);
+    const configCopy = JSON.parse(JSON.stringify(this.config)) as FormConfig;
+
+    const ref = this.windowService.open({
+      title: 'Configuração do Formulário Dinâmico',
+      contentComponent: PraxisDynamicFormConfigEditor,
+      data: configCopy,
+      initialWidth: '90vw',
+      initialHeight: '90vh',
+      minWidth: '320px',
+      minHeight: '600px',
+      autoCenterAfterResize: false,
+      enableTouch: true,
+      disableResize: false,
+      disableMaximize: false,
+    });
+
+    ref.closed.pipe(takeUntil(this.destroy$)).subscribe((result) => {
+      if (result) {
+        this.config = result as FormConfig;
+        this.configChange.emit(this.config);
+      }
+    });
+
     if (this.formId && this.layout) {
       this.layoutService.saveLayout(this.formId, this.layout);
     }

@@ -9,7 +9,7 @@ describe('FormLayoutEditorComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [FormLayoutEditorComponent, DragDropModule]
+      imports: [FormLayoutEditorComponent, DragDropModule],
     }).compileComponents();
 
     fixture = TestBed.createComponent(FormLayoutEditorComponent);
@@ -20,8 +20,8 @@ describe('FormLayoutEditorComponent', () => {
     const layout: FormLayout = {
       fieldsets: [
         { id: 'fs1', title: 'FS1', orientation: 'vertical', rows: [] },
-        { id: 'fs2', title: 'FS2', orientation: 'vertical', rows: [] }
-      ]
+        { id: 'fs2', title: 'FS2', orientation: 'vertical', rows: [] },
+      ],
     } as any;
     component.layout = layout;
     fixture.detectChanges();
@@ -33,8 +33,8 @@ describe('FormLayoutEditorComponent', () => {
       previousContainer: { data: layout.fieldsets } as any,
       item: {} as any,
       isPointerOverContainer: true,
-      distance: { x: 0, y: 0 }
-    });
+      distance: { x: 0, y: 0 },
+    } as any);
 
     expect(component.layout.fieldsets[0].id).toBe('fs2');
   });

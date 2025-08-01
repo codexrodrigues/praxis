@@ -10,11 +10,18 @@ describe('PraxisDynamicForm', () => {
   let crudService: jasmine.SpyObj<GenericCrudService<any>>;
 
   beforeEach(async () => {
-    crudService = jasmine.createSpyObj('GenericCrudService', ['configure', 'configureEndpoints', 'getSchema', 'get', 'create', 'update']);
+    crudService = jasmine.createSpyObj('GenericCrudService', [
+      'configure',
+      'configureEndpoints',
+      'getSchema',
+      'getById',
+      'create',
+      'update',
+    ]);
 
     await TestBed.configureTestingModule({
       imports: [PraxisDynamicForm, DynamicFieldLoaderDirective],
-      providers: [{ provide: GenericCrudService, useValue: crudService }]
+      providers: [{ provide: GenericCrudService, useValue: crudService }],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PraxisDynamicForm);
@@ -31,15 +38,27 @@ describe('PraxisDynamicForm', () => {
   });
 
   it('altera para modo edit ao receber resourceId', () => {
-    crudService.get.and.returnValue(of({ id: 1, nome: 'Teste' }));
+    crudService.getById.and.returnValue(of({ id: 1, nome: 'Teste' }));
     component.mode = 'edit';
     component.resourceId = 1;
     component.resourcePath = 'usuarios';
     crudService.getSchema.and.returnValue(of([]));
-    component.ngOnChanges({ resourcePath: { currentValue: 'usuarios', previousValue: undefined, firstChange: true, isFirstChange: () => true }, resourceId: { currentValue: 1, previousValue: undefined, firstChange: true, isFirstChange: () => true } });
-    expect(crudService.get).toHaveBeenCalled();
+    component.ngOnChanges({
+      resourcePath: {
+        currentValue: 'usuarios',
+        previousValue: undefined,
+        firstChange: true,
+        isFirstChange: () => true,
+      },
+      resourceId: {
+        currentValue: 1,
+        previousValue: undefined,
+        firstChange: true,
+        isFirstChange: () => true,
+      },
+    });
+    expect(crudService.getById).toHaveBeenCalled();
   });
-
 
   it('mostra botão de edição quando editModeEnabled é verdadeiro', () => {
     const schema = [{ name: 'nome', controlType: 'input' }];
@@ -47,7 +66,9 @@ describe('PraxisDynamicForm', () => {
     component.resourcePath = 'usuarios';
     component.editModeEnabled = true;
     fixture.detectChanges();
-    const button = fixture.nativeElement.querySelector('button[mat-icon-button]');
+    const button = fixture.nativeElement.querySelector(
+      'button[mat-icon-button]',
+    );
     expect(button).toBeTruthy();
   });
 
@@ -72,11 +93,12 @@ describe('PraxisDynamicForm', () => {
     crudService.create.and.returnValue(of({ id: 1 } as any));
     const submitSpy = jasmine.createSpy('submit');
     component.formSubmit.subscribe(submitSpy);
-    component['fieldMetadata'] = [{ name: 'nome', controlType: 'input' } as any];
+    component['fieldMetadata'] = [
+      { name: 'nome', controlType: 'input' } as any,
+    ];
     (component as any).buildForm();
     component.form.setValue({ nome: 'Teste' });
     component.onSubmit();
     expect(submitSpy).toHaveBeenCalled();
   });
-
 });
