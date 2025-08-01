@@ -263,7 +263,8 @@ These components work in tandem. For instance, when you annotate a field with `@
     *   The `@Filterable` annotation has key attributes such as:
         *   `operation()`: Defines the comparison operation (e.g., `EQUAL`, `LIKE`, `GREATER_THAN`, `BETWEEN` via the `FilterOperation` enum).
         *   `relation()`: Specifies a path to a field in a related entity if the filter needs to span across JPA relationships (e.g., `customer.address.city`).
-    *   When applied to `List<LocalDate>` or `List<LocalDateTime>` fields with `operation = BETWEEN`, the generated UI schema automatically sets the `controlType` to `DATE_RANGE` or `DATE_TIME_RANGE`. This works even if the field name doesn't end with `Filtro`.
+
+    *   When applied to `List<LocalDate>` or `List<LocalDateTime>` fields with `operation = BETWEEN`, the generated UI schema automatically sets the `controlType` to `DATE_RANGE` or `DATE_TIME_RANGE` and the data type to `DATE`. This works even if the field name doesn't end with `Filtro`.
 
 ### 5. CRUD Helpers
 
