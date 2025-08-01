@@ -26,6 +26,7 @@ import { CommonModule } from '@angular/common';
 
 import { BaseDynamicFieldComponent } from '../../base/base-dynamic-field.component';
 import { MaterialRadioMetadata, FieldOption, ComponentMetadata } from '@praxis/core';
+import { DynamicComponentService } from '../../services/dynamic-component.service';
 
 // =============================================================================
 // TYPE HELPERS PARA INDEX SIGNATURE SAFETY
@@ -72,11 +73,14 @@ interface RadioState {
     MatIconModule,
     MatTooltipModule
   ],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => MaterialRadioComponent),
-    multi: true
-  }],
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => MaterialRadioComponent),
+      multi: true
+    },
+    DynamicComponentService
+  ],
   host: {
     '[class]': 'cssClasses() + " " + fieldCssClasses()',
     '[attr.data-field-type]': '"radio"',

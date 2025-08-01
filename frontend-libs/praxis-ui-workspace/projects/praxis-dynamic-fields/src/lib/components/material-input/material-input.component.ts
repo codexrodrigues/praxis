@@ -31,6 +31,7 @@ import { CommonModule } from '@angular/common';
 import { BaseDynamicFieldComponent } from '../../base/base-dynamic-field.component';
 import { MaterialInputMetadata, ComponentMetadata } from '@praxis/core';
 import { getErrorStateMatcherForField } from '../../utils/error-state-matcher';
+import { DynamicComponentService } from '../../services/dynamic-component.service';
 
 // =============================================================================
 // TYPE HELPERS PARA INDEX SIGNATURE SAFETY
@@ -75,11 +76,14 @@ interface InputState {
     MatButtonModule,
     MatTooltipModule
   ],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => MaterialInputComponent),
-    multi: true
-  }],
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => MaterialInputComponent),
+      multi: true
+    },
+    DynamicComponentService
+  ],
   host: {
     '[class]': 'cssClasses() + " " + fieldCssClasses()',
     '[attr.data-field-type]': '"input"',

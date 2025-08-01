@@ -27,6 +27,7 @@ import { CommonModule } from '@angular/common';
 
 import { BaseDynamicFieldComponent } from '../../base/base-dynamic-field.component';
 import { MaterialCheckboxMetadata, FieldOption } from '@praxis/core';
+import { DynamicComponentService } from '../../services/dynamic-component.service';
 
 // =============================================================================
 // INTERFACES ESPECÍFICAS DO CHECKBOX
@@ -57,11 +58,14 @@ interface CheckboxState {
     MatTooltipModule,
     MatDividerModule
   ],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => MaterialCheckboxComponent),
-    multi: true
-  }],
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => MaterialCheckboxComponent),
+      multi: true
+    },
+    DynamicComponentService
+  ],
 host: {
     '[class]': 'cssClasses() + " " + fieldCssClasses()',
     '[attr.data-field-type]': '"checkbox"',

@@ -32,6 +32,7 @@ import { CommonModule } from '@angular/common';
 
 import { BaseDynamicFieldComponent } from '../../base/base-dynamic-field.component';
 import { MaterialTextareaMetadata } from '@praxis/core';
+import { DynamicComponentService } from '../../services/dynamic-component.service';
 
 // =============================================================================
 // INTERFACES ESPECÍFICAS DO TEXTAREA
@@ -65,11 +66,14 @@ interface TextareaState {
     MatTooltipModule,
 TextFieldModule
   ],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => MaterialTextareaComponent),
-    multi: true
-  }],
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => MaterialTextareaComponent),
+      multi: true
+    },
+    DynamicComponentService
+  ],
   host: {
     '[class]': 'cssClasses() + " " + fieldCssClasses()',
     '[attr.data-field-type]': '"textarea"',

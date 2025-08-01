@@ -42,6 +42,7 @@ import { SelectSearchInputComponent } from './select-search-input.component';
 import { SelectOptionsListComponent } from './select-options-list.component';
 import { SelectChipsComponent } from './select-chips.component';
 import { GenericCrudService } from '@praxis/core';
+import { DynamicComponentService } from '../../services/dynamic-component.service';
 
 // =============================================================================
 // TYPE HELPERS PARA INDEX SIGNATURE SAFETY
@@ -99,11 +100,14 @@ interface SelectState {
     SelectOptionsListComponent,
     SelectChipsComponent
   ],
-  providers: [{
-    provide: NG_VALUE_ACCESSOR,
-    useExisting: forwardRef(() => MaterialSelectComponent),
-    multi: true
-  }],
+  providers: [
+    {
+      provide: NG_VALUE_ACCESSOR,
+      useExisting: forwardRef(() => MaterialSelectComponent),
+      multi: true
+    },
+    DynamicComponentService
+  ],
   host: {
     '[class]': 'cssClasses() + " " + fieldCssClasses()',
     '[attr.data-field-type]': '"select"',
