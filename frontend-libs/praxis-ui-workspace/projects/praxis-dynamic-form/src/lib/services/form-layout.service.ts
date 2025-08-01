@@ -1,36 +1,23 @@
-import { Injectable, InjectionToken, Inject, Optional } from '@angular/core';
-import { FormLayout } from '@praxis/core';
-
-export interface FormLayoutStorage {
-  load(formId: string): FormLayout | null;
-  save(formId: string, layout: FormLayout): void;
-}
-
-export const LOCAL_STORAGE_FORM_LAYOUT_PROVIDER: FormLayoutStorage = {
-  load(formId: string): FormLayout | null {
-    const raw = localStorage.getItem(`praxis-layout-${formId}`);
-    return raw ? (JSON.parse(raw) as FormLayout) : null;
-  },
-  save(formId: string, layout: FormLayout): void {
-    localStorage.setItem(`praxis-layout-${formId}`, JSON.stringify(layout));
-  }
-};
-
-export const FORM_LAYOUT_STORAGE = new InjectionToken<FormLayoutStorage>('FORM_LAYOUT_STORAGE');
+import { Injectable, Inject, Optional } from '@angular/core';
+import { FormLayout, ConfigStorage, CONFIG_STORAGE } from '@praxis/core';
 
 @Injectable({ providedIn: 'root' })
 export class FormLayoutService {
-  private provider: FormLayoutStorage;
-
-  constructor(@Optional() @Inject(FORM_LAYOUT_STORAGE) provider?: FormLayoutStorage) {
-    this.provider = provider ?? LOCAL_STORAGE_FORM_LAYOUT_PROVIDER;
-  }
+  constructor(
+    @Optional() @Inject(CONFIG_STORAGE) private storage?: ConfigStorage,
+  ) {}
 
   loadLayout(formId: string): FormLayout | null {
-    return this.provider.load(formId);
+    return (
+      this.storage?.loadConfig<FormLayout>(`praxis-layout-${formId}`) ?? null
+    );
   }
 
   saveLayout(formId: string, layout: FormLayout): void {
-    this.provider.save(formId, layout);
+    this.storage?.saveConfig(`praxis-layout-${formId}`, layout);
+  }
+
+  clearLayout(formId: string): void {
+    this.storage?.clearConfig(`praxis-layout-${formId}`);
   }
 }
