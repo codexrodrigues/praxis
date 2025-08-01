@@ -30,6 +30,7 @@ export * from './lib/components/material-slider/material-slider.component';
 export * from './lib/components/material-textarea/material-textarea.component';
 export * from './lib/components/material-timepicker/material-timepicker.component';
 export * from './lib/components/material-toggle/material-toggle.component';
+export * from './lib/components/text-input/text-input.component';
 
 // Services
 export * from './lib/services/action-resolver.service';
