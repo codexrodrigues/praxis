@@ -21,12 +21,11 @@ import {
 import {
   MaterialInputMetadata,
   MaterialSelectMetadata,
-  MaterialDateMetadata,
+  MaterialDatepickerMetadata,
   MaterialCheckboxMetadata,
   MaterialButtonMetadata,
   MaterialNumericMetadata,
-  MaterialTextareaMetadata,
-  MaterialAutocompleteMetadata
+  MaterialTextareaMetadata
 } from '../models/material-field-metadata.interface';
 
 // =============================================================================
@@ -126,7 +125,7 @@ export const passwordInput: MaterialInputMetadata = {
 export const salaryInput: MaterialNumericMetadata = {
   name: 'salary',
   label: 'Annual Salary',
-  controlType: 'input',
+  controlType: 'numericTextBox',
   inputType: 'number',
   required: true,
   min: 0,
@@ -182,7 +181,7 @@ export const countrySelect: MaterialSelectMetadata = {
 export const skillsSelect: MaterialSelectMetadata = {
   name: 'skills',
   label: 'Skills',
-  controlType: 'multiselect',
+  controlType: 'multiSelect',
   multiple: true,
   searchable: true,
   maxSelections: 10,
@@ -209,33 +208,6 @@ export const skillsSelect: MaterialSelectMetadata = {
   }
 };
 
-/**
- * Example: Autocomplete with dynamic loading
- */
-export const cityAutocomplete: MaterialAutocompleteMetadata = {
-  name: 'city',
-  label: 'City',
-  controlType: 'autocomplete',
-  required: true,
-  minSearchLength: 2,
-  searchDebounce: 300,
-  endpoint: '/api/cities/search',
-  valueField: 'id',
-  displayField: 'name',
-  maxSuggestions: 10,
-  highlightMatches: true,
-  allowFreeText: false,
-  validators: {
-    required: true,
-    requiredMessage: 'Please select a city'
-  },
-  materialDesign: {
-    appearance: 'outline',
-    color: 'primary'
-  },
-  prefixIcon: 'location_city'
-};
-
 // =============================================================================
 // DATE/TIME FIELD EXAMPLES
 // =============================================================================
@@ -243,10 +215,10 @@ export const cityAutocomplete: MaterialAutocompleteMetadata = {
 /**
  * Example: Birth date with age validation
  */
-export const birthDatePicker: MaterialDateMetadata = {
+export const birthDatePicker: MaterialDatepickerMetadata = {
   name: 'birthDate',
   label: 'Date of Birth',
-  controlType: 'datepicker',
+  controlType: 'date',
   required: true,
   maxDate: new Date(), // Cannot be in the future
   minDate: new Date(1900, 0, 1), // Reasonable minimum
@@ -270,10 +242,10 @@ export const birthDatePicker: MaterialDateMetadata = {
 /**
  * Example: Date range picker for vacation requests
  */
-export const vacationDates: MaterialDateMetadata = {
+export const vacationDates: MaterialDatepickerMetadata = {
   name: 'vacationDates',
   label: 'Vacation Period',
-  controlType: 'datepicker',
+  controlType: 'dateRange',
   required: true,
   rangeSelection: true,
   minDate: new Date(), // Cannot select past dates
@@ -442,7 +414,7 @@ export const productForm: FieldMetadata[] = [
   {
     name: 'price',
     label: 'Price',
-    controlType: 'input',
+    controlType: 'numericTextBox',
     inputType: 'number',
     required: true,
     order: 4,
@@ -463,7 +435,7 @@ export const productForm: FieldMetadata[] = [
   {
     name: 'tags',
     label: 'Tags',
-    controlType: 'chip-list',
+    controlType: 'chipList',
     order: 5,
     maxChips: 10,
     separatorKeys: [',', ';'],
@@ -719,8 +691,8 @@ function mapLegacyControlType(legacyType: string): any {
     'text': 'input',
     'number': 'input',
     'dropdown': 'select',
-    'multiselect': 'multiselect',
-    'date': 'datepicker',
+    'multiselect': 'multiSelect',
+    'date': 'date',
     'checkbox': 'checkbox',
     'radio': 'radio',
     'textarea': 'textarea'
