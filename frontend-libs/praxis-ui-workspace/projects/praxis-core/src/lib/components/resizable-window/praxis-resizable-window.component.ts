@@ -290,7 +290,7 @@ export class PraxisResizableWindowComponent implements OnInit, AfterViewInit, On
 
     const deltaX = (event instanceof MouseEvent) ? event.clientX - this.startX : event.touches[0].clientX - this.startX;
     const deltaY = (event instanceof MouseEvent) ? event.clientY - this.startY : event.touches[0].clientY - this.startY;
-    console.log('🔄 OnResizeMove:', { direction: this.resizeDirection, deltaX, deltaY, minDrag: this.minDragDistance });
+    // console.log('🔄 OnResizeMove:', { direction: this.resizeDirection, deltaX, deltaY, minDrag: this.minDragDistance });
     
     if (Math.abs(deltaX) < this.minDragDistance && Math.abs(deltaY) < this.minDragDistance) return;
 
@@ -309,20 +309,47 @@ export class PraxisResizableWindowComponent implements OnInit, AfterViewInit, On
     let newLeft = this.startLeft;
     let newTop = this.startTop;
 
+    const originalWidth = newWidth;
+    const originalHeight = newHeight;
+    
     if (this.resizeDirection.includes('e')) newWidth += deltaX;
     if (this.resizeDirection.includes('w')) { newWidth -= deltaX; newLeft += deltaX; }
     if (this.resizeDirection.includes('s')) newHeight += deltaY;
     if (this.resizeDirection.includes('n')) { newHeight -= deltaY; newTop += deltaY; }
 
+    const beforeConstraints = { width: newWidth, height: newHeight };
+    
     newWidth = Math.max(this.minWidthPx, newWidth);
     newHeight = Math.max(this.minHeightPx, newHeight);
 
-    const maxW = window.innerWidth - 20;
-    const maxH = window.innerHeight - 20;
+    const maxW = window.innerWidth - 5; // Margem menor
+    const maxH = window.innerHeight - 5;
     newWidth = Math.min(maxW, newWidth);
     newHeight = Math.min(maxH, newHeight);
+    
+    console.log('🔍 Resize Debug - Direction & Delta:', {
+      direction: this.resizeDirection,
+      deltaX, deltaY
+    });
+    console.log('🔍 Resize Debug - Start Dimensions:', {
+      startWidth: this.startWidth,
+      startHeight: this.startHeight
+    });
+    console.log('🔍 Resize Debug - Calculations:', {
+      originalWidth,
+      originalHeight,
+      beforeConstraints,
+      afterConstraints: { width: newWidth, height: newHeight }
+    });
+    console.log('🔍 Resize Debug - Limits:', {
+      maxW, maxH,
+      minW: this.minWidthPx,
+      minH: this.minHeightPx,
+      windowWidth: window.innerWidth,
+      windowHeight: window.innerHeight
+    });
 
-    console.log('📏 UpdateSize:', { newWidth, newHeight, newTop, newLeft });
+    // console.log('📏 UpdateSize:', { newWidth, newHeight, newTop, newLeft });
     this.updateSize(`${newWidth}px`, `${newHeight}px`);
     // Fix: Parâmetros corretos (top, left)
     this.updatePosition(`${newTop}px`, `${newLeft}px`);
@@ -762,9 +789,19 @@ export class PraxisResizableWindowComponent implements OnInit, AfterViewInit, On
   }
 
   private updateSize(width: string, height: string): void {
-    console.log('📐 UpdateSize called:', { width, height, hasOverlay: !!this.overlayRef });
+    // console.log('📐 UpdateSize called:', { width, height, hasOverlay: !!this.overlayRef });
     if (this.overlayRef) {
+      // Método 1: Tenta updateSize do CDK
       this.overlayRef.updateSize({ width, height });
+      
+      // Método 2: BYPASS - Força estilos diretamente no overlay element
+      const overlayElement = this.overlayRef.overlayElement;
+      this.renderer.setStyle(overlayElement, 'width', width, 1); // 1 = RendererStyleFlags2.Important
+      this.renderer.setStyle(overlayElement, 'height', height, 1);
+      this.renderer.setStyle(overlayElement, 'max-width', width, 1);
+      this.renderer.setStyle(overlayElement, 'max-height', height, 1);
+      
+      // console.log('🔧 BYPASS: Applied styles directly to overlay element');
     } else {
       const pane = this.getPaneElement();
       this.renderer.setStyle(pane, 'width', width);
@@ -773,7 +810,7 @@ export class PraxisResizableWindowComponent implements OnInit, AfterViewInit, On
   }
 
   private updatePosition(top: string, left: string): void {
-    console.log('📍 UpdatePosition called:', { top, left, hasOverlay: !!this.overlayRef });
+    // console.log('📍 UpdatePosition called:', { top, left, hasOverlay: !!this.overlayRef });
     if (this.overlayRef) {
       this.overlayRef.updatePositionStrategy(
         this.overlay.position().global().top(top).left(left)

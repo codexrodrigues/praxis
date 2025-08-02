@@ -71,7 +71,7 @@ praxis-resizable-window.maximized {
   background: var(--mat-sys-surface-container); // Use elevated surface for depth in dark mode
   border: 1px solid var(--mat-sys-outline-variant); // Subtle outline for borders
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); // Increased shadow opacity for dark mode visibility
-  transition: width 0.15s ease-out, height 0.15s ease-out, top 0.1s ease-out, left 0.1s ease-out;
+  /* transition: width 0.15s ease-out, height 0.15s ease-out, top 0.1s ease-out, left 0.1s ease-out; */ /* Desabilitado para debug */
   position: relative; // Importante: contexto de posicionamento para os handles
   
   .resize-handle {
@@ -129,7 +129,7 @@ praxis-resizable-window.maximized {
 
 .cdk-overlay-pane {
   will-change: transform, width, height, top, left;
-  transition: width 0.15s ease-out, height 0.15s ease-out, top 0.1s ease-out, left 0.1s ease-out, transform 0.1s ease-out;
+  /* transition: width 0.15s ease-out, height 0.15s ease-out, top 0.1s ease-out, left 0.1s ease-out, transform 0.1s ease-out; */ /* Desabilitado para debug */
 }
 
 // Maximized state styles for overlay - higher specificity
