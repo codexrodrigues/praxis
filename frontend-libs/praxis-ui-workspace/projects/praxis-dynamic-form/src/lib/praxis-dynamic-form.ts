@@ -8,6 +8,7 @@ import {
   OnInit,
   SimpleChanges,
   ChangeDetectorRef,
+  Inject,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -19,6 +20,8 @@ import {
 
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -31,10 +34,15 @@ import {
 import { DynamicFieldLoaderDirective } from '@praxis/dynamic-fields';
 import {
   FormConfig,
+  syncWithServerMetadata,
+  mergeFieldMetadata,
+  getReferencedFieldMetadata,
+  SyncResult,
   FormLayout,
   FormSubmitEvent,
   FormReadyEvent,
   FormValueChangeEvent,
+  FormInitializationError,
   FormSection,
   FormRow,
   FormColumn,
@@ -42,6 +50,7 @@ import {
 } from '@praxis/core';
 import { FormLayoutService } from './services/form-layout.service';
 import { FormContextService } from './services/form-context.service';
+import { CONFIG_STORAGE, ConfigStorage } from '@praxis/core';
 import { PraxisDynamicFormConfigEditor } from './praxis-dynamic-form-config-editor';
 
 @Component({
@@ -54,58 +63,226 @@ import { PraxisDynamicFormConfigEditor } from './praxis-dynamic-form-config-edit
     DynamicFieldLoaderDirective,
     MatIconModule,
     MatButtonModule,
+    MatProgressSpinnerModule,
+    MatTooltipModule,
   ],
   template: `
-    <form
-      [formGroup]="form"
-      (ngSubmit)="onSubmit()"
-      class="praxis-dynamic-form"
-    >
-      <ng-container *ngFor="let section of config.sections">
-        <div class="form-section">
-          <h3 *ngIf="section.title">{{ section.title }}</h3>
-          <div *ngFor="let row of section.rows" class="form-row">
-            <div *ngFor="let column of row.columns" class="form-column">
-              <ng-container
-                dynamicFieldLoader
-                [fields]="getColumnFields(column)"
-                [formGroup]="form"
-              >
-              </ng-container>
-            </div>
+    @if (isLoading) {
+      <!-- Loading State -->
+      <div class="form-loading">
+        <mat-progress-spinner diameter="40"></mat-progress-spinner>
+        <p>Carregando formulário...</p>
+      </div>
+    } @else if (initializationStatus === 'error') {
+      <!-- Error State -->
+      <div class="form-error">
+        <mat-icon color="warn">error</mat-icon>
+        <h3>{{ getErrorTitle() }}</h3>
+        <p>{{ currentErrorMessage }}</p>
+        @if (isRecoverable) {
+          <button mat-stroked-button (click)="retryInitialization()">
+            <mat-icon>refresh</mat-icon>
+            Tentar Novamente
+          </button>
+        }
+        <button mat-button (click)="showDetailedError()" class="show-details">
+          Ver Detalhes Técnicos
+        </button>
+      </div>
+    } @else if (initializationStatus === 'success') {
+      <!-- Form Content -->
+      <form
+        [formGroup]="form"
+        (ngSubmit)="onSubmit()"
+        class="praxis-dynamic-form"
+        [attr.aria-label]="'Formulário ' + (config.metadata?.version || '')"
+      >
+        @for (section of config.sections; track section.id) {
+          <div class="form-section" [attr.data-section-id]="section.id">
+            @if (section.title) {
+              <h3 class="section-title">{{ section.title }}</h3>
+            }
+            @if (section.description) {
+              <p class="section-description">{{ section.description }}</p>
+            }
+            
+            @for (row of section.rows; track $index) {
+              <div class="form-row">
+                @for (column of row.columns; track $index) {
+                  <div class="form-column">
+                    <ng-container
+                      dynamicFieldLoader
+                      [fields]="getColumnFields(column)"
+                      [formGroup]="form"
+                    >
+                    </ng-container>
+                  </div>
+                }
+              </div>
+            }
           </div>
-        </div>
-      </ng-container>
-      <div class="form-actions">
+        }
+      
+      <div class="form-actions" [class.loading]="isLoading">
         <button
           type="submit"
           mat-raised-button
           color="primary"
-          [disabled]="form.invalid"
+          [disabled]="form.invalid || isLoading"
+          [attr.aria-label]="mode === 'edit' ? 'Atualizar registro' : 'Criar novo registro'"
         >
-          {{ mode === 'edit' ? 'Atualizar' : 'Criar' }}
+          @if (isLoading) {
+            <mat-icon>hourglass_empty</mat-icon>
+          }
+          {{ isLoading ? 'Processando...' : (mode === 'edit' ? 'Atualizar' : 'Criar') }}
         </button>
 
-        <button
-          *ngIf="editModeEnabled"
-          type="button"
-          mat-icon-button
-          (click)="openConfigEditor()"
-        >
-          <mat-icon>settings</mat-icon>
-        </button>
+        @if (editModeEnabled) {
+          <button
+            type="button"
+            mat-icon-button
+            (click)="openConfigEditor()"
+            matTooltip="Configurar formulário"
+            [disabled]="isLoading"
+          >
+            <mat-icon>settings</mat-icon>
+          </button>
+        }
       </div>
-    </form>
+      </form>
+    }
   `,
   styles: [
     `
       :host {
         display: block;
       }
+
+      .form-loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem;
+        text-align: center;
+        color: var(--md-sys-color-on-surface);
+        gap: 1rem;
+      }
+
+      .form-loading p {
+        margin: 0;
+        font-size: 0.875rem;
+        opacity: 0.7;
+      }
+
+      .form-error {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 3rem;
+        text-align: center;
+        color: var(--md-sys-color-error);
+        gap: 1rem;
+        border: 1px solid var(--md-sys-color-error);
+        border-radius: 8px;
+        background-color: var(--md-sys-color-error-container);
+        margin: 1rem;
+      }
+
+      .form-error h3 {
+        margin: 0;
+        color: var(--md-sys-color-on-error-container);
+      }
+
+      .form-error p {
+        margin: 0;
+        color: var(--md-sys-color-on-error-container);
+        opacity: 0.8;
+      }
+
+      .form-error button {
+        margin-top: 0.5rem;
+      }
+
+      .praxis-dynamic-form {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+
+      .form-section {
+        border: 1px solid var(--md-sys-color-outline-variant);
+        border-radius: 8px;
+        padding: 1.5rem;
+        background-color: var(--md-sys-color-surface-container-lowest);
+      }
+
+      .section-title {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.125rem;
+        font-weight: 500;
+        color: var(--md-sys-color-on-surface);
+      }
+
+      .section-description {
+        margin: 0 0 1rem 0;
+        font-size: 0.875rem;
+        color: var(--md-sys-color-on-surface-variant);
+      }
+
+      .form-row {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+
+      .form-row:last-child {
+        margin-bottom: 0;
+      }
+
+      .form-column {
+        flex: 1;
+        min-width: 0;
+      }
+
+      .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem;
+        border-top: 1px solid var(--md-sys-color-outline-variant);
+        background-color: var(--md-sys-color-surface-container-lowest);
+        position: sticky;
+        bottom: 0;
+        z-index: 1;
+      }
+
+      .form-actions.loading {
+        pointer-events: none;
+        opacity: 0.7;
+      }
+
+      @media (max-width: 768px) {
+        .form-row {
+          flex-direction: column;
+          gap: 0.5rem;
+        }
+
+        .form-section {
+          padding: 1rem;
+        }
+
+        .form-actions {
+          padding: 0.75rem;
+        }
+      }
     `,
   ],
 })
 export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
+  private readonly DEBUG = typeof window !== 'undefined' && ((window as any)['__PRAXIS_DEBUG__'] || true); // Temporariamente true para debug
   @Input() resourcePath?: string;
   @Input() resourceId?: string | number;
   @Input() mode: 'create' | 'edit' | 'view' = 'create';
@@ -136,10 +313,21 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   @Output() configChange = new EventEmitter<FormConfig>();
   @Output() formReady = new EventEmitter<FormReadyEvent>();
   @Output() valueChange = new EventEmitter<FormValueChangeEvent>();
+  @Output() syncCompleted = new EventEmitter<SyncResult>();
+  @Output() initializationError = new EventEmitter<FormInitializationError>();
+
+  // Estado interno para UX
+  isLoading = false;
+  initializationStatus: 'idle' | 'loading' | 'success' | 'error' = 'idle';
+  currentErrorMessage = '';
+  currentErrorDetails: any = null;
+  isRecoverable = false;
+  private isInitialized = false;
 
   form!: FormGroup;
-  private fieldMetadata: FieldMetadata[] = [];
   private pendingEntityId: string | number | null = null;
+  private loadedEntityId: string | number | null = null;
+  private schemaCache: any = null;
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -149,58 +337,217 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
     private layoutService: FormLayoutService,
     private contextService: FormContextService,
     private windowService: PraxisResizableWindowService,
+    @Inject(CONFIG_STORAGE) private configStorage: ConfigStorage,
   ) {
     this.form = this.fb.group({});
   }
 
   ngOnInit(): void {
-    if (!this.layout && this.formId) {
-      this.layout = this.layoutService.loadLayout(this.formId) || undefined;
+    // Initialize form based on the new flow
+    if (this.formId && this.resourcePath && !this.isInitialized) {
+      this.initializeForm();
     }
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['resourcePath'] && this.resourcePath) {
       this.crud.configure(this.resourcePath);
-      this.loadSchema();
+      
+      // Only initialize if not already initialized or if resourcePath actually changed
+      if (!this.isInitialized && this.formId) {
+        this.initializeForm();
+      }
     }
+    
     if (changes['resourceId']) {
       this.pendingEntityId = this.resourceId ?? null;
-      if (this.fieldMetadata.length > 0 && this.pendingEntityId != null) {
+      if (this.config.fieldMetadata?.length && this.pendingEntityId != null) {
         this.loadEntity();
       }
     }
   }
 
-  private loadSchema(): void {
-    this.crud
-      .getSchema()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe((defs) => {
-        this.fieldMetadata = mapFieldDefinitionsToMetadata(defs);
-        this.buildForm();
-        if (this.pendingEntityId != null) {
-          this.loadEntity();
-        }
-        this.cdr.detectChanges();
+  private async initializeForm(): Promise<void> {
+    // Prevent duplicate initialization
+    if (this.isInitialized || this.isLoading) {
+      this.debugLog('⚠️ Skipping duplicate initialization', { isInitialized: this.isInitialized, isLoading: this.isLoading });
+      return;
+    }
+
+    // Validação obrigatória para cenários corporativos
+    if (!this.resourcePath || !this.formId) {
+      const error = new Error(
+        `Form initialization failed: ${!this.formId ? 'formId' : 'resourcePath'} is required for corporate form management`
+      );
+      this.handleInitializationError('config-load', error, {
+        formId: this.formId,
+        resourcePath: this.resourcePath,
+        hasLocalConfig: false
       });
+      return;
+    }
+
+    this.isLoading = true;
+    this.initializationStatus = 'loading';
+
+    try {
+      // Step 1: Check for local saved config
+      const configKey = `praxis-form-config-${this.formId}`;
+      const localConfig = this.configStorage.loadConfig<FormConfig>(configKey);
+      
+      if (localConfig) {
+        // Flow 1: Has local config - load it and sync with server
+        this.debugLog('🔄 Loading saved form configuration');
+        this.config = localConfig;
+        await this.syncWithServer();
+      } else {
+        // Flow 2: No local config - create default from server
+        this.debugLog('🆕 Creating new form configuration from server');
+        await this.createDefaultConfig();
+      }
+      
+      // Build the form
+      this.buildFormFromConfig();
+      
+      // Load entity data if needed
+      if (this.pendingEntityId != null) {
+        this.loadEntity();
+      }
+      
+      this.initializationStatus = 'success';
+      this.isInitialized = true;
+      this.cdr.detectChanges();
+    } catch (error) {
+      this.handleInitializationError('form-build', error as Error, {
+        formId: this.formId,
+        resourcePath: this.resourcePath,
+        hasLocalConfig: this.configStorage.loadConfig(`praxis-form-config-${this.formId}`) !== null
+      });
+    } finally {
+      this.isLoading = false;
+    }
+  }
+
+  private handleInitializationError(stage: FormInitializationError['stage'], error: Error, context?: FormInitializationError['context']): void {
+    this.initializationStatus = 'error';
+    this.isLoading = false;
+    
+    const formError: FormInitializationError = {
+      stage,
+      error,
+      context,
+      recoverable: stage !== 'config-load',
+      userMessage: this.getErrorMessage(stage, error)
+    };
+    
+    // Update UX state
+    this.currentErrorMessage = formError.userMessage;
+    this.currentErrorDetails = { stage, error: error.message, context };
+    this.isRecoverable = formError.recoverable;
+    
+    console.error(`[PraxisDynamicForm] Initialization error at ${stage}:`, error);
+    this.initializationError.emit(formError);
+  }
+
+  private getErrorMessage(stage: FormInitializationError['stage'], error: Error): string {
+    const messages = {
+      'config-load': !this.formId ? 
+        'Erro: formId é obrigatório para persistência corporativa do formulário.' :
+        !this.resourcePath ?
+        'Erro: resourcePath é obrigatório para carregar esquema do servidor.' :
+        'Erro na configuração do formulário. Verifique se os parâmetros formId e resourcePath estão definidos.',
+      'schema-fetch': 'Erro ao carregar campos do servidor. Verifique sua conexão e tente novamente.',
+      'sync': 'Erro na sincronização com o servidor. O formulário será carregado com dados locais.',
+      'form-build': 'Erro ao construir o formulário. Entre em contato com o suporte técnico.'
+    };
+    
+    return messages[stage] || 'Erro desconhecido na inicialização do formulário.';
+  }
+  
+  private async createDefaultConfig(): Promise<void> {
+    try {
+      const serverDefs = await this.getSchemaWithCache();
+      const fieldMetadata = mapFieldDefinitionsToMetadata(serverDefs);
+      
+      if (!fieldMetadata || fieldMetadata.length === 0) {
+        throw new Error('No field metadata received from server');
+      }
+      
+      // Generate default layout from metadata
+      this.config = this.generateFormConfigFromMetadata(fieldMetadata);
+      
+      // Save the generated config
+      const configKey = `praxis-form-config-${this.formId}`;
+      this.configStorage.saveConfig(configKey, this.config);
+    } catch (error) {
+      this.handleInitializationError('schema-fetch', error as Error, {
+        formId: this.formId,
+        resourcePath: this.resourcePath,
+        hasLocalConfig: false
+      });
+      throw error; // Re-throw to stop initialization
+    }
+  }
+  
+  private async syncWithServer(): Promise<void> {
+    try {
+      const serverDefs = await this.getSchemaWithCache();
+      const serverMetadata = mapFieldDefinitionsToMetadata(serverDefs);
+      
+      const syncResult = syncWithServerMetadata(this.config, serverMetadata);
+      
+      this.config = syncResult.config;
+      
+      if (syncResult.syncResult.hasChanges) {
+        console.log('📋 Form sync detected changes:', syncResult.syncResult);
+        // Save updated config after sync
+        const configKey = `praxis-form-config-${this.formId}`;
+        this.configStorage.saveConfig(configKey, this.config);
+        this.syncCompleted.emit(syncResult.syncResult);
+      }
+    } catch (error) {
+      // Sync errors are not critical - we can continue with local config
+      this.handleInitializationError('sync', error as Error, {
+        formId: this.formId,
+        resourcePath: this.resourcePath,
+        hasLocalConfig: true
+      });
+      // Don't re-throw - continue with local config
+    }
   }
 
   private loadEntity(): void {
     if (this.pendingEntityId == null) {
       return;
     }
+    
+    // Avoid duplicate entity loading
+    if (this.loadedEntityId === this.pendingEntityId) {
+      this.debugLog('⚠️ Skipping duplicate entity load', { entityId: this.pendingEntityId });
+      return;
+    }
+    
+    this.debugLog('📥 Loading entity', { entityId: this.pendingEntityId });
+    this.loadedEntityId = this.pendingEntityId;
+    
     this.crud
       .getById(this.pendingEntityId)
       .pipe(takeUntil(this.destroy$))
-      .subscribe((data: any) => {
-        this.form.patchValue(data);
+      .subscribe((data: Record<string, any>) => {
+        if (data && typeof data === 'object') {
+          this.form.patchValue(data);
+          this.debugLog('✅ Entity loaded successfully', { entityId: this.pendingEntityId });
+        } else {
+          console.warn('Invalid entity data received:', data);
+        }
       });
   }
 
-  private buildForm(): void {
+  private buildFormFromConfig(): void {
     const controls: any = {};
-    for (const field of this.fieldMetadata) {
+    const fieldMetadata = this.config.fieldMetadata || [];
+    
+    for (const field of fieldMetadata) {
       const validators = [];
       if (field.required) {
         validators.push(Validators.required);
@@ -218,12 +565,10 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
     }
     this.form = this.fb.group(controls);
 
-    // Auto-generate layout if config is empty and we have metadata
-    this.generateDefaultLayoutIfNeeded();
-
-    this.contextService.setAvailableFields(this.fieldMetadata);
-    if (this.layout?.formRules) {
-      this.contextService.setFormRules(this.layout.formRules);
+    // Set context for rules
+    this.contextService.setAvailableFields(fieldMetadata);
+    if (this.config.formRules) {
+      this.contextService.setFormRules(this.config.formRules);
     }
 
     this.form.valueChanges
@@ -239,26 +584,17 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
 
     this.formReady.emit({
       formGroup: this.form,
-      fieldsMetadata: this.fieldMetadata,
+      fieldsMetadata: fieldMetadata,
       layout: this.layout,
       hasEntity: this.resourceId != null,
       entityId: this.resourceId ?? undefined,
     });
   }
 
-  /**
-   * Generates a default layout if the current config has no sections
-   * and we have field metadata available
-   */
-  private generateDefaultLayoutIfNeeded(): void {
-    if (this.config.sections.length === 0 && this.fieldMetadata.length > 0) {
-      this.config = this.generateFormConfigFromMetadata(this.fieldMetadata);
-    }
-  }
 
   /**
-   * Generates a FormConfig from FieldMetadata array
-   * Groups fields by their 'group' property or creates a single default section
+   * Generates a complete FormConfig from FieldMetadata array
+   * Includes both layout and field metadata
    */
   private generateFormConfigFromMetadata(
     fields: FieldMetadata[],
@@ -302,7 +638,16 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
       });
     });
 
-    return { sections };
+    // Return complete config with layout and metadata
+    return { 
+      sections,
+      fieldMetadata: fields,
+      metadata: {
+        version: '1.0.0',
+        lastUpdated: new Date(),
+        source: 'default'
+      }
+    };
   }
 
   /**
@@ -334,7 +679,8 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   }
 
   getColumnFields(column: { fields: string[] }): FieldMetadata[] {
-    return this.fieldMetadata.filter((f) => column.fields.includes(f.name));
+    const fieldMetadata = this.config.fieldMetadata || [];
+    return fieldMetadata.filter((f) => column.fields.includes(f.name));
   }
 
   onSubmit(): void {
@@ -383,12 +729,14 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   }
 
   openConfigEditor(): void {
-    const configCopy = JSON.parse(JSON.stringify(this.config)) as FormConfig;
-
+    console.log('🔧 [PraxisDynamicForm] Abrindo editor de configuração');
+    console.log('🔧 [PraxisDynamicForm] Config atual:', this.config);
+    
+    // Config already has everything needed (layout + metadata)
     const ref = this.windowService.open({
       title: 'Configuração do Formulário Dinâmico',
       contentComponent: PraxisDynamicFormConfigEditor,
-      data: configCopy,
+      data: this.config,
       initialWidth: '90vw',
       initialHeight: '90vh',
       minWidth: '320px',
@@ -401,18 +749,93 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
 
     ref.closed.pipe(takeUntil(this.destroy$)).subscribe((result) => {
       if (result) {
+        console.log('🔧 [PraxisDynamicForm] Nova configuração recebida do editor:', result);
         this.config = result as FormConfig;
+        
+        // Save updated config
+        if (this.formId) {
+          const configKey = `praxis-form-config-${this.formId}`;
+          this.configStorage.saveConfig(configKey, this.config);
+        }
+        
         this.configChange.emit(this.config);
+        
+        // Rebuild form with new config
+        this.buildFormFromConfig();
       }
     });
-
-    if (this.formId && this.layout) {
-      this.layoutService.saveLayout(this.formId, this.layout);
-    }
   }
 
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+    this.schemaCache = null;
+    this.isInitialized = false;
+  }
+
+  // TrackBy functions for performance optimization
+  trackBySection(index: number, section: FormSection): string {
+    return section.id;
+  }
+
+  trackByRow(index: number, row: FormRow): string {
+    // Generate a simple hash of the row's column field names
+    const fieldNames = row.columns.flatMap(col => col.fields).join(',');
+    return `row-${index}-${fieldNames}`;
+  }
+
+  trackByColumn(index: number, column: FormColumn): string {
+    return `col-${index}-${column.fields.join(',')}`;
+  }
+
+  // Public method for template access
+  retryInitialization(): void {
+    // Reset state for retry
+    this.isInitialized = false;
+    this.schemaCache = null;
+    this.loadedEntityId = null;
+    this.initializationStatus = 'idle';
+    this.initializeForm();
+  }
+
+  getErrorTitle(): string {
+    const titles = {
+      'config-load': 'Configuração Inválida',
+      'schema-fetch': 'Erro de Conexão',
+      'sync': 'Sincronização Parcial',
+      'form-build': 'Erro Interno'
+    };
+    
+    const stage = this.currentErrorDetails?.stage || 'form-build';
+    return titles[stage as keyof typeof titles] || 'Erro no Formulário';
+  }
+
+  showDetailedError(): void {
+    const details = this.currentErrorDetails ? JSON.stringify(this.currentErrorDetails, null, 2) : 'Nenhum detalhe disponível';
+    alert(`Detalhes técnicos:\n\n${details}\n\nPor favor, compartilhe estas informações com o suporte técnico.`);
+  }
+
+  private async getSchemaWithCache(): Promise<any> {
+    if (this.schemaCache) {
+      this.debugLog('📋 Using cached schema');
+      return this.schemaCache;
+    }
+    
+    this.debugLog('🌐 Fetching schema from server');
+    const schema = await this.crud.getSchema().toPromise();
+    
+    if (!schema) {
+      throw new Error('No server schema received');
+    }
+    
+    this.schemaCache = schema;
+    this.debugLog('✅ Schema cached successfully');
+    return schema;
+  }
+
+  private debugLog(message: string, ...args: any[]): void {
+    if (this.DEBUG) {
+      console.log(`[PraxisDynamicForm] ${message}`, ...args);
+    }
   }
 }

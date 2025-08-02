@@ -11,30 +11,16 @@
     [class]="textareaSpecificClasses()"
 >
 
-    <!-- Label editável ou estático -->
-    @if (!labelEditingState().isEditing) {
-      <mat-label 
-        (dblclick)="onLabelDoubleClick()"
-        [matTooltip]="metadata()?.description || ''"
-        [matTooltipDisabled]="!metadata()?.description"
-        matTooltipPosition="above">
-        {{ metadata()?.label }}
-        @if (metadata()?.required && !metadata()?.materialDesign?.hideRequiredMarker) {
-          <span class="pdx-required-marker" aria-label="required"> *</span>
-        }
-      </mat-label>
-    } @else {
-      <!-- Editor inline de label -->
-      <input
-        #labelEditor
-        matInput
-        class="pdx-label-editor"
-        [value]="editingLabel()"
-        (input)="updateLabelText($event)"
-        (blur)="onLabelEditorBlur()"
-        (keydown)="onLabelEditorKeyDown($event)"
-        [attr.aria-label]="'Editing label for ' + metadata()?.name">
-    }
+    <!-- Label estático -->
+    <mat-label 
+      [matTooltip]="metadata()?.description || ''"
+      [matTooltipDisabled]="!metadata()?.description"
+      matTooltipPosition="above">
+      {{ metadata()?.label }}
+      @if (metadata()?.required && !metadata()?.materialDesign?.hideRequiredMarker) {
+        <span class="pdx-required-marker" aria-label="required"> *</span>
+      }
+    </mat-label>
 
     <!-- Ícone de prefixo -->
     @if (metadata()?.prefixIcon) {
@@ -50,7 +36,7 @@
     <textarea
       #textareaElement
       matInput
-      [formControl]="formControl"
+      [formControl]="internalControl"
       [placeholder]="metadata()?.placeholder || ''"
       [maxlength]="metadata()?.maxLength || null"
       [minlength]="metadata()?.minLength || null"
@@ -107,19 +93,8 @@
         [id]="componentId() + '-error'"
         class="pdx-error-message">
         <mat-icon class="pdx-error-icon">error_outline</mat-icon>
-        {{ primaryErrorMessage() }}
+        {{ errorMessage() }}
       </mat-error>
-    }
-
-    <!-- Erros adicionais (se houver múltiplos) -->
-    @if (allErrorMessages().length > 1) {
-      <div class="pdx-additional-errors">
-        @for (error of allErrorMessages().slice(1); track error) {
-          <mat-error class="pdx-error-message pdx-additional-error">
-            {{ error }}
-          </mat-error>
-        }
-      </div>
     }
 
   </mat-form-field>
@@ -128,23 +103,11 @@
 
 
 
-<!-- Loading indicator para validação assíncrona -->
-@if (validationState().isValidating) {
-  <div class="pdx-validation-loading" [attr.aria-label]="'Validating ' + metadata()?.label">
-    <mat-icon class="pdx-loading-spinner">hourglass_empty</mat-icon>
-    <span class="pdx-sr-only">Validating...</span>
-  </div>
-}
-
-<!-- Indicador de estado enterprise (debug) -->
-@if (isDebugMode() && metadata()?.security) {
+<!-- Indicador de debug simplificado -->
+@if (metadata()?.security) {
   <div class="pdx-debug-info">
     <small class="pdx-debug-security">
-      Security Level: {{ metadata()?.security?.securityLevel }}
-@if (metadata()?.security?.audit?.enabled) {
-        | Audit: ON
-      }
-      | Chars: {{ textareaState().characterCount }}
+      Chars: {{ textareaState().characterCount }}
     </small>
   </div>
 }

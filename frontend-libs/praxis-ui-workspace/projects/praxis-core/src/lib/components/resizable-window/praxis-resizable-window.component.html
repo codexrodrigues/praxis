@@ -1,7 +1,7 @@
 <!-- praxis-resizable-window.component.html -->
 <div class="resizable-container" #resizableContainer role="dialog" aria-modal="true" [attr.aria-label]="title">
-  <div class="header" (mousedown)="startMove($event)" (touchstart)="startMove($event)">
-    <span class="title">{{ title }}</span>
+  <div class="header">
+    <span class="title" (mousedown)="startMove($event)" (touchstart)="startMove($event)">{{ title }}</span>
     <div class="actions">
       <button mat-icon-button (click)="toggleMaximize()" *ngIf="!disableMaximize">
         <mat-icon>{{ isMaximized ? 'fullscreen_exit' : 'fullscreen' }}</mat-icon>

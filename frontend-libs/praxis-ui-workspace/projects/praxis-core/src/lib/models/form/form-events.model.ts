@@ -56,3 +56,15 @@ export interface FormReadyEvent {
   hasEntity: boolean;
   entityId?: string | number;
 }
+
+export interface FormInitializationError {
+  stage: 'config-load' | 'schema-fetch' | 'sync' | 'form-build';
+  error: Error;
+  context?: {
+    formId?: string;
+    resourcePath?: string;
+    hasLocalConfig?: boolean;
+  };
+  recoverable: boolean;
+  userMessage: string;
+}

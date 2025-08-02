@@ -342,7 +342,7 @@ public abstract class AbstractCrudController<E, D, ID, FD extends GenericFilterD
     )
     public ResponseEntity<Void> getSchema() {
         // Constrói o link para o endpoint de metadados
-        Link metadataLink = linkToUiSchema("/filter", "post", "request");
+        Link metadataLink = linkToUiSchema("/all", "get", "response");
 
         // Retorna um redirecionamento HTTP para o link montado
         return ResponseEntity.status(HttpStatus.FOUND)

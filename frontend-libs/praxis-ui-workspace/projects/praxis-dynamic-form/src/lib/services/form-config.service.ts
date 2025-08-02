@@ -67,6 +67,7 @@ export class FormConfigService {
    */
   validateConfig(config: FormConfig): string[] {
     const errors: string[] = [];
+    
     if (!isValidFormConfig(config)) {
       errors.push('Invalid form configuration');
       return errors;

@@ -195,17 +195,28 @@ export class ComponentRegistryService implements IComponentRegistry {
    * Registra componentes Material Design padrão
    */
   private initializeDefaultComponents(): void {
-    // Input
-    this.register(
-      FieldControlTypeEnum.INPUT,
-      () => import('../../components/text-input/text-input.component').then(m => m.TextInputComponent)
-    );
+    // TextInputComponent para todos os tipos de input text-based
+    const textInputFactory = () => import('../../components/text-input/text-input.component').then(m => m.TextInputComponent);
+
+    // Input básico
+    this.register(FieldControlTypeEnum.INPUT, textInputFactory);
+
+    // Variantes de input usando TextInputComponent
+    this.register(FieldControlTypeEnum.EMAIL_INPUT, textInputFactory);
+    this.register(FieldControlTypeEnum.PASSWORD, textInputFactory);
+    this.register(FieldControlTypeEnum.NUMERIC_TEXT_BOX, textInputFactory);
+
+    // Mapeamentos para controlTypes do JSON Schema/OpenAPI
+    this.register('numericTextBox' as FieldControlType, textInputFactory);
+    this.register('phone' as FieldControlType, textInputFactory);
+    this.register('date' as FieldControlType, textInputFactory);
+    this.register('checkbox' as FieldControlType, textInputFactory);
 
     // // Textarea
-    // this.register(
-    //   FieldControlTypeEnum.TEXTAREA,
-    //   () => import('../../components/material-textarea/material-textarea.component').then(m => m.MaterialTextareaComponent)
-    // );
+    this.register(
+      FieldControlTypeEnum.EMAIL_INPUT,
+      () => import('../../components/material-textarea/material-textarea.component').then(m => m.MaterialTextareaComponent)
+    );
     //
     // // Select
     // this.register(

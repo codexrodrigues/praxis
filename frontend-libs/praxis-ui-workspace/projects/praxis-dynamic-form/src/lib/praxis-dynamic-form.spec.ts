@@ -1,13 +1,14 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { PraxisDynamicForm } from './praxis-dynamic-form';
-import { GenericCrudService } from '@praxis/core';
+import { GenericCrudService, CONFIG_STORAGE, ConfigStorage } from '@praxis/core';
 import { DynamicFieldLoaderDirective } from '@praxis/dynamic-fields';
 
 describe('PraxisDynamicForm', () => {
   let fixture: ComponentFixture<PraxisDynamicForm>;
   let component: PraxisDynamicForm;
   let crudService: jasmine.SpyObj<GenericCrudService<any>>;
+  let configStorage: jasmine.SpyObj<ConfigStorage>;
 
   beforeEach(async () => {
     crudService = jasmine.createSpyObj('GenericCrudService', [
@@ -19,9 +20,18 @@ describe('PraxisDynamicForm', () => {
       'update',
     ]);
 
+    configStorage = jasmine.createSpyObj('ConfigStorage', [
+      'loadConfig',
+      'saveConfig',
+      'clearConfig',
+    ]);
+
     await TestBed.configureTestingModule({
       imports: [PraxisDynamicForm, DynamicFieldLoaderDirective],
-      providers: [{ provide: GenericCrudService, useValue: crudService }],
+      providers: [
+        { provide: GenericCrudService, useValue: crudService },
+        { provide: CONFIG_STORAGE, useValue: configStorage },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PraxisDynamicForm);
@@ -31,10 +41,13 @@ describe('PraxisDynamicForm', () => {
   it('gera formulário a partir do resourcePath', async () => {
     const schema = [{ name: 'nome', controlType: 'input' }];
     crudService.getSchema.and.returnValue(of(schema as any));
+    configStorage.loadConfig.and.returnValue(null); // No local config
     component.resourcePath = 'usuarios';
+    component.formId = 'test-form';
     fixture.detectChanges();
     await fixture.whenStable();
-    expect(component['fieldMetadata'].length).toBe(1);
+    expect(component.config.fieldMetadata?.length).toBe(1);
+    expect(configStorage.saveConfig).toHaveBeenCalled();
   });
 
   it('altera para modo edit ao receber resourceId', () => {
@@ -93,10 +106,11 @@ describe('PraxisDynamicForm', () => {
     crudService.create.and.returnValue(of({ id: 1 } as any));
     const submitSpy = jasmine.createSpy('submit');
     component.formSubmit.subscribe(submitSpy);
-    component['fieldMetadata'] = [
-      { name: 'nome', controlType: 'input' } as any,
-    ];
-    (component as any).buildForm();
+    component.config = { 
+      sections: [],
+      fieldMetadata: [{ name: 'nome', controlType: 'input' } as any]
+    };
+    (component as any).buildFormFromConfig();
     component.form.setValue({ nome: 'Teste' });
     component.onSubmit();
     expect(submitSpy).toHaveBeenCalled();

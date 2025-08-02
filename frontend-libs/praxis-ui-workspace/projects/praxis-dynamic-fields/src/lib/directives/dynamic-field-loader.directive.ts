@@ -50,6 +50,7 @@ import { FieldMetadata } from '@praxis/core';
 import { ComponentRegistryService } from '../services/component-registry/component-registry.service';
 import { BaseDynamicFieldComponent } from '../base/base-dynamic-field.component';
 import { logger } from '../utils/logger';
+import { mapPropertyToFieldMetadata } from '../utils/json-schema-mapper';
 
 /**
  * Diretiva que renderiza campos de formulário dinamicamente baseado em metadados.
@@ -365,22 +366,34 @@ export class DynamicFieldLoaderDirective implements OnInit, OnDestroy, OnChanges
       return;
     }
 
-    // Validar estrutura básica dos fields
-    this.fields.forEach((field, index) => {
+    // Validar e normalizar estrutura básica dos fields
+    this.fields = this.fields.map((field, index) => {
       if (!field.name) {
         console.error(`[DynamicFieldLoader] Field at index ${index} is missing required 'name' property:`, field);
         throw new Error(`Field at index ${index} must have a 'name' property`);
       }
 
+      // Se campo não tem controlType, tentar inferir baseado em propriedades do schema
       if (!field.controlType) {
-        console.error(`[DynamicFieldLoader] Field '${field.name}' is missing required 'controlType' property:`, field);
-        throw new Error(`Field '${field.name}' must have a 'controlType' property`);
+        logger.debug(`[DynamicFieldLoader] Field '${field.name}' missing controlType, attempting to infer...`);
+        
+        // Tentar mapear usando informações disponíveis no campo
+        const inferredField = this.inferControlTypeFromField(field);
+        if (inferredField) {
+          logger.info(`[DynamicFieldLoader] Inferred controlType '${inferredField.controlType}' for field '${field.name}'`);
+          return inferredField;
+        } else {
+          console.error(`[DynamicFieldLoader] Field '${field.name}' is missing required 'controlType' property and couldn't be inferred:`, field);
+          throw new Error(`Field '${field.name}' must have a 'controlType' property`);
+        }
       }
 
       // Verificar se FormControl existe
       if (!this.formGroup!.get(field.name)) {
         console.warn(`[DynamicFieldLoader] FormControl for field '${field.name}' not found in FormGroup`);
       }
+
+      return field;
     });
 
     // Verificar se há campos duplicados
@@ -600,6 +613,76 @@ export class DynamicFieldLoaderDirective implements OnInit, OnDestroy, OnChanges
       console.error(`[DynamicFieldLoader] Error configuring component for field '${field.name}':`, error);
       throw error;
     }
+  }
+
+  // =============================================================================
+  // PRIVATE METHODS - FIELD INFERENCE
+  // =============================================================================
+
+  /**
+   * Tenta inferir controlType de um campo baseado em suas propriedades
+   * 
+   * @param field - Campo com controlType ausente
+   * @returns Campo com controlType inferido ou null se não conseguir inferir
+   */
+  private inferControlTypeFromField(field: FieldMetadata): FieldMetadata | null {
+    try {
+      // Criar um pseudo-schema property baseado no que temos disponível
+      const pseudoProperty: any = {
+        type: this.inferJsonTypeFromField(field),
+        format: this.inferFormatFromField(field)
+      };
+
+      // Tentar mapear usando o utilitário de schema
+      const mappedField = mapPropertyToFieldMetadata(field.name, pseudoProperty);
+      
+      if (mappedField && mappedField.controlType) {
+        // Mesclar propriedades originais com o controlType inferido
+        return {
+          ...field,
+          controlType: mappedField.controlType,
+          label: field.label || mappedField.label
+        };
+      }
+
+      return null;
+    } catch (error) {
+      logger.debug(`[DynamicFieldLoader] Error inferring controlType for '${field.name}':`, error);
+      return null;
+    }
+  }
+
+  /**
+   * Infere tipo JSON baseado nas propriedades do campo
+   */
+  private inferJsonTypeFromField(field: FieldMetadata): string {
+    // Tentar inferir pelo nome do campo
+    const fieldName = field.name.toLowerCase();
+    
+    if (fieldName.includes('email')) return 'string';
+    if (fieldName.includes('phone') || fieldName.includes('telefone')) return 'string';
+    if (fieldName.includes('date') || fieldName.includes('data')) return 'string';
+    if (fieldName.includes('age') || fieldName.includes('idade') || fieldName.includes('numero')) return 'integer';
+    if (fieldName.includes('price') || fieldName.includes('valor') || fieldName.includes('preco')) return 'number';
+    if (fieldName.includes('active') || fieldName.includes('ativo') || fieldName.includes('enabled')) return 'boolean';
+    if (fieldName === 'id') return 'integer';
+
+    // Fallback: string
+    return 'string';
+  }
+
+  /**
+   * Infere format baseado nas propriedades do campo
+   */
+  private inferFormatFromField(field: FieldMetadata): string | undefined {
+    const fieldName = field.name.toLowerCase();
+    
+    if (fieldName.includes('email')) return 'email';
+    if (fieldName.includes('phone') || fieldName.includes('telefone')) return 'tel';
+    if (fieldName.includes('date') || fieldName.includes('data')) return 'date';
+    if (fieldName.includes('password') || fieldName.includes('senha')) return 'password';
+
+    return undefined;
   }
 
   // =============================================================================

@@ -5,9 +5,8 @@
  * ✅ Auto-resize inteligente
  * ✅ Formatação e validação de texto  
  * ✅ Contador de caracteres e palavras
- * ✅ Preview markdown
- * ✅ Templates de texto
  * ✅ Spellcheck configurável
+ * ✅ Validação integrada
  */
 
 import { 
@@ -18,7 +17,9 @@ import {
   AfterViewInit,
   computed,
   signal,
-  effect
+  effect,
+  inject,
+  Injector
 } from '@angular/core';
 import { NG_VALUE_ACCESSOR } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -30,9 +31,8 @@ import { TextFieldModule } from '@angular/cdk/text-field';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
-import { BaseDynamicFieldComponent } from '../../base/base-dynamic-field.component';
+import { SimpleBaseInputComponent } from '../../base/simple-base-input.component';
 import { MaterialTextareaMetadata } from '@praxis/core';
-import { DynamicComponentService } from '../../services/dynamic-component.service';
 
 // =============================================================================
 // INTERFACES ESPECÍFICAS DO TEXTAREA
@@ -64,25 +64,31 @@ interface TextareaState {
     MatIconModule,
     MatButtonModule,
     MatTooltipModule,
-TextFieldModule
+    TextFieldModule
   ],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
       useExisting: forwardRef(() => MaterialTextareaComponent),
       multi: true
-    },
-    DynamicComponentService
+    }
   ],
   host: {
-    '[class]': 'cssClasses() + " " + fieldCssClasses()',
+    '[class]': 'componentCssClasses()',
     '[attr.data-field-type]': '"textarea"',
-    '[attr.data-field-name]': 'metadata()?.name'
+    '[attr.data-field-name]': 'metadata()?.name',
+    '[attr.data-component-id]': 'componentId()'
   }
 })
 export class MaterialTextareaComponent 
-  extends BaseDynamicFieldComponent<MaterialTextareaMetadata> 
+  extends SimpleBaseInputComponent
   implements AfterViewInit {
+
+  // =============================================================================
+  // INJECTED DEPENDENCIES
+  // =============================================================================
+
+  private readonly injector = inject(Injector);
 
   // =============================================================================
   // VIEW CHILDREN
@@ -90,9 +96,6 @@ export class MaterialTextareaComponent
 
   @ViewChild('textareaElement', { static: false })
   private textareaElement?: ElementRef<HTMLTextAreaElement>;
-
-  @ViewChild('labelEditor', { static: false })
-  private labelEditor?: ElementRef<HTMLInputElement>;
 
   // =============================================================================
   // SIGNALS ESPECÍFICOS DO TEXTAREA
@@ -107,20 +110,8 @@ export class MaterialTextareaComponent
   });
 
   // =============================================================================
-  // COMPUTED PROPERTIES
+  // COMPUTED PROPERTIES (material properties herdadas da base)
   // =============================================================================
-
-  /** Configuração da aparência do Material */
-  readonly materialAppearance = computed(() => {
-    const materialDesign = this.metadata()?.materialDesign;
-    return materialDesign?.appearance || 'outline';
-  });
-
-  /** Cor do tema Material */
-  readonly materialColor = computed(() => {
-    const materialDesign = this.metadata()?.materialDesign;
-    return materialDesign?.color || 'primary';
-  });
 
   /** Comportamento do float label */
   readonly floatLabelBehavior = computed(() => {
@@ -135,20 +126,13 @@ export class MaterialTextareaComponent
     return metadata?.showCharacterCount && metadata?.maxLength;
   });
 
-
-/** Deve permitir auto-resize */
+  /** Deve permitir auto-resize */
   readonly shouldAutoResize = computed(() => {
     const metadata = this.metadata();
     return metadata?.autoSize !== false;
   });
 
-  /** Label sendo editado */
-  readonly editingLabel = computed(() => {
-    const editState = this.labelEditingState();
-    return editState.isEditing ? editState.currentLabel : '';
-  });
-
-/** CSS classes específicas do textarea */
+  /** CSS classes específicas do textarea */
   readonly textareaSpecificClasses = computed(() => {
     const classes: string[] = [];
     const metadata = this.metadata();
@@ -168,14 +152,28 @@ export class MaterialTextareaComponent
   // LIFECYCLE
   // =============================================================================
 
-protected override onComponentInit(): void {
-    super.onComponentInit();
+  override ngOnInit(): void {
+    super.ngOnInit();
     this.initializeTextareaState();
     this.setupTextAnalysisEffects();
   }
 
   ngAfterViewInit(): void {
     this.setupTextareaEventListeners();
+  }
+
+  /**
+   * Adiciona classes CSS específicas do textarea
+   */
+  protected override getSpecificCssClasses(): string[] {
+    return ['pdx-material-textarea'];
+  }
+
+  /**
+   * Define metadata e aplica configurações
+   */
+  setTextareaMetadata(metadata: MaterialTextareaMetadata): void {
+    this.setMetadata(metadata);
   }
 
   // =============================================================================
@@ -219,7 +217,7 @@ protected override onComponentInit(): void {
     const textarea = this.textareaElement.nativeElement;
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
-    const currentValue = this.fieldValue() || '';
+    const currentValue = this.getValue() || '';
     
     const newValue = currentValue.substring(0, start) + text + currentValue.substring(end);
     
@@ -242,68 +240,26 @@ protected override onComponentInit(): void {
     const target = event.target as HTMLTextAreaElement;
     const value = target.value;
     
-this.setValue(value);
+    // Usa handleInput da base class
+    this.handleInput(event);
     this.updateCharacterCount(value);
   }
 
   onTextareaFocus(event: FocusEvent): void {
-    this.focus();
+    this.handleFocus();
   }
 
   onTextareaBlur(event: FocusEvent): void {
-    this.blur();
+    this.handleBlur();
   }
 
   onTextareaKeyDown(event: KeyboardEvent): void {
-    const metadata = this.metadata();
-    
-// Tab para inserir indentação
+    // Tab para inserir indentação
     if (event.key === 'Tab') {
       event.preventDefault();
       this.insertTextAtCursor('  ');
       return;
     }
-  }
-
-  // =============================================================================
-  // EVENTOS DE LABEL
-  // =============================================================================
-
-  onLabelDoubleClick(): void {
-    if (!this.componentState().disabled) {
-      this.startLabelEditing();
-      
-      setTimeout(() => {
-        if (this.labelEditor) {
-          this.labelEditor.nativeElement.focus();
-          this.labelEditor.nativeElement.select();
-        }
-      });
-    }
-  }
-
-  onLabelEditorBlur(): void {
-    this.finishLabelEditing();
-  }
-
-  onLabelEditorKeyDown(event: KeyboardEvent): void {
-    if (event.key === 'Enter') {
-      event.preventDefault();
-      this.finishLabelEditing();
-    } else if (event.key === 'Escape') {
-      event.preventDefault();
-      this.cancelLabelEditing();
-    }
-  }
-
-  updateLabelText(event: Event): void {
-    const target = event.target as HTMLInputElement;
-    const editState = this.labelEditingState();
-    
-    this.labelEditingState.set({
-      ...editState,
-      currentLabel: target.value
-    });
   }
 
   // =============================================================================
@@ -318,16 +274,16 @@ private initializeTextareaState(): void {
       autoResize: metadata.autoSize !== false
     });
 
-    this.updateCharacterCount(this.fieldValue() || '');
+    this.updateCharacterCount(this.getValue() || '');
   }
 
 private setupTextAnalysisEffects(): void {
     effect(() => {
-      const fieldValue = this.fieldValue();
+      const fieldValue = this.getValue();
       if (fieldValue !== null && fieldValue !== undefined) {
         this.updateCharacterCount(String(fieldValue));
       }
-    });
+    }, { injector: this.injector });
   }
 
   private setupTextareaEventListeners(): void {

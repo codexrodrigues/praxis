@@ -17,16 +17,6 @@ praxis-resizable-window.maximized {
   padding: 0 !important;
 }
 
-.resizable-container {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
-  background: var(--mat-sys-surface-container); // Use elevated surface for depth in dark mode
-  border: 1px solid var(--mat-sys-outline-variant); // Subtle outline for borders
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); // Increased shadow opacity for dark mode visibility
-  transition: width 0.15s ease-out, height 0.15s ease-out, top 0.1s ease-out, left 0.1s ease-out;
-}
 
 .header {
   display: flex;
@@ -35,12 +25,22 @@ praxis-resizable-window.maximized {
   padding: 8px 16px;
   background: var(--mat-sys-surface-container-high); // Slightly elevated for header distinction
   border-bottom: 1px solid var(--mat-sys-outline-variant); // Consistent subtle divider
-  cursor: move;
   color: var(--mat-sys-on-surface); // Ensure text/icons are readable
+  position: relative;
+  z-index: 5; // Menor que os resize handles (z-index: 15)
+  pointer-events: none; // Desabilita eventos no header inteiro
+  
+  .title {
+    cursor: move; // Apenas o título permite mover
+    flex: 1; // Ocupa o espaço disponível
+    user-select: none; // Evita seleção de texto durante drag
+    padding: 4px 8px; // Área clicável maior
+    pointer-events: auto; // Reabilita só no título
+  }
 }
 
 // Hide move cursor when maximized
-.maximized .header {
+.maximized .header .title {
   cursor: default;
 }
 
@@ -50,36 +50,76 @@ praxis-resizable-window.maximized {
 
 .actions {
   display: flex;
+  pointer-events: auto; // Reabilita nos botões
 }
 
 .content {
   flex: 1;
-  overflow-y: auto;
+  overflow: auto; // Permite scroll horizontal e vertical
   padding: 16px;
   color: var(--mat-sys-on-surface); // Content text color
+  min-width: 0; // Remove limites baseados no conteúdo
+  min-height: 0; // Remove limites baseados no conteúdo
 }
 
-.resize-handle {
-  position: absolute;
-  background: transparent;
-  z-index: 10;
+.resizable-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%; // Garante largura total
+  overflow: hidden;
+  background: var(--mat-sys-surface-container); // Use elevated surface for depth in dark mode
+  border: 1px solid var(--mat-sys-outline-variant); // Subtle outline for borders
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); // Increased shadow opacity for dark mode visibility
+  transition: width 0.15s ease-out, height 0.15s ease-out, top 0.1s ease-out, left 0.1s ease-out;
+  position: relative; // Importante: contexto de posicionamento para os handles
+  
+  .resize-handle {
+    position: absolute;
+    background: rgba(0, 123, 255, 0.05); // Muito sutil
+    border: 1px solid rgba(0, 123, 255, 0.2); // Borda sutil
+    z-index: 15; // Maior que o header para evitar conflitos
+    pointer-events: auto; // Garante que os handles sejam clicáveis
+    touch-action: none; // Reforça para touch
 
-  &.n, &.s { height: 5px; left: 0; right: 0; cursor: ns-resize; }
-  &.e, &.w { width: 5px; top: 0; bottom: 0; cursor: ew-resize; }
-  &.ne, &.sw { width: 10px; height: 10px; cursor: nesw-resize; }
-  &.nw, &.se { width: 10px; height: 10px; cursor: nwse-resize; }
+    // Handles laterais - tamanhos maiores para facilitar o clique
+    &.n, &.s { 
+      height: 10px; 
+      left: 10px; // Evita sobreposição com cantos
+      right: 10px; 
+      cursor: ns-resize; 
+    }
+    &.e, &.w { 
+      width: 10px; 
+      top: 10px; // Evita sobreposição com cantos
+      bottom: 10px; 
+      cursor: ew-resize; 
+    }
+    
+    // Handles dos cantos - maiores e com prioridade
+    &.ne, &.sw { width: 15px; height: 15px; cursor: nesw-resize; z-index: 16; }
+    &.nw, &.se { width: 15px; height: 15px; cursor: nwse-resize; z-index: 16; }
 
-  &.n { top: -5px; }
-  &.s { bottom: -5px; }
-  &.e { right: -5px; }
-  &.w { left: -5px; }
-  &.ne { top: -5px; right: -5px; }
-  &.nw { top: -5px; left: -5px; }
-  &.se { bottom: -5px; right: -5px; }
-  &.sw { bottom: -5px; left: -5px; }
+    // Posicionamento preciso
+    &.n { top: -5px; }
+    &.s { bottom: -5px; }
+    &.e { right: -5px; }
+    &.w { left: -5px; }
+    &.ne { top: -5px; right: -5px; }
+    &.nw { top: -5px; left: -5px; }
+    &.se { bottom: -5px; right: -5px; }
+    &.sw { bottom: -5px; left: -5px; }
 
-  &:hover {
-    background: rgba(255, 255, 255, 0.1); // Light overlay for hover in dark mode
+    &:hover {
+      background: rgba(0, 123, 255, 0.3); // Mais visível no hover
+      border-color: rgba(0, 123, 255, 0.7);
+    }
+
+    // Evita conflito com o header
+    &:active {
+      background: rgba(0, 123, 255, 0.4);
+      border-color: rgba(0, 123, 255, 0.8);
+    }
   }
 }
 
@@ -143,7 +183,7 @@ body.dragging {
   transition: none !important;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 480px) {
   .resize-handle {
     display: none;
   }

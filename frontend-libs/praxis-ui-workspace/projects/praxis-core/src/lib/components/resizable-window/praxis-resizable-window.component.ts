@@ -11,7 +11,8 @@ import {
   OnInit,
   Output,
   Renderer2,
-  ViewChild
+  ViewChild,
+  ViewEncapsulation
 } from '@angular/core';
 import { CdkPortalOutlet, ComponentPortal, PortalModule, TemplatePortal } from '@angular/cdk/portal';
 import {Overlay, OverlayModule, OverlayRef} from '@angular/cdk/overlay';
@@ -29,6 +30,7 @@ import {WINDOW_DATA, WINDOW_REF, PraxisResizableWindowRef} from './services/prax
   templateUrl: './praxis-resizable-window.component.html',
   styleUrls: ['./praxis-resizable-window.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  encapsulation: ViewEncapsulation.Emulated // Força encapsulamento dos estilos
 })
 export class PraxisResizableWindowComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() title: string = 'Janela';
@@ -136,6 +138,19 @@ export class PraxisResizableWindowComponent implements OnInit, AfterViewInit, On
   }
 
   ngAfterViewInit(): void {
+    // Debug: Log resize handles state
+    console.log('🔍 Resize Handles Debug:', {
+      disableResize: this.disableResize,
+      isMaximized: this.isMaximized,
+      screenWidth: window.innerWidth,
+      shouldShowHandles: !this.disableResize && !this.isMaximized,
+      mediaQueryHiding: window.innerWidth <= 480,
+      containerElement: this.resizableContainer?.nativeElement,
+      paneElement: this.getPaneElement()
+    });
+    
+    console.log('DOM Hierarchy Debug:', this.resizableContainer.nativeElement.innerHTML.substring(0, 200));
+    
     // Attach any pending content now that ViewChild is available
     if (this.pendingContentComponent) {
       this.attachContent(this.pendingContentComponent, this.pendingWindowRef);
@@ -232,11 +247,12 @@ export class PraxisResizableWindowComponent implements OnInit, AfterViewInit, On
   }
 
   startResize(event: MouseEvent | TouchEvent, direction: string): void {
+    event.stopPropagation();
+    event.preventDefault();
+    console.log('🔧 StartResize:', { direction, disabled: this.disableResize, maximized: this.isMaximized });
+    
     if (this.disableResize || this.isMaximized || (event instanceof TouchEvent && event.touches.length > 1)) return;
     if (event instanceof TouchEvent && !this.enableTouch) return;
-
-    event.preventDefault();
-    event.stopPropagation();
 
     this.resizeDirection = direction;
     this.startX = (event instanceof MouseEvent) ? event.clientX : event.touches[0].clientX;
@@ -274,6 +290,8 @@ export class PraxisResizableWindowComponent implements OnInit, AfterViewInit, On
 
     const deltaX = (event instanceof MouseEvent) ? event.clientX - this.startX : event.touches[0].clientX - this.startX;
     const deltaY = (event instanceof MouseEvent) ? event.clientY - this.startY : event.touches[0].clientY - this.startY;
+    console.log('🔄 OnResizeMove:', { direction: this.resizeDirection, deltaX, deltaY, minDrag: this.minDragDistance });
+    
     if (Math.abs(deltaX) < this.minDragDistance && Math.abs(deltaY) < this.minDragDistance) return;
 
     const currentTime = Date.now();
@@ -304,6 +322,7 @@ export class PraxisResizableWindowComponent implements OnInit, AfterViewInit, On
     newWidth = Math.min(maxW, newWidth);
     newHeight = Math.min(maxH, newHeight);
 
+    console.log('📏 UpdateSize:', { newWidth, newHeight, newTop, newLeft });
     this.updateSize(`${newWidth}px`, `${newHeight}px`);
     // Fix: Parâmetros corretos (top, left)
     this.updatePosition(`${newTop}px`, `${newLeft}px`);
@@ -409,8 +428,27 @@ export class PraxisResizableWindowComponent implements OnInit, AfterViewInit, On
       return;
     }
     
+    if ((event.target as HTMLElement).classList.contains('resize-handle')) {
+      console.log('🚫 Move bloqueado - target é resize handle');
+      return;
+    }
+    
     const target = event.target as HTMLElement;
-    if (this.isMaximized || target.tagName === 'BUTTON' || !this.enableTouch && (event instanceof TouchEvent)) {
+    console.log('🚚 StartMove:', { 
+      target: target.className, 
+      tagName: target.tagName,
+      isResizeHandle: target.classList.contains('resize-handle'),
+      isTitle: target.classList.contains('title'),
+      maximized: this.isMaximized 
+    });
+    
+    // IMPORTANTE: Só permitir drag se o clique foi especificamente no título
+    if (!target.classList.contains('title')) {
+      console.log('🚫 Move bloqueado - clique não foi no título');
+      return;
+    }
+    
+    if (this.isMaximized || !this.enableTouch && (event instanceof TouchEvent)) {
       return;
     }
 
@@ -724,6 +762,7 @@ export class PraxisResizableWindowComponent implements OnInit, AfterViewInit, On
   }
 
   private updateSize(width: string, height: string): void {
+    console.log('📐 UpdateSize called:', { width, height, hasOverlay: !!this.overlayRef });
     if (this.overlayRef) {
       this.overlayRef.updateSize({ width, height });
     } else {
@@ -734,6 +773,7 @@ export class PraxisResizableWindowComponent implements OnInit, AfterViewInit, On
   }
 
   private updatePosition(top: string, left: string): void {
+    console.log('📍 UpdatePosition called:', { top, left, hasOverlay: !!this.overlayRef });
     if (this.overlayRef) {
       this.overlayRef.updatePositionStrategy(
         this.overlay.position().global().top(top).left(left)

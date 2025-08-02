@@ -1,5 +1,5 @@
 <!-- Container principal do button -->
-<div class="pdx-button-container" [class]="buttonSpecificClasses()">
+<div class="pdx-button-container" [class]="componentCssClasses()">
 
   <!-- Button básico -->
   @if (buttonVariant() === 'basic') {
@@ -14,18 +14,15 @@
       [matTooltip]="tooltipText()"
       [matTooltipDisabled]="!tooltipText()"
       matTooltipPosition="above"
-      (click)="onClick($event)"
-      (mousedown)="onMouseDown()"
-      (mouseup)="onMouseUp()"
-      (keydown)="onKeyDown($event)"
-      class="pdx-button-element">
+      (click)="handleClick($event)"
+                        class="pdx-button-element">
       
-      @if (shouldShowSpinner()) {
+      @if (isLoading()) {
         <mat-spinner diameter="16" class="pdx-button-spinner"></mat-spinner>
       }
       
       @if (shouldShowIcon()) {
-        <mat-icon class="pdx-button-icon">{{ iconName() }}</mat-icon>
+        <mat-icon class="pdx-button-icon">{{ buttonIcon() }}</mat-icon>
       }
       
       <span class="pdx-button-text">{{ buttonText() }}</span>
@@ -45,18 +42,15 @@
       [matTooltip]="tooltipText()"
       [matTooltipDisabled]="!tooltipText()"
       matTooltipPosition="above"
-      (click)="onClick($event)"
-      (mousedown)="onMouseDown()"
-      (mouseup)="onMouseUp()"
-      (keydown)="onKeyDown($event)"
-      class="pdx-button-element">
+      (click)="handleClick($event)"
+                        class="pdx-button-element">
       
-      @if (shouldShowSpinner()) {
+      @if (isLoading()) {
         <mat-spinner diameter="16" class="pdx-button-spinner"></mat-spinner>
       }
       
       @if (shouldShowIcon()) {
-        <mat-icon class="pdx-button-icon">{{ iconName() }}</mat-icon>
+        <mat-icon class="pdx-button-icon">{{ buttonIcon() }}</mat-icon>
       }
       
       <span class="pdx-button-text">{{ buttonText() }}</span>
@@ -76,18 +70,15 @@
       [matTooltip]="tooltipText()"
       [matTooltipDisabled]="!tooltipText()"
       matTooltipPosition="above"
-      (click)="onClick($event)"
-      (mousedown)="onMouseDown()"
-      (mouseup)="onMouseUp()"
-      (keydown)="onKeyDown($event)"
-      class="pdx-button-element">
+      (click)="handleClick($event)"
+                        class="pdx-button-element">
       
-      @if (shouldShowSpinner()) {
+      @if (isLoading()) {
         <mat-spinner diameter="16" class="pdx-button-spinner"></mat-spinner>
       }
       
       @if (shouldShowIcon()) {
-        <mat-icon class="pdx-button-icon">{{ iconName() }}</mat-icon>
+        <mat-icon class="pdx-button-icon">{{ buttonIcon() }}</mat-icon>
       }
       
       <span class="pdx-button-text">{{ buttonText() }}</span>
@@ -107,18 +98,15 @@
       [matTooltip]="tooltipText()"
       [matTooltipDisabled]="!tooltipText()"
       matTooltipPosition="above"
-      (click)="onClick($event)"
-      (mousedown)="onMouseDown()"
-      (mouseup)="onMouseUp()"
-      (keydown)="onKeyDown($event)"
-      class="pdx-button-element">
+      (click)="handleClick($event)"
+                        class="pdx-button-element">
       
-      @if (shouldShowSpinner()) {
+      @if (isLoading()) {
         <mat-spinner diameter="16" class="pdx-button-spinner"></mat-spinner>
       }
       
       @if (shouldShowIcon()) {
-        <mat-icon class="pdx-button-icon">{{ iconName() }}</mat-icon>
+        <mat-icon class="pdx-button-icon">{{ buttonIcon() }}</mat-icon>
       }
       
       <span class="pdx-button-text">{{ buttonText() }}</span>
@@ -133,21 +121,18 @@
       [color]="materialColor()"
       [disabled]="isDisabled()"
       [disableRipple]="shouldDisableRipple()"
-      [attr.aria-label]="metadata()?.label || iconName()"
+      [attr.aria-label]="metadata()?.label || buttonIcon()"
       [attr.aria-describedby]="metadata()?.description ? componentId() + '-description' : null"
       [matTooltip]="tooltipText() || metadata()?.label"
       [matTooltipDisabled]="!tooltipText() && !metadata()?.label"
       matTooltipPosition="above"
-      (click)="onClick($event)"
-      (mousedown)="onMouseDown()"
-      (mouseup)="onMouseUp()"
-      (keydown)="onKeyDown($event)"
-      class="pdx-button-element">
+      (click)="handleClick($event)"
+                        class="pdx-button-element">
       
-      @if (shouldShowSpinner()) {
+      @if (isLoading()) {
         <mat-spinner diameter="16" class="pdx-button-spinner"></mat-spinner>
       } @else {
-        <mat-icon>{{ iconName() || 'button' }}</mat-icon>
+        <mat-icon>{{ buttonIcon() || 'button' }}</mat-icon>
       }
     </button>
   }
@@ -160,21 +145,18 @@
       [color]="materialColor()"
       [disabled]="isDisabled()"
       [disableRipple]="shouldDisableRipple()"
-      [attr.aria-label]="metadata()?.label || iconName()"
+      [attr.aria-label]="metadata()?.label || buttonIcon()"
       [attr.aria-describedby]="metadata()?.description ? componentId() + '-description' : null"
       [matTooltip]="tooltipText() || metadata()?.label"
       [matTooltipDisabled]="!tooltipText() && !metadata()?.label"
       matTooltipPosition="above"
-      (click)="onClick($event)"
-      (mousedown)="onMouseDown()"
-      (mouseup)="onMouseUp()"
-      (keydown)="onKeyDown($event)"
-      class="pdx-button-element">
+      (click)="handleClick($event)"
+                        class="pdx-button-element">
       
-      @if (shouldShowSpinner()) {
+      @if (isLoading()) {
         <mat-spinner diameter="20" class="pdx-button-spinner"></mat-spinner>
       } @else {
-        <mat-icon>{{ iconName() || 'add' }}</mat-icon>
+        <mat-icon>{{ buttonIcon() || 'add' }}</mat-icon>
       }
     </button>
   }
@@ -187,21 +169,18 @@
       [color]="materialColor()"
       [disabled]="isDisabled()"
       [disableRipple]="shouldDisableRipple()"
-      [attr.aria-label]="metadata()?.label || iconName()"
+      [attr.aria-label]="metadata()?.label || buttonIcon()"
       [attr.aria-describedby]="metadata()?.description ? componentId() + '-description' : null"
       [matTooltip]="tooltipText() || metadata()?.label"
       [matTooltipDisabled]="!tooltipText() && !metadata()?.label"
       matTooltipPosition="above"
-      (click)="onClick($event)"
-      (mousedown)="onMouseDown()"
-      (mouseup)="onMouseUp()"
-      (keydown)="onKeyDown($event)"
-      class="pdx-button-element">
+      (click)="handleClick($event)"
+                        class="pdx-button-element">
       
-      @if (shouldShowSpinner()) {
+      @if (isLoading()) {
         <mat-spinner diameter="16" class="pdx-button-spinner"></mat-spinner>
       } @else {
-        <mat-icon>{{ iconName() || 'add' }}</mat-icon>
+        <mat-icon>{{ buttonIcon() || 'add' }}</mat-icon>
       }
     </button>
   }
@@ -218,7 +197,7 @@
 </div>
 
 <!-- Loading indicator para validação assíncrona -->
-@if (validationState().isValidating) {
+@if (isLoading()) {
   <div class="pdx-validation-loading" [attr.aria-label]="'Validating ' + metadata()?.label">
     <mat-icon class="pdx-loading-spinner">hourglass_empty</mat-icon>
     <span class="pdx-sr-only">Validating...</span>
@@ -226,14 +205,14 @@
 }
 
 <!-- Indicador de estado enterprise (debug) -->
-@if (isDebugMode() && metadata()?.security) {
+@if (false && metadata()?.security) {
   <div class="pdx-debug-info">
     <small class="pdx-debug-security">
       Security Level: {{ metadata()?.security?.securityLevel }}
       @if (metadata()?.security?.audit?.enabled) {
         | Audit: ON
       }
-      | Clicks: {{ buttonState().clickCount }}
+      | Clicks: {{ 0 }}
       @if (keyboardShortcut()) {
         | Shortcut: {{ keyboardShortcut() }}
       }

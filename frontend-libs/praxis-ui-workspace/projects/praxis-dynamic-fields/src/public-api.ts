@@ -6,6 +6,8 @@
 export * from './lib/base/base-dynamic.component';
 export * from './lib/base/base-dynamic-field.component';
 export * from './lib/base/base-dynamic-list.component';
+export * from './lib/base/simple-base-input.component';
+export * from './lib/base/simple-base-button.component';
 
 // Directives
 export * from './lib/directives/dynamic-field-loader.directive';
@@ -19,7 +21,6 @@ export * from './lib/components/material-currency/material-currency.component';
 export * from './lib/components/material-date-picker/material-date-picker.component';
 export * from './lib/components/material-date-range/material-date-range.component';
 export * from './lib/components/material-datepicker/material-datepicker.component';
-export * from './lib/components/material-input/material-input.component';
 export * from './lib/components/material-radio/material-radio.component';
 export * from './lib/components/material-rating/material-rating.component';
 export * from './lib/components/material-select/material-select.component';
@@ -51,3 +52,4 @@ export {
 // Utilities
 export * from './lib/utils/error-state-matcher';
 export * from './lib/utils/logger';
+export * from './lib/utils/json-schema-mapper';
