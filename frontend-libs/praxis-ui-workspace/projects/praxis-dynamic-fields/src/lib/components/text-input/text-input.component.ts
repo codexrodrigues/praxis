@@ -126,7 +126,7 @@ export class TextInputComponent extends SimpleBaseInputComponent {
     }
   }
 
-  protected override onComponentInit(): void {
+  override onComponentInit(): void {
     // Inicialização específica do text-input
     const meta = this.metadata();
     if (meta) {
@@ -155,7 +155,7 @@ export class TextInputComponent extends SimpleBaseInputComponent {
   /**
    * Reset do campo
    */
-  resetField(): void {
+  override resetField(): void {
     const meta = this.metadata();
     const defaultValue = meta?.defaultValue ?? null;
 

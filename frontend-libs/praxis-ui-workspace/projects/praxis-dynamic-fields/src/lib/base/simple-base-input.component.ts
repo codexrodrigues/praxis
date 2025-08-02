@@ -1,13 +1,13 @@
 /**
  * @fileoverview Simple base component for input fields with basic ControlValueAccessor functionality
- * 
+ *
  * This is a simplified base component that provides:
  * ✅ Basic ControlValueAccessor implementation
  * ✅ FormControl integration
  * ✅ Simple state management with signals
  * ✅ Basic event handling
  * ✅ Minimal logging system
- * 
+ *
  * The goal is to start simple and gradually move functionality from text-input here.
  */
 
@@ -34,10 +34,13 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { ComponentMetadata } from '@praxis/core';
+import { BehaviorSubject } from 'rxjs';
+import { BaseDynamicFieldComponent, ComponentLifecycleEvent, ValueChangeOptions } from './base-dynamic-field-component.interface';
 
 // =============================================================================
 // BASIC INTERFACES
 // =============================================================================
+
 
 interface BasicComponentState {
   initialized: boolean;
@@ -77,7 +80,7 @@ type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error';
 // =============================================================================
 
 @Directive()
-export abstract class SimpleBaseInputComponent implements ControlValueAccessor, OnInit, OnDestroy {
+export abstract class SimpleBaseInputComponent implements ControlValueAccessor, OnInit, OnDestroy, BaseDynamicFieldComponent {
 
   // =============================================================================
   // DEPENDENCY INJECTION
@@ -86,6 +89,8 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
   protected readonly destroyRef = inject(DestroyRef);
   protected readonly elementRef = inject(ElementRef);
   protected readonly cdr = inject(ChangeDetectorRef);
+  /** Subject para eventos de lifecycle */
+  readonly lifecycleEvents$ = new BehaviorSubject<ComponentLifecycleEvent | null>(null);
 
   // =============================================================================
   // SIGNALS
@@ -118,6 +123,9 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
   // =============================================================================
 
   readonly internalControl = new FormControl();
+  
+  /** FormControl signal para interface BaseDynamicFieldComponent */
+  readonly formControl = signal<AbstractControl | null>(null);
 
   // ControlValueAccessor callbacks
   private onChange = (value: any) => {};
@@ -212,7 +220,7 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
   readonly componentCssClasses = computed(() => {
     const baseClasses = this.baseCssClasses();
     const specificClasses = this.getSpecificCssClasses();
-    
+
     return [...baseClasses, ...specificClasses].join(' ');
   });
 
@@ -240,13 +248,28 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
 
   ngOnInit(): void {
     this.componentId.set(this.generateUniqueId());
+    this.formControl.set(this.internalControl); // Sincronizar FormControl signal
     this.setupFormControlIntegration();
     this.setupValidators();
     this.componentState.update(state => ({ ...state, initialized: true }));
+    this.emitLifecycleEvent('init');
     this.log('debug', 'Simple base component initialized');
+    
+    // Chamar hook após inicialização completa
+    if (this.onComponentInit) {
+      this.onComponentInit();
+    }
+    this.emitLifecycleEvent('afterInit');
   }
 
   ngOnDestroy(): void {
+    this.emitLifecycleEvent('destroy');
+    
+    // Chamar hook antes da destruição
+    if (this.onComponentDestroy) {
+      this.onComponentDestroy();
+    }
+    
     this.log('debug', 'Simple base component destroyed');
   }
 
@@ -277,7 +300,7 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
 
   setDisabledState(isDisabled: boolean): void {
     this.componentState.update(state => ({ ...state, disabled: isDisabled }));
-    
+
     if (isDisabled) {
       this.internalControl.disable({ emitEvent: false });
     } else {
@@ -325,9 +348,9 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
   // =============================================================================
 
   /**
-   * Define o valor do campo
+   * Define o valor do campo (implementação da interface BaseDynamicFieldComponent)
    */
-  setValue(value: any, options?: { emitEvent?: boolean }): void {
+  setValue(value: any, options?: ValueChangeOptions): void {
     if (this.syncInProgress) return;
 
     const opts = { emitEvent: true, ...options };
@@ -400,6 +423,7 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
     this.metadata.set(metadata);
     // Reaplica validators quando metadata muda
     this.setupValidators();
+    this.emitLifecycleEvent('change');
   }
 
   /**
@@ -425,10 +449,60 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
   }
 
   /**
-   * Hook chamado após inicialização - para subclasses implementarem
+   * Hook chamado após inicialização - implementação da interface BaseDynamicFieldComponent
+   * Subclasses podem override para implementar comportamento específico
    */
-  protected onComponentInit(): void {
+  onComponentInit?(): void {
     // Default implementation - subclasses can override
+  }
+  
+  /**
+   * Hook chamado antes da destruição - implementação da interface BaseDynamicFieldComponent
+   * Subclasses podem override para limpeza específica
+   */
+  onComponentDestroy?(): void {
+    // Default implementation - subclasses can override
+  }
+  
+  /**
+   * Define estado de loading - implementação da interface BaseDynamicFieldComponent
+   */
+  setLoading?(loading: boolean): void {
+    // Default implementation - subclasses can override para components com loading
+    this.log('debug', `Loading state changed: ${loading}`);
+  }
+  
+  /**
+   * Define estado desabilitado - implementação da interface BaseDynamicFieldComponent
+   */
+  setDisabled?(disabled: boolean): void {
+    this.setDisabledState(disabled);
+  }
+  
+  /**
+   * Reset do campo - implementação da interface BaseDynamicFieldComponent
+   */
+  resetField?(): void {
+    const meta = this.metadata();
+    const defaultValue = meta?.defaultValue ?? null;
+
+    this.setValue(defaultValue, { emitEvent: false });
+    
+    this.componentState.update(state => ({
+      ...state,
+      touched: false,
+      dirty: false
+    }));
+
+    this.fieldState.update(state => ({
+      ...state,
+      value: defaultValue,
+      valid: true,
+      errors: null
+    }));
+
+    this.internalControl.markAsPristine();
+    this.internalControl.markAsUntouched();
   }
 
   /**
@@ -519,4 +593,16 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
       console.debug(`[${this.componentId()}] ${message}`, data || '');
     }
   }
+
+  private emitLifecycleEvent(phase: ComponentLifecycleEvent['phase']): void {
+    const event: ComponentLifecycleEvent = {
+      phase,
+      timestamp: Date.now(),
+      componentId: this.componentId(),
+      metadata: this.metadata()
+    };
+
+    this.lifecycleEvents$.next(event);
+  }
+
 }

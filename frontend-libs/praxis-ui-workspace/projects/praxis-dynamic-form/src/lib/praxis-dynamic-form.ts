@@ -90,15 +90,46 @@ import { PraxisDynamicFormConfigEditor } from './praxis-dynamic-form-config-edit
         </button>
       </div>
     } @else if (initializationStatus === 'success') {
+      <!-- Configuration Controls -->
+      @if (shouldShowConfigControls) {
+        <div class="form-config-controls">
+        <button
+          type="button"
+          mat-icon-button
+          (click)="toggleEditMode()"
+          [matTooltip]="effectiveEditModeEnabled ? 'Desabilitar customização do formulário' : 'Habilitar customização do formulário'"
+          class="layout-customize-toggle"
+          [class.active]="effectiveEditModeEnabled"
+          [attr.aria-label]="effectiveEditModeEnabled ? 'Sair do modo de customização de layout' : 'Entrar no modo de customização de layout'"
+        >
+          <mat-icon>{{ effectiveEditModeEnabled ? 'design_services' : 'tune' }}</mat-icon>
+        </button>
+        
+        @if (effectiveEditModeEnabled) {
+          <button
+            type="button"
+            mat-icon-button
+            (click)="openConfigEditor()"
+            matTooltip="Configurar formulário"
+            [disabled]="isLoading"
+            class="config-button"
+          >
+            <mat-icon>settings</mat-icon>
+          </button>
+        }
+        </div>
+      }
+
       <!-- Form Content -->
       <form
         [formGroup]="form"
         (ngSubmit)="onSubmit()"
         class="praxis-dynamic-form"
+        [class.layout-edit-mode]="effectiveEditModeEnabled"
         [attr.aria-label]="'Formulário ' + (config.metadata?.version || '')"
       >
         @for (section of config.sections; track section.id) {
-          <div class="form-section" [attr.data-section-id]="section.id">
+          <div class="form-section" [class.layout-editable]="effectiveEditModeEnabled" [attr.data-section-id]="section.id">
             @if (section.title) {
               <h3 class="section-title">{{ section.title }}</h3>
             }
@@ -106,10 +137,17 @@ import { PraxisDynamicFormConfigEditor } from './praxis-dynamic-form-config-edit
               <p class="section-description">{{ section.description }}</p>
             }
             
-            @for (row of section.rows; track $index) {
-              <div class="form-row">
-                @for (column of row.columns; track $index) {
-                  <div class="form-column">
+            @for (row of section.rows; track $index; let rowIndex = $index) {
+              <div class="form-row" 
+                   [class.layout-editable]="effectiveEditModeEnabled"
+                   [attr.data-row-index]="rowIndex"
+                   [attr.data-section-id]="section.id">
+                @for (column of row.columns; track $index; let colIndex = $index) {
+                  <div class="form-column" 
+                       [class.layout-editable]="effectiveEditModeEnabled"
+                       [attr.data-column-index]="colIndex"
+                       [attr.data-row-index]="rowIndex"
+                       [attr.data-section-id]="section.id">
                     <ng-container
                       dynamicFieldLoader
                       [fields]="getColumnFields(column)"
@@ -137,17 +175,6 @@ import { PraxisDynamicFormConfigEditor } from './praxis-dynamic-form-config-edit
           {{ isLoading ? 'Processando...' : (mode === 'edit' ? 'Atualizar' : 'Criar') }}
         </button>
 
-        @if (editModeEnabled) {
-          <button
-            type="button"
-            mat-icon-button
-            (click)="openConfigEditor()"
-            matTooltip="Configurar formulário"
-            [disabled]="isLoading"
-          >
-            <mat-icon>settings</mat-icon>
-          </button>
-        }
       </div>
       </form>
     }
@@ -156,6 +183,44 @@ import { PraxisDynamicFormConfigEditor } from './praxis-dynamic-form-config-edit
     `
       :host {
         display: block;
+        position: relative;
+      }
+
+      .form-config-controls {
+        position: absolute;
+        top: 0;
+        right: 0;
+        display: flex;
+        gap: 0.5rem;
+        z-index: 100;
+        background-color: var(--md-sys-color-surface-container);
+        padding: 0.5rem;
+        border-radius: 0 0 0 8px;
+        border: 1px solid var(--md-sys-color-outline-variant);
+        border-top: none;
+        border-right: none;
+        /* Fixar largura para evitar mudança de posição */
+        min-width: 100px;
+        justify-content: flex-end;
+      }
+
+      .layout-customize-toggle {
+        transition: all 0.2s ease;
+        /* Fixar tamanho para evitar mudança de posição */
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        min-height: 40px;
+      }
+
+      .layout-customize-toggle.active {
+        background-color: var(--md-sys-color-primary-container);
+        color: var(--md-sys-color-on-primary-container);
+        /* Remover animação que pode causar instabilidade */
+      }
+
+      .config-button {
+        color: var(--md-sys-color-primary);
       }
 
       .form-loading {
@@ -209,6 +274,33 @@ import { PraxisDynamicFormConfigEditor } from './praxis-dynamic-form-config-edit
         display: flex;
         flex-direction: column;
         gap: 1.5rem;
+        transition: all 0.3s ease;
+      }
+
+      /* Layout Edit Mode - Visual Indicators */
+      .layout-edit-mode {
+        background-color: var(--md-sys-color-surface-container-low);
+        border: 2px dashed var(--md-sys-color-primary);
+        border-radius: 12px;
+        padding: 1rem;
+        position: relative;
+      }
+
+      .layout-edit-mode::before {
+        content: "🎨 Modo de Customização";
+        position: absolute;
+        top: -8px;
+        left: 16px;
+        background-color: var(--md-sys-color-primary);
+        color: var(--md-sys-color-on-primary);
+        padding: 2px 8px;
+        border-radius: 8px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        z-index: 1;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        /* Não interferir no layout */
+        pointer-events: none;
       }
 
       .form-section {
@@ -216,6 +308,19 @@ import { PraxisDynamicFormConfigEditor } from './praxis-dynamic-form-config-edit
         border-radius: 8px;
         padding: 1.5rem;
         background-color: var(--md-sys-color-surface-container-lowest);
+        transition: all 0.2s ease;
+        position: relative;
+      }
+
+      /* Layout Editable - Hover Effects (drag implementado futuramente) */
+      .form-section.layout-editable {
+        /* Border transparente para evitar layout shift */
+        border: 1px solid transparent;
+      }
+      
+      .form-section.layout-editable:hover {
+        border: 1px dashed var(--md-sys-color-primary);
+        /* Remover background que pode causar expansão visual */
       }
 
       .section-title {
@@ -235,15 +340,49 @@ import { PraxisDynamicFormConfigEditor } from './praxis-dynamic-form-config-edit
         display: flex;
         gap: 1rem;
         margin-bottom: 1rem;
+        transition: all 0.2s ease;
+        border-radius: 6px;
+        position: relative;
       }
 
       .form-row:last-child {
         margin-bottom: 0;
       }
 
+      .form-row.layout-editable {
+        position: relative;
+        /* Border transparente para evitar layout shift */
+        border: 1px solid transparent;
+        border-radius: 4px;
+        /* Remover padding para evitar expansão */
+        margin: -1px;
+      }
+
+      .form-row.layout-editable:hover {
+        border: 1px dashed var(--md-sys-color-secondary);
+        /* Remover background que pode causar expansão visual */
+      }
+
       .form-column {
         flex: 1;
         min-width: 0;
+        transition: all 0.2s ease;
+        border-radius: 4px;
+        position: relative;
+      }
+
+      .form-column.layout-editable {
+        position: relative;
+        /* Border transparente para evitar layout shift */
+        border: 1px solid transparent;
+        border-radius: 4px;
+        /* Remover padding para evitar expansão */
+        margin: -1px;
+      }
+
+      .form-column.layout-editable:hover {
+        border: 1px dashed var(--md-sys-color-tertiary);
+        /* Remover background que pode causar expansão visual */
       }
 
       .form-actions {
@@ -287,7 +426,23 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   @Input() resourceId?: string | number;
   @Input() mode: 'create' | 'edit' | 'view' = 'create';
   @Input() config: FormConfig = { sections: [] };
-  /** Shows the configuration editor button */
+  /** 
+   * CUSTOMIZAÇÃO DE LAYOUT - NÃO confundir com edição de dados do formulário
+   * 
+   * Este flag controla se o usuário pode customizar a ESTRUTURA do formulário:
+   * - Mover sections, rows, columns
+   * - Configurar layout e aparência 
+   * - Acessar editor de configuração
+   * 
+   * É INDEPENDENTE do mode (view/edit/create) que controla os DADOS do registro
+   * 
+   * @example
+   * // Formulário em modo VIEW de dados + customização HABILITADA
+   * <praxis-dynamic-form mode="view" [editModeEnabled]="true">
+   * 
+   * // Formulário em modo EDIT de dados + customização DESABILITADA  
+   * <praxis-dynamic-form mode="edit" [editModeEnabled]="false">
+   */
   @Input() editModeEnabled = false;
   /** Identifier for persisting layouts */
   @Input() formId?: string;
@@ -315,6 +470,7 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   @Output() valueChange = new EventEmitter<FormValueChangeEvent>();
   @Output() syncCompleted = new EventEmitter<SyncResult>();
   @Output() initializationError = new EventEmitter<FormInitializationError>();
+  @Output() editModeEnabledChange = new EventEmitter<boolean>();
 
   // Estado interno para UX
   isLoading = false;
@@ -323,6 +479,15 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   currentErrorDetails: any = null;
   isRecoverable = false;
   private isInitialized = false;
+  
+  // ESTADO INTERNO para CUSTOMIZAÇÃO DE LAYOUT (não muta o @Input)
+  // Este estado permite toggle da customização independente dos dados do formulário
+  // Persiste entre sessões para experiência corporativa consistente
+  private _internalEditModeEnabled: boolean = false;
+  
+  // Flag para indicar se houve interação do usuário (toggle manual)
+  // Quando true, o estado interno tem precedência sobre o @Input
+  private _userHasToggledEditMode: boolean = false;
 
   form!: FormGroup;
   private pendingEntityId: string | number | null = null;
@@ -342,7 +507,39 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
     this.form = this.fb.group({});
   }
 
+  // Getter para o estado efetivo de CUSTOMIZAÇÃO DE LAYOUT
+  // Lógica de precedência:
+  // 1. Se usuário fez toggle manual -> usar estado interno
+  // 2. Senão -> usar @Input como fallback
+  get effectiveEditModeEnabled(): boolean {
+    return this._userHasToggledEditMode ? this._internalEditModeEnabled : this.editModeEnabled;
+  }
+
+  // Getter para determinar se deve mostrar os controles de configuração
+  get shouldShowConfigControls(): boolean {
+    // Sempre mostrar em contexto corporativo (quando tem formId)
+    // editModeEnabled é independente do mode do formulário
+    return !!this.formId;
+  }
+
   ngOnInit(): void {
+    // Carregar estado persistido de CUSTOMIZAÇÃO DE LAYOUT (não confundir com dados)
+    if (this.formId) {
+      const customizationModeKey = `praxis-layout-customization-${this.formId}`;
+      const userToggledKey = `praxis-user-toggled-${this.formId}`;
+      
+      const savedCustomizationMode = this.configStorage.loadConfig<boolean>(customizationModeKey);
+      const savedUserToggled = this.configStorage.loadConfig<boolean>(userToggledKey);
+      
+      if (savedCustomizationMode !== null) {
+        this._internalEditModeEnabled = savedCustomizationMode;
+      }
+      
+      if (savedUserToggled !== null) {
+        this._userHasToggledEditMode = savedUserToggled;
+      }
+    }
+
     // Initialize form based on the new flow
     if (this.formId && this.resourcePath && !this.isInitialized) {
       this.initializeForm();
@@ -425,12 +622,14 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
       });
     } finally {
       this.isLoading = false;
+      this.cdr.detectChanges();
     }
   }
 
   private handleInitializationError(stage: FormInitializationError['stage'], error: Error, context?: FormInitializationError['context']): void {
     this.initializationStatus = 'error';
     this.isLoading = false;
+    this.cdr.detectChanges();
     
     const formError: FormInitializationError = {
       stage,
@@ -726,6 +925,38 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
         });
       },
     });
+  }
+
+  /**
+   * TOGGLE DE CUSTOMIZAÇÃO DE LAYOUT - NÃO É EDIÇÃO DE DADOS
+   * 
+   * Este método alterna entre:
+   * - Modo normal: Usuário interage com dados do formulário (conforme mode: view/edit/create)
+   * - Modo customização: Usuário pode mover sections/rows/columns e configurar layout
+   * 
+   * IMPORTANTE: Independe completamente do mode do formulário
+   */
+  toggleEditMode(): void {
+    // Marcar que usuário fez toggle manual (estado interno tem precedência)
+    this._userHasToggledEditMode = true;
+    
+    // Toggle estado interno de CUSTOMIZAÇÃO (não o @Input de dados)
+    this._internalEditModeEnabled = !this._internalEditModeEnabled;
+    
+    // Persistir estado corporativo para consistência entre sessões
+    if (this.formId) {
+      const customizationModeKey = `praxis-layout-customization-${this.formId}`;
+      const userToggledKey = `praxis-user-toggled-${this.formId}`;
+      
+      this.configStorage.saveConfig(customizationModeKey, this._internalEditModeEnabled);
+      this.configStorage.saveConfig(userToggledKey, this._userHasToggledEditMode);
+    }
+    
+    // Emitir mudança para componente pai - usar o estado efetivo
+    this.editModeEnabledChange.emit(this.effectiveEditModeEnabled);
+    
+    // Force change detection para aplicar estilos visuais imediatamente
+    this.cdr.detectChanges();
   }
 
   openConfigEditor(): void {

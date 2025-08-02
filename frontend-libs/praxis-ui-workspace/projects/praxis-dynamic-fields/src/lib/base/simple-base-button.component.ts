@@ -30,6 +30,8 @@ import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 
 import { ComponentMetadata } from '@praxis/core';
+import { BaseDynamicFieldComponent, ComponentLifecycleEvent } from './base-dynamic-field-component.interface';
+import { BehaviorSubject } from 'rxjs';
 
 // =============================================================================
 // BASIC INTERFACES FOR BUTTONS
@@ -69,7 +71,7 @@ type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error';
 // =============================================================================
 
 @Directive()
-export abstract class SimpleBaseButtonComponent implements OnInit, OnDestroy {
+export abstract class SimpleBaseButtonComponent implements OnInit, OnDestroy, BaseDynamicFieldComponent {
 
   // =============================================================================
   // DEPENDENCY INJECTION
@@ -80,6 +82,9 @@ export abstract class SimpleBaseButtonComponent implements OnInit, OnDestroy {
   protected readonly cdr = inject(ChangeDetectorRef);
   protected readonly router = inject(Router);
   protected readonly dialog = inject(MatDialog);
+  
+  /** Subject para eventos de lifecycle */
+  readonly lifecycleEvents$ = new BehaviorSubject<ComponentLifecycleEvent | null>(null);
 
   // =============================================================================
   // SIGNALS
@@ -210,10 +215,24 @@ export abstract class SimpleBaseButtonComponent implements OnInit, OnDestroy {
     this.componentId.set(this.generateUniqueId());
     this.initializeButtonAction();
     this.buttonState.update(state => ({ ...state, initialized: true }));
+    this.emitLifecycleEvent('init');
     this.log('debug', 'Simple base button component initialized');
+    
+    // Chamar hook após inicialização completa
+    if (this.onComponentInit) {
+      this.onComponentInit();
+    }
+    this.emitLifecycleEvent('afterInit');
   }
 
   ngOnDestroy(): void {
+    this.emitLifecycleEvent('destroy');
+    
+    // Chamar hook antes da destruição
+    if (this.onComponentDestroy) {
+      this.onComponentDestroy();
+    }
+    
     this.log('debug', 'Simple base button component destroyed');
   }
 
@@ -332,6 +351,7 @@ export abstract class SimpleBaseButtonComponent implements OnInit, OnDestroy {
   protected setMetadata(metadata: ComponentMetadata): void {
     this.metadata.set(metadata);
     this.initializeButtonAction();
+    this.emitLifecycleEvent('change');
   }
 
   /**
@@ -342,9 +362,18 @@ export abstract class SimpleBaseButtonComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Hook chamado após inicialização - para subclasses implementarem
+   * Hook chamado após inicialização - implementação da interface BaseDynamicFieldComponent
+   * Subclasses podem override para implementar comportamento específico
    */
-  protected onComponentInit(): void {
+  onComponentInit?(): void {
+    // Default implementation - subclasses can override
+  }
+  
+  /**
+   * Hook chamado antes da destruição - implementação da interface BaseDynamicFieldComponent
+   * Subclasses podem override para limpeza específica
+   */
+  onComponentDestroy?(): void {
     // Default implementation - subclasses can override
   }
 
@@ -513,5 +542,19 @@ export abstract class SimpleBaseButtonComponent implements OnInit, OnDestroy {
     else if (level === 'debug') {
       console.debug(`[${this.componentId()}] ${message}`, data || '');
     }
+  }
+  
+  /**
+   * Emite evento de lifecycle
+   */
+  private emitLifecycleEvent(phase: ComponentLifecycleEvent['phase']): void {
+    const event: ComponentLifecycleEvent = {
+      phase,
+      timestamp: Date.now(),
+      componentId: this.componentId(),
+      metadata: this.metadata()
+    };
+
+    this.lifecycleEvents$.next(event);
   }
 }
