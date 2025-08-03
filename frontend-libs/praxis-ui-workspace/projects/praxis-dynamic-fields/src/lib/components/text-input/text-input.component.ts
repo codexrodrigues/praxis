@@ -93,7 +93,7 @@ import { SimpleBaseInputComponent, BaseValidationConfig } from '../../base/simpl
   ],
   host: {
     '[class]': 'componentCssClasses()',
-    '[attr.data-field-type]': '"text-input"',
+    '[attr.data-field-type]': '"input"',
     '[attr.data-field-name]': 'metadata()?.name',
     '[attr.data-component-id]': 'componentId()'
   }
