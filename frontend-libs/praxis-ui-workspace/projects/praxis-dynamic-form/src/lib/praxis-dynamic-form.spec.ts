@@ -1,8 +1,15 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { PraxisDynamicForm } from './praxis-dynamic-form';
-import { GenericCrudService, CONFIG_STORAGE, ConfigStorage } from '@praxis/core';
-import { DynamicFieldLoaderDirective } from '@praxis/dynamic-fields';
+import {
+  GenericCrudService,
+  CONFIG_STORAGE,
+  ConfigStorage,
+} from '@praxis/core';
+import {
+  DynamicFieldLoaderDirective,
+  MaterialSelectComponent,
+} from '@praxis/dynamic-fields';
 
 describe('PraxisDynamicForm', () => {
   let fixture: ComponentFixture<PraxisDynamicForm>;
@@ -18,6 +25,7 @@ describe('PraxisDynamicForm', () => {
       'getById',
       'create',
       'update',
+      'filter',
     ]);
 
     configStorage = jasmine.createSpyObj('ConfigStorage', [
@@ -25,6 +33,12 @@ describe('PraxisDynamicForm', () => {
       'saveConfig',
       'clearConfig',
     ]);
+
+    TestBed.overrideComponent(MaterialSelectComponent, {
+      set: {
+        providers: [{ provide: GenericCrudService, useValue: crudService }],
+      },
+    });
 
     await TestBed.configureTestingModule({
       imports: [PraxisDynamicForm, DynamicFieldLoaderDirective],
@@ -106,13 +120,51 @@ describe('PraxisDynamicForm', () => {
     crudService.create.and.returnValue(of({ id: 1 } as any));
     const submitSpy = jasmine.createSpy('submit');
     component.formSubmit.subscribe(submitSpy);
-    component.config = { 
+    component.config = {
       sections: [],
-      fieldMetadata: [{ name: 'nome', controlType: 'input' } as any]
+      fieldMetadata: [{ name: 'nome', controlType: 'input' } as any],
     };
     (component as any).buildFormFromConfig();
     component.form.setValue({ nome: 'Teste' });
     component.onSubmit();
     expect(submitSpy).toHaveBeenCalled();
+  });
+
+  it('renderiza campo select com carregamento remoto', async () => {
+    const page = {
+      content: [{ id: '1', label: 'Ativo' }],
+      totalElements: 1,
+      totalPages: 1,
+      pageNumber: 0,
+      pageSize: 50,
+    } as any;
+    crudService.filter.and.returnValue(of(page));
+    crudService.getSchema.and.returnValue(of([]));
+
+    component.config = {
+      sections: [
+        {
+          id: 's1',
+          rows: [{ columns: [{ fields: ['status'] }] }],
+        },
+      ],
+      fieldMetadata: [
+        {
+          name: 'status',
+          controlType: 'select',
+          resourcePath: 'status',
+          optionLabelKey: 'label',
+          optionValueKey: 'id',
+        } as any,
+      ],
+    };
+
+    (component as any).buildFormFromConfig();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(crudService.filter).toHaveBeenCalled();
+    const select = fixture.nativeElement.querySelector('pdx-material-select');
+    expect(select).toBeTruthy();
   });
 });

@@ -6,6 +6,7 @@
 export * from './lib/base/base-dynamic-field-component.interface';
 export * from './lib/base/simple-base-input.component';
 export * from './lib/base/simple-base-button.component';
+export * from './lib/base/simple-base-select.component';
 
 // Directives
 export * from './lib/directives/dynamic-field-loader.directive';
@@ -22,6 +23,10 @@ export * from './lib/components/number-input/number-input.component';
 export * from './lib/components/month-input/month-input.component';
 export * from './lib/components/password-input/password-input.component';
 export * from './lib/components/search-input/search-input.component';
+export * from './lib/components/material-select/material-select.component';
+export * from './lib/components/material-multi-select/material-multi-select.component';
+export * from './lib/components/material-searchable-select/material-searchable-select.component';
+export * from './lib/components/material-async-select/material-async-select.component';
 export * from './lib/components/preload-status/preload-status.component';
 export * from './lib/components/phone-input/phone-input.component';
 export * from './lib/components/time-input/time-input.component';
