@@ -330,13 +330,33 @@ export class ComponentRegistryService implements IComponentRegistry {
         '../../components/material-textarea/material-textarea.component'
       ).then((m) => m.MaterialTextareaComponent),
     );
-    //
-    // // Select
-    // this.register(
-    //   FieldControlTypeEnum.SELECT,
-    //   () => import('../../components/material-select/material-select.component').then(m => m.MaterialSelectComponent)
-    // );
-    //
+    const selectFactory = () =>
+      import('../../components/material-select/material-select.component').then(
+        (m) => m.MaterialSelectComponent,
+      );
+    this.register(FieldControlTypeEnum.SELECT, selectFactory);
+
+    const multiSelectFactory = () =>
+      import(
+        '../../components/material-multi-select/material-multi-select.component'
+      ).then((m) => m.MaterialMultiSelectComponent);
+    this.register(FieldControlTypeEnum.MULTI_SELECT, multiSelectFactory);
+
+    const searchableSelectFactory = () =>
+      import(
+        '../../components/material-searchable-select/material-searchable-select.component'
+      ).then((m) => m.MaterialSearchableSelectComponent);
+    this.register(
+      'searchable-select' as FieldControlType,
+      searchableSelectFactory,
+    );
+
+    const asyncSelectFactory = () =>
+      import(
+        '../../components/material-async-select/material-async-select.component'
+      ).then((m) => m.MaterialAsyncSelectComponent);
+    this.register('async-select' as FieldControlType, asyncSelectFactory);
+
     // // Checkbox
     // this.register(
     //   FieldControlTypeEnum.CHECKBOX,

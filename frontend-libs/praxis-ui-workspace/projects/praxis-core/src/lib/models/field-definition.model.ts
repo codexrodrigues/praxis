@@ -46,9 +46,16 @@ export interface FieldDefinition {
   valueField?: string;
   displayField?: string;
   endpoint?: string;
+  resourcePath?: string;
   emptyOptionText?: string;
   options?: { key: string; value: string }[];
   filter?: any;
+  filterCriteria?: any;
+  searchable?: boolean;
+  selectAll?: boolean;
+  maxSelections?: number;
+  optionLabelKey?: string;
+  optionValueKey?: string;
   filterOptions?: any[];
   filterControlType?: string;
   numericFormat?: string;
