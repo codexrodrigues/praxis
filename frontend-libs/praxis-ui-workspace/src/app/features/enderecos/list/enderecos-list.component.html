@@ -1,0 +1,17 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon aria-hidden="true">home</mat-icon>
+      <span>Endereços</span>
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <praxis-table
+      resourcePath="enderecos"
+      [editModeEnabled]="true"
+      (rowClick)="onRowClick($event)"
+      (rowAction)="onRowAction($event)"
+    >
+    </praxis-table>
+  </mat-card-content>
+</mat-card>

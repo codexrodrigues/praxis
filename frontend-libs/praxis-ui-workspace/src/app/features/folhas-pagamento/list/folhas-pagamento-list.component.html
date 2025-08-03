@@ -1,0 +1,17 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon aria-hidden="true">request_quote</mat-icon>
+      <span>Folhas de Pagamento</span>
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <praxis-table
+      resourcePath="folhas-pagamento"
+      [editModeEnabled]="true"
+      (rowClick)="onRowClick($event)"
+      (rowAction)="onRowAction($event)"
+    >
+    </praxis-table>
+  </mat-card-content>
+</mat-card>

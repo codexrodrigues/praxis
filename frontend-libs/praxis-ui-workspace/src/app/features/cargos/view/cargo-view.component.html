@@ -1,0 +1,18 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon aria-hidden="true">work</mat-icon>
+      <span>Detalhes do Cargo</span>
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <praxis-dynamic-form
+      resourcePath="cargos"
+      [resourceId]="id || undefined"
+      formId="cargos-view"
+      mode="view"
+      [editModeEnabled]="true"
+    >
+    </praxis-dynamic-form>
+  </mat-card-content>
+</mat-card>

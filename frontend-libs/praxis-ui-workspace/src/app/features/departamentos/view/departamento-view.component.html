@@ -1,0 +1,18 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon aria-hidden="true">apartment</mat-icon>
+      <span>Detalhes do Departamento</span>
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <praxis-dynamic-form
+      resourcePath="departamentos"
+      [resourceId]="id || undefined"
+      formId="departamentos-view"
+      mode="view"
+      [editModeEnabled]="true"
+    >
+    </praxis-dynamic-form>
+  </mat-card-content>
+</mat-card>
