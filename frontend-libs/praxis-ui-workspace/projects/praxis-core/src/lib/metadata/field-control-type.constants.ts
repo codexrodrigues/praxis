@@ -27,13 +27,16 @@ export const FieldControlType = {
   COLOR_GRADIENT: 'colorGradient',
   COLOR_PALETTE: 'colorPalette',
   COLOR_PICKER: 'colorPicker',
+  COLOR_INPUT: 'color',
   CONTEXT_MENU: 'contextMenu',
   CONVERSATIONAL_UI: 'conversationalUI',
   CURRENCY_INPUT: 'currency',
+  DATE_INPUT: 'dateInput',
   DATE_PICKER: 'date',
   DATE_RANGE: 'dateRange',
   DATE_TIME_PICKER: 'dateTime',
   DATE_TIME_RANGE: 'dateTimeRange',
+  DATETIME_LOCAL_INPUT: 'dateTimeLocal',
   DIALOG: 'dialog',
   DRAWER: 'drawer',
   DROP_DOWN_TREE: 'dropDownTree',
@@ -52,6 +55,7 @@ export const FieldControlType = {
   LIST_VIEW: 'listView',
   MAP: 'map',
   MASKED_TEXT_BOX: 'maskedTextBox',
+  MONTH_INPUT: 'month',
   MULTI_COLUMN_COMBO_BOX: 'multiColumnComboBox',
   MULTI_SELECT: 'multiSelect',
   MULTI_SELECT_TREE: 'multiSelectTree',
@@ -74,6 +78,7 @@ export const FieldControlType = {
   RICH_TEXT_EDITOR: 'richTextEditor',
   RIPPLE: 'ripple',
   SCROLL_VIEW: 'scrollView',
+  SEARCH_INPUT: 'search',
   SELECT: 'select',
   SIGNATURE: 'signature',
   SLIDER: 'slider',
@@ -87,6 +92,7 @@ export const FieldControlType = {
   SVG_ICON: 'svgIcon',
   TABS: 'tabs',
   TEXTAREA: 'textarea',
+  TIME_INPUT: 'time',
   TIME_PICKER: 'timePicker',
   TIMELINE: 'timeline',
   TOGGLE: 'toggle',
@@ -95,7 +101,9 @@ export const FieldControlType = {
   TREE_VIEW: 'treeView',
   TYPOGRAPHY: 'typography',
   URL_INPUT: 'url',
+  WEEK_INPUT: 'week',
   WINDOW: 'window',
 } as const;
 
-export type FieldControlType = typeof FieldControlType[keyof typeof FieldControlType];
+export type FieldControlType =
+  (typeof FieldControlType)[keyof typeof FieldControlType];

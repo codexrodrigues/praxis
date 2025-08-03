@@ -14,7 +14,19 @@ export * from './lib/directives/dynamic-field-loader.directive';
 export * from './lib/components/material-button/material-button.component';
 export * from './lib/components/material-button/confirm-dialog.component';
 export * from './lib/components/text-input/text-input.component';
+export * from './lib/components/color-input/color-input.component';
+export * from './lib/components/date-input/date-input.component';
+export * from './lib/components/datetime-local-input/datetime-local-input.component';
+export * from './lib/components/email-input/email-input.component';
+export * from './lib/components/number-input/number-input.component';
+export * from './lib/components/month-input/month-input.component';
+export * from './lib/components/password-input/password-input.component';
+export * from './lib/components/search-input/search-input.component';
 export * from './lib/components/preload-status/preload-status.component';
+export * from './lib/components/phone-input/phone-input.component';
+export * from './lib/components/time-input/time-input.component';
+export * from './lib/components/url-input/url-input.component';
+export * from './lib/components/week-input/week-input.component';
 
 // Services
 export * from './lib/services/action-resolver.service';

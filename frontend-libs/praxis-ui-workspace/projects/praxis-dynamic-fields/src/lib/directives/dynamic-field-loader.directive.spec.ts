@@ -1,19 +1,24 @@
 /**
  * @fileoverview Testes unitários para DynamicFieldLoaderDirective
- * 
+ *
  * Testa renderização dinâmica de campos, integração com ComponentRegistryService,
  * validação de inputs e emissão de outputs.
  */
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Component, DebugElement } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 import { DynamicFieldLoaderDirective } from './dynamic-field-loader.directive';
 import { ComponentRegistryService } from '../services/component-registry/component-registry.service';
-import { MaterialInputComponent } from '../components/material-input/material-input.component';
+import { TextInputComponent } from '../components/text-input/text-input.component';
 import { MaterialButtonComponent } from '../components/material-button/material-button.component';
 import { FieldMetadata } from '@praxis/core';
 
@@ -24,16 +29,17 @@ import { FieldMetadata } from '@praxis/core';
 @Component({
   template: `
     <form [formGroup]="testForm">
-      <ng-container 
-        dynamicFieldLoader 
-        [fields]="fields" 
+      <ng-container
+        dynamicFieldLoader
+        [fields]="fields"
         [formGroup]="testForm"
-        (componentsCreated)="onComponentsCreated($event)">
+        (componentsCreated)="onComponentsCreated($event)"
+      >
       </ng-container>
     </form>
   `,
   standalone: true,
-  imports: [ReactiveFormsModule, DynamicFieldLoaderDirective]
+  imports: [ReactiveFormsModule, DynamicFieldLoaderDirective],
 })
 class TestHostComponent {
   testForm: FormGroup;
@@ -57,7 +63,7 @@ class MockComponentRegistryService {
   async getComponent(controlType: string): Promise<any> {
     switch (controlType) {
       case 'input':
-        return MaterialInputComponent;
+        return TextInputComponent;
       case 'button':
         return MaterialButtonComponent;
       default:
@@ -82,24 +88,22 @@ describe('DynamicFieldLoaderDirective', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [
-        TestHostComponent,
-        NoopAnimationsModule,
-        ReactiveFormsModule
-      ],
+      imports: [TestHostComponent, NoopAnimationsModule, ReactiveFormsModule],
       providers: [
         {
           provide: ComponentRegistryService,
-          useClass: MockComponentRegistryService
-        }
-      ]
+          useClass: MockComponentRegistryService,
+        },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(TestHostComponent);
     component = fixture.componentInstance;
     registryService = TestBed.inject(ComponentRegistryService);
 
-    const directiveEl = fixture.debugElement.query(By.directive(DynamicFieldLoaderDirective));
+    const directiveEl = fixture.debugElement.query(
+      By.directive(DynamicFieldLoaderDirective),
+    );
     directive = directiveEl.injector.get(DynamicFieldLoaderDirective);
   });
 
@@ -126,7 +130,7 @@ describe('DynamicFieldLoaderDirective', () => {
     it('should throw error when fields is null', () => {
       component.fields = null as any;
       component.testForm = new FormBuilder().group({});
-      
+
       expect(() => {
         fixture.detectChanges();
       }).toThrowError('[DynamicFieldLoader] Input "fields" is required');
@@ -135,7 +139,7 @@ describe('DynamicFieldLoaderDirective', () => {
     it('should throw error when formGroup is null', () => {
       component.fields = [];
       component.testForm = null as any;
-      
+
       expect(() => {
         fixture.detectChanges();
       }).toThrowError('[DynamicFieldLoader] Input "formGroup" is required');
@@ -144,7 +148,7 @@ describe('DynamicFieldLoaderDirective', () => {
     it('should throw error when fields is not an array', () => {
       component.fields = {} as any;
       component.testForm = new FormBuilder().group({});
-      
+
       expect(() => {
         fixture.detectChanges();
       }).toThrowError('[DynamicFieldLoader] Input "fields" must be an array');
@@ -153,28 +157,28 @@ describe('DynamicFieldLoaderDirective', () => {
     it('should throw error when field is missing name', () => {
       component.fields = [{ controlType: 'input' } as any];
       component.testForm = new FormBuilder().group({});
-      
+
       expect(() => {
         fixture.detectChanges();
-      }).toThrowError('Field at index 0 must have a \'name\' property');
+      }).toThrowError("Field at index 0 must have a 'name' property");
     });
 
     it('should throw error when field is missing controlType', () => {
       component.fields = [{ name: 'test' } as any];
       component.testForm = new FormBuilder().group({});
-      
+
       expect(() => {
         fixture.detectChanges();
-      }).toThrowError('Field \'test\' must have a \'controlType\' property');
+      }).toThrowError("Field 'test' must have a 'controlType' property");
     });
 
     it('should throw error for duplicate field names', () => {
       component.fields = [
         { name: 'test', controlType: 'input' },
-        { name: 'test', controlType: 'button' }
+        { name: 'test', controlType: 'button' },
       ] as FieldMetadata[];
       component.testForm = new FormBuilder().group({});
-      
+
       expect(() => {
         fixture.detectChanges();
       }).toThrowError('Duplicate field names are not allowed: test');
@@ -192,18 +196,18 @@ describe('DynamicFieldLoaderDirective', () => {
           name: 'email',
           label: 'Email',
           controlType: 'input',
-          required: true
+          required: true,
         },
         {
           name: 'submit',
           label: 'Submit',
-          controlType: 'button'
-        }
+          controlType: 'button',
+        },
       ] as FieldMetadata[];
 
       component.testForm = new FormBuilder().group({
         email: ['', [Validators.required, Validators.email]],
-        submit: ['']
+        submit: [''],
       });
     });
 
@@ -224,7 +228,7 @@ describe('DynamicFieldLoaderDirective', () => {
       const emailComponent = component.createdComponents.get('email');
       const submitComponent = component.createdComponents.get('submit');
 
-      expect(emailComponent.componentType).toBe(MaterialInputComponent);
+      expect(emailComponent.componentType).toBe(TextInputComponent);
       expect(submitComponent.componentType).toBe(MaterialButtonComponent);
     });
 
@@ -264,12 +268,12 @@ describe('DynamicFieldLoaderDirective', () => {
         {
           name: 'unknown',
           label: 'Unknown',
-          controlType: 'unknownType'
-        }
+          controlType: 'unknownType',
+        } as any,
       ] as FieldMetadata[];
 
       component.testForm = new FormBuilder().group({
-        unknown: ['']
+        unknown: [''],
       });
 
       spyOn(console, 'warn');
@@ -277,25 +281,29 @@ describe('DynamicFieldLoaderDirective', () => {
       await fixture.whenStable();
 
       expect(console.warn).toHaveBeenCalledWith(
-        jasmine.stringContaining('No component found for controlType \'unknownType\'')
+        jasmine.stringContaining(
+          "No component found for controlType 'unknownType'",
+        ),
       );
       expect(component.createdComponents.size).toBe(0);
     });
 
     it('should handle registry errors gracefully', async () => {
-      spyOn(registryService, 'getComponent').and.rejectWith(new Error('Registry error'));
+      spyOn(registryService, 'getComponent').and.rejectWith(
+        new Error('Registry error'),
+      );
       spyOn(console, 'error');
 
       component.fields = [
         {
           name: 'test',
           label: 'Test',
-          controlType: 'input'
-        }
+          controlType: 'input',
+        },
       ] as FieldMetadata[];
 
       component.testForm = new FormBuilder().group({
-        test: ['']
+        test: [''],
       });
 
       try {
@@ -317,12 +325,12 @@ describe('DynamicFieldLoaderDirective', () => {
         {
           name: 'test',
           label: 'Test',
-          controlType: 'input'
-        }
+          controlType: 'input',
+        },
       ] as FieldMetadata[];
 
       component.testForm = new FormBuilder().group({
-        test: ['']
+        test: [''],
       });
     });
 
@@ -338,8 +346,8 @@ describe('DynamicFieldLoaderDirective', () => {
         {
           name: 'newField',
           label: 'New Field',
-          controlType: 'button'
-        }
+          controlType: 'button',
+        },
       ] as FieldMetadata[];
 
       component.testForm.addControl('newField', new FormBuilder().control(''));
@@ -357,20 +365,24 @@ describe('DynamicFieldLoaderDirective', () => {
 
       const oldFormGroup = component.testForm;
       component.testForm = new FormBuilder().group({
-        test: ['new value']
+        test: ['new value'],
       });
 
       fixture.detectChanges();
       await fixture.whenStable();
 
       const testComponent = component.createdComponents.get('test');
-      expect(testComponent.instance.formControl()).not.toBe(oldFormGroup.get('test'));
-      expect(testComponent.instance.formControl()).toBe(component.testForm.get('test'));
+      expect(testComponent.instance.formControl()).not.toBe(
+        oldFormGroup.get('test'),
+      );
+      expect(testComponent.instance.formControl()).toBe(
+        component.testForm.get('test'),
+      );
     });
 
     it('should clean up components on destroy', () => {
       fixture.detectChanges();
-      
+
       const destroySpy = jasmine.createSpy('destroy');
       if (component.createdComponents) {
         component.createdComponents.forEach((ref: any) => {
@@ -381,7 +393,9 @@ describe('DynamicFieldLoaderDirective', () => {
       fixture.destroy();
 
       if (component.createdComponents) {
-        expect(destroySpy).toHaveBeenCalledTimes(component.createdComponents.size);
+        expect(destroySpy).toHaveBeenCalledTimes(
+          component.createdComponents.size,
+        );
       }
     });
   });
@@ -396,18 +410,18 @@ describe('DynamicFieldLoaderDirective', () => {
         {
           name: 'email',
           label: 'Email',
-          controlType: 'input'
+          controlType: 'input',
         },
         {
           name: 'submit',
           label: 'Submit',
-          controlType: 'button'
-        }
+          controlType: 'button',
+        },
       ] as FieldMetadata[];
 
       component.testForm = new FormBuilder().group({
         email: [''],
-        submit: ['']
+        submit: [''],
       });
 
       fixture.detectChanges();
@@ -419,7 +433,7 @@ describe('DynamicFieldLoaderDirective', () => {
       const nonExistentComponent = directive.getComponent('nonexistent');
 
       expect(emailComponent).toBeDefined();
-      expect(emailComponent!.componentType).toBe(MaterialInputComponent);
+      expect(emailComponent!.componentType).toBe(TextInputComponent);
       expect(nonExistentComponent).toBeUndefined();
     });
 
@@ -434,12 +448,12 @@ describe('DynamicFieldLoaderDirective', () => {
 
     it('should provide refresh method', async () => {
       const initialSize = component.createdComponents.size;
-      
+
       // Modificar fields externamente
       component.fields.push({
         name: 'newField',
         label: 'New Field',
-        controlType: 'input'
+        controlType: 'input',
       } as FieldMetadata);
 
       component.testForm.addControl('newField', new FormBuilder().control(''));
@@ -466,7 +480,7 @@ describe('DynamicFieldLoaderDirective', () => {
       fixture.detectChanges();
 
       expect(console.warn).toHaveBeenCalledWith(
-        '[DynamicFieldLoader] Fields array is empty - no components will be rendered'
+        '[DynamicFieldLoader] Fields array is empty - no components will be rendered',
       );
     });
 
@@ -475,8 +489,8 @@ describe('DynamicFieldLoaderDirective', () => {
         {
           name: 'missingControl',
           label: 'Missing Control',
-          controlType: 'input'
-        }
+          controlType: 'input',
+        },
       ] as FieldMetadata[];
 
       component.testForm = new FormBuilder().group({}); // FormGroup sem o control
@@ -486,7 +500,9 @@ describe('DynamicFieldLoaderDirective', () => {
       await fixture.whenStable();
 
       expect(console.warn).toHaveBeenCalledWith(
-        jasmine.stringContaining('FormControl for field \'missingControl\' not found in FormGroup')
+        jasmine.stringContaining(
+          "FormControl for field 'missingControl' not found in FormGroup",
+        ),
       );
     });
 
@@ -495,12 +511,12 @@ describe('DynamicFieldLoaderDirective', () => {
         {
           name: 'test',
           label: 'Test',
-          controlType: 'input'
-        }
+          controlType: 'input',
+        },
       ] as FieldMetadata[];
 
       component.testForm = new FormBuilder().group({
-        test: ['']
+        test: [''],
       });
 
       spyOn(console, 'debug');
@@ -513,7 +529,7 @@ describe('DynamicFieldLoaderDirective', () => {
       await fixture.whenStable();
 
       expect(console.debug).toHaveBeenCalledWith(
-        '[DynamicFieldLoader] Waiting for current rendering to complete...'
+        '[DynamicFieldLoader] Waiting for current rendering to complete...',
       );
     });
   });
