@@ -1,0 +1,18 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon aria-hidden="true">beach_access</mat-icon>
+      <span>Detalhes de Férias/Afastamento</span>
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <praxis-dynamic-form
+      resourcePath="ferias-afastamentos"
+      [resourceId]="id || undefined"
+      formId="ferias-afastamentos-view"
+      mode="view"
+      [editModeEnabled]="true"
+    >
+    </praxis-dynamic-form>
+  </mat-card-content>
+</mat-card>

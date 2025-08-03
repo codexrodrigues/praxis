@@ -1,0 +1,18 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon aria-hidden="true">request_quote</mat-icon>
+      <span>Detalhes da Folha de Pagamento</span>
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <praxis-dynamic-form
+      resourcePath="folhas-pagamento"
+      [resourceId]="id || undefined"
+      formId="folhas-pagamento-view"
+      mode="view"
+      [editModeEnabled]="true"
+    >
+    </praxis-dynamic-form>
+  </mat-card-content>
+</mat-card>

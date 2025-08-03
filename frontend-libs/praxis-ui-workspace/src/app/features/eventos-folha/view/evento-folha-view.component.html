@@ -1,0 +1,18 @@
+<mat-card>
+  <mat-card-header>
+    <mat-card-title>
+      <mat-icon aria-hidden="true">event</mat-icon>
+      <span>Detalhes do Evento de Folha</span>
+    </mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <praxis-dynamic-form
+      resourcePath="eventos-folha"
+      [resourceId]="id || undefined"
+      formId="eventos-folha-view"
+      mode="view"
+      [editModeEnabled]="true"
+    >
+    </praxis-dynamic-form>
+  </mat-card-content>
+</mat-card>
