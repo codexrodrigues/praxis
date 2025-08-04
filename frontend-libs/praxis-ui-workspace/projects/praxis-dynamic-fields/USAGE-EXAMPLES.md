@@ -615,6 +615,23 @@ const statusField: MaterialRadioMetadata = {
 };
 ```
 
+### 8. MaterialTimepicker para Agendamentos
+
+Exemplo de seletor de horário com intervalo e formato 24h:
+
+```typescript
+const meetingTime: MaterialTimepickerMetadata = {
+  name: "meetingTime",
+  label: "Horário da reunião",
+  controlType: "timePicker",
+  min: "08:00",
+  max: "18:00",
+  stepMinute: 15,
+  format: "24h",
+  touchUi: true,
+};
+```
+
 ## 🔧 Integração com Testes
 
 ### 5. Testando Formulários Dinâmicos

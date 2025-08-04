@@ -27,6 +27,7 @@ import {
   MaterialButtonMetadata,
   MaterialNumericMetadata,
   MaterialTextareaMetadata,
+  MaterialTimepickerMetadata
 } from '../models/material-field-metadata.interface';
 
 // =============================================================================
@@ -271,6 +272,25 @@ export const vacationDates: MaterialDateRangeMetadata = {
     appearance: 'outline',
     color: 'primary',
   },
+};
+
+/**
+ * Example: Timepicker for meeting scheduling
+ */
+export const meetingTimePicker: MaterialTimepickerMetadata = {
+  name: 'meetingTime',
+  label: 'Meeting Time',
+  controlType: 'timePicker',
+  interval: 900, // 15 minutes
+  min: '08:00',
+  max: '18:00',
+  format: '24h',
+  stepMinute: 15,
+  openOnClick: true,
+  materialDesign: {
+    appearance: 'outline',
+    color: 'primary'
+  }
 };
 
 // =============================================================================

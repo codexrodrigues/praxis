@@ -1044,38 +1044,6 @@ export interface MaterialSliderMetadata extends FieldMetadata {
 }
 
 /**
- * Specialized metadata for Material Time Picker components.
- *
- * ⚠️ COMPONENTE NÃO IMPLEMENTADO - Interface de planejamento
- *
- * Para implementar: criar MaterialTimePickerComponent em components/material-timepicker/
- * e registrar no ComponentRegistryService
- *
- * Handles time selection with clock interface.
- */
-export interface MaterialTimePickerMetadata extends FieldMetadata {
-  controlType: typeof FieldControlType.TIME_PICKER;
-
-  /** Time format (12 or 24 hour) */
-  timeFormat?: 12 | 24;
-
-  /** Minimum selectable time */
-  minTime?: string;
-
-  /** Maximum selectable time */
-  maxTime?: string;
-
-  /** Time step in minutes */
-  stepMinute?: number;
-
-  /** Show seconds selector */
-  showSeconds?: boolean;
-
-  /** Default time to show when opening */
-  defaultTime?: string;
-}
-
-/**
  * Specialized metadata for Material Rating components.
  *
  * ⚠️ COMPONENTE NÃO IMPLEMENTADO - Interface de planejamento
@@ -1391,4 +1359,50 @@ export interface MaterialTimeInputMetadata extends BaseMaterialInputMetadata {
   max?: string;
   /** Step for minute increments in seconds. */
   step?: number;
+}
+
+/**
+ * Metadata for Material Timepicker components.
+ *
+ * Configures the Angular Material `mat-timepicker` which allows
+ * selecting a time of day through an overlay panel.
+ */
+export interface MaterialTimepickerMetadata extends BaseMaterialInputMetadata {
+  controlType: typeof FieldControlType.TIME_PICKER;
+  /** Minimum selectable time in 24h format (HH:mm or HH:mm:ss). */
+  min?: string;
+
+  /** Maximum selectable time in 24h format (HH:mm or HH:mm:ss). */
+  max?: string;
+
+  /**
+   * Interval between options in the timepicker.
+   * Can be a number of seconds or a string with units like '30m'.
+   * Ignored if `options` is provided.
+   */
+  interval?: number | string;
+
+  /** Specific selectable time options. Takes precedence over `interval`. */
+  timeOptions?: string[];
+
+  /** Whether clicking the input should open the timepicker overlay. */
+  openOnClick?: boolean;
+
+  /** Use touch-friendly dialog UI. */
+  touchUi?: boolean;
+
+  /** Display time using 12-hour or 24-hour format. */
+  format?: '12h' | '24h';
+
+  /** Include seconds in the selection. */
+  showSeconds?: boolean;
+
+  /** Minute increment when entering time manually. */
+  stepMinute?: number;
+
+  /** Second increment when entering time manually. */
+  stepSecond?: number;
+
+  /** Identifier of a custom filter function to disable specific times. */
+  timeFilter?: string;
 }

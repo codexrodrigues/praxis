@@ -290,6 +290,12 @@ export class ComponentRegistryService implements IComponentRegistry {
         (m) => m.TimeInputComponent,
       );
 
+    // Angular Material timepicker
+    const timepickerFactory = () =>
+      import(
+        '../../components/material-timepicker/material-timepicker.component'
+      ).then((m) => m.MaterialTimepickerComponent);
+
     // HTML5 url input
     const urlInputFactory = () =>
       import('../../components/url-input/url-input.component').then(
@@ -312,6 +318,7 @@ export class ComponentRegistryService implements IComponentRegistry {
     this.register(FieldControlTypeEnum.SEARCH_INPUT, searchInputFactory);
     this.register(FieldControlTypeEnum.PHONE, phoneInputFactory);
     this.register(FieldControlTypeEnum.TIME_INPUT, timeInputFactory);
+    this.register(FieldControlTypeEnum.TIME_PICKER, timepickerFactory);
     this.register(FieldControlTypeEnum.URL_INPUT, urlInputFactory);
     this.register(FieldControlTypeEnum.WEEK_INPUT, weekInputFactory);
 
