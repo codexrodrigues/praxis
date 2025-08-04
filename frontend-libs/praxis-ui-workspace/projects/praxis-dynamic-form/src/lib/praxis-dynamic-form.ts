@@ -893,6 +893,19 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
       if (field.validators?.pattern) {
         validators.push(Validators.pattern(field.validators.pattern));
       }
+
+      const isMultiple =
+        field.controlType === FieldControlType.CHECKBOX ||
+        field.controlType === FieldControlType.MULTI_SELECT ||
+        (field as any).multiple;
+
+      const defaultValue =
+        field.defaultValue != null
+          ? field.defaultValue
+          : isMultiple
+            ? []
+            : null;
+
       controls[field.name] = [defaultValue, validators];
     }
     this.form = this.fb.group(controls);

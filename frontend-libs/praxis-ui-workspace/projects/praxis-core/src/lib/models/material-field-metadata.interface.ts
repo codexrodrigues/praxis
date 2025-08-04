@@ -770,14 +770,47 @@ export interface MaterialSelectMetadata extends FieldMetadata {
 export interface MaterialCheckboxMetadata extends FieldMetadata {
   controlType: typeof FieldControlType.CHECKBOX;
 
+  /** Checkbox options for group selection */
+  checkboxOptions?: Array<{
+    value: any;
+    text: string;
+    label?: string;
+    description?: string;
+    disabled?: boolean;
+  }>;
+
+  /** Enable option search/filter */
+  searchable?: boolean;
+
+  /** Show "Select All" option */
+  selectAll?: boolean;
+
+  /** Maximum number of selections */
+  maxSelections?: number;
+
+  /** Backend resource for dynamic option loading */
+  resourcePath?: string;
+
+  /** Additional filter criteria for backend requests */
+  filterCriteria?: Record<string, any>;
+
+  /** Key for option label when loading from backend */
+  optionLabelKey?: string;
+
+  /** Key for option value when loading from backend */
+  optionValueKey?: string;
+
+  /** Layout direction */
+  layout?: 'horizontal' | 'vertical';
+
+  /** Checkbox color theme */
+  color?: ThemePalette;
+
   /** Checkbox label position */
   labelPosition?: 'before' | 'after';
 
   /** Enable indeterminate state */
   indeterminate?: boolean;
-
-  /** Checkbox color theme */
-  color?: ThemePalette;
 
   /** Link text for checkbox with clickable link */
   linkText?: string;
@@ -799,7 +832,7 @@ export interface MaterialRadioMetadata extends FieldMetadata {
   controlType: typeof FieldControlType.RADIO;
 
   /** Radio button options */
-  radioOptions: Array<{
+  radioOptions?: Array<{
     value: any;
     text: string;
     label?: string;
@@ -807,11 +840,26 @@ export interface MaterialRadioMetadata extends FieldMetadata {
     disabled?: boolean;
   }>;
 
+  /** Backend resource for dynamic option loading */
+  resourcePath?: string;
+
+  /** Additional filter criteria for backend requests */
+  filterCriteria?: Record<string, any>;
+
+  /** Key for option label when loading from backend */
+  optionLabelKey?: string;
+
+  /** Key for option value when loading from backend */
+  optionValueKey?: string;
+
   /** Layout direction */
   layout?: 'horizontal' | 'vertical';
 
   /** Radio button color theme */
   color?: ThemePalette;
+
+  /** Label position relative to the radio button */
+  labelPosition?: 'before' | 'after';
 }
 
 /**

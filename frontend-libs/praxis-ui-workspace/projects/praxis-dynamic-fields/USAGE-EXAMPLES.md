@@ -7,31 +7,24 @@ Esta diretiva permite renderizar campos de formulário dinamicamente baseado em 
 ### 1. Importação e Setup
 
 ```typescript
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { DynamicFieldLoaderDirective } from '@praxis/dynamic-fields';
-import { FieldMetadata } from '@praxis/core';
+import { Component } from "@angular/core";
+import { FormBuilder, FormGroup, Validators } from "@angular/forms";
+import { DynamicFieldLoaderDirective } from "@praxis/dynamic-fields";
+import { FieldMetadata } from "@praxis/core";
 
 @Component({
-  selector: 'app-basic-form',
+  selector: "app-basic-form",
   template: `
     <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
       <h2>Formulário Dinâmico</h2>
-      
-      <ng-container 
-        dynamicFieldLoader 
-        [fields]="fieldMetadata" 
-        [formGroup]="userForm"
-        (componentsCreated)="onComponentsReady($event)">
-      </ng-container>
-      
-      <button type="submit" [disabled]="userForm.invalid">
-        Enviar
-      </button>
+
+      <ng-container dynamicFieldLoader [fields]="fieldMetadata" [formGroup]="userForm" (componentsCreated)="onComponentsReady($event)"> </ng-container>
+
+      <button type="submit" [disabled]="userForm.invalid">Enviar</button>
     </form>
   `,
   standalone: true,
-  imports: [ReactiveFormsModule, DynamicFieldLoaderDirective]
+  imports: [ReactiveFormsModule, DynamicFieldLoaderDirective],
 })
 export class BasicFormComponent {
   userForm: FormGroup;
@@ -45,41 +38,41 @@ export class BasicFormComponent {
     // Definir metadata dos campos
     this.fieldMetadata = [
       {
-        name: 'email',
-        label: 'Email',
-        controlType: 'input',
-        inputType: 'email',
+        name: "email",
+        label: "Email",
+        controlType: "input",
+        inputType: "email",
         required: true,
-        placeholder: 'Digite seu email'
+        placeholder: "Digite seu email",
       },
       {
-        name: 'password',
-        label: 'Senha',
-        controlType: 'input',
-        inputType: 'password',
+        name: "password",
+        label: "Senha",
+        controlType: "input",
+        inputType: "password",
         required: true,
-        minLength: 8
+        minLength: 8,
       },
       {
-        name: 'remember',
-        label: 'Lembrar de mim',
-        controlType: 'checkbox'
-      }
+        name: "remember",
+        label: "Lembrar de mim",
+        controlType: "checkbox",
+      },
     ];
 
     // Criar FormGroup correspondente
     this.userForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(8)]],
-      remember: [false]
+      email: ["", [Validators.required, Validators.email]],
+      password: ["", [Validators.required, Validators.minLength(8)]],
+      remember: [false],
     });
   }
 
   onComponentsReady(components: Map<string, any>) {
-    console.log('Componentes criados:', components);
-    
+    console.log("Componentes criados:", components);
+
     // Exemplo: focar no primeiro campo
-    const emailComponent = components.get('email');
+    const emailComponent = components.get("email");
     if (emailComponent) {
       emailComponent.instance.focus();
     }
@@ -87,7 +80,7 @@ export class BasicFormComponent {
 
   onSubmit() {
     if (this.userForm.valid) {
-      console.log('Form Data:', this.userForm.value);
+      console.log("Form Data:", this.userForm.value);
     }
   }
 }
@@ -99,41 +92,29 @@ export class BasicFormComponent {
 
 ```typescript
 @Component({
-  selector: 'app-enterprise-form',
+  selector: "app-enterprise-form",
   template: `
     <div class="enterprise-form-container">
       <mat-card>
         <mat-card-header>
           <mat-card-title>Cadastro de Funcionário</mat-card-title>
         </mat-card-header>
-        
+
         <mat-card-content>
           <form [formGroup]="employeeForm">
-            <ng-container 
-              dynamicFieldLoader 
-              [fields]="employeeFields" 
-              [formGroup]="employeeForm"
-              (componentsCreated)="onEmployeeComponentsCreated($event)">
-            </ng-container>
+            <ng-container dynamicFieldLoader [fields]="employeeFields" [formGroup]="employeeForm" (componentsCreated)="onEmployeeComponentsCreated($event)"> </ng-container>
           </form>
         </mat-card-content>
-        
+
         <mat-card-actions>
           <button mat-button (click)="saveAsDraft()">Salvar Rascunho</button>
-          <button mat-raised-button color="primary" (click)="submitEmployee()">
-            Cadastrar
-          </button>
+          <button mat-raised-button color="primary" (click)="submitEmployee()">Cadastrar</button>
         </mat-card-actions>
       </mat-card>
     </div>
   `,
   standalone: true,
-  imports: [
-    ReactiveFormsModule, 
-    DynamicFieldLoaderDirective,
-    MatCardModule,
-    MatButtonModule
-  ]
+  imports: [ReactiveFormsModule, DynamicFieldLoaderDirective, MatCardModule, MatButtonModule],
 })
 export class EnterpriseFormComponent {
   employeeForm: FormGroup;
@@ -148,93 +129,93 @@ export class EnterpriseFormComponent {
     this.employeeFields = [
       // Seção: Dados Pessoais
       {
-        name: 'fullName',
-        label: 'Nome Completo',
-        controlType: 'input',
+        name: "fullName",
+        label: "Nome Completo",
+        controlType: "input",
         required: true,
         maxLength: 100,
-        group: 'personal'
+        group: "personal",
       },
       {
-        name: 'email',
-        label: 'Email Corporativo',
-        controlType: 'input',
-        inputType: 'email',
+        name: "email",
+        label: "Email Corporativo",
+        controlType: "input",
+        inputType: "email",
         required: true,
-        autocomplete: 'email'
+        autocomplete: "email",
       },
       {
-        name: 'phone',
-        label: 'Telefone',
-        controlType: 'input',
-        inputType: 'tel',
-        mask: '(00) 00000-0000'
+        name: "phone",
+        label: "Telefone",
+        controlType: "input",
+        inputType: "tel",
+        mask: "(00) 00000-0000",
       },
-      
+
       // Seção: Dados Profissionais
       {
-        name: 'department',
-        label: 'Departamento',
-        controlType: 'select',
+        name: "department",
+        label: "Departamento",
+        controlType: "select",
         required: true,
-        endpoint: '/api/departments',
-        group: 'professional'
+        endpoint: "/api/departments",
+        group: "professional",
       },
       {
-        name: 'position',
-        label: 'Cargo',
-        controlType: 'select',
+        name: "position",
+        label: "Cargo",
+        controlType: "select",
         required: true,
-        dependencyFields: ['department']
+        dependencyFields: ["department"],
       },
       {
-        name: 'startDate',
-        label: 'Data de Início',
-        controlType: 'date',
+        name: "startDate",
+        label: "Data de Início",
+        controlType: "date",
         required: true,
-        minDate: new Date()
+        minDate: new Date(),
       },
-      
+
       // Seção: Observações
       {
-        name: 'notes',
-        label: 'Observações',
-        controlType: 'textarea',
+        name: "notes",
+        label: "Observações",
+        controlType: "textarea",
         maxLength: 500,
         showCharacterCount: true,
-        rows: 4
+        rows: 4,
       },
-      
+
       // Ações
       {
-        name: 'validateBtn',
-        label: 'Validar Dados',
-        controlType: 'button',
-        action: 'validateForm',
-        variant: 'stroked',
-        icon: 'check_circle'
+        name: "validateBtn",
+        label: "Validar Dados",
+        controlType: "button",
+        action: "validateForm",
+        variant: "stroked",
+        icon: "check_circle",
       },
       {
-        name: 'draftBtn',
-        label: 'Salvar Rascunho',
-        controlType: 'button',
-        action: 'saveFormDraft:employeeForm',
-        variant: 'basic',
-        icon: 'save_alt'
-      }
+        name: "draftBtn",
+        label: "Salvar Rascunho",
+        controlType: "button",
+        action: "saveFormDraft:employeeForm",
+        variant: "basic",
+        icon: "save_alt",
+      },
     ];
 
     // Criar FormGroup
     this.employeeForm = this.fb.group({
-      fullName: ['', [Validators.required, Validators.maxLength(100)]],
-      email: ['', [Validators.required, Validators.email]],
-      phone: [''],
-      department: ['', Validators.required],
-      position: ['', Validators.required],
-      startDate: ['', Validators.required],
-      notes: ['', Validators.maxLength(500)],
-      validateBtn: [''],
-      draftBtn: ['']
+      fullName: ["", [Validators.required, Validators.maxLength(100)]],
+      email: ["", [Validators.required, Validators.email]],
+      phone: [""],
+      department: ["", Validators.required],
+      position: ["", Validators.required],
+      startDate: ["", Validators.required],
+      notes: ["", Validators.maxLength(500)],
+      validateBtn: [""],
+      draftBtn: [""],
     });
 
     // Setup dependencies
@@ -243,13 +224,13 @@ export class EnterpriseFormComponent {
 
   private setupFieldDependencies() {
     // Quando departamento mudar, recarregar opções de cargo
-    this.employeeForm.get('department')?.valueChanges.subscribe(deptId => {
+    this.employeeForm.get("department")?.valueChanges.subscribe((deptId) => {
       if (deptId) {
         // Recarregar opções do campo position
-        const positionComponent = this.componentRefs.get('position');
+        const positionComponent = this.componentRefs.get("position");
         if (positionComponent) {
           // Disparar ação para recarregar opções
-          positionComponent.instance.executeAction('refreshOptions:position');
+          positionComponent.instance.executeAction("refreshOptions:position");
         }
       }
     });
@@ -257,10 +238,10 @@ export class EnterpriseFormComponent {
 
   onEmployeeComponentsCreated(components: Map<string, any>) {
     this.componentRefs = components;
-    console.log('Componentes empresariais criados:', components);
+    console.log("Componentes empresariais criados:", components);
 
     // Auto-focus no primeiro campo
-    const firstComponent = components.get('fullName');
+    const firstComponent = components.get("fullName");
     if (firstComponent) {
       setTimeout(() => firstComponent.instance.focus(), 100);
     }
@@ -268,7 +249,7 @@ export class EnterpriseFormComponent {
 
   saveAsDraft() {
     // Ação será executada via built-in action do botão
-    const draftBtn = this.componentRefs.get('draftBtn');
+    const draftBtn = this.componentRefs.get("draftBtn");
     if (draftBtn) {
       draftBtn.instance.executeAction();
     }
@@ -279,10 +260,10 @@ export class EnterpriseFormComponent {
       // API call via built-in action
       const apiData = {
         ...this.employeeForm.value,
-        submittedAt: new Date().toISOString()
+        submittedAt: new Date().toISOString(),
       };
-      
-      console.log('Submitting employee data:', apiData);
+
+      console.log("Submitting employee data:", apiData);
       // Implementar chamada para API de cadastro
     }
   }
@@ -295,7 +276,7 @@ export class EnterpriseFormComponent {
 
 ```typescript
 @Component({
-  selector: 'app-configurable-form',
+  selector: "app-configurable-form",
   template: `
     <div class="configurable-form">
       <mat-toolbar>
@@ -310,34 +291,19 @@ export class EnterpriseFormComponent {
 
       <div class="form-content" *ngIf="!loading">
         <form [formGroup]="dynamicForm">
-          <ng-container 
-            dynamicFieldLoader 
-            [fields]="configFields" 
-            [formGroup]="dynamicForm"
-            (componentsCreated)="onDynamicComponentsCreated($event)">
-          </ng-container>
+          <ng-container dynamicFieldLoader [fields]="configFields" [formGroup]="dynamicForm" (componentsCreated)="onDynamicComponentsCreated($event)"> </ng-container>
         </form>
 
         <div class="form-actions">
           <button mat-button (click)="resetForm()">Limpar</button>
           <button mat-button (click)="previewData()">Preview</button>
-          <button mat-raised-button color="primary" (click)="submitForm()">
-            Enviar
-          </button>
+          <button mat-raised-button color="primary" (click)="submitForm()">Enviar</button>
         </div>
       </div>
     </div>
   `,
   standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    DynamicFieldLoaderDirective,
-    MatToolbarModule,
-    MatProgressBarModule,
-    MatIconModule,
-    MatButtonModule,
-    CommonModule
-  ]
+  imports: [ReactiveFormsModule, DynamicFieldLoaderDirective, MatToolbarModule, MatProgressBarModule, MatIconModule, MatButtonModule, CommonModule],
 })
 export class ConfigurableFormComponent implements OnInit {
   dynamicForm: FormGroup = new FormGroup({});
@@ -347,7 +313,7 @@ export class ConfigurableFormComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private http: HttpClient
+    private http: HttpClient,
   ) {}
 
   async ngOnInit() {
@@ -356,17 +322,17 @@ export class ConfigurableFormComponent implements OnInit {
 
   private async loadFormConfiguration() {
     this.loading = true;
-    
+
     try {
       // Carregar configuração do backend
-      const config = await this.http.get<any>('/api/form-config/user-survey').toPromise();
-      
+      const config = await this.http.get<any>("/api/form-config/user-survey").toPromise();
+
       this.configFields = config.fields;
       this.dynamicForm = this.createFormGroupFromConfig(config.fields);
-      
-      console.log('Configuração carregada:', config);
+
+      console.log("Configuração carregada:", config);
     } catch (error) {
-      console.error('Erro ao carregar configuração:', error);
+      console.error("Erro ao carregar configuração:", error);
       this.handleConfigurationError();
     } finally {
       this.loading = false;
@@ -376,10 +342,10 @@ export class ConfigurableFormComponent implements OnInit {
   private createFormGroupFromConfig(fields: FieldMetadata[]): FormGroup {
     const group: any = {};
 
-    fields.forEach(field => {
+    fields.forEach((field) => {
       const validators = this.buildValidators(field);
-      const defaultValue = field.defaultValue || '';
-      
+      const defaultValue = field.defaultValue || "";
+
       group[field.name] = [defaultValue, validators];
     });
 
@@ -392,15 +358,15 @@ export class ConfigurableFormComponent implements OnInit {
     if (field.required) {
       validators.push(Validators.required);
     }
-    
+
     if (field.validators?.email) {
       validators.push(Validators.email);
     }
-    
+
     if (field.validators?.minLength) {
       validators.push(Validators.minLength(field.validators.minLength));
     }
-    
+
     if (field.validators?.maxLength) {
       validators.push(Validators.maxLength(field.validators.maxLength));
     }
@@ -414,7 +380,7 @@ export class ConfigurableFormComponent implements OnInit {
 
   onDynamicComponentsCreated(components: Map<string, any>) {
     this.componentRefs = components;
-    
+
     // Log dos componentes criados
     components.forEach((ref, name) => {
       console.log(`Componente ${name} criado:`, ref.instance);
@@ -433,8 +399,8 @@ export class ConfigurableFormComponent implements OnInit {
     }
 
     // Exemplo: Validação em tempo real para campos críticos
-    const criticalFields = ['email', 'cpf', 'phone'];
-    criticalFields.forEach(fieldName => {
+    const criticalFields = ["email", "cpf", "phone"];
+    criticalFields.forEach((fieldName) => {
       const component = this.componentRefs.get(fieldName);
       if (component) {
         // Adicionar validação em tempo real
@@ -456,11 +422,11 @@ export class ConfigurableFormComponent implements OnInit {
       const draftData = {
         formData: this.dynamicForm.value,
         timestamp: new Date().toISOString(),
-        version: '1.0'
+        version: "1.0",
       };
-      
-      localStorage.setItem('auto-draft-survey', JSON.stringify(draftData));
-      console.log('Auto-save realizado');
+
+      localStorage.setItem("auto-draft-survey", JSON.stringify(draftData));
+      console.log("Auto-save realizado");
     }
   }
 
@@ -470,9 +436,9 @@ export class ConfigurableFormComponent implements OnInit {
 
   resetForm() {
     this.dynamicForm.reset();
-    
+
     // Executar ação de clear via componentes
-    this.componentRefs.forEach(component => {
+    this.componentRefs.forEach((component) => {
       if (component.instance.clearValue) {
         component.instance.clearValue();
       }
@@ -480,48 +446,49 @@ export class ConfigurableFormComponent implements OnInit {
   }
 
   previewData() {
-    console.log('Preview dos dados:', {
+    console.log("Preview dos dados:", {
       formValue: this.dynamicForm.value,
       formValid: this.dynamicForm.valid,
-      formErrors: this.getFormErrors()
+      formErrors: this.getFormErrors(),
     });
   }
 
   private getFormErrors(): any {
     const errors: any = {};
-    
-    Object.keys(this.dynamicForm.controls).forEach(key => {
+
+    Object.keys(this.dynamicForm.controls).forEach((key) => {
       const control = this.dynamicForm.get(key);
       if (control && control.errors) {
         errors[key] = control.errors;
       }
     });
-    
+
     return errors;
   }
 
   async submitForm() {
     if (this.dynamicForm.valid) {
       try {
-        const response = await this.http.post('/api/form-submissions', {
-          formId: 'user-survey',
-          data: this.dynamicForm.value,
-          metadata: {
-            submittedAt: new Date().toISOString(),
-            userAgent: navigator.userAgent
-          }
-        }).toPromise();
+        const response = await this.http
+          .post("/api/form-submissions", {
+            formId: "user-survey",
+            data: this.dynamicForm.value,
+            metadata: {
+              submittedAt: new Date().toISOString(),
+              userAgent: navigator.userAgent,
+            },
+          })
+          .toPromise();
 
-        console.log('Formulário enviado com sucesso:', response);
-        
+        console.log("Formulário enviado com sucesso:", response);
+
         // Limpar auto-save após envio bem-sucedido
-        localStorage.removeItem('auto-draft-survey');
-        
+        localStorage.removeItem("auto-draft-survey");
       } catch (error) {
-        console.error('Erro ao enviar formulário:', error);
+        console.error("Erro ao enviar formulário:", error);
       }
     } else {
-      console.warn('Formulário inválido:', this.getFormErrors());
+      console.warn("Formulário inválido:", this.getFormErrors());
     }
   }
 
@@ -529,16 +496,16 @@ export class ConfigurableFormComponent implements OnInit {
     // Configuração fallback em caso de erro
     this.configFields = [
       {
-        name: 'errorFallback',
-        label: 'Erro ao carregar configuração',
-        controlType: 'input',
+        name: "errorFallback",
+        label: "Erro ao carregar configuração",
+        controlType: "input",
         disabled: true,
-        defaultValue: 'Tente recarregar a página'
-      }
+        defaultValue: "Tente recarregar a página",
+      },
     ];
-    
+
     this.dynamicForm = this.fb.group({
-      errorFallback: [{value: 'Erro de configuração', disabled: true}]
+      errorFallback: [{ value: "Erro de configuração", disabled: true }],
     });
   }
 }
@@ -550,56 +517,46 @@ export class ConfigurableFormComponent implements OnInit {
 
 ```typescript
 @Component({
-  selector: 'app-multi-step-form',
+  selector: "app-multi-step-form",
   template: `
     <mat-horizontal-stepper #stepper>
-      <mat-step 
-        *ngFor="let step of formSteps; let i = index"
-        [label]="step.label"
-        [completed]="isStepCompleted(i)">
-        
+      <mat-step *ngFor="let step of formSteps; let i = index" [label]="step.label" [completed]="isStepCompleted(i)">
         <form [formGroup]="getStepForm(i)">
-          <ng-container 
-            dynamicFieldLoader 
-            [fields]="step.fields" 
-            [formGroup]="getStepForm(i)"
-            (componentsCreated)="onStepComponentsCreated(i, $event)">
-          </ng-container>
+          <ng-container dynamicFieldLoader [fields]="step.fields" [formGroup]="getStepForm(i)" (componentsCreated)="onStepComponentsCreated(i, $event)"> </ng-container>
         </form>
 
         <div class="step-actions">
-          <button mat-button matStepperPrevious *ngIf="i > 0">
-            Anterior
-          </button>
-          <button mat-button matStepperNext [disabled]="!isStepValid(i)">
-            Próximo
-          </button>
-          <button mat-raised-button color="primary" *ngIf="i === formSteps.length - 1"
-                  (click)="submitAllSteps()" [disabled]="!allStepsValid()">
-            Finalizar
-          </button>
+          <button mat-button matStepperPrevious *ngIf="i > 0">Anterior</button>
+          <button mat-button matStepperNext [disabled]="!isStepValid(i)">Próximo</button>
+          <button mat-raised-button color="primary" *ngIf="i === formSteps.length - 1" (click)="submitAllSteps()" [disabled]="!allStepsValid()">Finalizar</button>
         </div>
       </mat-step>
     </mat-horizontal-stepper>
-  `
+  `,
 })
 export class MultiStepFormComponent {
   formSteps = [
     {
-      label: 'Dados Pessoais',
-      fields: [/* campos do step 1 */],
-      form: new FormGroup({})
+      label: "Dados Pessoais",
+      fields: [
+        /* campos do step 1 */
+      ],
+      form: new FormGroup({}),
     },
     {
-      label: 'Endereço',
-      fields: [/* campos do step 2 */],
-      form: new FormGroup({})
+      label: "Endereço",
+      fields: [
+        /* campos do step 2 */
+      ],
+      form: new FormGroup({}),
     },
     {
-      label: 'Confirmação',
-      fields: [/* campos do step 3 */],
-      form: new FormGroup({})
-    }
+      label: "Confirmação",
+      fields: [
+        /* campos do step 3 */
+      ],
+      form: new FormGroup({}),
+    },
   ];
 
   // Implementação dos métodos de controle de steps...
@@ -612,18 +569,49 @@ Exemplo de metadata utilizando os novos subcomponentes do `MaterialSelectCompone
 
 ```typescript
 const fruitField: MaterialSelectMetadata = {
-  name: 'favoriteFruits',
-  label: 'Frutas Favoritas',
-  controlType: 'select',
+  name: "favoriteFruits",
+  label: "Frutas Favoritas",
+  controlType: "select",
   multiple: true,
-  multipleDisplay: 'chips',
+  multipleDisplay: "chips",
   searchable: true,
   showSelectAll: true,
   options: [
-    { value: 'apple', text: 'Maçã', group: 'Comuns' },
-    { value: 'banana', text: 'Banana', group: 'Comuns' },
-    { value: 'grape', text: 'Uva', group: 'Outras' }
-  ]
+    { value: "apple", text: "Maçã", group: "Comuns" },
+    { value: "banana", text: "Banana", group: "Comuns" },
+    { value: "grape", text: "Uva", group: "Outras" },
+  ],
+};
+```
+
+### 6. MaterialCheckboxGroup com Selecionar Todos
+
+Exemplo de grupo de checkboxes com carregamento remoto e suporte a "selecionar todos":
+
+```typescript
+const rolesField: MaterialCheckboxMetadata = {
+  name: "roles",
+  label: "Perfis",
+  controlType: "checkbox",
+  selectAll: true,
+  endpoint: "roles",
+  optionLabelKey: "name",
+  optionValueKey: "id",
+};
+```
+
+### 7. MaterialRadioGroup com Carregamento Remoto
+
+Exemplo de grupo de rádios usando API para preencher opções:
+
+```typescript
+const statusField: MaterialRadioMetadata = {
+  name: "status",
+  label: "Status",
+  controlType: "radio",
+  endpoint: "status",
+  optionLabelKey: "description",
+  optionValueKey: "code",
 };
 ```
 
@@ -632,31 +620,29 @@ const fruitField: MaterialSelectMetadata = {
 ### 5. Testando Formulários Dinâmicos
 
 ```typescript
-describe('DynamicFormIntegration', () => {
+describe("DynamicFormIntegration", () => {
   let component: MyDynamicFormComponent;
   let fixture: ComponentFixture<MyDynamicFormComponent>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [MyDynamicFormComponent, DynamicFieldLoaderDirective]
+      imports: [MyDynamicFormComponent, DynamicFieldLoaderDirective],
     });
-    
+
     fixture = TestBed.createComponent(MyDynamicFormComponent);
     component = fixture.componentInstance;
   });
 
-  it('should create dynamic components based on metadata', async () => {
-    component.fields = [
-      { name: 'test', controlType: 'input', label: 'Test' }
-    ];
-    
+  it("should create dynamic components based on metadata", async () => {
+    component.fields = [{ name: "test", controlType: "input", label: "Test" }];
+
     fixture.detectChanges();
     await fixture.whenStable();
 
-    expect(component.componentRefs.has('test')).toBe(true);
+    expect(component.componentRefs.has("test")).toBe(true);
   });
 
-  it('should validate form data correctly', () => {
+  it("should validate form data correctly", () => {
     component.setupValidForm();
     fixture.detectChanges();
 

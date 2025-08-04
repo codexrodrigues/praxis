@@ -5,12 +5,14 @@ import {
   GenericCrudService,
   CONFIG_STORAGE,
   ConfigStorage,
+
   FieldControlType,
   MaterialDatepickerMetadata,
   MaterialDateRangeMetadata,
   DateRangeValue,
 } from '@praxis/core';
 import { DynamicFieldLoaderDirective } from '@praxis/dynamic-fields';
+
 
 describe('PraxisDynamicForm', () => {
   let fixture: ComponentFixture<PraxisDynamicForm>;
@@ -26,6 +28,7 @@ describe('PraxisDynamicForm', () => {
       'getById',
       'create',
       'update',
+      'filter',
     ]);
 
     configStorage = jasmine.createSpyObj('ConfigStorage', [
@@ -33,6 +36,24 @@ describe('PraxisDynamicForm', () => {
       'saveConfig',
       'clearConfig',
     ]);
+
+    TestBed.overrideComponent(MaterialSelectComponent, {
+      set: {
+        providers: [{ provide: GenericCrudService, useValue: crudService }],
+      },
+    });
+
+    TestBed.overrideComponent(MaterialCheckboxGroupComponent, {
+      set: {
+        providers: [{ provide: GenericCrudService, useValue: crudService }],
+      },
+    });
+
+    TestBed.overrideComponent(MaterialRadioGroupComponent, {
+      set: {
+        providers: [{ provide: GenericCrudService, useValue: crudService }],
+      },
+    });
 
     await TestBed.configureTestingModule({
       imports: [PraxisDynamicForm, DynamicFieldLoaderDirective],
@@ -123,6 +144,7 @@ describe('PraxisDynamicForm', () => {
     component.onSubmit();
     expect(submitSpy).toHaveBeenCalled();
   });
+
 
   it('aplica validadores de min/max em campos de data', () => {
     component.config = {

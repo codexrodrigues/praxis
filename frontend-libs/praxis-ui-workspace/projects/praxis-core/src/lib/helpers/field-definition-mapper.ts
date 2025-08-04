@@ -1,11 +1,16 @@
 import { FieldDefinition } from '../models/field-definition.model';
-import { FieldMetadata, ValidatorOptions } from '../models/component-metadata.interface';
+import {
+  FieldMetadata,
+  ValidatorOptions,
+} from '../models/component-metadata.interface';
 
 /**
  * Convert a `FieldDefinition` coming from the backend schema into
  * `FieldMetadata` used by the dynamic field loader.
  */
-export function mapFieldDefinitionToMetadata(field: FieldDefinition): FieldMetadata {
+export function mapFieldDefinitionToMetadata(
+  field: FieldDefinition,
+): FieldMetadata {
   const metadata: FieldMetadata = {
     name: field.name,
     label: field.label ?? field.name,
@@ -31,8 +36,11 @@ export function mapFieldDefinitionToMetadata(field: FieldDefinition): FieldMetad
     'mask',
     'inlineEditing',
     'endpoint',
-    'valueField',
-    'displayField',
+    'resourcePath',
+    'multiple',
+    'searchable',
+    'selectAll',
+    'maxSelections',
   ];
 
   for (const prop of simpleProps) {
@@ -40,6 +48,18 @@ export function mapFieldDefinitionToMetadata(field: FieldDefinition): FieldMetad
     if (value !== undefined) {
       (metadata as any)[prop] = value;
     }
+  }
+
+  if (field.displayField) {
+    (metadata as any).optionLabelKey = field.displayField;
+  }
+
+  if (field.valueField) {
+    (metadata as any).optionValueKey = field.valueField;
+  }
+
+  if ((field as any).filter) {
+    (metadata as any).filterCriteria = (field as any).filter;
   }
 
   if (field.required !== undefined) {
@@ -51,21 +71,17 @@ export function mapFieldDefinitionToMetadata(field: FieldDefinition): FieldMetad
   }
 
   if (field.options) {
-    metadata.options = field.options.map(opt => ({
+    const mapped = field.options.map((opt) => ({
       value: opt.key,
       text: opt.value,
     }));
+    (metadata as any).options = mapped;
+    (metadata as any).selectOptions = mapped;
   }
 
   const validators: ValidatorOptions = {};
-  const validatorProps: Array<keyof FieldDefinition & keyof ValidatorOptions> = [
-    'required',
-    'minLength',
-    'maxLength',
-    'min',
-    'max',
-    'pattern',
-  ];
+  const validatorProps: Array<keyof FieldDefinition & keyof ValidatorOptions> =
+    ['required', 'minLength', 'maxLength', 'min', 'max', 'pattern'];
 
   for (const prop of validatorProps) {
     const value = field[prop];
@@ -84,6 +100,8 @@ export function mapFieldDefinitionToMetadata(field: FieldDefinition): FieldMetad
 /**
  * Convenience function to map an array of definitions.
  */
-export function mapFieldDefinitionsToMetadata(fields: FieldDefinition[]): FieldMetadata[] {
+export function mapFieldDefinitionsToMetadata(
+  fields: FieldDefinition[],
+): FieldMetadata[] {
   return fields.map(mapFieldDefinitionToMetadata);
 }

@@ -18,8 +18,8 @@ Sistema simplificado de campos dinâmicos para aplicações corporativas Angular
 ### Sistema de Registro
 
 ```typescript
-import { ComponentRegistryService } from '@praxis/dynamic-fields';
-import { FieldControlType } from '@praxis/core';
+import { ComponentRegistryService } from "@praxis/dynamic-fields";
+import { FieldControlType } from "@praxis/core";
 
 // Obter componente usando constantes
 const component = await registry.getComponent(FieldControlType.INPUT);
@@ -33,7 +33,7 @@ const isRegistered = registry.isRegistered(FieldControlType.INPUT);
 O sistema usa as constantes do `@praxis/core` para garantir consistência:
 
 - `FieldControlType.INPUT` - Campo de texto Material Design
-- `FieldControlType.TEXTAREA` - Área de texto Material Design  
+- `FieldControlType.TEXTAREA` - Área de texto Material Design
 - `FieldControlType.SELECT` - Campo de seleção Material Design
 - `FieldControlType.CHECKBOX` - Caixa de seleção Material Design
 - `FieldControlType.RADIO` - Botão de rádio Material Design
@@ -63,6 +63,23 @@ O `MaterialSelectComponent` agora está dividido em subcomponentes menores para 
 
 Esses subcomponentes são utilizados internamente pelo select e não exigem alterações na utilização normal do componente.
 
+## 🧩 MaterialCheckboxGroupComponent
+
+Renderiza uma lista de checkboxes conectada ao `@angular/forms`, permitindo a seleção de múltiplos valores.
+
+- **Select All**: opção para marcar todas as entradas habilitadas.
+- **maxSelections**: limita o número de escolhas possíveis.
+- **Carregamento Remoto**: aceita `endpoint`, `optionLabelKey` e `optionValueKey` para popular opções via API.
+- **Layout**: suporta `labelPosition` e `color` conforme [documentação do Angular Material](https://material.angular.dev/components/checkbox/overview).
+
+## 🧩 MaterialRadioGroupComponent
+
+Grupo de botões de rádio que consome metadados ou dados remotos para criar seleções exclusivas.
+
+- **Seleção Única**: utiliza `MatRadioGroup` para garantir apenas um valor ativo.
+- **Carregamento Dinâmico**: mesmas chaves de configuração de `MaterialSelectComponent` para buscar opções.
+- **Layout Flexível**: configuração de orientação, `labelPosition` e `color` segundo a [documentação oficial](https://material.angular.dev/components/radio/overview).
+
 ## 📦 Instalação
 
 ```bash
@@ -72,15 +89,15 @@ npm install @praxis/dynamic-fields
 ## 🚀 Uso Básico
 
 ```typescript
-import { ComponentRegistryService } from '@praxis/dynamic-fields';
-import { FieldControlType } from '@praxis/core';
+import { ComponentRegistryService } from "@praxis/dynamic-fields";
+import { FieldControlType } from "@praxis/core";
 
 @Component({
-  selector: 'app-dynamic-form',
-  template: `<ng-container #dynamicContainer></ng-container>`
+  selector: "app-dynamic-form",
+  template: `<ng-container #dynamicContainer></ng-container>`,
 })
 export class DynamicFormComponent {
-  @ViewChild('dynamicContainer', { read: ViewContainerRef }) 
+  @ViewChild("dynamicContainer", { read: ViewContainerRef })
   container!: ViewContainerRef;
 
   constructor(private registry: ComponentRegistryService) {}
@@ -110,16 +127,13 @@ export class DynamicFormComponent {
 ## 🔧 Registrar Componente Customizado
 
 ```typescript
-import { FieldControlType } from '@praxis/core';
+import { FieldControlType } from "@praxis/core";
 
 // Registrar componente customizado - SUPER SIMPLES!
-registry.register(
-  'customField' as FieldControlType,
-  () => import('./custom-field.component').then(m => m.CustomFieldComponent)
-);
+registry.register("customField" as FieldControlType, () => import("./custom-field.component").then((m) => m.CustomFieldComponent));
 
 // Uso posterior
-const customComponent = await registry.getComponent('customField' as FieldControlType);
+const customComponent = await registry.getComponent("customField" as FieldControlType);
 ```
 
 ## 📊 Estatísticas
@@ -197,4 +211,4 @@ ng lint praxis-dynamic-fields
 
 ---
 
-*Sistema desenvolvido seguindo as diretrizes do CLAUDE.md - focado no essencial, sem complexidades desnecessárias.*
+_Sistema desenvolvido seguindo as diretrizes do CLAUDE.md - focado no essencial, sem complexidades desnecessárias._
