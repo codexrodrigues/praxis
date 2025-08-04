@@ -82,6 +82,53 @@ describe('SimpleBaseSelectComponent', () => {
     expect(component.internalControl.value).toEqual([]);
   });
 
+  it('should ignore disabled options when selecting all', () => {
+    const options: SelectOption<string>[] = [
+      { label: 'A', value: 'a' },
+      { label: 'B', value: 'b', disabled: true },
+      { label: 'C', value: 'c' },
+    ];
+
+    component.apply({ options, multiple: true, selectAll: true });
+    component.toggleSelectAll();
+    expect(component.internalControl.value).toEqual(['a', 'c']);
+    expect(component.isAllSelected()).toBeTrue();
+  });
+
+  it('should toggle select all respecting maxSelections', () => {
+    const options: SelectOption<string>[] = [
+      { label: 'A', value: 'a' },
+      { label: 'B', value: 'b' },
+      { label: 'C', value: 'c' },
+    ];
+
+    component.apply({
+      options,
+      multiple: true,
+      selectAll: true,
+      maxSelections: 2,
+    });
+
+    component.toggleSelectAll();
+    expect(component.internalControl.value).toEqual(['a', 'b']);
+    expect(component.isAllSelected()).toBeTrue();
+
+    component.toggleSelectAll();
+    expect(component.internalControl.value).toEqual([]);
+  });
+
+  it('should check if value is selected', () => {
+    const options: SelectOption<string>[] = [
+      { label: 'A', value: 'a' },
+      { label: 'B', value: 'b' },
+    ];
+
+    component.apply({ options, multiple: true });
+    component.selectOption(options[0]);
+    expect(component.isSelected('a')).toBeTrue();
+    expect(component.isSelected('b')).toBeFalse();
+  });
+
   it('should filter options based on search term', () => {
     const options: SelectOption<string>[] = [
       { label: 'Apple', value: 'a' },

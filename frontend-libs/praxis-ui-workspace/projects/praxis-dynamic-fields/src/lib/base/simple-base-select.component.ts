@@ -204,6 +204,14 @@ export abstract class SimpleBaseSelectComponent<
     this.selectionChange.emit(this.internalControl.value as any);
   }
 
+  /** Checks if the provided value is currently selected */
+  isSelected(value: T): boolean {
+    const current = this.internalControl.value as any;
+    return this.multiple()
+      ? Array.isArray(current) && current.includes(value)
+      : current === value;
+  }
+
   /**
    * Toggles selection of all options when `selectAll` is enabled in multiple
    * selection mode.
@@ -211,17 +219,18 @@ export abstract class SimpleBaseSelectComponent<
   toggleSelectAll(): void {
     if (!this.multiple() || !this.selectAll()) return;
 
-    const allValues = this.options().map((o) => o.value);
-    const current = Array.isArray(this.internalControl.value)
-      ? [...this.internalControl.value]
-      : [];
+    const selectable = this.options()
+      .filter((o) => !o.disabled)
+      .map((o) => o.value);
+    const target = selectable.slice(
+      0,
+      this.maxSelections() ?? selectable.length,
+    );
 
-    if (current.length === allValues.length) {
+    if (this.isAllSelected()) {
       this.setValue([]);
     } else {
-      this.setValue(
-        allValues.slice(0, this.maxSelections() ?? allValues.length),
-      );
+      this.setValue(target);
     }
 
     this.selectionChange.emit(this.internalControl.value as any);
@@ -233,7 +242,18 @@ export abstract class SimpleBaseSelectComponent<
     const current = Array.isArray(this.internalControl.value)
       ? this.internalControl.value
       : [];
-    return current.length > 0 && current.length === this.options().length;
+    const selectable = this.options()
+      .filter((o) => !o.disabled)
+      .map((o) => o.value);
+    const target = selectable.slice(
+      0,
+      this.maxSelections() ?? selectable.length,
+    );
+    return (
+      current.length === target.length &&
+      target.length > 0 &&
+      target.every((v) => current.includes(v))
+    );
   }
 
   /** TrackBy function to optimize ngFor over options */

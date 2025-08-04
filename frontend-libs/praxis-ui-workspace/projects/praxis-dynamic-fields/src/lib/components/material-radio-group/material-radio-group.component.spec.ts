@@ -2,23 +2,20 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { By } from '@angular/platform-browser';
-import { MatSelect } from '@angular/material/select';
-import {
-  FieldControlType,
-  MaterialSelectMetadata,
-  API_URL,
-} from '@praxis/core';
+import { MatRadioGroup } from '@angular/material/radio';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
-import { MaterialSelectComponent } from './material-select.component';
+import { FieldControlType, MaterialRadioMetadata, API_URL } from '@praxis/core';
 
-describe('MaterialSelectComponent', () => {
-  let component: MaterialSelectComponent;
-  let fixture: ComponentFixture<MaterialSelectComponent>;
+import { MaterialRadioGroupComponent } from './material-radio-group.component';
+
+describe('MaterialRadioGroupComponent', () => {
+  let component: MaterialRadioGroupComponent;
+  let fixture: ComponentFixture<MaterialRadioGroupComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [
-        MaterialSelectComponent,
+        MaterialRadioGroupComponent,
         FormsModule,
         ReactiveFormsModule,
         NoopAnimationsModule,
@@ -27,13 +24,13 @@ describe('MaterialSelectComponent', () => {
       providers: [{ provide: API_URL, useValue: { default: {} } }],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(MaterialSelectComponent);
+    fixture = TestBed.createComponent(MaterialRadioGroupComponent);
     component = fixture.componentInstance;
-    const metadata: MaterialSelectMetadata = {
-      controlType: FieldControlType.SELECT,
+    const metadata: MaterialRadioMetadata = {
+      controlType: FieldControlType.RADIO,
       name: 'status',
       label: 'Status',
-      selectOptions: [
+      radioOptions: [
         { label: 'Active', text: 'Active', value: 'active' },
         { label: 'Inactive', text: 'Inactive', value: 'inactive' },
       ],
@@ -61,22 +58,22 @@ describe('MaterialSelectComponent', () => {
   });
 
   it('should reflect disabled and required states', () => {
-    const meta: MaterialSelectMetadata = {
-      controlType: FieldControlType.SELECT,
+    const meta: MaterialRadioMetadata = {
+      controlType: FieldControlType.RADIO,
       name: 'status',
       label: 'Status',
       required: true,
       disabled: true,
-      selectOptions: [
+      radioOptions: [
         { label: 'A', text: 'A', value: 'a' },
         { label: 'B', text: 'B', value: 'b' },
       ],
     };
     component.setSelectMetadata(meta as any);
     fixture.detectChanges();
-    const matSelect = fixture.debugElement.query(By.css('mat-select'))
-      .componentInstance as MatSelect;
-    expect(matSelect.required).toBeTrue();
-    expect(matSelect.disabled).toBeTrue();
+    const group = fixture.debugElement.query(By.css('mat-radio-group'))
+      .componentInstance as MatRadioGroup;
+    expect(group.required).toBeTrue();
+    expect(group.disabled).toBeTrue();
   });
 });

@@ -1,77 +1,69 @@
 import { Component, forwardRef } from '@angular/core';
 import { NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
+import { MatRadioModule } from '@angular/material/radio';
 
-import { MaterialSelectMetadata, GenericCrudService } from '@praxis/core';
+import { MaterialRadioMetadata, GenericCrudService } from '@praxis/core';
 import {
   SimpleBaseSelectComponent,
   SimpleSelectMetadata,
 } from '../../base/simple-base-select.component';
 
 @Component({
-  selector: 'pdx-material-select',
+  selector: 'pdx-material-radio-group',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatSelectModule,
-  ],
+  imports: [CommonModule, ReactiveFormsModule, MatRadioModule],
   template: `
-    <mat-form-field
-      [appearance]="materialAppearance()"
-      [color]="materialColor()"
-      [class]="componentCssClasses()"
-    >
-      <mat-label>{{ metadata()?.label || 'Select' }}</mat-label>
-      <mat-select
+    <div class="pdx-radio-group-wrapper">
+      @if (metadata()?.label) {
+        <label class="pdx-radio-label">{{ metadata()!.label }}</label>
+      }
+      <mat-radio-group
         [formControl]="internalControl"
-        [placeholder]="metadata()?.placeholder || ''"
-        [required]="metadata()?.required || false"
-        [disabled]="metadata()?.disabled || false"
+        [color]="metadata()?.color"
+        [labelPosition]="metadata()?.labelPosition || 'after'"
+        [class.pdx-radio-horizontal]="metadata()?.layout === 'horizontal'"
       >
-        <mat-option
+        <mat-radio-button
           *ngFor="let option of options(); trackBy: trackByOption"
           [value]="option.value"
           [disabled]="option.disabled"
-          (click)="selectOption(option)"
+          (change)="selectOption(option)"
         >
           {{ option.label }}
-        </mat-option>
-      </mat-select>
+        </mat-radio-button>
+      </mat-radio-group>
       @if (
         errorMessage() &&
         internalControl.invalid &&
         (internalControl.dirty || internalControl.touched)
       ) {
-        <mat-error>{{ errorMessage() }}</mat-error>
+        <div class="pdx-error">{{ errorMessage() }}</div>
       }
       @if (metadata()?.hint && !hasValidationError()) {
-        <mat-hint>{{ metadata()!.hint }}</mat-hint>
+        <div class="pdx-hint">{{ metadata()!.hint }}</div>
       }
-    </mat-form-field>
+    </div>
   `,
   providers: [
     GenericCrudService,
     {
       provide: NG_VALUE_ACCESSOR,
-      useExisting: forwardRef(() => MaterialSelectComponent),
+      useExisting: forwardRef(() => MaterialRadioGroupComponent),
       multi: true,
     },
   ],
   host: {
     '[class]': 'componentCssClasses()',
-    '[attr.data-field-type]': '"select"',
+    '[attr.data-field-type]': '"radio"',
     '[attr.data-field-name]': 'metadata()?.name',
     '[attr.data-component-id]': 'componentId()',
   },
 })
-export class MaterialSelectComponent extends SimpleBaseSelectComponent {
+export class MaterialRadioGroupComponent extends SimpleBaseSelectComponent {
   override setSelectMetadata(metadata: SimpleSelectMetadata<any>): void {
-    const matMetadata = metadata as MaterialSelectMetadata;
-    const source = matMetadata.selectOptions ?? (matMetadata as any).options;
+    const matMetadata = metadata as MaterialRadioMetadata;
+    const source = matMetadata.radioOptions ?? (matMetadata as any).options;
     const mappedOptions = source?.map((o: any) => ({
       label: o.label ?? o.text,
       value: o.value,
@@ -82,7 +74,6 @@ export class MaterialSelectComponent extends SimpleBaseSelectComponent {
       ...matMetadata,
       options: mappedOptions,
       multiple: false,
-      searchable: matMetadata.searchable,
       resourcePath: matMetadata.resourcePath ?? (matMetadata as any).endpoint,
       filterCriteria: matMetadata.filterCriteria ?? (matMetadata as any).filter,
       optionLabelKey:
@@ -90,5 +81,9 @@ export class MaterialSelectComponent extends SimpleBaseSelectComponent {
       optionValueKey:
         matMetadata.optionValueKey ?? (matMetadata as any).valueField,
     });
+  }
+
+  protected override getSpecificCssClasses(): string[] {
+    return ['pdx-simple-select', 'pdx-material-radio-group'];
   }
 }
