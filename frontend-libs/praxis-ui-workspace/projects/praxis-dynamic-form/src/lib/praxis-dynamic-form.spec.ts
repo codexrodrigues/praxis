@@ -1,7 +1,15 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { PraxisDynamicForm } from './praxis-dynamic-form';
-import { GenericCrudService, CONFIG_STORAGE, ConfigStorage } from '@praxis/core';
+import {
+  GenericCrudService,
+  CONFIG_STORAGE,
+  ConfigStorage,
+  FieldControlType,
+  MaterialDatepickerMetadata,
+  MaterialDateRangeMetadata,
+  DateRangeValue,
+} from '@praxis/core';
 import { DynamicFieldLoaderDirective } from '@praxis/dynamic-fields';
 
 describe('PraxisDynamicForm', () => {
@@ -106,13 +114,92 @@ describe('PraxisDynamicForm', () => {
     crudService.create.and.returnValue(of({ id: 1 } as any));
     const submitSpy = jasmine.createSpy('submit');
     component.formSubmit.subscribe(submitSpy);
-    component.config = { 
+    component.config = {
       sections: [],
-      fieldMetadata: [{ name: 'nome', controlType: 'input' } as any]
+      fieldMetadata: [{ name: 'nome', controlType: 'input' } as any],
     };
     (component as any).buildFormFromConfig();
     component.form.setValue({ nome: 'Teste' });
     component.onSubmit();
     expect(submitSpy).toHaveBeenCalled();
+  });
+
+  it('aplica validadores de min/max em campos de data', () => {
+    component.config = {
+      sections: [],
+      fieldMetadata: [
+        {
+          name: 'birth',
+          controlType: FieldControlType.DATE_PICKER,
+          minDate: '2024-01-01',
+          maxDate: '2024-12-31',
+        } as MaterialDatepickerMetadata,
+      ],
+    };
+    (component as any).buildFormFromConfig();
+    const ctrl = component.form.get('birth')!;
+    ctrl.setValue(new Date('2023-12-31'));
+    expect(ctrl.hasError('minDate')).toBeTrue();
+    ctrl.setValue(new Date('2024-06-15'));
+    expect(ctrl.valid).toBeTrue();
+    ctrl.setValue(new Date('2025-01-01'));
+    expect(ctrl.hasError('maxDate')).toBeTrue();
+  });
+
+  it('valida campos de intervalo de datas', () => {
+    component.config = {
+      sections: [],
+      fieldMetadata: [
+        {
+          name: 'period',
+          controlType: FieldControlType.DATE_RANGE,
+          minDate: '2024-01-01',
+          maxDate: '2024-12-31',
+        } as MaterialDateRangeMetadata,
+      ],
+    };
+    (component as any).buildFormFromConfig();
+    const ctrl = component.form.get('period')!;
+    ctrl.setValue({
+      startDate: new Date('2024-02-01'),
+      endDate: new Date('2024-01-01'),
+    } as DateRangeValue);
+    expect(ctrl.hasError('rangeOrder')).toBeTrue();
+    ctrl.setValue({
+      startDate: new Date('2023-12-31'),
+      endDate: new Date('2024-01-05'),
+    } as DateRangeValue);
+    expect(ctrl.hasError('minDate')).toBeTrue();
+    ctrl.setValue({
+      startDate: new Date('2024-01-01'),
+      endDate: new Date('2024-12-31'),
+    } as DateRangeValue);
+    expect(ctrl.valid).toBeTrue();
+  });
+
+  it('exige início e fim quando campo de intervalo é obrigatório', () => {
+    component.config = {
+      sections: [],
+      fieldMetadata: [
+        {
+          name: 'period',
+          controlType: FieldControlType.DATE_RANGE,
+          required: true,
+        } as MaterialDateRangeMetadata,
+      ],
+    };
+    (component as any).buildFormFromConfig();
+    const ctrl = component.form.get('period')!;
+
+    expect(ctrl.hasError('required')).toBeTrue();
+
+    ctrl.setValue({ startDate: new Date('2024-01-01'), endDate: null });
+    expect(ctrl.hasError('required')).toBeTrue();
+
+    ctrl.setValue({
+      startDate: new Date('2024-01-01'),
+      endDate: new Date('2024-01-02'),
+    });
+    expect(ctrl.valid).toBeTrue();
   });
 });

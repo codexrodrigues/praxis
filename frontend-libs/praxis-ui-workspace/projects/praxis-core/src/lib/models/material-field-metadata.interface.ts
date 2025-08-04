@@ -821,9 +821,7 @@ export interface MaterialRadioMetadata extends FieldMetadata {
  * date range selection, and validation.
  */
 export interface MaterialDatepickerMetadata extends FieldMetadata {
-  controlType:
-    | typeof FieldControlType.DATE_PICKER
-    | typeof FieldControlType.DATE_RANGE;
+  controlType: typeof FieldControlType.DATE_PICKER;
 
   /** Date format for display */
   dateFormat?: string;
@@ -837,8 +835,48 @@ export interface MaterialDatepickerMetadata extends FieldMetadata {
   /** Start view (month, year, multi-year) */
   startView?: 'month' | 'year' | 'multi-year';
 
-  /** Enable date range selection */
-  range?: boolean;
+  /** Date to open calendar at */
+  startAt?: Date | string;
+
+  /** Enables touch UI mode */
+  touchUi?: boolean;
+
+  /** Filter function for allowed dates */
+  dateFilter?: (date: Date | null) => boolean;
+}
+
+export interface MaterialDateRangeMetadata extends FieldMetadata {
+  controlType: typeof FieldControlType.DATE_RANGE;
+
+  /** Minimum selectable date */
+  minDate?: Date | string;
+
+  /** Maximum selectable date */
+  maxDate?: Date | string;
+
+  /** Date to open calendar at */
+  startAt?: Date | string;
+
+  /** Enables touch UI mode */
+  touchUi?: boolean;
+
+  /** Filter function for allowed dates */
+  dateFilter?: (date: Date | null) => boolean;
+
+  /** Placeholder for start date input */
+  startPlaceholder?: string;
+
+  /** Placeholder for end date input */
+  endPlaceholder?: string;
+
+  /** Accessibility label for start date input */
+  startAriaLabel?: string;
+
+  /** Accessibility label for end date input */
+  endAriaLabel?: string;
+
+  /** Start view (month, year, multi-year) */
+  startView?: 'month' | 'year' | 'multi-year';
 }
 
 /**

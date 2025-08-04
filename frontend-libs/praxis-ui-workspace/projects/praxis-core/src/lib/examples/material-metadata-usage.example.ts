@@ -1,12 +1,12 @@
 /**
  * @fileoverview Comprehensive usage examples for Material Metadata interfaces
- * 
+ *
  * This file demonstrates practical applications of the metadata interface system
  * with real-world scenarios covering form creation, validation, and data binding.
- * 
+ *
  * Examples cover:
  * - Basic field definitions
- * - Advanced validation scenarios  
+ * - Advanced validation scenarios
  * - Material Design integration
  * - Dynamic form generation
  * - Cross-field dependencies
@@ -15,17 +15,18 @@
 
 import {
   FieldMetadata,
-  ValidatorOptions
+  ValidatorOptions,
 } from '../models/component-metadata.interface';
 
 import {
   MaterialInputMetadata,
   MaterialSelectMetadata,
   MaterialDatepickerMetadata,
+  MaterialDateRangeMetadata,
   MaterialCheckboxMetadata,
   MaterialButtonMetadata,
   MaterialNumericMetadata,
-  MaterialTextareaMetadata
+  MaterialTextareaMetadata,
 } from '../models/material-field-metadata.interface';
 
 // =============================================================================
@@ -49,13 +50,13 @@ export const basicTextInput: MaterialInputMetadata = {
     maxLength: 50,
     requiredMessage: 'First name is required',
     minLengthMessage: 'First name must be at least 2 characters',
-    maxLengthMessage: 'First name cannot exceed 50 characters'
+    maxLengthMessage: 'First name cannot exceed 50 characters',
   },
   materialDesign: {
     appearance: 'outline',
     color: 'primary',
-    floatLabel: 'auto'
-  }
+    floatLabel: 'auto',
+  },
 };
 
 /**
@@ -81,13 +82,13 @@ export const emailInput: MaterialInputMetadata = {
     },
     requiredMessage: 'Email is required',
     emailMessage: 'Please enter a valid email address',
-    uniqueMessage: 'This email is already registered'
+    uniqueMessage: 'This email is already registered',
   },
   materialDesign: {
     appearance: 'outline',
-    color: 'primary'
+    color: 'primary',
   },
-  suffixIcon: 'email'
+  suffixIcon: 'email',
 };
 
 /**
@@ -110,13 +111,14 @@ export const passwordInput: MaterialInputMetadata = {
     },
     requiredMessage: 'Password is required',
     minLengthMessage: 'Password must be at least 8 characters',
-    patternMessage: 'Password must contain uppercase, lowercase, number and special character'
+    patternMessage:
+      'Password must contain uppercase, lowercase, number and special character',
   },
   materialDesign: {
     appearance: 'outline',
-    color: 'primary'
+    color: 'primary',
   },
-  hint: 'Use at least 8 characters with mixed case, numbers and symbols'
+  hint: 'Use at least 8 characters with mixed case, numbers and symbols',
 };
 
 /**
@@ -139,13 +141,13 @@ export const salaryInput: MaterialNumericMetadata = {
     max: 1000000,
     requiredMessage: 'Salary is required',
     minMessage: 'Salary must be positive',
-    maxMessage: 'Salary cannot exceed $1,000,000'
+    maxMessage: 'Salary cannot exceed $1,000,000',
   },
   materialDesign: {
     appearance: 'outline',
-    color: 'primary'
+    color: 'primary',
   },
-  prefixIcon: 'attach_money'
+  prefixIcon: 'attach_money',
 };
 
 // =============================================================================
@@ -167,12 +169,12 @@ export const countrySelect: MaterialSelectMetadata = {
   displayField: 'name',
   validators: {
     required: true,
-    requiredMessage: 'Please select a country'
+    requiredMessage: 'Please select a country',
   },
   materialDesign: {
     appearance: 'outline',
-    color: 'primary'
-  }
+    color: 'primary',
+  },
 };
 
 /**
@@ -195,17 +197,17 @@ export const skillsSelect: MaterialSelectMetadata = {
     { value: 'nodejs', text: 'Node.js' },
     { value: 'python', text: 'Python' },
     { value: 'java', text: 'Java' },
-    { value: 'csharp', text: 'C#' }
+    { value: 'csharp', text: 'C#' },
   ],
   validators: {
     customValidator: (skills: string[]) => {
       return skills?.length >= 3 ? true : 'Please select at least 3 skills';
-    }
+    },
   },
   materialDesign: {
     appearance: 'outline',
-    color: 'primary'
-  }
+    color: 'primary',
+  },
 };
 
 // =============================================================================
@@ -230,41 +232,45 @@ export const birthDatePicker: MaterialDatepickerMetadata = {
       const age = calculateAge(date);
       return age >= 18 ? true : 'Must be at least 18 years old';
     },
-    requiredMessage: 'Date of birth is required'
+    requiredMessage: 'Date of birth is required',
   },
   materialDesign: {
     appearance: 'outline',
-    color: 'primary'
+    color: 'primary',
   },
-  prefixIcon: 'cake'
+  prefixIcon: 'cake',
 };
 
 /**
  * Example: Date range picker for vacation requests
  */
-export const vacationDates: MaterialDatepickerMetadata = {
+export const vacationDates: MaterialDateRangeMetadata = {
   name: 'vacationDates',
   label: 'Vacation Period',
   controlType: 'dateRange',
   required: true,
-  rangeSelection: true,
   minDate: new Date(), // Cannot select past dates
   startPlaceholder: 'Start date',
   endPlaceholder: 'End date',
-  disableWeekends: false,
+  startAriaLabel: 'Vacation start date',
+  endAriaLabel: 'Vacation end date',
+  dateFilter: (d: Date | null) => !!d && d.getDay() !== 0 && d.getDay() !== 6,
   validators: {
     required: true,
-    customValidator: (dateRange: { start: Date; end: Date }) => {
-      if (!dateRange?.start || !dateRange?.end) return true;
-      const daysDiff = Math.ceil((dateRange.end.getTime() - dateRange.start.getTime()) / (1000 * 60 * 60 * 24));
+    customValidator: (dateRange: { startDate: Date; endDate: Date }) => {
+      if (!dateRange?.startDate || !dateRange?.endDate) return true;
+      const daysDiff = Math.ceil(
+        (dateRange.endDate.getTime() - dateRange.startDate.getTime()) /
+          (1000 * 60 * 60 * 24),
+      );
       return daysDiff <= 30 ? true : 'Vacation period cannot exceed 30 days';
     },
-    requiredMessage: 'Please select vacation dates'
+    requiredMessage: 'Please select vacation dates',
   },
   materialDesign: {
     appearance: 'outline',
-    color: 'primary'
-  }
+    color: 'primary',
+  },
 };
 
 // =============================================================================
@@ -282,12 +288,12 @@ export const userRegistrationForm: FieldMetadata[] = [
     required: true,
     options: [
       { value: 'personal', text: 'Personal' },
-      { value: 'business', text: 'Business' }
+      { value: 'business', text: 'Business' },
     ],
     order: 1,
     materialDesign: {
-      color: 'primary'
-    }
+      color: 'primary',
+    },
   },
   {
     name: 'firstName',
@@ -298,8 +304,8 @@ export const userRegistrationForm: FieldMetadata[] = [
     visibleIn: ['form'],
     dependencyFields: ['accountType'],
     materialDesign: {
-      appearance: 'outline'
-    }
+      appearance: 'outline',
+    },
   },
   {
     name: 'lastName',
@@ -310,29 +316,33 @@ export const userRegistrationForm: FieldMetadata[] = [
     visibleIn: ['form'],
     dependencyFields: ['accountType'],
     materialDesign: {
-      appearance: 'outline'
-    }
+      appearance: 'outline',
+    },
   },
   {
     name: 'companyName',
     label: 'Company Name',
     controlType: 'input',
     order: 4,
-    conditionalRequired: (formValue: any) => formValue.accountType === 'business',
-    conditionalDisplay: (formValue: any) => formValue.accountType === 'business',
+    conditionalRequired: (formValue: any) =>
+      formValue.accountType === 'business',
+    conditionalDisplay: (formValue: any) =>
+      formValue.accountType === 'business',
     validators: {
-      conditionalValidation: [{
-        condition: (formValue: any) => formValue.accountType === 'business',
-        validators: {
-          required: true,
-          minLength: 2,
-          requiredMessage: 'Company name is required for business accounts'
-        }
-      }]
+      conditionalValidation: [
+        {
+          condition: (formValue: any) => formValue.accountType === 'business',
+          validators: {
+            required: true,
+            minLength: 2,
+            requiredMessage: 'Company name is required for business accounts',
+          },
+        },
+      ],
     },
     materialDesign: {
-      appearance: 'outline'
-    }
+      appearance: 'outline',
+    },
   },
   {
     name: 'email',
@@ -347,11 +357,11 @@ export const userRegistrationForm: FieldMetadata[] = [
       uniqueValidator: async (email: string) => {
         const response = await fetch(`/api/users/check-email?email=${email}`);
         return response.ok;
-      }
+      },
     },
     materialDesign: {
-      appearance: 'outline'
-    }
+      appearance: 'outline',
+    },
   },
   {
     name: 'agreeToTerms',
@@ -363,12 +373,12 @@ export const userRegistrationForm: FieldMetadata[] = [
       requiredChecked: true,
       customValidator: (checked: boolean) => {
         return checked ? true : 'You must agree to the Terms of Service';
-      }
+      },
     },
     materialDesign: {
-      color: 'primary'
-    }
-  }
+      color: 'primary',
+    },
+  },
 ];
 
 /**
@@ -383,8 +393,8 @@ export const productForm: FieldMetadata[] = [
     order: 1,
     maxLength: 100,
     materialDesign: {
-      appearance: 'outline'
-    }
+      appearance: 'outline',
+    },
   },
   {
     name: 'description',
@@ -395,8 +405,8 @@ export const productForm: FieldMetadata[] = [
     maxLength: 500,
     showCharacterCount: true,
     materialDesign: {
-      appearance: 'outline'
-    }
+      appearance: 'outline',
+    },
   } as MaterialTextareaMetadata,
   {
     name: 'category',
@@ -408,8 +418,8 @@ export const productForm: FieldMetadata[] = [
     valueField: 'id',
     displayField: 'name',
     materialDesign: {
-      appearance: 'outline'
-    }
+      appearance: 'outline',
+    },
   },
   {
     name: 'price',
@@ -426,11 +436,11 @@ export const productForm: FieldMetadata[] = [
       min: 0,
       customValidator: (price: number) => {
         return price > 0 ? true : 'Price must be greater than zero';
-      }
+      },
     },
     materialDesign: {
-      appearance: 'outline'
-    }
+      appearance: 'outline',
+    },
   } as MaterialNumericMetadata,
   {
     name: 'tags',
@@ -442,11 +452,11 @@ export const productForm: FieldMetadata[] = [
     autocomplete: {
       enabled: true,
       source: ['electronics', 'clothing', 'books', 'sports', 'home'],
-      minSearchLength: 1
+      minSearchLength: 1,
     },
     materialDesign: {
-      appearance: 'outline'
-    }
+      appearance: 'outline',
+    },
   },
   {
     name: 'available',
@@ -455,9 +465,9 @@ export const productForm: FieldMetadata[] = [
     order: 6,
     defaultValue: true,
     materialDesign: {
-      color: 'primary'
-    }
-  }
+      color: 'primary',
+    },
+  },
 ];
 
 // =============================================================================
@@ -484,11 +494,14 @@ function calculateAge(birthDate: Date): number {
   const today = new Date();
   let age = today.getFullYear() - birthDate.getFullYear();
   const monthDiff = today.getMonth() - birthDate.getMonth();
-  
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && today.getDate() < birthDate.getDate())
+  ) {
     age--;
   }
-  
+
   return age;
 }
 
@@ -528,7 +541,7 @@ export interface FormConfiguration {
 export const contactFormConfig: FormConfiguration = {
   name: 'contactForm',
   title: 'Contact Us',
-  description: 'Send us a message and we\'ll get back to you soon.',
+  description: "Send us a message and we'll get back to you soon.",
   fields: [
     {
       name: 'name',
@@ -541,12 +554,12 @@ export const contactFormConfig: FormConfiguration = {
         required: true,
         minLength: 2,
         requiredMessage: 'Name is required',
-        minLengthMessage: 'Name must be at least 2 characters'
+        minLengthMessage: 'Name must be at least 2 characters',
       },
       materialDesign: {
         appearance: 'outline',
-        color: 'primary'
-      }
+        color: 'primary',
+      },
     },
     {
       name: 'email',
@@ -560,12 +573,12 @@ export const contactFormConfig: FormConfiguration = {
         required: true,
         email: true,
         requiredMessage: 'Email is required',
-        emailMessage: 'Please enter a valid email'
+        emailMessage: 'Please enter a valid email',
       },
       materialDesign: {
         appearance: 'outline',
-        color: 'primary'
-      }
+        color: 'primary',
+      },
     },
     {
       name: 'subject',
@@ -578,16 +591,16 @@ export const contactFormConfig: FormConfiguration = {
         { value: 'general', text: 'General Inquiry' },
         { value: 'support', text: 'Technical Support' },
         { value: 'billing', text: 'Billing Question' },
-        { value: 'feedback', text: 'Feedback' }
+        { value: 'feedback', text: 'Feedback' },
       ],
       validators: {
         required: true,
-        requiredMessage: 'Please select a subject'
+        requiredMessage: 'Please select a subject',
       },
       materialDesign: {
         appearance: 'outline',
-        color: 'primary'
-      }
+        color: 'primary',
+      },
     },
     {
       name: 'message',
@@ -604,12 +617,12 @@ export const contactFormConfig: FormConfiguration = {
         minLength: 10,
         maxLength: 1000,
         requiredMessage: 'Message is required',
-        minLengthMessage: 'Message must be at least 10 characters'
+        minLengthMessage: 'Message must be at least 10 characters',
       },
       materialDesign: {
         appearance: 'outline',
-        color: 'primary'
-      }
+        color: 'primary',
+      },
     } as MaterialTextareaMetadata,
     {
       name: 'newsletter',
@@ -618,8 +631,8 @@ export const contactFormConfig: FormConfiguration = {
       order: 5,
       defaultValue: false,
       materialDesign: {
-        color: 'primary'
-      }
+        color: 'primary',
+      },
     },
     {
       name: 'submit',
@@ -629,26 +642,27 @@ export const contactFormConfig: FormConfiguration = {
       order: 6,
       variant: 'raised',
       materialDesign: {
-        color: 'primary'
-      }
-    } as MaterialButtonMetadata
+        color: 'primary',
+      },
+    } as MaterialButtonMetadata,
   ],
   layout: {
     columns: 2,
     spacing: '16px',
-    groupSpacing: '24px'
+    groupSpacing: '24px',
   },
   validation: {
     mode: 'blur',
     showErrorSummary: true,
-    scrollToFirstError: true
+    scrollToFirstError: true,
   },
   submission: {
     endpoint: '/api/contact',
     method: 'POST',
     successMessage: 'Thank you! Your message has been sent.',
-    errorMessage: 'Sorry, there was an error sending your message. Please try again.'
-  }
+    errorMessage:
+      'Sorry, there was an error sending your message. Please try again.',
+  },
 };
 
 // =============================================================================
@@ -681,23 +695,23 @@ export function migrateLegacyFieldDefinition(legacy: any): FieldMetadata {
     validators: migrateLegacyValidators(legacy),
     materialDesign: {
       appearance: 'outline',
-      color: 'primary'
-    }
+      color: 'primary',
+    },
   };
 }
 
 function mapLegacyControlType(legacyType: string): any {
   const typeMap: Record<string, any> = {
-    'text': 'input',
-    'number': 'input',
-    'dropdown': 'select',
-    'multiselect': 'multiSelect',
-    'date': 'date',
-    'checkbox': 'checkbox',
-    'radio': 'radio',
-    'textarea': 'textarea'
+    text: 'input',
+    number: 'input',
+    dropdown: 'select',
+    multiselect: 'multiSelect',
+    date: 'date',
+    checkbox: 'checkbox',
+    radio: 'radio',
+    textarea: 'textarea',
   };
-  
+
   return typeMap[legacyType] || 'input';
 }
 
@@ -713,6 +727,6 @@ function migrateLegacyValidators(legacy: any): ValidatorOptions {
     requiredMessage: legacy.requiredMessage,
     minLengthMessage: legacy.minLengthMessage,
     maxLengthMessage: legacy.maxLengthMessage,
-    patternMessage: legacy.patternMessage
+    patternMessage: legacy.patternMessage,
   };
 }

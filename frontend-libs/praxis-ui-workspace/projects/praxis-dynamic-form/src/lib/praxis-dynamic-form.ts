@@ -12,10 +12,12 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
+  AbstractControl,
   FormBuilder,
   FormGroup,
   ReactiveFormsModule,
   Validators,
+  ValidationErrors,
 } from '@angular/forms';
 
 import { MatIconModule } from '@angular/material/icon';
@@ -30,6 +32,10 @@ import {
   FieldMetadata,
   mapFieldDefinitionsToMetadata,
   EndpointConfig,
+  FieldControlType,
+  MaterialDatepickerMetadata,
+  MaterialDateRangeMetadata,
+  DateRangeValue,
 } from '@praxis/core';
 import { DynamicFieldLoaderDirective } from '@praxis/dynamic-fields';
 import {
@@ -93,30 +99,40 @@ import { PraxisDynamicFormConfigEditor } from './praxis-dynamic-form-config-edit
       <!-- Configuration Controls -->
       @if (shouldShowConfigControls) {
         <div class="form-config-controls">
-        <button
-          type="button"
-          mat-icon-button
-          (click)="toggleEditMode()"
-          [matTooltip]="effectiveEditModeEnabled ? 'Desabilitar customização do formulário' : 'Habilitar customização do formulário'"
-          class="layout-customize-toggle"
-          [class.active]="effectiveEditModeEnabled"
-          [attr.aria-label]="effectiveEditModeEnabled ? 'Sair do modo de customização de layout' : 'Entrar no modo de customização de layout'"
-        >
-          <mat-icon>{{ effectiveEditModeEnabled ? 'design_services' : 'tune' }}</mat-icon>
-        </button>
-        
-        @if (effectiveEditModeEnabled) {
           <button
             type="button"
             mat-icon-button
-            (click)="openConfigEditor()"
-            matTooltip="Configurar formulário"
-            [disabled]="isLoading"
-            class="config-button"
+            (click)="toggleEditMode()"
+            [matTooltip]="
+              effectiveEditModeEnabled
+                ? 'Desabilitar customização do formulário'
+                : 'Habilitar customização do formulário'
+            "
+            class="layout-customize-toggle"
+            [class.active]="effectiveEditModeEnabled"
+            [attr.aria-label]="
+              effectiveEditModeEnabled
+                ? 'Sair do modo de customização de layout'
+                : 'Entrar no modo de customização de layout'
+            "
           >
-            <mat-icon>settings</mat-icon>
+            <mat-icon>{{
+              effectiveEditModeEnabled ? 'design_services' : 'tune'
+            }}</mat-icon>
           </button>
-        }
+
+          @if (effectiveEditModeEnabled) {
+            <button
+              type="button"
+              mat-icon-button
+              (click)="openConfigEditor()"
+              matTooltip="Configurar formulário"
+              [disabled]="isLoading"
+              class="config-button"
+            >
+              <mat-icon>settings</mat-icon>
+            </button>
+          }
         </div>
       }
 
@@ -129,25 +145,37 @@ import { PraxisDynamicFormConfigEditor } from './praxis-dynamic-form-config-edit
         [attr.aria-label]="'Formulário ' + (config.metadata?.version || '')"
       >
         @for (section of config.sections; track section.id) {
-          <div class="form-section" [class.layout-editable]="effectiveEditModeEnabled" [attr.data-section-id]="section.id">
+          <div
+            class="form-section"
+            [class.layout-editable]="effectiveEditModeEnabled"
+            [attr.data-section-id]="section.id"
+          >
             @if (section.title) {
               <h3 class="section-title">{{ section.title }}</h3>
             }
             @if (section.description) {
               <p class="section-description">{{ section.description }}</p>
             }
-            
+
             @for (row of section.rows; track $index; let rowIndex = $index) {
-              <div class="form-row" 
-                   [class.layout-editable]="effectiveEditModeEnabled"
-                   [attr.data-row-index]="rowIndex"
-                   [attr.data-section-id]="section.id">
-                @for (column of row.columns; track $index; let colIndex = $index) {
-                  <div class="form-column" 
-                       [class.layout-editable]="effectiveEditModeEnabled"
-                       [attr.data-column-index]="colIndex"
-                       [attr.data-row-index]="rowIndex"
-                       [attr.data-section-id]="section.id">
+              <div
+                class="form-row"
+                [class.layout-editable]="effectiveEditModeEnabled"
+                [attr.data-row-index]="rowIndex"
+                [attr.data-section-id]="section.id"
+              >
+                @for (
+                  column of row.columns;
+                  track $index;
+                  let colIndex = $index
+                ) {
+                  <div
+                    class="form-column"
+                    [class.layout-editable]="effectiveEditModeEnabled"
+                    [attr.data-column-index]="colIndex"
+                    [attr.data-row-index]="rowIndex"
+                    [attr.data-section-id]="section.id"
+                  >
                     <ng-container
                       dynamicFieldLoader
                       [fields]="getColumnFields(column)"
@@ -160,22 +188,29 @@ import { PraxisDynamicFormConfigEditor } from './praxis-dynamic-form-config-edit
             }
           </div>
         }
-      
-      <div class="form-actions" [class.loading]="isLoading">
-        <button
-          type="submit"
-          mat-raised-button
-          color="primary"
-          [disabled]="form.invalid || isLoading"
-          [attr.aria-label]="mode === 'edit' ? 'Atualizar registro' : 'Criar novo registro'"
-        >
-          @if (isLoading) {
-            <mat-icon>hourglass_empty</mat-icon>
-          }
-          {{ isLoading ? 'Processando...' : (mode === 'edit' ? 'Atualizar' : 'Criar') }}
-        </button>
 
-      </div>
+        <div class="form-actions" [class.loading]="isLoading">
+          <button
+            type="submit"
+            mat-raised-button
+            color="primary"
+            [disabled]="form.invalid || isLoading"
+            [attr.aria-label]="
+              mode === 'edit' ? 'Atualizar registro' : 'Criar novo registro'
+            "
+          >
+            @if (isLoading) {
+              <mat-icon>hourglass_empty</mat-icon>
+            }
+            {{
+              isLoading
+                ? 'Processando...'
+                : mode === 'edit'
+                  ? 'Atualizar'
+                  : 'Criar'
+            }}
+          </button>
+        </div>
       </form>
     }
   `,
@@ -287,7 +322,7 @@ import { PraxisDynamicFormConfigEditor } from './praxis-dynamic-form-config-edit
       }
 
       .layout-edit-mode::before {
-        content: "🎨 Modo de Customização";
+        content: '🎨 Modo de Customização';
         position: absolute;
         top: -8px;
         left: 16px;
@@ -317,7 +352,7 @@ import { PraxisDynamicFormConfigEditor } from './praxis-dynamic-form-config-edit
         /* Border transparente para evitar layout shift */
         border: 1px solid transparent;
       }
-      
+
       .form-section.layout-editable:hover {
         border: 1px dashed var(--md-sys-color-primary);
         /* Remover background que pode causar expansão visual */
@@ -421,26 +456,28 @@ import { PraxisDynamicFormConfigEditor } from './praxis-dynamic-form-config-edit
   ],
 })
 export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
-  private readonly DEBUG = typeof window !== 'undefined' && ((window as any)['__PRAXIS_DEBUG__'] || true); // Temporariamente true para debug
+  private readonly DEBUG =
+    typeof window !== 'undefined' &&
+    ((window as any)['__PRAXIS_DEBUG__'] || true); // Temporariamente true para debug
   @Input() resourcePath?: string;
   @Input() resourceId?: string | number;
   @Input() mode: 'create' | 'edit' | 'view' = 'create';
   @Input() config: FormConfig = { sections: [] };
-  /** 
+  /**
    * CUSTOMIZAÇÃO DE LAYOUT - NÃO confundir com edição de dados do formulário
-   * 
+   *
    * Este flag controla se o usuário pode customizar a ESTRUTURA do formulário:
    * - Mover sections, rows, columns
-   * - Configurar layout e aparência 
+   * - Configurar layout e aparência
    * - Acessar editor de configuração
-   * 
+   *
    * É INDEPENDENTE do mode (view/edit/create) que controla os DADOS do registro
-   * 
+   *
    * @example
    * // Formulário em modo VIEW de dados + customização HABILITADA
    * <praxis-dynamic-form mode="view" [editModeEnabled]="true">
-   * 
-   * // Formulário em modo EDIT de dados + customização DESABILITADA  
+   *
+   * // Formulário em modo EDIT de dados + customização DESABILITADA
    * <praxis-dynamic-form mode="edit" [editModeEnabled]="false">
    */
   @Input() editModeEnabled = false;
@@ -479,12 +516,12 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   currentErrorDetails: any = null;
   isRecoverable = false;
   private isInitialized = false;
-  
+
   // ESTADO INTERNO para CUSTOMIZAÇÃO DE LAYOUT (não muta o @Input)
   // Este estado permite toggle da customização independente dos dados do formulário
   // Persiste entre sessões para experiência corporativa consistente
   private _internalEditModeEnabled: boolean = false;
-  
+
   // Flag para indicar se houve interação do usuário (toggle manual)
   // Quando true, o estado interno tem precedência sobre o @Input
   private _userHasToggledEditMode: boolean = false;
@@ -512,7 +549,9 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   // 1. Se usuário fez toggle manual -> usar estado interno
   // 2. Senão -> usar @Input como fallback
   get effectiveEditModeEnabled(): boolean {
-    return this._userHasToggledEditMode ? this._internalEditModeEnabled : this.editModeEnabled;
+    return this._userHasToggledEditMode
+      ? this._internalEditModeEnabled
+      : this.editModeEnabled;
   }
 
   // Getter para determinar se deve mostrar os controles de configuração
@@ -527,14 +566,16 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
     if (this.formId) {
       const customizationModeKey = `praxis-layout-customization-${this.formId}`;
       const userToggledKey = `praxis-user-toggled-${this.formId}`;
-      
-      const savedCustomizationMode = this.configStorage.loadConfig<boolean>(customizationModeKey);
-      const savedUserToggled = this.configStorage.loadConfig<boolean>(userToggledKey);
-      
+
+      const savedCustomizationMode =
+        this.configStorage.loadConfig<boolean>(customizationModeKey);
+      const savedUserToggled =
+        this.configStorage.loadConfig<boolean>(userToggledKey);
+
       if (savedCustomizationMode !== null) {
         this._internalEditModeEnabled = savedCustomizationMode;
       }
-      
+
       if (savedUserToggled !== null) {
         this._userHasToggledEditMode = savedUserToggled;
       }
@@ -549,13 +590,13 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['resourcePath'] && this.resourcePath) {
       this.crud.configure(this.resourcePath);
-      
+
       // Only initialize if not already initialized or if resourcePath actually changed
       if (!this.isInitialized && this.formId) {
         this.initializeForm();
       }
     }
-    
+
     if (changes['resourceId']) {
       this.pendingEntityId = this.resourceId ?? null;
       if (this.config.fieldMetadata?.length && this.pendingEntityId != null) {
@@ -567,19 +608,22 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   private async initializeForm(): Promise<void> {
     // Prevent duplicate initialization
     if (this.isInitialized || this.isLoading) {
-      this.debugLog('⚠️ Skipping duplicate initialization', { isInitialized: this.isInitialized, isLoading: this.isLoading });
+      this.debugLog('⚠️ Skipping duplicate initialization', {
+        isInitialized: this.isInitialized,
+        isLoading: this.isLoading,
+      });
       return;
     }
 
     // Validação obrigatória para cenários corporativos
     if (!this.resourcePath || !this.formId) {
       const error = new Error(
-        `Form initialization failed: ${!this.formId ? 'formId' : 'resourcePath'} is required for corporate form management`
+        `Form initialization failed: ${!this.formId ? 'formId' : 'resourcePath'} is required for corporate form management`,
       );
       this.handleInitializationError('config-load', error, {
         formId: this.formId,
         resourcePath: this.resourcePath,
-        hasLocalConfig: false
+        hasLocalConfig: false,
       });
       return;
     }
@@ -591,7 +635,7 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
       // Step 1: Check for local saved config
       const configKey = `praxis-form-config-${this.formId}`;
       const localConfig = this.configStorage.loadConfig<FormConfig>(configKey);
-      
+
       if (localConfig) {
         // Flow 1: Has local config - load it and sync with server
         this.debugLog('🔄 Loading saved form configuration');
@@ -602,15 +646,15 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
         this.debugLog('🆕 Creating new form configuration from server');
         await this.createDefaultConfig();
       }
-      
+
       // Build the form
       this.buildFormFromConfig();
-      
+
       // Load entity data if needed
       if (this.pendingEntityId != null) {
         this.loadEntity();
       }
-      
+
       this.initializationStatus = 'success';
       this.isInitialized = true;
       this.cdr.detectChanges();
@@ -618,7 +662,9 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
       this.handleInitializationError('form-build', error as Error, {
         formId: this.formId,
         resourcePath: this.resourcePath,
-        hasLocalConfig: this.configStorage.loadConfig(`praxis-form-config-${this.formId}`) !== null
+        hasLocalConfig:
+          this.configStorage.loadConfig(`praxis-form-config-${this.formId}`) !==
+          null,
       });
     } finally {
       this.isLoading = false;
@@ -626,55 +672,69 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
     }
   }
 
-  private handleInitializationError(stage: FormInitializationError['stage'], error: Error, context?: FormInitializationError['context']): void {
+  private handleInitializationError(
+    stage: FormInitializationError['stage'],
+    error: Error,
+    context?: FormInitializationError['context'],
+  ): void {
     this.initializationStatus = 'error';
     this.isLoading = false;
     this.cdr.detectChanges();
-    
+
     const formError: FormInitializationError = {
       stage,
       error,
       context,
       recoverable: stage !== 'config-load',
-      userMessage: this.getErrorMessage(stage, error)
+      userMessage: this.getErrorMessage(stage, error),
     };
-    
+
     // Update UX state
     this.currentErrorMessage = formError.userMessage;
     this.currentErrorDetails = { stage, error: error.message, context };
     this.isRecoverable = formError.recoverable;
-    
-    console.error(`[PraxisDynamicForm] Initialization error at ${stage}:`, error);
+
+    console.error(
+      `[PraxisDynamicForm] Initialization error at ${stage}:`,
+      error,
+    );
     this.initializationError.emit(formError);
   }
 
-  private getErrorMessage(stage: FormInitializationError['stage'], error: Error): string {
+  private getErrorMessage(
+    stage: FormInitializationError['stage'],
+    error: Error,
+  ): string {
     const messages = {
-      'config-load': !this.formId ? 
-        'Erro: formId é obrigatório para persistência corporativa do formulário.' :
-        !this.resourcePath ?
-        'Erro: resourcePath é obrigatório para carregar esquema do servidor.' :
-        'Erro na configuração do formulário. Verifique se os parâmetros formId e resourcePath estão definidos.',
-      'schema-fetch': 'Erro ao carregar campos do servidor. Verifique sua conexão e tente novamente.',
-      'sync': 'Erro na sincronização com o servidor. O formulário será carregado com dados locais.',
-      'form-build': 'Erro ao construir o formulário. Entre em contato com o suporte técnico.'
+      'config-load': !this.formId
+        ? 'Erro: formId é obrigatório para persistência corporativa do formulário.'
+        : !this.resourcePath
+          ? 'Erro: resourcePath é obrigatório para carregar esquema do servidor.'
+          : 'Erro na configuração do formulário. Verifique se os parâmetros formId e resourcePath estão definidos.',
+      'schema-fetch':
+        'Erro ao carregar campos do servidor. Verifique sua conexão e tente novamente.',
+      sync: 'Erro na sincronização com o servidor. O formulário será carregado com dados locais.',
+      'form-build':
+        'Erro ao construir o formulário. Entre em contato com o suporte técnico.',
     };
-    
-    return messages[stage] || 'Erro desconhecido na inicialização do formulário.';
+
+    return (
+      messages[stage] || 'Erro desconhecido na inicialização do formulário.'
+    );
   }
-  
+
   private async createDefaultConfig(): Promise<void> {
     try {
       const serverDefs = await this.getSchemaWithCache();
       const fieldMetadata = mapFieldDefinitionsToMetadata(serverDefs);
-      
+
       if (!fieldMetadata || fieldMetadata.length === 0) {
         throw new Error('No field metadata received from server');
       }
-      
+
       // Generate default layout from metadata
       this.config = this.generateFormConfigFromMetadata(fieldMetadata);
-      
+
       // Save the generated config
       const configKey = `praxis-form-config-${this.formId}`;
       this.configStorage.saveConfig(configKey, this.config);
@@ -682,21 +742,21 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
       this.handleInitializationError('schema-fetch', error as Error, {
         formId: this.formId,
         resourcePath: this.resourcePath,
-        hasLocalConfig: false
+        hasLocalConfig: false,
       });
       throw error; // Re-throw to stop initialization
     }
   }
-  
+
   private async syncWithServer(): Promise<void> {
     try {
       const serverDefs = await this.getSchemaWithCache();
       const serverMetadata = mapFieldDefinitionsToMetadata(serverDefs);
-      
+
       const syncResult = syncWithServerMetadata(this.config, serverMetadata);
-      
+
       this.config = syncResult.config;
-      
+
       if (syncResult.syncResult.hasChanges) {
         console.log('📋 Form sync detected changes:', syncResult.syncResult);
         // Save updated config after sync
@@ -709,7 +769,7 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
       this.handleInitializationError('sync', error as Error, {
         formId: this.formId,
         resourcePath: this.resourcePath,
-        hasLocalConfig: true
+        hasLocalConfig: true,
       });
       // Don't re-throw - continue with local config
     }
@@ -719,23 +779,27 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
     if (this.pendingEntityId == null) {
       return;
     }
-    
+
     // Avoid duplicate entity loading
     if (this.loadedEntityId === this.pendingEntityId) {
-      this.debugLog('⚠️ Skipping duplicate entity load', { entityId: this.pendingEntityId });
+      this.debugLog('⚠️ Skipping duplicate entity load', {
+        entityId: this.pendingEntityId,
+      });
       return;
     }
-    
+
     this.debugLog('📥 Loading entity', { entityId: this.pendingEntityId });
     this.loadedEntityId = this.pendingEntityId;
-    
+
     this.crud
       .getById(this.pendingEntityId)
       .pipe(takeUntil(this.destroy$))
       .subscribe((data: Record<string, any>) => {
         if (data && typeof data === 'object') {
           this.form.patchValue(data);
-          this.debugLog('✅ Entity loaded successfully', { entityId: this.pendingEntityId });
+          this.debugLog('✅ Entity loaded successfully', {
+            entityId: this.pendingEntityId,
+          });
         } else {
           console.warn('Invalid entity data received:', data);
         }
@@ -745,11 +809,80 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   private buildFormFromConfig(): void {
     const controls: any = {};
     const fieldMetadata = this.config.fieldMetadata || [];
-    
+
     for (const field of fieldMetadata) {
-      const validators = [];
+      const validators: Array<
+        (control: AbstractControl) => ValidationErrors | null
+      > = [];
+      let defaultValue: any = field.defaultValue ?? null;
+
+      if (field.controlType === FieldControlType.DATE_PICKER) {
+        const md = field as MaterialDatepickerMetadata;
+        if (typeof defaultValue === 'string') {
+          defaultValue = new Date(defaultValue);
+        }
+        const min = md.minDate
+          ? typeof md.minDate === 'string'
+            ? new Date(md.minDate)
+            : md.minDate
+          : null;
+        if (min) {
+          validators.push((control) => {
+            const val = control.value ? new Date(control.value) : null;
+            return !val || val >= min ? null : { minDate: true };
+          });
+        }
+        const max = md.maxDate
+          ? typeof md.maxDate === 'string'
+            ? new Date(md.maxDate)
+            : md.maxDate
+          : null;
+        if (max) {
+          validators.push((control) => {
+            const val = control.value ? new Date(control.value) : null;
+            return !val || val <= max ? null : { maxDate: true };
+          });
+        }
+      } else if (field.controlType === FieldControlType.DATE_RANGE) {
+        const md = field as MaterialDateRangeMetadata;
+        const parse = (d: Date | string | null | undefined): Date | null =>
+          typeof d === 'string' ? new Date(d) : (d ?? null);
+        const dv = defaultValue as DateRangeValue | null;
+        defaultValue = {
+          startDate: dv?.startDate ? parse(dv.startDate) : null,
+          endDate: dv?.endDate ? parse(dv.endDate) : null,
+        } as DateRangeValue;
+        const min = parse(md.minDate);
+        const max = parse(md.maxDate);
+        validators.push((control) => {
+          const val = control.value as DateRangeValue | null;
+          if (!val) {
+            return null;
+          }
+          const start = val.startDate ? new Date(val.startDate) : null;
+          const end = val.endDate ? new Date(val.endDate) : null;
+          if (start && end && start > end) {
+            return { rangeOrder: true };
+          }
+          if (min && ((start && start < min) || (end && end < min))) {
+            return { minDate: true };
+          }
+          if (max && ((start && start > max) || (end && end > max))) {
+            return { maxDate: true };
+          }
+          return null;
+        });
+      }
+
       if (field.required) {
-        validators.push(Validators.required);
+        if (field.controlType === FieldControlType.DATE_RANGE) {
+          validators.push((control) => {
+            const val = control.value as DateRangeValue | null;
+            return val?.startDate && val?.endDate ? null : { required: true };
+          });
+        } else {
+          validators.push(Validators.required);
+        }
       }
       if (field.validators?.minLength) {
         validators.push(Validators.minLength(field.validators.minLength));
@@ -760,7 +893,7 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
       if (field.validators?.pattern) {
         validators.push(Validators.pattern(field.validators.pattern));
       }
-      controls[field.name] = [field.defaultValue ?? null, validators];
+      controls[field.name] = [defaultValue, validators];
     }
     this.form = this.fb.group(controls);
 
@@ -789,7 +922,6 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
       entityId: this.resourceId ?? undefined,
     });
   }
-
 
   /**
    * Generates a complete FormConfig from FieldMetadata array
@@ -838,14 +970,14 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
     });
 
     // Return complete config with layout and metadata
-    return { 
+    return {
       sections,
       fieldMetadata: fields,
       metadata: {
         version: '1.0.0',
         lastUpdated: new Date(),
-        source: 'default'
-      }
+        source: 'default',
+      },
     };
   }
 
@@ -929,32 +1061,38 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
 
   /**
    * TOGGLE DE CUSTOMIZAÇÃO DE LAYOUT - NÃO É EDIÇÃO DE DADOS
-   * 
+   *
    * Este método alterna entre:
    * - Modo normal: Usuário interage com dados do formulário (conforme mode: view/edit/create)
    * - Modo customização: Usuário pode mover sections/rows/columns e configurar layout
-   * 
+   *
    * IMPORTANTE: Independe completamente do mode do formulário
    */
   toggleEditMode(): void {
     // Marcar que usuário fez toggle manual (estado interno tem precedência)
     this._userHasToggledEditMode = true;
-    
+
     // Toggle estado interno de CUSTOMIZAÇÃO (não o @Input de dados)
     this._internalEditModeEnabled = !this._internalEditModeEnabled;
-    
+
     // Persistir estado corporativo para consistência entre sessões
     if (this.formId) {
       const customizationModeKey = `praxis-layout-customization-${this.formId}`;
       const userToggledKey = `praxis-user-toggled-${this.formId}`;
-      
-      this.configStorage.saveConfig(customizationModeKey, this._internalEditModeEnabled);
-      this.configStorage.saveConfig(userToggledKey, this._userHasToggledEditMode);
+
+      this.configStorage.saveConfig(
+        customizationModeKey,
+        this._internalEditModeEnabled,
+      );
+      this.configStorage.saveConfig(
+        userToggledKey,
+        this._userHasToggledEditMode,
+      );
     }
-    
+
     // Emitir mudança para componente pai - usar o estado efetivo
     this.editModeEnabledChange.emit(this.effectiveEditModeEnabled);
-    
+
     // Force change detection para aplicar estilos visuais imediatamente
     this.cdr.detectChanges();
   }
@@ -962,7 +1100,7 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   openConfigEditor(): void {
     console.log('🔧 [PraxisDynamicForm] Abrindo editor de configuração');
     console.log('🔧 [PraxisDynamicForm] Config atual:', this.config);
-    
+
     // Config already has everything needed (layout + metadata)
     const ref = this.windowService.open({
       title: 'Configuração do Formulário Dinâmico',
@@ -980,17 +1118,20 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
 
     ref.closed.pipe(takeUntil(this.destroy$)).subscribe((result) => {
       if (result) {
-        console.log('🔧 [PraxisDynamicForm] Nova configuração recebida do editor:', result);
+        console.log(
+          '🔧 [PraxisDynamicForm] Nova configuração recebida do editor:',
+          result,
+        );
         this.config = result as FormConfig;
-        
+
         // Save updated config
         if (this.formId) {
           const configKey = `praxis-form-config-${this.formId}`;
           this.configStorage.saveConfig(configKey, this.config);
         }
-        
+
         this.configChange.emit(this.config);
-        
+
         // Rebuild form with new config
         this.buildFormFromConfig();
       }
@@ -1011,7 +1152,7 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
 
   trackByRow(index: number, row: FormRow): string {
     // Generate a simple hash of the row's column field names
-    const fieldNames = row.columns.flatMap(col => col.fields).join(',');
+    const fieldNames = row.columns.flatMap((col) => col.fields).join(',');
     return `row-${index}-${fieldNames}`;
   }
 
@@ -1033,17 +1174,21 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
     const titles = {
       'config-load': 'Configuração Inválida',
       'schema-fetch': 'Erro de Conexão',
-      'sync': 'Sincronização Parcial',
-      'form-build': 'Erro Interno'
+      sync: 'Sincronização Parcial',
+      'form-build': 'Erro Interno',
     };
-    
+
     const stage = this.currentErrorDetails?.stage || 'form-build';
     return titles[stage as keyof typeof titles] || 'Erro no Formulário';
   }
 
   showDetailedError(): void {
-    const details = this.currentErrorDetails ? JSON.stringify(this.currentErrorDetails, null, 2) : 'Nenhum detalhe disponível';
-    alert(`Detalhes técnicos:\n\n${details}\n\nPor favor, compartilhe estas informações com o suporte técnico.`);
+    const details = this.currentErrorDetails
+      ? JSON.stringify(this.currentErrorDetails, null, 2)
+      : 'Nenhum detalhe disponível';
+    alert(
+      `Detalhes técnicos:\n\n${details}\n\nPor favor, compartilhe estas informações com o suporte técnico.`,
+    );
   }
 
   private async getSchemaWithCache(): Promise<any> {
@@ -1051,14 +1196,14 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
       this.debugLog('📋 Using cached schema');
       return this.schemaCache;
     }
-    
+
     this.debugLog('🌐 Fetching schema from server');
     const schema = await this.crud.getSchema().toPromise();
-    
+
     if (!schema) {
       throw new Error('No server schema received');
     }
-    
+
     this.schemaCache = schema;
     this.debugLog('✅ Schema cached successfully');
     return schema;

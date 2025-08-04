@@ -16,6 +16,8 @@ export * from './lib/components/material-button/confirm-dialog.component';
 export * from './lib/components/text-input/text-input.component';
 export * from './lib/components/color-input/color-input.component';
 export * from './lib/components/date-input/date-input.component';
+export * from './lib/components/material-datepicker/material-datepicker.component';
+export * from './lib/components/material-date-range/material-date-range.component';
 export * from './lib/components/datetime-local-input/datetime-local-input.component';
 export * from './lib/components/email-input/email-input.component';
 export * from './lib/components/number-input/number-input.component';

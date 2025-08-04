@@ -242,6 +242,18 @@ export class ComponentRegistryService implements IComponentRegistry {
         (m) => m.DateInputComponent,
       );
 
+    // Angular Material Datepicker
+    const datepickerFactory = () =>
+      import(
+        '../../components/material-datepicker/material-datepicker.component'
+      ).then((m) => m.MaterialDatepickerComponent);
+
+    // Angular Material Date Range Picker
+    const dateRangeFactory = () =>
+      import(
+        '../../components/material-date-range/material-date-range.component'
+      ).then((m) => m.MaterialDateRangeComponent);
+
     // Specialized datetime-local input
     const datetimeLocalInputFactory = () =>
       import(
@@ -309,6 +321,10 @@ export class ComponentRegistryService implements IComponentRegistry {
     // HTML5 date input
     this.register(FieldControlTypeEnum.DATE_INPUT, dateInputFactory);
 
+    // Material Datepicker
+    this.register(FieldControlTypeEnum.DATE_PICKER, datepickerFactory);
+    this.register(FieldControlTypeEnum.DATE_RANGE, dateRangeFactory);
+
     // HTML5 datetime-local input
     this.register(
       FieldControlTypeEnum.DATETIME_LOCAL_INPUT,
@@ -321,7 +337,8 @@ export class ComponentRegistryService implements IComponentRegistry {
     // Mapeamentos para controlTypes do JSON Schema/OpenAPI
     this.register('numericTextBox' as FieldControlType, numberInputFactory);
     this.register('phone' as FieldControlType, phoneInputFactory);
-    this.register('date' as FieldControlType, dateInputFactory);
+    this.register('date' as FieldControlType, datepickerFactory);
+    this.register('dateRange' as FieldControlType, dateRangeFactory);
     this.register('checkbox' as FieldControlType, textInputFactory);
 
     // Textarea
