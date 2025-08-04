@@ -27,10 +27,10 @@ describe('SearchInputComponent', () => {
   it('should propagate search value changes', () => {
     const control = new FormControl('');
     component.registerOnChange(control.setValue.bind(control));
-    const input: HTMLInputElement = fixture.nativeElement.querySelector('input');
+    const input: HTMLInputElement =
+      fixture.nativeElement.querySelector('input');
     input.value = 'query';
     input.dispatchEvent(new Event('input'));
     expect(control.value).toBe('query');
   });
 });
-

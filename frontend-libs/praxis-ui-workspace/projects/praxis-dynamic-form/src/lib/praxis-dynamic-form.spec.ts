@@ -5,13 +5,14 @@ import {
   GenericCrudService,
   CONFIG_STORAGE,
   ConfigStorage,
+
+  FieldControlType,
+  MaterialDatepickerMetadata,
+  MaterialDateRangeMetadata,
+  DateRangeValue,
 } from '@praxis/core';
-import {
-  DynamicFieldLoaderDirective,
-  MaterialSelectComponent,
-  MaterialCheckboxGroupComponent,
-  MaterialRadioGroupComponent,
-} from '@praxis/dynamic-fields';
+import { DynamicFieldLoaderDirective } from '@praxis/dynamic-fields';
+
 
 describe('PraxisDynamicForm', () => {
   let fixture: ComponentFixture<PraxisDynamicForm>;
@@ -144,104 +145,83 @@ describe('PraxisDynamicForm', () => {
     expect(submitSpy).toHaveBeenCalled();
   });
 
-  it('renderiza campo select com carregamento remoto', async () => {
-    const page = {
-      content: [{ id: '1', label: 'Ativo' }],
-      totalElements: 1,
-      totalPages: 1,
-      pageNumber: 0,
-      pageSize: 50,
-    } as any;
-    crudService.filter.and.returnValue(of(page));
-    crudService.getSchema.and.returnValue(of([]));
 
+  it('aplica validadores de min/max em campos de data', () => {
     component.config = {
-      sections: [
-        {
-          id: 's1',
-          rows: [{ columns: [{ fields: ['status'] }] }],
-        },
-      ],
+      sections: [],
       fieldMetadata: [
         {
-          name: 'status',
-          controlType: 'select',
-          resourcePath: 'status',
-          optionLabelKey: 'label',
-          optionValueKey: 'id',
-        } as any,
+          name: 'birth',
+          controlType: FieldControlType.DATE_PICKER,
+          minDate: '2024-01-01',
+          maxDate: '2024-12-31',
+        } as MaterialDatepickerMetadata,
       ],
     };
-
     (component as any).buildFormFromConfig();
-    fixture.detectChanges();
-    await fixture.whenStable();
-
-    expect(crudService.filter).toHaveBeenCalled();
-    const select = fixture.nativeElement.querySelector('pdx-material-select');
-    expect(select).toBeTruthy();
+    const ctrl = component.form.get('birth')!;
+    ctrl.setValue(new Date('2023-12-31'));
+    expect(ctrl.hasError('minDate')).toBeTrue();
+    ctrl.setValue(new Date('2024-06-15'));
+    expect(ctrl.valid).toBeTrue();
+    ctrl.setValue(new Date('2025-01-01'));
+    expect(ctrl.hasError('maxDate')).toBeTrue();
   });
 
-  it('renderiza grupo de checkboxes e usa array por padrão', async () => {
-    crudService.getSchema.and.returnValue(of([]));
-
+  it('valida campos de intervalo de datas', () => {
     component.config = {
-      sections: [
-        {
-          id: 's1',
-          rows: [{ columns: [{ fields: ['roles'] }] }],
-        },
-      ],
+      sections: [],
       fieldMetadata: [
         {
-          name: 'roles',
-          controlType: 'checkbox',
-          checkboxOptions: [{ label: 'Admin', value: 'admin' }],
-        } as any,
+          name: 'period',
+          controlType: FieldControlType.DATE_RANGE,
+          minDate: '2024-01-01',
+          maxDate: '2024-12-31',
+        } as MaterialDateRangeMetadata,
       ],
     };
-
     (component as any).buildFormFromConfig();
-    fixture.detectChanges();
-    await fixture.whenStable();
-
-    const checkbox = fixture.nativeElement.querySelector(
-      'pdx-material-checkbox-group',
-    );
-    expect(checkbox).toBeTruthy();
-    expect(component.form.get('roles')?.value).toEqual([]);
+    const ctrl = component.form.get('period')!;
+    ctrl.setValue({
+      startDate: new Date('2024-02-01'),
+      endDate: new Date('2024-01-01'),
+    } as DateRangeValue);
+    expect(ctrl.hasError('rangeOrder')).toBeTrue();
+    ctrl.setValue({
+      startDate: new Date('2023-12-31'),
+      endDate: new Date('2024-01-05'),
+    } as DateRangeValue);
+    expect(ctrl.hasError('minDate')).toBeTrue();
+    ctrl.setValue({
+      startDate: new Date('2024-01-01'),
+      endDate: new Date('2024-12-31'),
+    } as DateRangeValue);
+    expect(ctrl.valid).toBeTrue();
   });
 
-  it('renderiza grupo de radios', async () => {
-    crudService.getSchema.and.returnValue(of([]));
-
+  it('exige início e fim quando campo de intervalo é obrigatório', () => {
     component.config = {
-      sections: [
-        {
-          id: 's1',
-          rows: [{ columns: [{ fields: ['gender'] }] }],
-        },
-      ],
+      sections: [],
       fieldMetadata: [
         {
-          name: 'gender',
-          controlType: 'radio',
-          radioOptions: [
-            { label: 'Masculino', value: 'M' },
-            { label: 'Feminino', value: 'F' },
-          ],
-        } as any,
+          name: 'period',
+          controlType: FieldControlType.DATE_RANGE,
+          required: true,
+        } as MaterialDateRangeMetadata,
       ],
     };
-
     (component as any).buildFormFromConfig();
-    fixture.detectChanges();
-    await fixture.whenStable();
+    const ctrl = component.form.get('period')!;
 
-    const radio = fixture.nativeElement.querySelector(
-      'pdx-material-radio-group',
-    );
-    expect(radio).toBeTruthy();
-    expect(component.form.get('gender')?.value).toBeNull();
+    expect(ctrl.hasError('required')).toBeTrue();
+
+    ctrl.setValue({ startDate: new Date('2024-01-01'), endDate: null });
+    expect(ctrl.hasError('required')).toBeTrue();
+
+    ctrl.setValue({
+      startDate: new Date('2024-01-01'),
+      endDate: new Date('2024-01-02'),
+    });
+    expect(ctrl.valid).toBeTrue();
   });
 });

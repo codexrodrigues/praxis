@@ -12,10 +12,12 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
+  AbstractControl,
   FormBuilder,
   FormGroup,
   ReactiveFormsModule,
   Validators,
+  ValidationErrors,
 } from '@angular/forms';
 
 import { MatIconModule } from '@angular/material/icon';
@@ -31,6 +33,9 @@ import {
   mapFieldDefinitionsToMetadata,
   EndpointConfig,
   FieldControlType,
+  MaterialDatepickerMetadata,
+  MaterialDateRangeMetadata,
+  DateRangeValue,
 } from '@praxis/core';
 import { DynamicFieldLoaderDirective } from '@praxis/dynamic-fields';
 import {
@@ -806,9 +811,78 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
     const fieldMetadata = this.config.fieldMetadata || [];
 
     for (const field of fieldMetadata) {
-      const validators = [];
+      const validators: Array<
+        (control: AbstractControl) => ValidationErrors | null
+      > = [];
+      let defaultValue: any = field.defaultValue ?? null;
+
+      if (field.controlType === FieldControlType.DATE_PICKER) {
+        const md = field as MaterialDatepickerMetadata;
+        if (typeof defaultValue === 'string') {
+          defaultValue = new Date(defaultValue);
+        }
+        const min = md.minDate
+          ? typeof md.minDate === 'string'
+            ? new Date(md.minDate)
+            : md.minDate
+          : null;
+        if (min) {
+          validators.push((control) => {
+            const val = control.value ? new Date(control.value) : null;
+            return !val || val >= min ? null : { minDate: true };
+          });
+        }
+        const max = md.maxDate
+          ? typeof md.maxDate === 'string'
+            ? new Date(md.maxDate)
+            : md.maxDate
+          : null;
+        if (max) {
+          validators.push((control) => {
+            const val = control.value ? new Date(control.value) : null;
+            return !val || val <= max ? null : { maxDate: true };
+          });
+        }
+      } else if (field.controlType === FieldControlType.DATE_RANGE) {
+        const md = field as MaterialDateRangeMetadata;
+        const parse = (d: Date | string | null | undefined): Date | null =>
+          typeof d === 'string' ? new Date(d) : (d ?? null);
+        const dv = defaultValue as DateRangeValue | null;
+        defaultValue = {
+          startDate: dv?.startDate ? parse(dv.startDate) : null,
+          endDate: dv?.endDate ? parse(dv.endDate) : null,
+        } as DateRangeValue;
+        const min = parse(md.minDate);
+        const max = parse(md.maxDate);
+        validators.push((control) => {
+          const val = control.value as DateRangeValue | null;
+          if (!val) {
+            return null;
+          }
+          const start = val.startDate ? new Date(val.startDate) : null;
+          const end = val.endDate ? new Date(val.endDate) : null;
+          if (start && end && start > end) {
+            return { rangeOrder: true };
+          }
+          if (min && ((start && start < min) || (end && end < min))) {
+            return { minDate: true };
+          }
+          if (max && ((start && start > max) || (end && end > max))) {
+            return { maxDate: true };
+          }
+          return null;
+        });
+      }
+
       if (field.required) {
-        validators.push(Validators.required);
+        if (field.controlType === FieldControlType.DATE_RANGE) {
+          validators.push((control) => {
+            const val = control.value as DateRangeValue | null;
+            return val?.startDate && val?.endDate ? null : { required: true };
+          });
+        } else {
+          validators.push(Validators.required);
+        }
       }
       if (field.validators?.minLength) {
         validators.push(Validators.minLength(field.validators.minLength));
