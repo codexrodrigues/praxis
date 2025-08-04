@@ -27,6 +27,8 @@ export * from './lib/components/material-select/material-select.component';
 export * from './lib/components/material-multi-select/material-multi-select.component';
 export * from './lib/components/material-searchable-select/material-searchable-select.component';
 export * from './lib/components/material-async-select/material-async-select.component';
+export * from './lib/components/material-radio-group/material-radio-group.component';
+export * from './lib/components/material-checkbox-group/material-checkbox-group.component';
 export * from './lib/components/preload-status/preload-status.component';
 export * from './lib/components/phone-input/phone-input.component';
 export * from './lib/components/time-input/time-input.component';

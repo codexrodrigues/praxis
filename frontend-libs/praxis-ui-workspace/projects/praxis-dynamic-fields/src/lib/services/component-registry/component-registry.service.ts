@@ -357,6 +357,18 @@ export class ComponentRegistryService implements IComponentRegistry {
       ).then((m) => m.MaterialAsyncSelectComponent);
     this.register('async-select' as FieldControlType, asyncSelectFactory);
 
+    const radioGroupFactory = () =>
+      import(
+        '../../components/material-radio-group/material-radio-group.component'
+      ).then((m) => m.MaterialRadioGroupComponent);
+    this.register(FieldControlTypeEnum.RADIO, radioGroupFactory);
+
+    const checkboxGroupFactory = () =>
+      import(
+        '../../components/material-checkbox-group/material-checkbox-group.component'
+      ).then((m) => m.MaterialCheckboxGroupComponent);
+    this.register(FieldControlTypeEnum.CHECKBOX, checkboxGroupFactory);
+
     // // Checkbox
     // this.register(
     //   FieldControlTypeEnum.CHECKBOX,

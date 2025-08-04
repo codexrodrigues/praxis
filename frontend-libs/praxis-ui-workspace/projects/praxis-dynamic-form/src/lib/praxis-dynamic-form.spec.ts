@@ -9,6 +9,8 @@ import {
 import {
   DynamicFieldLoaderDirective,
   MaterialSelectComponent,
+  MaterialCheckboxGroupComponent,
+  MaterialRadioGroupComponent,
 } from '@praxis/dynamic-fields';
 
 describe('PraxisDynamicForm', () => {
@@ -35,6 +37,18 @@ describe('PraxisDynamicForm', () => {
     ]);
 
     TestBed.overrideComponent(MaterialSelectComponent, {
+      set: {
+        providers: [{ provide: GenericCrudService, useValue: crudService }],
+      },
+    });
+
+    TestBed.overrideComponent(MaterialCheckboxGroupComponent, {
+      set: {
+        providers: [{ provide: GenericCrudService, useValue: crudService }],
+      },
+    });
+
+    TestBed.overrideComponent(MaterialRadioGroupComponent, {
       set: {
         providers: [{ provide: GenericCrudService, useValue: crudService }],
       },
@@ -166,5 +180,68 @@ describe('PraxisDynamicForm', () => {
     expect(crudService.filter).toHaveBeenCalled();
     const select = fixture.nativeElement.querySelector('pdx-material-select');
     expect(select).toBeTruthy();
+  });
+
+  it('renderiza grupo de checkboxes e usa array por padrão', async () => {
+    crudService.getSchema.and.returnValue(of([]));
+
+    component.config = {
+      sections: [
+        {
+          id: 's1',
+          rows: [{ columns: [{ fields: ['roles'] }] }],
+        },
+      ],
+      fieldMetadata: [
+        {
+          name: 'roles',
+          controlType: 'checkbox',
+          checkboxOptions: [{ label: 'Admin', value: 'admin' }],
+        } as any,
+      ],
+    };
+
+    (component as any).buildFormFromConfig();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const checkbox = fixture.nativeElement.querySelector(
+      'pdx-material-checkbox-group',
+    );
+    expect(checkbox).toBeTruthy();
+    expect(component.form.get('roles')?.value).toEqual([]);
+  });
+
+  it('renderiza grupo de radios', async () => {
+    crudService.getSchema.and.returnValue(of([]));
+
+    component.config = {
+      sections: [
+        {
+          id: 's1',
+          rows: [{ columns: [{ fields: ['gender'] }] }],
+        },
+      ],
+      fieldMetadata: [
+        {
+          name: 'gender',
+          controlType: 'radio',
+          radioOptions: [
+            { label: 'Masculino', value: 'M' },
+            { label: 'Feminino', value: 'F' },
+          ],
+        } as any,
+      ],
+    };
+
+    (component as any).buildFormFromConfig();
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    const radio = fixture.nativeElement.querySelector(
+      'pdx-material-radio-group',
+    );
+    expect(radio).toBeTruthy();
+    expect(component.form.get('gender')?.value).toBeNull();
   });
 });
