@@ -41,6 +41,9 @@ body {
 }
 
 
+mat-form-field {
+  width: 100%;
+}
 
 // Media queries para responsividade
 @media (max-width: 599px) {
