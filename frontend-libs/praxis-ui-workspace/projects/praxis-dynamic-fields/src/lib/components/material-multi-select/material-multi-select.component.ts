@@ -38,9 +38,8 @@ import {
           <mat-option
             (click)="$event.stopPropagation(); toggleSelectAll()"
             [value]="null"
-            [selected]="isAllSelected()"
           >
-            Selecionar todos
+            {{ isAllSelected() ? '✓ ' : '' }}Selecionar todos
           </mat-option>
         }
         <mat-option

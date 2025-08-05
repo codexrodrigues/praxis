@@ -208,13 +208,13 @@ public class UiSchemaTestDTO {
     private List<LocalDate> vacationPeriod;
 
     @UISchema(
-            label = "Departments",
-            controlType = FieldControlType.MULTI_SELECT_TREE,
-            options = "[{\\"label\\":\\"Operations\\",\\"value\\":\\"ops\\",\\"children\\":[{\\"label\\":\\"HR\\",\\"value\\":\\"hr\\"},{\\"label\\":\\"IT\\",\\"value\\":\\"it\\"}]},{\\"label\\":\\"Sales\\",\\"value\\":\\"sales\\"}]",
-            order = 15,
-            group = "selection",
-            displayField = "label",
-            valueField = "value"
+        label = "Departments",
+        controlType = FieldControlType.MULTI_SELECT_TREE,
+        options = "[{\"label\":\"Operations\",\"value\":\"ops\",\"children\":[{\"label\":\"HR\",\"value\":\"hr\"},{\"label\":\"IT\",\"value\":\"it\"}]},{\"label\":\"Sales\",\"value\":\"sales\"}]",
+        order = 15,
+        group = "selection",
+        displayField = "label",
+        valueField = "value"
     )
     private List<String> departments;
 

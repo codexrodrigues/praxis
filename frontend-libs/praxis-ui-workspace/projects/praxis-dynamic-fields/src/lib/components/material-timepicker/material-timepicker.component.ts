@@ -46,10 +46,6 @@ import { SimpleBaseInputComponent } from '../../base/simple-base-input.component
         [required]="metadata()?.required || false"
         [readonly]="metadata()?.readonly || false"
         [matTimepicker]="picker"
-        [matTimepickerMin]="metadata()?.min || null"
-        [matTimepickerMax]="metadata()?.max || null"
-        [matTimepickerOpenOnClick]="metadata()?.openOnClick ?? true"
-        [matTimepickerFilter]="timeFilterFn"
         [step]="stepAttribute()"
         [attr.aria-label]="metadata()?.ariaLabel || metadata()?.label"
         [attr.aria-required]="metadata()?.required ? 'true' : 'false'"
@@ -60,11 +56,8 @@ import { SimpleBaseInputComponent } from '../../base/simple-base-input.component
       <mat-timepicker
         #picker
         [interval]="metadata()?.interval || null"
-        [touchUi]="metadata()?.touchUi || false"
-        [format]="metadata()?.format || '24h'"
-        [showSeconds]="metadata()?.showSeconds || false"
-        [timeOptions]="metadata()?.timeOptions || null"
-        [disabled]="internalControl.disabled"
+        [options]="metadata()?.timeOptions || null"
+        [disableRipple]="metadata()?.disableRipple || false"
       ></mat-timepicker>
 
       @if (
@@ -109,8 +102,6 @@ export class MaterialTimepickerComponent extends SimpleBaseInputComponent {
   /** Emits whenever validation state changes. */
   readonly validationChange = output<ValidationErrors | null>();
 
-  /** Optional function used to filter selectable times. */
-  timeFilterFn?: (time: string) => boolean;
 
   override ngOnInit(): void {
     const meta = this.metadata();
@@ -138,14 +129,6 @@ export class MaterialTimepickerComponent extends SimpleBaseInputComponent {
       });
     }
 
-    this.timeFilterFn = this.resolveTimeFilter(meta?.timeFilter);
-    if (this.timeFilterFn) {
-      this.internalControl.addValidators((control) => {
-        const value = control.value as string | null;
-        if (!value) return null;
-        return this.timeFilterFn!(value) ? null : { timeFilter: true };
-      });
-    }
     super.ngOnInit();
   }
 
@@ -180,12 +163,4 @@ export class MaterialTimepickerComponent extends SimpleBaseInputComponent {
     return null;
   }
 
-  /** Resolves a filter function by name on the component instance. */
-  private resolveTimeFilter(
-    name?: string,
-  ): ((time: string) => boolean) | undefined {
-    if (!name) return undefined;
-    const candidate = (this as any)[name];
-    return typeof candidate === 'function' ? candidate.bind(this) : undefined;
-  }
 }

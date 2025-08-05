@@ -899,12 +899,10 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
         field.controlType === FieldControlType.MULTI_SELECT ||
         (field as any).multiple;
 
-      const defaultValue =
-        field.defaultValue != null
-          ? field.defaultValue
-          : isMultiple
-            ? []
-            : null;
+      // Use the already processed defaultValue, or set array for multiple selection
+      if (defaultValue == null && isMultiple) {
+        defaultValue = [];
+      }
 
       controls[field.name] = [defaultValue, validators];
     }

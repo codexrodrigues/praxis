@@ -30,6 +30,11 @@ public enum FieldControlType {
     APP_BAR("appBar"),
 
     /**
+     *
+     */
+    RADIO_GROUP("radioGroup"),
+
+    /**
      * Controle de gauge em arco para exibir valores em formato semi-circular.
      *
      * Exemplo de uso: Indicadores de desempenho ou progresso, como "Carga da CPU".
