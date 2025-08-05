@@ -1,7 +1,16 @@
-import { Directive, signal, output, computed, inject } from '@angular/core';
+import {
+  Directive,
+  signal,
+  output,
+  computed,
+  inject,
+  viewChild,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ComponentMetadata, GenericCrudService, Page } from '@praxis/core';
 import { SimpleBaseInputComponent } from './simple-base-input.component';
 import { take } from 'rxjs';
+import { MatSelect } from '@angular/material/select';
 
 /**
  * Generic option definition for select components.
@@ -51,6 +60,7 @@ export interface SimpleSelectMetadata<T = any> extends ComponentMetadata {
 export abstract class SimpleBaseSelectComponent<
   T = any,
 > extends SimpleBaseInputComponent {
+  protected readonly matSelectRef = viewChild(MatSelect);
   /** Available options */
   readonly options = signal<SelectOption<T>[]>([]);
 
@@ -90,6 +100,14 @@ export abstract class SimpleBaseSelectComponent<
   /** Holds error message when option loading fails */
   readonly error = signal<string | null>(null);
 
+  override ngAfterViewInit(): void {
+    super.ngAfterViewInit();
+    const select = this.matSelectRef();
+    if (select) {
+      this.registerMatSelect(select);
+    }
+  }
+
   /** CRUD service for remote option loading (optional) */
   protected readonly crudService = inject(GenericCrudService as any, {
     optional: true,
@@ -103,6 +121,9 @@ export abstract class SimpleBaseSelectComponent<
 
   /** Emits whenever options are loaded remotely */
   readonly optionsLoaded = output<SelectOption<T>[]>();
+  readonly openedChange = output<boolean>();
+
+  protected matSelect: MatSelect | null = null;
 
   /** Options filtered according to the current `searchTerm` */
   readonly filteredOptions = computed(() => {
@@ -146,6 +167,54 @@ export abstract class SimpleBaseSelectComponent<
       } else {
         this.loadOptions();
       }
+    }
+  }
+
+  protected override setMetadata(metadata: ComponentMetadata): void {
+    super.setMetadata(metadata);
+    this.applySelectAttributes();
+  }
+
+  protected registerMatSelect(select: MatSelect): void {
+    this.matSelect = select;
+    this.registerInputElement(select._elementRef.nativeElement);
+    this.applySelectAttributes();
+    select.openedChange
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((v) => this.openedChange.emit(v));
+    select.selectionChange
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((event) => {
+        this.selectionChange.emit(event.value as any);
+      });
+  }
+
+  protected applySelectAttributes(): void {
+    if (!this.matSelect) return;
+    const meta: any = this.metadata();
+    if (!meta) return;
+
+    if (meta.compareWith) this.matSelect.compareWith = meta.compareWith;
+    if (meta.panelClass) this.matSelect.panelClass = meta.panelClass;
+    if (meta.disableRipple !== undefined)
+      this.matSelect.disableRipple = meta.disableRipple;
+    if (meta.disableOptionCentering !== undefined)
+      this.matSelect.disableOptionCentering = meta.disableOptionCentering;
+    if (meta.tabIndex !== undefined) this.matSelect.tabIndex = meta.tabIndex;
+    if (meta.placeholder) this.matSelect.placeholder = meta.placeholder;
+    if (meta.multiple !== undefined) this.matSelect.multiple = meta.multiple;
+    if (meta.required !== undefined) this.matSelect.required = meta.required;
+    if (meta.errorStateMatcher)
+      this.matSelect.errorStateMatcher = meta.errorStateMatcher;
+    if (meta.ariaLabel) this.matSelect.ariaLabel = meta.ariaLabel;
+    if (meta.ariaLabelledby)
+      this.matSelect.ariaLabelledby = meta.ariaLabelledby;
+  }
+
+  override setDisabledState(isDisabled: boolean): void {
+    super.setDisabledState(isDisabled);
+    if (this.matSelect) {
+      this.matSelect.disabled = isDisabled;
     }
   }
 

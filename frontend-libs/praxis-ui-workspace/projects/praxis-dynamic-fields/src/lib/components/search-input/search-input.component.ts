@@ -46,9 +46,6 @@ import { SimpleBaseInputComponent } from '../../base/simple-base-input.component
         [type]="inputType()"
         [attr.aria-label]="metadata()?.ariaLabel || metadata()?.label"
         [attr.aria-required]="metadata()?.required ? 'true' : 'false'"
-        (focus)="handleFocus()"
-        (blur)="handleBlur()"
-        (input)="handleInput($event)"
       />
 
       @if (metadata()?.suffixIcon) {
@@ -114,4 +111,3 @@ export class SearchInputComponent extends SimpleBaseInputComponent {
     this.setMetadata(metadata);
   }
 }
-

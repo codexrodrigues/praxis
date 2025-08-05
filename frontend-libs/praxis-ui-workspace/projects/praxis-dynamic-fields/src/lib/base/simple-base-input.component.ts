@@ -26,6 +26,7 @@ import {
   inject,
   OnInit,
   OnDestroy,
+  AfterViewInit,
   ElementRef,
   ChangeDetectorRef,
   DestroyRef,
@@ -35,12 +36,15 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { ComponentMetadata } from '@praxis/core';
 import { BehaviorSubject } from 'rxjs';
-import { BaseDynamicFieldComponent, ComponentLifecycleEvent, ValueChangeOptions } from './base-dynamic-field-component.interface';
+import {
+  BaseDynamicFieldComponent,
+  ComponentLifecycleEvent,
+  ValueChangeOptions,
+} from './base-dynamic-field-component.interface';
 
 // =============================================================================
 // BASIC INTERFACES
 // =============================================================================
-
 
 interface BasicComponentState {
   initialized: boolean;
@@ -80,8 +84,14 @@ type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error';
 // =============================================================================
 
 @Directive()
-export abstract class SimpleBaseInputComponent implements ControlValueAccessor, OnInit, OnDestroy, BaseDynamicFieldComponent {
-
+export abstract class SimpleBaseInputComponent
+  implements
+    ControlValueAccessor,
+    OnInit,
+    OnDestroy,
+    AfterViewInit,
+    BaseDynamicFieldComponent
+{
   // =============================================================================
   // DEPENDENCY INJECTION
   // =============================================================================
@@ -90,7 +100,10 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
   protected readonly elementRef = inject(ElementRef);
   protected readonly cdr = inject(ChangeDetectorRef);
   /** Subject para eventos de lifecycle */
-  readonly lifecycleEvents$ = new BehaviorSubject<ComponentLifecycleEvent | null>(null);
+  readonly lifecycleEvents$ =
+    new BehaviorSubject<ComponentLifecycleEvent | null>(null);
+  /** Native element registered by subclasses */
+  protected nativeElement: HTMLElement | null = null;
 
   // =============================================================================
   // SIGNALS
@@ -105,14 +118,14 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
     focused: false,
     disabled: false,
     touched: false,
-    dirty: false
+    dirty: false,
   });
 
   /** Estado básico do campo */
   protected readonly fieldState = signal<BasicFieldState>({
     value: null,
     valid: true,
-    errors: null
+    errors: null,
   });
 
   /** ID único do componente */
@@ -123,7 +136,7 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
   // =============================================================================
 
   readonly internalControl = new FormControl();
-  
+
   /** FormControl signal para interface BaseDynamicFieldComponent */
   readonly formControl = signal<AbstractControl | null>(null);
 
@@ -138,6 +151,8 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
 
   readonly valueChange = output<any>();
   readonly focusChange = output<boolean>();
+  readonly nativeBlur = output<FocusEvent>();
+  readonly nativeChange = output<Event>();
 
   // =============================================================================
   // COMPUTED PROPERTIES
@@ -156,13 +171,17 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
       customValidator: meta.validators?.customValidator,
       messages: {
         required: meta.validators?.requiredMessage || 'Campo obrigatório',
-        minlength: meta.validators?.minLengthMessage || `Mínimo {requiredLength} caracteres`,
-        maxlength: meta.validators?.maxLengthMessage || `Máximo {requiredLength} caracteres`,
+        minlength:
+          meta.validators?.minLengthMessage ||
+          `Mínimo {requiredLength} caracteres`,
+        maxlength:
+          meta.validators?.maxLengthMessage ||
+          `Máximo {requiredLength} caracteres`,
         pattern: meta.validators?.patternMessage || 'Formato inválido',
-        custom: 'Valor inválido'
+        custom: 'Valor inválido',
       },
       validateOnBlur: meta.validators?.validationTrigger === 'blur',
-      debounceTime: meta.validators?.validationDebounce ?? 300
+      debounceTime: meta.validators?.validationDebounce ?? 300,
     } as BaseValidationConfig;
   });
 
@@ -177,12 +196,20 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
 
     if (errors['required']) return messages.required || 'Campo obrigatório';
     if (errors['minlength']) {
-      return messages.minlength?.replace('{requiredLength}', errors['minlength'].requiredLength) ||
-             `Mínimo ${errors['minlength'].requiredLength} caracteres`;
+      return (
+        messages.minlength?.replace(
+          '{requiredLength}',
+          errors['minlength'].requiredLength,
+        ) || `Mínimo ${errors['minlength'].requiredLength} caracteres`
+      );
     }
     if (errors['maxlength']) {
-      return messages.maxlength?.replace('{requiredLength}', errors['maxlength'].requiredLength) ||
-             `Máximo ${errors['maxlength'].requiredLength} caracteres`;
+      return (
+        messages.maxlength?.replace(
+          '{requiredLength}',
+          errors['maxlength'].requiredLength,
+        ) || `Máximo ${errors['maxlength'].requiredLength} caracteres`
+      );
     }
     if (errors['pattern']) return messages.pattern || 'Formato inválido';
     if (errors['custom']) return messages.custom || errors['custom'];
@@ -194,7 +221,11 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
   readonly hasValidationError = computed(() => {
     const state = this.fieldState();
     const componentState = this.componentState();
-    return !state.valid && (componentState.dirty || componentState.touched) && state.errors !== null;
+    return (
+      !state.valid &&
+      (componentState.dirty || componentState.touched) &&
+      state.errors !== null
+    );
   });
 
   /** CSS classes básicas do componente */
@@ -251,10 +282,10 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
     this.formControl.set(this.internalControl); // Sincronizar FormControl signal
     this.setupFormControlIntegration();
     this.setupValidators();
-    this.componentState.update(state => ({ ...state, initialized: true }));
+    this.componentState.update((state) => ({ ...state, initialized: true }));
     this.emitLifecycleEvent('init');
     this.log('debug', 'Simple base component initialized');
-    
+
     // Chamar hook após inicialização completa
     if (this.onComponentInit) {
       this.onComponentInit();
@@ -262,14 +293,23 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
     this.emitLifecycleEvent('afterInit');
   }
 
+  ngAfterViewInit(): void {
+    const el = this.elementRef.nativeElement.querySelector(
+      'input,textarea,select',
+    ) as HTMLElement | null;
+    if (el) {
+      this.registerInputElement(el);
+    }
+  }
+
   ngOnDestroy(): void {
     this.emitLifecycleEvent('destroy');
-    
+
     // Chamar hook antes da destruição
     if (this.onComponentDestroy) {
       this.onComponentDestroy();
     }
-    
+
     this.log('debug', 'Simple base component destroyed');
   }
 
@@ -282,7 +322,7 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
       this.syncInProgress = true;
       try {
         this.internalControl.setValue(value, { emitEvent: false });
-        this.fieldState.update(state => ({ ...state, value }));
+        this.fieldState.update((state) => ({ ...state, value }));
         this.log('debug', 'Value written from parent', { value });
       } finally {
         this.syncInProgress = false;
@@ -299,12 +339,20 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
   }
 
   setDisabledState(isDisabled: boolean): void {
-    this.componentState.update(state => ({ ...state, disabled: isDisabled }));
+    this.componentState.update((state) => ({ ...state, disabled: isDisabled }));
 
     if (isDisabled) {
       this.internalControl.disable({ emitEvent: false });
     } else {
       this.internalControl.enable({ emitEvent: false });
+    }
+
+    if (this.nativeElement) {
+      if ('disabled' in this.nativeElement) {
+        (this.nativeElement as any).disabled = isDisabled;
+      } else {
+        this.nativeElement.setAttribute('aria-disabled', String(isDisabled));
+      }
     }
   }
 
@@ -321,7 +369,7 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
       try {
         this.onChange(value);
         this.valueChange.emit(value);
-        this.fieldState.update(state => ({ ...state, value }));
+        this.fieldState.update((state) => ({ ...state, value }));
         this.markAsDirty();
       } finally {
         this.syncInProgress = false;
@@ -330,13 +378,13 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
   }
 
   handleFocus(): void {
-    this.componentState.update(state => ({ ...state, focused: true }));
+    this.componentState.update((state) => ({ ...state, focused: true }));
     this.focusChange.emit(true);
     this.log('debug', 'Component focused');
   }
 
   handleBlur(): void {
-    this.componentState.update(state => ({ ...state, focused: false }));
+    this.componentState.update((state) => ({ ...state, focused: false }));
     this.focusChange.emit(false);
     this.onTouched();
     this.markAsTouched();
@@ -364,7 +412,7 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
         this.valueChange.emit(value);
       }
 
-      this.fieldState.update(state => ({ ...state, value }));
+      this.fieldState.update((state) => ({ ...state, value }));
       this.markAsDirty();
     } finally {
       this.syncInProgress = false;
@@ -382,14 +430,14 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
    * Marca o campo como tocado
    */
   markAsTouched(): void {
-    this.componentState.update(state => ({ ...state, touched: true }));
+    this.componentState.update((state) => ({ ...state, touched: true }));
   }
 
   /**
    * Marca o campo como sujo
    */
   markAsDirty(): void {
-    this.componentState.update(state => ({ ...state, dirty: true }));
+    this.componentState.update((state) => ({ ...state, dirty: true }));
   }
 
   /**
@@ -423,7 +471,92 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
     this.metadata.set(metadata);
     // Reaplica validators quando metadata muda
     this.setupValidators();
+    this.applyNativeAttributes();
     this.emitLifecycleEvent('change');
+  }
+
+  /** Registra elemento nativo e aplica atributos/eventos */
+  protected registerInputElement(el: HTMLElement): void {
+    this.nativeElement = el;
+    this.attachNativeEventHandlers();
+    this.applyNativeAttributes();
+  }
+
+  /** Aplica atributos e ARIA com base no metadata */
+  protected applyNativeAttributes(): void {
+    if (!this.nativeElement) return;
+    const meta = this.metadata();
+    if (!meta) return;
+
+    if (meta.name) this.nativeElement.setAttribute('name', meta.name);
+    if (meta.id) this.nativeElement.id = meta.id;
+    if (meta.placeholder)
+      this.nativeElement.setAttribute('placeholder', meta.placeholder);
+    if (meta.readonly) this.nativeElement.setAttribute('readonly', '');
+    if (meta.autocomplete)
+      this.nativeElement.setAttribute('autocomplete', meta.autocomplete);
+    if (meta.inputMode)
+      this.nativeElement.setAttribute('inputmode', meta.inputMode);
+    if (meta.spellcheck !== undefined)
+      this.nativeElement.setAttribute('spellcheck', String(meta.spellcheck));
+    if (meta.tabIndex !== undefined)
+      (this.nativeElement as any).tabIndex = meta.tabIndex;
+    if (meta.maxLength !== undefined)
+      (this.nativeElement as any).maxLength = meta.maxLength;
+    if (meta.minLength !== undefined)
+      (this.nativeElement as any).minLength = meta.minLength;
+    if (meta.textTransform)
+      (this.nativeElement as HTMLElement).style.textTransform =
+        meta.textTransform;
+    if (meta.ariaLabel)
+      this.nativeElement.setAttribute('aria-label', meta.ariaLabel);
+    if (meta.ariaDescribedby)
+      this.nativeElement.setAttribute('aria-describedby', meta.ariaDescribedby);
+    if (meta.ariaLabelledby)
+      this.nativeElement.setAttribute('aria-labelledby', meta.ariaLabelledby);
+    if (meta.required !== undefined) {
+      this.nativeElement.setAttribute(
+        'aria-required',
+        meta.required ? 'true' : 'false',
+      );
+    }
+    if (meta.dataAttributes) {
+      for (const [key, value] of Object.entries(meta.dataAttributes)) {
+        this.nativeElement.setAttribute(`data-${key}`, value);
+      }
+    }
+    if (meta.autoFocus) {
+      this.nativeElement.setAttribute('autofocus', '');
+      setTimeout(() => this.nativeElement?.focus());
+    }
+  }
+
+  /** Vincula handlers nativos de eventos */
+  private attachNativeEventHandlers(): void {
+    if (!this.nativeElement) return;
+    const focusHandler = (event: FocusEvent) => {
+      this.handleFocus();
+    };
+    const blurHandler = (event: FocusEvent) => {
+      this.handleBlur();
+      this.nativeBlur.emit(event);
+    };
+    const changeHandler = (event: Event) => {
+      this.nativeChange.emit(event);
+    };
+    const inputHandler = (event: Event) => this.handleInput(event);
+
+    this.nativeElement.addEventListener('focus', focusHandler);
+    this.nativeElement.addEventListener('blur', blurHandler);
+    this.nativeElement.addEventListener('change', changeHandler);
+    this.nativeElement.addEventListener('input', inputHandler);
+
+    this.destroyRef.onDestroy(() => {
+      this.nativeElement?.removeEventListener('focus', focusHandler);
+      this.nativeElement?.removeEventListener('blur', blurHandler);
+      this.nativeElement?.removeEventListener('change', changeHandler);
+      this.nativeElement?.removeEventListener('input', inputHandler);
+    });
   }
 
   /**
@@ -434,14 +567,13 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
       this.internalControl.updateValueAndValidity();
       const errors = this.internalControl.errors;
 
-      this.fieldState.update(state => ({
+      this.fieldState.update((state) => ({
         ...state,
         errors,
-        valid: !errors
+        valid: !errors,
       }));
 
       return errors;
-
     } catch (error) {
       this.log('error', 'Validation failed', { error });
       return { validationError: { message: 'Validation failed' } };
@@ -455,7 +587,7 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
   onComponentInit?(): void {
     // Default implementation - subclasses can override
   }
-  
+
   /**
    * Hook chamado antes da destruição - implementação da interface BaseDynamicFieldComponent
    * Subclasses podem override para limpeza específica
@@ -463,7 +595,7 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
   onComponentDestroy?(): void {
     // Default implementation - subclasses can override
   }
-  
+
   /**
    * Define estado de loading - implementação da interface BaseDynamicFieldComponent
    */
@@ -471,14 +603,14 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
     // Default implementation - subclasses can override para components com loading
     this.log('debug', `Loading state changed: ${loading}`);
   }
-  
+
   /**
    * Define estado desabilitado - implementação da interface BaseDynamicFieldComponent
    */
   setDisabled?(disabled: boolean): void {
     this.setDisabledState(disabled);
   }
-  
+
   /**
    * Reset do campo - implementação da interface BaseDynamicFieldComponent
    */
@@ -487,18 +619,18 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
     const defaultValue = meta?.defaultValue ?? null;
 
     this.setValue(defaultValue, { emitEvent: false });
-    
-    this.componentState.update(state => ({
+
+    this.componentState.update((state) => ({
       ...state,
       touched: false,
-      dirty: false
+      dirty: false,
     }));
 
-    this.fieldState.update(state => ({
+    this.fieldState.update((state) => ({
       ...state,
       value: defaultValue,
       valid: true,
-      errors: null
+      errors: null,
     }));
 
     this.internalControl.markAsPristine();
@@ -521,18 +653,18 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
     // Integração básica com FormControl
     this.internalControl.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(value => {
-        this.fieldState.update(state => ({ ...state, value }));
+      .subscribe((value) => {
+        this.fieldState.update((state) => ({ ...state, value }));
       });
 
     // Sincronizar status do FormControl
     this.internalControl.statusChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(status => {
-        this.fieldState.update(state => ({
+      .subscribe((status) => {
+        this.fieldState.update((state) => ({
           ...state,
           valid: status === 'VALID',
-          errors: this.internalControl.errors
+          errors: this.internalControl.errors,
         }));
       });
   }
@@ -549,8 +681,10 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
 
     // Validadores básicos
     if (config.required) validators.push(Validators.required);
-    if (config.minLength) validators.push(Validators.minLength(config.minLength));
-    if (config.maxLength) validators.push(Validators.maxLength(config.maxLength));
+    if (config.minLength)
+      validators.push(Validators.minLength(config.minLength));
+    if (config.maxLength)
+      validators.push(Validators.maxLength(config.maxLength));
     if (config.pattern) validators.push(Validators.pattern(config.pattern));
 
     // Validador customizado
@@ -562,7 +696,9 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
     this.internalControl.updateValueAndValidity();
   }
 
-  private createCustomValidator(validatorFn: (value: any) => string | null): ValidatorFn {
+  private createCustomValidator(
+    validatorFn: (value: any) => string | null,
+  ): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       const result = validatorFn(control.value);
       return result ? { custom: result } : null;
@@ -582,7 +718,7 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
         level,
         message: `[${this.componentId()}] ${message}`,
         timestamp: new Date().toISOString(),
-        data
+        data,
       };
 
       const consoleFn = level === 'error' ? console.error : console.warn;
@@ -599,10 +735,9 @@ export abstract class SimpleBaseInputComponent implements ControlValueAccessor, 
       phase,
       timestamp: Date.now(),
       componentId: this.componentId(),
-      metadata: this.metadata()
+      metadata: this.metadata(),
     };
 
     this.lifecycleEvents$.next(event);
   }
-
 }

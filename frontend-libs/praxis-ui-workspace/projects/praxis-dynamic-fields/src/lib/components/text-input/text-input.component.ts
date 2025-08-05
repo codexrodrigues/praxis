@@ -1,16 +1,11 @@
-import {
-  Component,
-  forwardRef,
-  computed,
-  output
-} from '@angular/core';
+import { Component, forwardRef, computed, output } from '@angular/core';
 import {
   NG_VALUE_ACCESSOR,
   ReactiveFormsModule,
   Validators,
   ValidatorFn,
   AbstractControl,
-  ValidationErrors
+  ValidationErrors,
 } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -18,7 +13,10 @@ import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 
 import { MaterialInputMetadata, ComponentMetadata } from '@praxis/core';
-import { SimpleBaseInputComponent, BaseValidationConfig } from '../../base/simple-base-input.component';
+import {
+  SimpleBaseInputComponent,
+  BaseValidationConfig,
+} from '../../base/simple-base-input.component';
 
 // =============================================================================
 // INTERFACES ESPECÍFICAS DO TEXT-INPUT (herda BaseValidationConfig)
@@ -31,8 +29,8 @@ import { SimpleBaseInputComponent, BaseValidationConfig } from '../../base/simpl
     <mat-form-field
       [appearance]="materialAppearance()"
       [color]="materialColor()"
-      [class]="componentCssClasses()">
-
+      [class]="componentCssClasses()"
+    >
       <mat-label>{{ metadata()?.label || 'Text' }}</mat-label>
 
       @if (metadata()?.prefixIcon) {
@@ -52,29 +50,32 @@ import { SimpleBaseInputComponent, BaseValidationConfig } from '../../base/simpl
         [minlength]="metadata()?.minLength || null"
         [attr.aria-label]="metadata()?.ariaLabel || metadata()?.label"
         [attr.aria-required]="metadata()?.required ? 'true' : 'false'"
-        (focus)="handleFocus()"
-        (blur)="handleBlur()"
-        (input)="handleInput($event)"
       />
 
       @if (metadata()?.suffixIcon) {
         <mat-icon matSuffix>{{ metadata()!.suffixIcon }}</mat-icon>
       }
 
-      @if (errorMessage() && internalControl.invalid && (internalControl.dirty || internalControl.touched)) {
+      @if (
+        errorMessage() &&
+        internalControl.invalid &&
+        (internalControl.dirty || internalControl.touched)
+      ) {
         <mat-error>{{ errorMessage() }}</mat-error>
       }
 
       @if (metadata()?.hint && !hasValidationError()) {
-        <mat-hint [align]="metadata()?.hintAlign || 'start'">{{ metadata()!.hint }}</mat-hint>
+        <mat-hint [align]="metadata()?.hintAlign || 'start'">{{
+          metadata()!.hint
+        }}</mat-hint>
       }
 
       @if (metadata()?.showCharacterCount && metadata()?.maxLength) {
         <mat-hint align="end">
-          {{ (internalControl.value || '').length }} / {{ metadata()!.maxLength }}
+          {{ (internalControl.value || '').length }} /
+          {{ metadata()!.maxLength }}
         </mat-hint>
       }
-
     </mat-form-field>
   `,
   imports: [
@@ -82,7 +83,7 @@ import { SimpleBaseInputComponent, BaseValidationConfig } from '../../base/simpl
     MatInputModule,
     MatFormFieldModule,
     MatIconModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
   ],
   providers: [
     {
@@ -95,11 +96,10 @@ import { SimpleBaseInputComponent, BaseValidationConfig } from '../../base/simpl
     '[class]': 'componentCssClasses()',
     '[attr.data-field-type]': '"input"',
     '[attr.data-field-name]': 'metadata()?.name',
-    '[attr.data-component-id]': 'componentId()'
-  }
+    '[attr.data-component-id]': 'componentId()',
+  },
 })
 export class TextInputComponent extends SimpleBaseInputComponent {
-
   // =============================================================================
   // OUTPUTS ESPECÍFICOS
   // =============================================================================
@@ -131,7 +131,10 @@ export class TextInputComponent extends SimpleBaseInputComponent {
     const meta = this.metadata();
     if (meta) {
       // Inicializar valor padrão se definido
-      if (meta.defaultValue !== undefined && this.internalControl.value == null) {
+      if (
+        meta.defaultValue !== undefined &&
+        this.internalControl.value == null
+      ) {
         this.internalControl.setValue(meta.defaultValue, { emitEvent: false });
       }
     }
@@ -160,19 +163,19 @@ export class TextInputComponent extends SimpleBaseInputComponent {
     const defaultValue = meta?.defaultValue ?? null;
 
     this.setValue(defaultValue, { emitEvent: false });
-    
+
     // Reset estados via base class
-    this.componentState.update(state => ({
+    this.componentState.update((state) => ({
       ...state,
       touched: false,
-      dirty: false
+      dirty: false,
     }));
 
-    this.fieldState.update(state => ({
+    this.fieldState.update((state) => ({
       ...state,
       value: defaultValue,
       valid: true,
-      errors: null
+      errors: null,
     }));
 
     this.internalControl.markAsPristine();
@@ -194,5 +197,4 @@ export class TextInputComponent extends SimpleBaseInputComponent {
   setInputMetadata(metadata: MaterialInputMetadata): void {
     this.setMetadata(metadata); // Base class já reaplica validators
   }
-
 }
