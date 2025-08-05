@@ -53,9 +53,6 @@ import { SimpleBaseInputComponent } from '../../base/simple-base-input.component
         [step]="stepAttribute()"
         [attr.aria-label]="metadata()?.ariaLabel || metadata()?.label"
         [attr.aria-required]="metadata()?.required ? 'true' : 'false'"
-        (focus)="handleFocus()"
-        (blur)="handleBlur()"
-        (input)="handleInput($event)"
       />
 
       <mat-timepicker-toggle matSuffix [for]="picker"></mat-timepicker-toggle>

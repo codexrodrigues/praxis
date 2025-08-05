@@ -56,8 +56,6 @@ import { SimpleBaseInputComponent } from '../../base/simple-base-input.component
           [placeholder]="metadata()?.startPlaceholder || ''"
           [readonly]="metadata()?.readonly || false"
           [attr.aria-label]="metadata()?.startAriaLabel || metadata()?.label"
-          (focus)="handleFocus()"
-          (blur)="handleBlur()"
         />
         <input
           matEndDate
@@ -65,8 +63,6 @@ import { SimpleBaseInputComponent } from '../../base/simple-base-input.component
           [placeholder]="metadata()?.endPlaceholder || ''"
           [readonly]="metadata()?.readonly || false"
           [attr.aria-label]="metadata()?.endAriaLabel || metadata()?.label"
-          (focus)="handleFocus()"
-          (blur)="handleBlur()"
         />
       </mat-date-range-input>
 

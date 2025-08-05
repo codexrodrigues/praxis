@@ -1,17 +1,17 @@
 /**
  * @fileoverview Componente Material Textarea dinâmico
- * 
+ *
  * Textarea avançado com suporte a:
  * ✅ Auto-resize inteligente
- * ✅ Formatação e validação de texto  
+ * ✅ Formatação e validação de texto
  * ✅ Contador de caracteres e palavras
  * ✅ Spellcheck configurável
  * ✅ Validação integrada
  */
 
-import { 
-  Component, 
-  ElementRef, 
+import {
+  Component,
+  ElementRef,
   forwardRef,
   ViewChild,
   AfterViewInit,
@@ -19,7 +19,7 @@ import {
   signal,
   effect,
   inject,
-  Injector
+  Injector,
 } from '@angular/core';
 import { NG_VALUE_ACCESSOR } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -45,7 +45,6 @@ interface TextareaState {
   lineCount: number;
 }
 
-
 // =============================================================================
 // COMPONENTE MATERIAL TEXTAREA
 // =============================================================================
@@ -64,26 +63,26 @@ interface TextareaState {
     MatIconModule,
     MatButtonModule,
     MatTooltipModule,
-    TextFieldModule
+    TextFieldModule,
   ],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
       useExisting: forwardRef(() => MaterialTextareaComponent),
-      multi: true
-    }
+      multi: true,
+    },
   ],
   host: {
     '[class]': 'componentCssClasses()',
     '[attr.data-field-type]': '"textarea"',
     '[attr.data-field-name]': 'metadata()?.name',
-    '[attr.data-component-id]': 'componentId()'
-  }
+    '[attr.data-component-id]': 'componentId()',
+  },
 })
-export class MaterialTextareaComponent 
+export class MaterialTextareaComponent
   extends SimpleBaseInputComponent
-  implements AfterViewInit {
-
+  implements AfterViewInit
+{
   // =============================================================================
   // INJECTED DEPENDENCIES
   // =============================================================================
@@ -101,12 +100,12 @@ export class MaterialTextareaComponent
   // SIGNALS ESPECÍFICOS DO TEXTAREA
   // =============================================================================
 
-/** Estado específico do textarea */
+  /** Estado específico do textarea */
   protected readonly textareaState = signal<TextareaState>({
     autoResize: true,
     characterCount: 0,
     wordCount: 0,
-    lineCount: 1
+    lineCount: 1,
   });
 
   // =============================================================================
@@ -136,15 +135,15 @@ export class MaterialTextareaComponent
   readonly textareaSpecificClasses = computed(() => {
     const classes: string[] = [];
     const metadata = this.metadata();
-    
+
     if (this.shouldAutoResize()) {
       classes.push('pdx-textarea-auto-resize');
     }
-    
+
     if (metadata?.spellcheck) {
       classes.push('pdx-textarea-spellcheck');
     }
-    
+
     return classes.join(' ');
   });
 
@@ -158,7 +157,7 @@ export class MaterialTextareaComponent
     this.setupTextAnalysisEffects();
   }
 
-  ngAfterViewInit(): void {
+  override ngAfterViewInit(): void {
     this.setupTextareaEventListeners();
   }
 
@@ -185,7 +184,7 @@ export class MaterialTextareaComponent
    */
   override focus(): void {
     super.focus();
-    
+
     if (this.textareaElement) {
       this.textareaElement.nativeElement.focus();
     }
@@ -213,16 +212,17 @@ export class MaterialTextareaComponent
    */
   insertTextAtCursor(text: string): void {
     if (!this.textareaElement) return;
-    
+
     const textarea = this.textareaElement.nativeElement;
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
     const currentValue = this.getValue() || '';
-    
-    const newValue = currentValue.substring(0, start) + text + currentValue.substring(end);
-    
+
+    const newValue =
+      currentValue.substring(0, start) + text + currentValue.substring(end);
+
     this.setValue(newValue);
-    
+
     // Reposicionar cursor
     setTimeout(() => {
       const newPosition = start + text.length;
@@ -231,7 +231,6 @@ export class MaterialTextareaComponent
     });
   }
 
-
   // =============================================================================
   // EVENTOS DO TEXTAREA
   // =============================================================================
@@ -239,7 +238,7 @@ export class MaterialTextareaComponent
   onTextareaInput(event: Event): void {
     const target = event.target as HTMLTextAreaElement;
     const value = target.value;
-    
+
     // Usa handleInput da base class
     this.handleInput(event);
     this.updateCharacterCount(value);
@@ -266,32 +265,35 @@ export class MaterialTextareaComponent
   // MÉTODOS PRIVADOS
   // =============================================================================
 
-private initializeTextareaState(): void {
+  private initializeTextareaState(): void {
     const metadata = this.metadata();
     if (!metadata) return;
 
     this.updateTextareaState({
-      autoResize: metadata.autoSize !== false
+      autoResize: metadata.autoSize !== false,
     });
 
     this.updateCharacterCount(this.getValue() || '');
   }
 
-private setupTextAnalysisEffects(): void {
-    effect(() => {
-      const fieldValue = this.getValue();
-      if (fieldValue !== null && fieldValue !== undefined) {
-        this.updateCharacterCount(String(fieldValue));
-      }
-    }, { injector: this.injector });
+  private setupTextAnalysisEffects(): void {
+    effect(
+      () => {
+        const fieldValue = this.getValue();
+        if (fieldValue !== null && fieldValue !== undefined) {
+          this.updateCharacterCount(String(fieldValue));
+        }
+      },
+      { injector: this.injector },
+    );
   }
 
   private setupTextareaEventListeners(): void {
     if (!this.textareaElement) return;
 
     const textarea = this.textareaElement.nativeElement;
-    
-// Listener para paste events
+
+    // Listener para paste events
     textarea.addEventListener('paste', (event) => {
       setTimeout(() => {
         this.updateCharacterCount(textarea.value);
@@ -306,15 +308,15 @@ private setupTextAnalysisEffects(): void {
     });
   }
 
-private updateCharacterCount(value: string): void {
+  private updateCharacterCount(value: string): void {
     const characterCount = value.length;
     const wordCount = value.trim() ? value.trim().split(/\s+/).length : 0;
     const lineCount = value.split('\n').length;
-    
+
     this.updateTextareaState({
       characterCount,
       wordCount,
-      lineCount
+      lineCount,
     });
   }
 

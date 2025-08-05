@@ -45,9 +45,6 @@ import { SimpleBaseInputComponent } from '../../base/simple-base-input.component
         [step]="metadata()?.step || null"
         [attr.aria-label]="metadata()?.ariaLabel || metadata()?.label"
         [attr.aria-required]="metadata()?.required ? 'true' : 'false'"
-        (focus)="handleFocus()"
-        (blur)="handleBlur()"
-        (input)="handleInput($event)"
       />
 
       @if (metadata()?.suffixIcon) {
