@@ -15,6 +15,7 @@ import { EventosFolhaListComponent } from './features/eventos-folha/list/eventos
 import { EventoFolhaViewComponent } from './features/eventos-folha/view/evento-folha-view.component';
 import { FolhasPagamentoListComponent } from './features/folhas-pagamento/list/folhas-pagamento-list.component';
 import { FolhaPagamentoViewComponent } from './features/folhas-pagamento/view/folha-pagamento-view.component';
+import { UiWrappersTestComponent } from './features/ui-wrappers-test/ui-wrappers-test.component';
 // import { IntegrationDemoComponent } from '@praxis/table';
 
 export const routes: Routes = [
@@ -37,6 +38,7 @@ export const routes: Routes = [
   { path: 'eventos-folha/view/:id', component: EventoFolhaViewComponent },
   { path: 'folhas-pagamento', component: FolhasPagamentoListComponent },
   { path: 'folhas-pagamento/view/:id', component: FolhaPagamentoViewComponent },
+  { path: 'ui-wrappers-test', component: UiWrappersTestComponent },
   // { path: 'integration-demo', component: IntegrationDemoComponent },
   { path: '', redirectTo: '/funcionarios', pathMatch: 'full' },
 ];

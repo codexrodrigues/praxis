@@ -42,6 +42,11 @@ public class ApiRouteDefinitions {
     public static final String HR_DEPENDENTES_GROUP = "dependentes";
     public static final String HR_DEPENDENTES_TAG = "HR - Dependentes";
 
+    // UI Wrappers Test
+    public static final String UI_WRAPPERS_TEST_PATH = "/api/ui-test/wrappers";
+    public static final String UI_WRAPPERS_TEST_GROUP = "ui-wrappers-test";
+    public static final String UI_WRAPPERS_TEST_TAG = "UI Wrappers Test";
+
     private ApiRouteDefinitions() {
         // Prevent instantiation
     }
