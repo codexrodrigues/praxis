@@ -75,4 +75,12 @@ public class OpenApiGroupsConfig {
                 .pathsToMatch(ApiRouteDefinitions.HR_DEPENDENTES_PATH + "/**")
                 .build();
     }
+
+    @Bean
+    public GroupedOpenApi configureUiWrappersTestDocumentation() {
+        return GroupedOpenApi.builder()
+                .group(ApiRouteDefinitions.UI_WRAPPERS_TEST_GROUP)
+                .pathsToMatch(ApiRouteDefinitions.UI_WRAPPERS_TEST_PATH + "/**")
+                .build();
+    }
 }
