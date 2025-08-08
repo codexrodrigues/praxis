@@ -40,7 +40,7 @@ Ao acessar o Swagger UI, cada grupo aparece como uma seção separada. Isso faci
 
 Componente auxiliar que implementa `SmartInitializingSingleton`. Após a inicialização do contexto Spring, ele executa diversas verificações:
 
-1. Confere se todos os grupos declarados em `ApiRouteDefinitions` possuem beans correspondentes em `OpenApiGroupsConfig`.
+1. Confere se todos os grupos declarados em `ApiRouteDefinitions` possuem beans correspondentes em `OpenApiGroupsConfig` e se cada `*_GROUP` tem um `*_PATH` associado cujo valor contém o nome do grupo.
 2. Detecta sobreposição de rotas entre diferentes grupos.
 3. Emite avisos caso alguma classe `@RestController` não esteja coberta por nenhum grupo.
 
