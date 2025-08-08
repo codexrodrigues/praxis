@@ -1,15 +1,14 @@
 package com.example.praxis.common.config;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Map;
+/**
+ * Centraliza as rotas utilizadas pela aplicação. Os valores são definidos como
+ * constantes de tempo de compilação para que possam ser utilizados em
+ * anotações como {@code @RequestMapping} sem causar erros de "attribute value
+ * must be constant".
+ */
+public final class ApiRouteDefinitions {
 
-public class ApiRouteDefinitions {
-
-    private static final Map<String, String> ROUTES = loadRoutes();
-    private static final String HR_BASE = ROUTES.getOrDefault("humanResources", "/api/human-resources");
+    private static final String HR_BASE = "/api/human-resources";
 
     // Users
     public static final String USERS_PATH = "/users";
@@ -52,19 +51,11 @@ public class ApiRouteDefinitions {
     public static final String HR_DEPENDENTES_TAG = "HR - Dependentes";
 
     // UI Wrappers Test
-    public static final String UI_WRAPPERS_TEST_PATH = ROUTES.getOrDefault("uiWrappersTest", "/api/ui-test/wrappers");
+    public static final String UI_WRAPPERS_TEST_PATH = "/api/ui-test/wrappers";
     public static final String UI_WRAPPERS_TEST_GROUP = "ui-wrappers-test";
     public static final String UI_WRAPPERS_TEST_TAG = "UI Wrappers Test";
 
     private ApiRouteDefinitions() {
         // Prevent instantiation
-    }
-
-    private static Map<String, String> loadRoutes() {
-        try (InputStream is = ApiRouteDefinitions.class.getClassLoader().getResourceAsStream("api-routes.json")) {
-            return new ObjectMapper().readValue(is, new TypeReference<>() {});
-        } catch (IOException e) {
-            throw new ExceptionInInitializerError("Failed to load api-routes.json" + e);
-        }
     }
 }

@@ -92,10 +92,17 @@ public class OpenApiGroupsValidator implements SmartInitializingSingleton {
                     String pathFieldName = field.getName().replace("_GROUP", "_PATH");
                     try {
                         Field pathField = ApiRouteDefinitions.class.getDeclaredField(pathFieldName);
-                        // Verificar se o GROUP está coerente com o PATH
+                        // Verificar se o PATH é coerente com o GROUP. A validação é
+                        // intencionalmente flexível para permitir cenários corporativos
+                        // onde o nome do grupo pode não coincidir exatamente com o
+                        // caminho. Ainda assim, é recomendado que o nome do grupo
+                        // apareça em alguma parte do path para facilitar a
+                        // manutenção.
                         String pathValue = (String) pathField.get(null);
-                        if (!normalizePath(pathValue).substring(1).equals(groupName)) {
-                            logger.warn("Inconsistência entre GROUP e PATH: {} não corresponde a {}",
+                        String normalizedPath = normalizePath(pathValue);
+                        if (!normalizedPath.contains(groupName)) {
+                            logger.warn(
+                                    "Inconsistência entre GROUP e PATH: {} não está contido em {}",
                                     groupName, pathValue);
                         }
                     } catch (NoSuchFieldException e) {
