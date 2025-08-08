@@ -1,8 +1,10 @@
 import { ApiUrlConfig } from '@praxis/core';
+import apiRoutes from '../../api-routes.json';
 
 export const environment = {
   production: false,
   apiUrl: {
-    default: { baseUrl: 'http://localhost:8087/api/human-resources', version: '' }
-  } as ApiUrlConfig
+    default: { baseUrl: apiRoutes.apiBase, version: '' },
+    humanResources: { baseUrl: apiRoutes.humanResources, version: '' },
+  } as ApiUrlConfig,
 };
