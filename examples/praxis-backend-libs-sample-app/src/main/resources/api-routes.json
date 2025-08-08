@@ -1,0 +1,5 @@
+{
+  "apiBase": "/api",
+  "humanResources": "/api/human-resources",
+  "uiWrappersTest": "/api/ui-test/wrappers"
+}

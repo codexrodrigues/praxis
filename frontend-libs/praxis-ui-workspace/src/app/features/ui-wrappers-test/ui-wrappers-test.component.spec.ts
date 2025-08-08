@@ -18,4 +18,8 @@ describe('UiWrappersTestComponent', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('should resolve resourcePath from shared routes', () => {
+    expect((component as any).resourcePath).toBe('ui-test/wrappers');
+  });
 });

@@ -3,7 +3,7 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
-    "baseUrl": "./",  // Garante resolução correta dos caminhos relativos
+    "baseUrl": "./", // Garante resolução correta dos caminhos relativos
     "strict": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": false,
@@ -14,9 +14,7 @@
     "experimentalDecorators": true,
     "paths": {
       "@praxis/core": ["projects/praxis-core/src/public-api.ts"],
-      "@praxis/table": [
-        "projects/praxis-table/src/public-api.ts"
-      ],
+      "@praxis/table": ["projects/praxis-table/src/public-api.ts"],
       "@praxis/dynamic-fields": [
         "projects/praxis-dynamic-fields/src/public-api.ts"
       ],
@@ -26,13 +24,12 @@
       "@praxis/visual-builder": [
         "projects/praxis-visual-builder/src/public-api.ts"
       ],
-      "@praxis/dynamic-form": [
-        "projects/praxis-dynamic-form/src/public-api.ts"
-      ]
+      "@praxis/dynamic-form": ["projects/praxis-dynamic-form/src/public-api.ts"]
     },
     "importHelpers": true,
     "target": "ES2022",
-    "module": "preserve"
+    "module": "preserve",
+    "resolveJsonModule": true
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
