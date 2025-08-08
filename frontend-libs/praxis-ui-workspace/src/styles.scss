@@ -2,7 +2,11 @@
 @use 'theme-dark' as *;
 
 html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+body { 
+  margin: 0; 
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  overflow: hidden; // Previne scroll no body
+}
 
 body {
   background-color: #121212;

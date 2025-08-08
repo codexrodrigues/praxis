@@ -1,6 +1,6 @@
 // Layout principal
   .layout-container {
-    height: 100vh;
+    height: calc(100vh - 64px); // Subtrai a altura do toolbar (64px é a altura padrão do mat-toolbar)
   }
 
   .spacer {
