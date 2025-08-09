@@ -6,10 +6,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { PraxisTable } from '../praxis-table';
-import { 
-  TableConfig, 
-  TableConfigService 
-} from '@praxis/core';
+import { TableConfig, TableConfigService } from '@praxis/core';
+import { GenericCrudService } from '@praxis/core';
 
 describe('PraxisTable Unified Architecture', () => {
   let component: PraxisTable;
@@ -19,8 +17,9 @@ describe('PraxisTable Unified Architecture', () => {
     await TestBed.configureTestingModule({
       imports: [PraxisTable, NoopAnimationsModule],
       providers: [
-        TableConfigService
-      ]
+        TableConfigService,
+        { provide: GenericCrudService, useValue: { configure: () => {} } },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PraxisTable);
@@ -32,7 +31,7 @@ describe('PraxisTable Unified Architecture', () => {
       const config: TableConfig = {
         columns: [
           { field: 'id', header: 'ID', type: 'number' },
-          { field: 'name', header: 'Nome', type: 'string' }
+          { field: 'name', header: 'Nome', type: 'string' },
         ],
         behavior: {
           sorting: {
@@ -41,7 +40,7 @@ describe('PraxisTable Unified Architecture', () => {
             strategy: 'client',
             showSortIndicators: true,
             indicatorPosition: 'end',
-            allowClearSort: true
+            allowClearSort: true,
           },
           pagination: {
             enabled: true,
@@ -52,13 +51,13 @@ describe('PraxisTable Unified Architecture', () => {
             showPageInfo: true,
             position: 'bottom',
             style: 'default',
-            strategy: 'client'
-          }
+            strategy: 'client',
+          },
         },
         toolbar: {
           visible: true,
-          position: 'top'
-        }
+          position: 'top',
+        },
       };
 
       component.config = config;
@@ -75,11 +74,11 @@ describe('PraxisTable Unified Architecture', () => {
       const config: TableConfig = {
         meta: {
           version: '2.0.0',
-          name: 'Advanced Config'
+          name: 'Advanced Config',
         },
         columns: [
           { field: 'id', header: 'ID', type: 'number' },
-          { field: 'name', header: 'Nome', type: 'string' }
+          { field: 'name', header: 'Nome', type: 'string' },
         ],
         behavior: {
           pagination: {
@@ -91,7 +90,7 @@ describe('PraxisTable Unified Architecture', () => {
             showPageInfo: true,
             position: 'bottom',
             style: 'default',
-            strategy: 'server'
+            strategy: 'server',
           },
           sorting: {
             enabled: true,
@@ -99,13 +98,13 @@ describe('PraxisTable Unified Architecture', () => {
             strategy: 'client',
             showSortIndicators: true,
             indicatorPosition: 'end',
-            allowClearSort: true
+            allowClearSort: true,
           },
           filtering: {
             enabled: true,
             strategy: 'client',
-            debounceTime: 300
-          }
+            debounceTime: 300,
+          },
         },
         appearance: {
           density: 'compact',
@@ -115,9 +114,9 @@ describe('PraxisTable Unified Architecture', () => {
             showOuterBorder: true,
             style: 'solid',
             width: 1,
-            color: '#e0e0e0'
-          }
-        }
+            color: '#e0e0e0',
+          },
+        },
       };
 
       component.config = config;
@@ -134,23 +133,23 @@ describe('PraxisTable Unified Architecture', () => {
     it('should detect available features correctly', () => {
       const config: TableConfig = {
         columns: [],
-        behavior: { 
-          sorting: { 
-            enabled: true, 
+        behavior: {
+          sorting: {
+            enabled: true,
             multiSort: true,
             strategy: 'client',
             showSortIndicators: true,
             indicatorPosition: 'end',
-            allowClearSort: true
-          } 
+            allowClearSort: true,
+          },
         },
         actions: {
-          bulk: { enabled: true, position: 'toolbar', actions: [] }
+          bulk: { enabled: true, position: 'toolbar', actions: [] },
         },
         export: {
           enabled: true,
-          formats: ['csv', 'excel']
-        }
+          formats: ['csv', 'excel'],
+        },
       };
 
       component.config = config;
@@ -164,16 +163,16 @@ describe('PraxisTable Unified Architecture', () => {
     it('should handle disabled features correctly', () => {
       const config: TableConfig = {
         columns: [],
-        behavior: { 
-          sorting: { 
-            enabled: true, 
+        behavior: {
+          sorting: {
+            enabled: true,
             multiSort: false,
             strategy: 'client',
             showSortIndicators: true,
             indicatorPosition: 'end',
-            allowClearSort: true
-          } 
-        }
+            allowClearSort: true,
+          },
+        },
       };
 
       component.config = config;
@@ -199,9 +198,9 @@ describe('PraxisTable Unified Architecture', () => {
             showPageInfo: true,
             position: 'bottom',
             style: 'default',
-            strategy: 'client'
-          }
-        }
+            strategy: 'client',
+          },
+        },
       };
 
       component.config = config;
@@ -223,9 +222,9 @@ describe('PraxisTable Unified Architecture', () => {
             strategy: 'client',
             showSortIndicators: true,
             indicatorPosition: 'end',
-            allowClearSort: true
-          }
-        }
+            allowClearSort: true,
+          },
+        },
       };
 
       component.config = config;
@@ -257,7 +256,7 @@ describe('PraxisTable Unified Architecture', () => {
     it('should provide access to current configuration', () => {
       const config: TableConfig = {
         meta: { version: '2.0.0', name: 'Test' },
-        columns: [{ field: 'test', header: 'Test' }]
+        columns: [{ field: 'test', header: 'Test' }],
       };
 
       component.config = config;

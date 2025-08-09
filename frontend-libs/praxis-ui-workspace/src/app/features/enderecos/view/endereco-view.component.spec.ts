@@ -2,12 +2,21 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { EnderecoViewComponent } from './endereco-view.component';
 import { ActivatedRoute } from '@angular/router';
 import { of } from 'rxjs';
+import { GenericCrudService } from '@praxis/core';
 
 describe('EnderecoViewComponent', () => {
   let component: EnderecoViewComponent;
   let fixture: ComponentFixture<EnderecoViewComponent>;
 
   beforeEach(async () => {
+    TestBed.overrideComponent(EnderecoViewComponent, {
+      set: {
+        providers: [
+          { provide: GenericCrudService, useValue: { configure: () => {} } },
+        ],
+      },
+    });
+
     await TestBed.configureTestingModule({
       imports: [EnderecoViewComponent],
       providers: [

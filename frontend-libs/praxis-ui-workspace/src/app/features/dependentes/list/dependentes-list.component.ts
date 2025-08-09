@@ -3,16 +3,23 @@ import { Router } from '@angular/router';
 import { PraxisTable } from '@praxis/table';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
+import { GenericCrudService, ApiEndpoint } from '@praxis/core';
 
 @Component({
   selector: 'app-dependentes-list',
   standalone: true,
   imports: [MatCardModule, MatIconModule, PraxisTable],
+  providers: [GenericCrudService],
   templateUrl: './dependentes-list.component.html',
   styleUrl: './dependentes-list.component.scss',
 })
 export class DependentesListComponent {
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private crudService: GenericCrudService<any>,
+  ) {
+    this.crudService.configure('dependentes', ApiEndpoint.HumanResources);
+  }
 
   onRowClick(event: any): void {
     if (event?.row?.id != null) {

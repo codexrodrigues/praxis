@@ -3,16 +3,23 @@ import { Router } from '@angular/router';
 import { PraxisTable } from '@praxis/table';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
+import { GenericCrudService, ApiEndpoint } from '@praxis/core';
 
 @Component({
   selector: 'app-funcionarios-list',
   standalone: true,
   imports: [MatCardModule, MatIconModule, PraxisTable],
+  providers: [GenericCrudService],
   templateUrl: './funcionarios-list.component.html',
-  styleUrl: './funcionarios-list.component.scss'
+  styleUrl: './funcionarios-list.component.scss',
 })
 export class FuncionariosListComponent {
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private crudService: GenericCrudService<any>,
+  ) {
+    this.crudService.configure('funcionarios', ApiEndpoint.HumanResources);
+  }
 
   onRowClick(event: any): void {
     // Temporário: aceitar qualquer tipo de evento até que o PraxisTable seja corrigido
@@ -24,7 +31,7 @@ export class FuncionariosListComponent {
     }
   }
 
-  onRowAction(event: {action: string, row: any}): void {
+  onRowAction(event: { action: string; row: any }): void {
     switch (event.action) {
       case 'view':
         this.router.navigate(['/funcionarios/view', event.row.id]);
@@ -37,5 +44,4 @@ export class FuncionariosListComponent {
         break;
     }
   }
-
 }

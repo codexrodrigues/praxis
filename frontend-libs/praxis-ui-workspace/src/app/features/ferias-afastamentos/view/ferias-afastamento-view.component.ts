@@ -6,11 +6,13 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { GenericCrudService, ApiEndpoint } from '@praxis/core';
 
 @Component({
   selector: 'app-ferias-afastamento-view',
   standalone: true,
   imports: [CommonModule, MatCardModule, MatIconModule, PraxisDynamicForm],
+  providers: [GenericCrudService],
   templateUrl: './ferias-afastamento-view.component.html',
   styleUrl: './ferias-afastamento-view.component.scss',
 })
@@ -18,7 +20,15 @@ export class FeriasAfastamentoViewComponent implements OnInit, OnDestroy {
   id: string | null = null;
   private destroy$ = new Subject<void>();
 
-  constructor(private route: ActivatedRoute) {}
+  constructor(
+    private route: ActivatedRoute,
+    private crudService: GenericCrudService<any>,
+  ) {
+    this.crudService.configure(
+      'ferias-afastamentos',
+      ApiEndpoint.HumanResources,
+    );
+  }
 
   ngOnInit(): void {
     this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {

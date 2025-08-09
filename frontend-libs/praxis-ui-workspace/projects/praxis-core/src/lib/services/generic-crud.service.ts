@@ -1,16 +1,27 @@
-import {HttpClient, HttpErrorResponse, HttpParams} from '@angular/common/http';
-import {Observable, throwError} from 'rxjs';
-import {catchError, map} from 'rxjs/operators';
+import {
+  HttpClient,
+  HttpErrorResponse,
+  HttpParams,
+} from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 
-import {RestApiResponse} from '../models/rest-api-response.model';
-import {Page, Pageable} from '../models/page.model';
+import { RestApiResponse } from '../models/rest-api-response.model';
+import { Page, Pageable } from '../models/page.model';
 
 import { FieldDefinition } from '../models/field-definition.model';
+import { ApiEndpoint } from '../models/api-endpoint.enum';
 
-import {Inject, Injectable} from '@angular/core';
-import {API_URL, ApiUrlConfig, ApiUrlEntry, buildApiUrl, buildHeaders} from '../tokens/api-url.token';
+import { Inject, Injectable } from '@angular/core';
+import {
+  API_URL,
+  ApiUrlConfig,
+  ApiUrlEntry,
+  buildApiUrl,
+  buildHeaders,
+} from '../tokens/api-url.token';
 import { composeHeadersWithVersion } from '../helpers/version.helper';
-import {SchemaNormalizerService} from './schema-normalizer.service';
+import { SchemaNormalizerService } from './schema-normalizer.service';
 
 /**
  * Interface para configuração de endpoints personalizados.
@@ -60,7 +71,7 @@ export interface CrudOperationOptions {
    */
   parentPath?: string;
   /** Chave do endpoint configurado via ApiUrlConfig */
-  endpointKey?: string;
+  endpointKey?: ApiEndpoint;
 }
 
 /**
@@ -83,15 +94,14 @@ export interface CrudOperationOptions {
  * @template T Tipo da entidade manipulada pelo serviço.
  */
 @Injectable({
-  providedIn: null
+  providedIn: null,
 })
 export class GenericCrudService<T> {
-
   private baseApiUrl!: string; // Root URL for the API
-  private apiUrl!: string;    // Full base path for the configured resource
+  private apiUrl!: string; // Full base path for the configured resource
   private endpoints: EndpointConfig = {}; // Stores user-defined custom endpoints
   private apiUrlConfig: ApiUrlConfig;
-  private currentEndpointKey = 'default';
+  private currentEndpointKey: ApiEndpoint = ApiEndpoint.Default;
   private resourcePath!: string;
 
   // Nova propriedade para armazenar a URL do schema
@@ -104,7 +114,7 @@ export class GenericCrudService<T> {
     }
   }
 
-  private resolveEndpointEntry(key?: string): ApiUrlEntry {
+  private resolveEndpointEntry(key?: ApiEndpoint): ApiUrlEntry {
     const cfgKey = key ?? this.currentEndpointKey;
     return this.apiUrlConfig[cfgKey] || this.apiUrlConfig['default'];
   }
@@ -119,17 +129,19 @@ export class GenericCrudService<T> {
   constructor(
     private http: HttpClient,
     private schemaNormalizer: SchemaNormalizerService,
-    @Inject(API_URL) apiUrlInjected: ApiUrlConfig
+    @Inject(API_URL) apiUrlInjected: ApiUrlConfig,
   ) {
     this.apiUrlConfig = apiUrlInjected;
   }
 
-  configure(resourcePath: string, endpointKey: string = 'default'): void {
+  configure(resourcePath: string, endpointKey?: ApiEndpoint): void {
     if (!resourcePath || !resourcePath.trim()) {
       throw new Error(GenericCrudService.ERROR_MESSAGES.emptyResourcePath);
     }
 
-    this.currentEndpointKey = endpointKey;
+    if (endpointKey) {
+      this.currentEndpointKey = endpointKey;
+    }
     const entry = this.resolveEndpointEntry(endpointKey);
     this.baseApiUrl = buildApiUrl(entry);
 
@@ -141,21 +153,21 @@ export class GenericCrudService<T> {
     this.configured = true;
   }
 
-/**
- * Configura endpoints personalizados para cada operação CRUD, substituindo as URLs padrão.
- *
- * Este método permite definir caminhos específicos para cada tipo de operação (getAll, getById, etc.)
- * Os endpoints podem ser:
- * - Caminhos relativos: serão anexados ao baseApiUrl (ex: 'usuarios/ativos')
- * - URLs absolutas: usadas diretamente (ex: 'https://api.externa.com/usuarios')
- *
- * Exemplo de uso:
- * ```typescript
- * crudService.configureEndpoints({
- *   getAll: 'usuarios/ativos',        // GET [baseApiUrl]/usuarios/ativos
- *   create: 'https://api.ext/dados',  // POST https://api.ext/dados
- *   filter: 'usuarios/busca-avancada' // POST [baseApiUrl]/usuarios/busca-avancada
- * });
+  /**
+   * Configura endpoints personalizados para cada operação CRUD, substituindo as URLs padrão.
+   *
+   * Este método permite definir caminhos específicos para cada tipo de operação (getAll, getById, etc.)
+   * Os endpoints podem ser:
+   * - Caminhos relativos: serão anexados ao baseApiUrl (ex: 'usuarios/ativos')
+   * - URLs absolutas: usadas diretamente (ex: 'https://api.externa.com/usuarios')
+   *
+   * Exemplo de uso:
+   * ```typescript
+   * crudService.configureEndpoints({
+   *   getAll: 'usuarios/ativos',        // GET [baseApiUrl]/usuarios/ativos
+   *   create: 'https://api.ext/dados',  // POST https://api.ext/dados
+   *   filter: 'usuarios/busca-avancada' // POST [baseApiUrl]/usuarios/busca-avancada
+   * });
    * ```
    *
    * @param customEndpoints Objeto com endpoints customizados.
@@ -164,44 +176,58 @@ export class GenericCrudService<T> {
     this.endpoints = { ...this.endpoints, ...customEndpoints };
   }
 
-/**
- * Constrói a URL completa para uma determinada operação CRUD, considerando endpoints personalizados e caminhos pai.
- *
- * Este método usa a seguinte ordem de prioridade:
- * 1. Endpoint personalizado definido pelo usuário (via configureEndpoints)
- * 2. Construção padrão de URL baseada no recurso configurado
- *
- * Para recursos aninhados, o parentPath é incorporado na URL final (ex: /clientes/123/enderecos).
- *
- * @param operation - A operação CRUD a ser executada (getAll, getById, create, update, delete, filter, schema)
- * @param id - Identificador opcional para operações que exigem ID (getById, update, delete)
- * @param parentPath - Caminho do recurso pai opcional para recursos aninhados (ex: 'clientes/123')
- * @returns A URL completa para a requisição à API
- * @throws Error quando o ID é obrigatório mas não fornecido, ou quando o serviço não está configurado
- */
-private getEndpointUrl(
-  operation: keyof EndpointConfig,
-  id?: string | number,
-  parentPath?: string,
-  endpointKey?: string
-): string {
+  /**
+   * Constrói a URL completa para uma determinada operação CRUD, considerando endpoints personalizados e caminhos pai.
+   *
+   * Este método usa a seguinte ordem de prioridade:
+   * 1. Endpoint personalizado definido pelo usuário (via configureEndpoints)
+   * 2. Construção padrão de URL baseada no recurso configurado
+   *
+   * Para recursos aninhados, o parentPath é incorporado na URL final (ex: /clientes/123/enderecos).
+   *
+   * @param operation - A operação CRUD a ser executada (getAll, getById, create, update, delete, filter, schema)
+   * @param id - Identificador opcional para operações que exigem ID (getById, update, delete)
+   * @param parentPath - Caminho do recurso pai opcional para recursos aninhados (ex: 'clientes/123')
+   * @returns A URL completa para a requisição à API
+   * @throws Error quando o ID é obrigatório mas não fornecido, ou quando o serviço não está configurado
+   */
+  private getEndpointUrl(
+    operation: keyof EndpointConfig,
+    id?: string | number,
+    parentPath?: string,
+    endpointKey?: ApiEndpoint,
+  ): string {
     const entry = this.resolveEndpointEntry(endpointKey);
     const baseApiUrl = buildApiUrl(entry);
     const customUserEndpoint = this.endpoints[operation];
 
     // Priority 1: User-defined custom endpoint
     if (customUserEndpoint) {
-      if (customUserEndpoint.startsWith('http')) { // Absolute HTTP/HTTPS URL
+      if (customUserEndpoint.startsWith('http')) {
+        // Absolute HTTP/HTTPS URL
         let url = customUserEndpoint.replace(/\/+$/, '');
-        if ((operation === 'getById' || operation === 'update' || operation === 'delete') && (id !== undefined && id !== null)) {
+        if (
+          (operation === 'getById' ||
+            operation === 'update' ||
+            operation === 'delete') &&
+          id !== undefined &&
+          id !== null
+        ) {
           url += `/${id}`;
         }
         return url;
-      } else { // Relative custom path (relative to baseApiUrl)
+      } else {
+        // Relative custom path (relative to baseApiUrl)
         const endpoint = customUserEndpoint.replace(/^\/+/, '');
         let url = `${baseApiUrl}/${endpoint}`;
         url = url.replace(/\/+$/, '');
-        if ((operation === 'getById' || operation === 'update' || operation === 'delete') && (id !== undefined && id !== null)) {
+        if (
+          (operation === 'getById' ||
+            operation === 'update' ||
+            operation === 'delete') &&
+          id !== undefined &&
+          id !== null
+        ) {
           url += `/${id}`;
         }
         return url;
@@ -209,16 +235,22 @@ private getEndpointUrl(
     }
 
     // Priority 2: Standard path construction (no custom endpoint for this operation)
-    if (!this.resourcePath) { // requires configure()
+    if (!this.resourcePath) {
+      // requires configure()
       throw new Error(GenericCrudService.ERROR_MESSAGES.unconfiguredService);
     }
 
     let resourceUrl = `${baseApiUrl}/${this.resourcePath}`; // Default base for the resource e.g. [baseApiUrl]/addresses
 
     if (parentPath) {
-      const resourceNameOnly = this.resourcePath.replace(/^\/+/, '').replace(/\/+$/, '');
+      const resourceNameOnly = this.resourcePath
+        .replace(/^\/+/, '')
+        .replace(/\/+$/, '');
 
-      const cleanedParentPath = parentPath.trim().replace(/^\/+/, '').replace(/\/+$/, '');
+      const cleanedParentPath = parentPath
+        .trim()
+        .replace(/^\/+/, '')
+        .replace(/\/+$/, '');
 
       resourceUrl = `${baseApiUrl}/${cleanedParentPath}`;
       if (resourceNameOnly) {
@@ -229,26 +261,32 @@ private getEndpointUrl(
     resourceUrl = resourceUrl.replace(/\/+$/, ''); // Ensure no trailing slash before appending suffixes
 
     switch (operation) {
-      case 'getAll': return `${resourceUrl}/all`;
+      case 'getAll':
+        return `${resourceUrl}/all`;
       case 'getById':
-        if (id === undefined || id === null) throw new Error(`ID is required for ${operation} operation.`);
+        if (id === undefined || id === null)
+          throw new Error(`ID is required for ${operation} operation.`);
         return `${resourceUrl}/${id}`;
-      case 'create': return resourceUrl;
+      case 'create':
+        return resourceUrl;
       case 'update':
-        if (id === undefined || id === null) throw new Error(`ID is required for ${operation} operation.`);
+        if (id === undefined || id === null)
+          throw new Error(`ID is required for ${operation} operation.`);
         return `${resourceUrl}/${id}`;
       case 'delete':
-        if (id === undefined || id === null) throw new Error(`ID is required for ${operation} operation.`);
+        if (id === undefined || id === null)
+          throw new Error(`ID is required for ${operation} operation.`);
         return `${resourceUrl}/${id}`;
-      case 'filter': return `${resourceUrl}/filter`;
-      case 'schema': return `${resourceUrl}/schemas`;
+      case 'filter':
+        return `${resourceUrl}/filter`;
+      case 'schema':
+        return `${resourceUrl}/schemas`;
       default:
         // Should not be reached due to keyof EndpointConfig
         const exhaustiveCheck: never = operation;
         throw new Error(`Unknown operation: ${exhaustiveCheck}`);
     }
   }
-
 
   /**
    * Obtém o schema (metadados) do recurso, útil para construção dinâmica de grids e formulários.
@@ -263,50 +301,59 @@ private getEndpointUrl(
    * @returns Observable com array de FieldDefinition.
    */
 
-  public getSchema(options?: CrudOperationOptions): Observable<FieldDefinition[]> {
+  public getSchema(
+    options?: CrudOperationOptions,
+  ): Observable<FieldDefinition[]> {
     this.ensureConfigured();
     const entry = this.resolveEndpointEntry(options?.endpointKey);
-    const url = this.getEndpointUrl('schema', undefined, options?.parentPath, options?.endpointKey);
+    const url = this.getEndpointUrl(
+      'schema',
+      undefined,
+      options?.parentPath,
+      options?.endpointKey,
+    );
     // Armazena a URL para referência posterior this._schemaUrl = url;
     this._schemaUrl = url;
-    return this.http.get<any>(url, { headers: composeHeadersWithVersion(entry) }).pipe(
-      map((response) => this.schemaNormalizer.normalizeSchema(response)),
-      catchError(this.handleError)
-    );
+    return this.http
+      .get<any>(url, { headers: composeHeadersWithVersion(entry) })
+      .pipe(
+        map((response) => this.schemaNormalizer.normalizeSchema(response)),
+        catchError(this.handleError),
+      );
   }
 
   /**
    * Retorna a URL do último schema solicitado
    */
-public schemaUrl(): string {
-  this.ensureConfigured();
-  let url: string;
+  public schemaUrl(): string {
+    this.ensureConfigured();
+    let url: string;
 
-  // Se já temos a URL do schema armazenada, usá-la
-  if (this._schemaUrl) {
-    url = this._schemaUrl;
-  } else {
+    // Se já temos a URL do schema armazenada, usá-la
+    if (this._schemaUrl) {
+      url = this._schemaUrl;
+    } else {
+      try {
+        // Tentar construir a URL mesmo que getSchema() não tenha sido chamado
+        url = this.getEndpointUrl('schema');
+      } catch (error) {
+        // Se o serviço não estiver configurado, retornar string vazia
+        return '';
+      }
+    }
+
+    // Remover protocolo, domínio e porta da URL
+    // Ex: "http://localhost:8080/api/usuarios/schemas" -> "/api/usuarios/schemas"
     try {
-      // Tentar construir a URL mesmo que getSchema() não tenha sido chamado
-      url = this.getEndpointUrl('schema');
+      // Usar objeto URL para extrair apenas o caminho
+      const urlObj = new URL(url);
+      return urlObj.pathname;
     } catch (error) {
-      // Se o serviço não estiver configurado, retornar string vazia
-      return '';
+      // Se não for uma URL válida ou já for apenas um caminho
+      // Remover protocolo e domínio com regex
+      return url.replace(/^(https?:\/\/)?[^\/]+(\/|$)/, '/');
     }
   }
-
-  // Remover protocolo, domínio e porta da URL
-  // Ex: "http://localhost:8080/api/usuarios/schemas" -> "/api/usuarios/schemas"
-  try {
-    // Usar objeto URL para extrair apenas o caminho
-    const urlObj = new URL(url);
-    return urlObj.pathname;
-  } catch (error) {
-    // Se não for uma URL válida ou já for apenas um caminho
-    // Remover protocolo e domínio com regex
-    return url.replace(/^(https?:\/\/)?[^\/]+(\/|$)/, '/');
-  }
-}
 
   /**
    * Obtém um schema filtrado diretamente do endpoint `/schemas/filtered`.
@@ -334,16 +381,24 @@ public schemaUrl(): string {
       httpParams = httpParams.set('schemaType', params.schemaType);
     }
     if (params.includeInternalSchemas !== undefined) {
-      httpParams = httpParams.set('includeInternalSchemas', String(params.includeInternalSchemas));
+      httpParams = httpParams.set(
+        'includeInternalSchemas',
+        String(params.includeInternalSchemas),
+      );
     }
 
     const entry = this.resolveEndpointEntry();
     const baseUrl = buildApiUrl(entry);
     const url = `${baseUrl}/schemas/filtered`;
-    return this.http.get<any>(url, { params: httpParams, headers: composeHeadersWithVersion(entry) }).pipe(
-      map((response) => this.schemaNormalizer.normalizeSchema(response)),
-      catchError(this.handleError)
-    );
+    return this.http
+      .get<any>(url, {
+        params: httpParams,
+        headers: composeHeadersWithVersion(entry),
+      })
+      .pipe(
+        map((response) => this.schemaNormalizer.normalizeSchema(response)),
+        catchError(this.handleError),
+      );
   }
 
   /**
@@ -368,11 +423,22 @@ public schemaUrl(): string {
     return this.getAllResponse(options).pipe(map((r) => r.data));
   }
 
-  public getAllResponse(options?: CrudOperationOptions): Observable<RestApiResponse<T[]>> {
+  public getAllResponse(
+    options?: CrudOperationOptions,
+  ): Observable<RestApiResponse<T[]>> {
     this.ensureConfigured();
     const entry = this.resolveEndpointEntry(options?.endpointKey);
-    const url = this.getEndpointUrl('getAll', undefined, options?.parentPath, options?.endpointKey);
-    return this.http.get<RestApiResponse<T[]>>(url, { headers: composeHeadersWithVersion(entry) }).pipe(catchError(this.handleError));
+    const url = this.getEndpointUrl(
+      'getAll',
+      undefined,
+      options?.parentPath,
+      options?.endpointKey,
+    );
+    return this.http
+      .get<
+        RestApiResponse<T[]>
+      >(url, { headers: composeHeadersWithVersion(entry) })
+      .pipe(catchError(this.handleError));
   }
 
   /**
@@ -394,16 +460,32 @@ public schemaUrl(): string {
    * @param options Parâmetros opcionais, incluindo parentPath.
    * @returns Observable com a entidade encontrada.
    */
-  public getById(id: string | number, options?: CrudOperationOptions): Observable<T> {
+  public getById(
+    id: string | number,
+    options?: CrudOperationOptions,
+  ): Observable<T> {
     return this.getByIdResponse(id, options).pipe(map((r) => r.data));
   }
 
-  public getByIdResponse(id: string | number, options?: CrudOperationOptions): Observable<RestApiResponse<T>> {
-    if (id === undefined || id === null) throw new Error(GenericCrudService.ERROR_MESSAGES.emptyId);
+  public getByIdResponse(
+    id: string | number,
+    options?: CrudOperationOptions,
+  ): Observable<RestApiResponse<T>> {
+    if (id === undefined || id === null)
+      throw new Error(GenericCrudService.ERROR_MESSAGES.emptyId);
     this.ensureConfigured();
     const entry = this.resolveEndpointEntry(options?.endpointKey);
-    const url = this.getEndpointUrl('getById', id, options?.parentPath, options?.endpointKey);
-    return this.http.get<RestApiResponse<T>>(url, { headers: composeHeadersWithVersion(entry) }).pipe(catchError(this.handleError));
+    const url = this.getEndpointUrl(
+      'getById',
+      id,
+      options?.parentPath,
+      options?.endpointKey,
+    );
+    return this.http
+      .get<
+        RestApiResponse<T>
+      >(url, { headers: composeHeadersWithVersion(entry) })
+      .pipe(catchError(this.handleError));
   }
 
   /**
@@ -429,12 +511,24 @@ public schemaUrl(): string {
     return this.createResponse(entity, options).pipe(map((r) => r.data));
   }
 
-  public createResponse(entity: T, options?: CrudOperationOptions): Observable<RestApiResponse<T>> {
+  public createResponse(
+    entity: T,
+    options?: CrudOperationOptions,
+  ): Observable<RestApiResponse<T>> {
     if (!entity) throw new Error(GenericCrudService.ERROR_MESSAGES.emptyEntity);
     this.ensureConfigured();
     const entry = this.resolveEndpointEntry(options?.endpointKey);
-    const url = this.getEndpointUrl('create', undefined, options?.parentPath, options?.endpointKey);
-    return this.http.post<RestApiResponse<T>>(url, entity, { headers: composeHeadersWithVersion(entry) }).pipe(catchError(this.handleError));
+    const url = this.getEndpointUrl(
+      'create',
+      undefined,
+      options?.parentPath,
+      options?.endpointKey,
+    );
+    return this.http
+      .post<
+        RestApiResponse<T>
+      >(url, entity, { headers: composeHeadersWithVersion(entry) })
+      .pipe(catchError(this.handleError));
   }
 
   /**
@@ -457,17 +551,35 @@ public schemaUrl(): string {
    * @param options Parâmetros opcionais, incluindo parentPath.
    * @returns Observable com a entidade atualizada.
    */
-  public update(id: string | number, entity: T, options?: CrudOperationOptions): Observable<T> {
+  public update(
+    id: string | number,
+    entity: T,
+    options?: CrudOperationOptions,
+  ): Observable<T> {
     return this.updateResponse(id, entity, options).pipe(map((r) => r.data));
   }
 
-  public updateResponse(id: string | number, entity: T, options?: CrudOperationOptions): Observable<RestApiResponse<T>> {
-    if (id === undefined || id === null) throw new Error(GenericCrudService.ERROR_MESSAGES.emptyId);
+  public updateResponse(
+    id: string | number,
+    entity: T,
+    options?: CrudOperationOptions,
+  ): Observable<RestApiResponse<T>> {
+    if (id === undefined || id === null)
+      throw new Error(GenericCrudService.ERROR_MESSAGES.emptyId);
     if (!entity) throw new Error(GenericCrudService.ERROR_MESSAGES.emptyEntity);
     this.ensureConfigured();
     const entry = this.resolveEndpointEntry(options?.endpointKey);
-    const url = this.getEndpointUrl('update', id, options?.parentPath, options?.endpointKey);
-    return this.http.put<RestApiResponse<T>>(url, entity, { headers: composeHeadersWithVersion(entry) }).pipe(catchError(this.handleError));
+    const url = this.getEndpointUrl(
+      'update',
+      id,
+      options?.parentPath,
+      options?.endpointKey,
+    );
+    return this.http
+      .put<
+        RestApiResponse<T>
+      >(url, entity, { headers: composeHeadersWithVersion(entry) })
+      .pipe(catchError(this.handleError));
   }
 
   /**
@@ -489,16 +601,32 @@ public schemaUrl(): string {
    * @param options Parâmetros opcionais, incluindo parentPath.
    * @returns Observable vazio quando a remoção for bem-sucedida.
    */
-  public delete(id: string | number, options?: CrudOperationOptions): Observable<void> {
+  public delete(
+    id: string | number,
+    options?: CrudOperationOptions,
+  ): Observable<void> {
     return this.deleteResponse(id, options).pipe(map(() => undefined));
   }
 
-  public deleteResponse(id: string | number, options?: CrudOperationOptions): Observable<RestApiResponse<void>> {
-    if (id === undefined || id === null) throw new Error(GenericCrudService.ERROR_MESSAGES.emptyId);
+  public deleteResponse(
+    id: string | number,
+    options?: CrudOperationOptions,
+  ): Observable<RestApiResponse<void>> {
+    if (id === undefined || id === null)
+      throw new Error(GenericCrudService.ERROR_MESSAGES.emptyId);
     this.ensureConfigured();
     const entry = this.resolveEndpointEntry(options?.endpointKey);
-    const url = this.getEndpointUrl('delete', id, options?.parentPath, options?.endpointKey);
-    return this.http.delete<RestApiResponse<void>>(url, { headers: composeHeadersWithVersion(entry) }).pipe(catchError(this.handleError));
+    const url = this.getEndpointUrl(
+      'delete',
+      id,
+      options?.parentPath,
+      options?.endpointKey,
+    );
+    return this.http
+      .delete<
+        RestApiResponse<void>
+      >(url, { headers: composeHeadersWithVersion(entry) })
+      .pipe(catchError(this.handleError));
   }
 
   /**
@@ -516,11 +644,21 @@ public schemaUrl(): string {
    * @param options Parâmetros opcionais, incluindo parentPath.
    * @returns Observable com página de entidades.
    */
-  public filter(filterCriteria: Partial<T>, pageable?: Pageable, options?: CrudOperationOptions): Observable<Page<T>> {
-    return this.filterResponse(filterCriteria, pageable, options).pipe(map((r) => r.data));
+  public filter(
+    filterCriteria: Partial<T>,
+    pageable?: Pageable,
+    options?: CrudOperationOptions,
+  ): Observable<Page<T>> {
+    return this.filterResponse(filterCriteria, pageable, options).pipe(
+      map((r) => r.data),
+    );
   }
 
-  public filterResponse(filterCriteria: Partial<T>, pageable?: Pageable, options?: CrudOperationOptions): Observable<RestApiResponse<Page<T>>> {
+  public filterResponse(
+    filterCriteria: Partial<T>,
+    pageable?: Pageable,
+    options?: CrudOperationOptions,
+  ): Observable<RestApiResponse<Page<T>>> {
     let params = new HttpParams();
     if (pageable) {
       params = params
@@ -533,8 +671,17 @@ public schemaUrl(): string {
 
     this.ensureConfigured();
     const entry = this.resolveEndpointEntry(options?.endpointKey);
-    const url = this.getEndpointUrl('filter', undefined, options?.parentPath, options?.endpointKey);
-    return this.http.post<RestApiResponse<Page<T>>>(url, filterCriteria, { params, headers: composeHeadersWithVersion(entry) }).pipe(catchError(this.handleError));
+    const url = this.getEndpointUrl(
+      'filter',
+      undefined,
+      options?.parentPath,
+      options?.endpointKey,
+    );
+    return this.http
+      .post<
+        RestApiResponse<Page<T>>
+      >(url, filterCriteria, { params, headers: composeHeadersWithVersion(entry) })
+      .pipe(catchError(this.handleError));
   }
 
   /**
@@ -542,18 +689,19 @@ public schemaUrl(): string {
    */
   private handleError(error: HttpErrorResponse): Observable<never> {
     console.error('Erro na API:', error);
-    const errorMessage = error.error instanceof ErrorEvent
-      ? `Erro do cliente: ${error.error.message}`
-      : `Erro do servidor (status ${error.status}): ${error.message}`;
+    const errorMessage =
+      error.error instanceof ErrorEvent
+        ? `Erro do cliente: ${error.error.message}`
+        : `Erro do servidor (status ${error.status}): ${error.message}`;
     return throwError(() => new Error(errorMessage));
   }
-
 
   private static readonly ERROR_MESSAGES = {
     emptyResourcePath: 'O caminho do recurso não pode ser vazio.',
     emptyId: 'O ID não pode ser nulo ou vazio.',
     emptyEntity: 'A entidade não pode ser nula ou vazia.',
-    unconfiguredService: 'Serviço não configurado. Chame configure() antes de usar.'
+    unconfiguredService:
+      'Serviço não configurado. Chame configure() antes de usar.',
   };
 
   /**
@@ -577,12 +725,10 @@ public schemaUrl(): string {
     url: string,
     method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH' = 'GET',
     body?: any,
-    params?: HttpParams
+    params?: HttpParams,
   ): Observable<R> {
-    return this.http.request<R>(method, url, { body, params })
+    return this.http
+      .request<R>(method, url, { body, params })
       .pipe(catchError(this.handleError));
   }
-
-
-
 }
