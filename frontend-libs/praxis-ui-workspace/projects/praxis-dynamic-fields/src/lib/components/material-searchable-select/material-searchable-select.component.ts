@@ -25,32 +25,60 @@ import { SimpleBaseSelectComponent } from '../../base/simple-base-select.compone
       [class]="componentCssClasses()"
     >
       <mat-label>{{ metadata()?.label || 'Select' }}</mat-label>
-      <mat-select
-        [formControl]="internalControl"
-        [placeholder]="metadata()?.placeholder || ''"
-        [required]="metadata()?.required || false"
-        [disabled]="metadata()?.disabled || false"
-        (openedChange)="onOpened($event)"
-      >
-        <mat-option *ngIf="searchable()" disabled>
-          <input
-            #searchInput
-            matInput
-            type="text"
-            (input)="onSearch($any($event.target).value)"
-            (keydown)="$event.stopPropagation()"
-            placeholder="Search..."
-          />
-        </mat-option>
-        <mat-option
-          *ngFor="let option of filteredOptions(); trackBy: trackByOption"
-          [value]="option.value"
-          [disabled]="option.disabled"
-          (click)="selectOption(option)"
+      @if (multiple()) {
+        <mat-select
+          multiple
+          [formControl]="internalControl"
+          [placeholder]="metadata()?.placeholder || ''"
+          [required]="metadata()?.required || false"
+          (openedChange)="onOpened($event)"
         >
-          {{ option.label }}
-        </mat-option>
-      </mat-select>
+          <mat-option *ngIf="searchable()" disabled>
+            <input
+              #searchInput
+              matInput
+              type="text"
+              (input)="onSearch($any($event.target).value)"
+              (keydown)="$event.stopPropagation()"
+              placeholder="Search..."
+            />
+          </mat-option>
+          <mat-option
+            *ngFor="let option of filteredOptions(); trackBy: trackByOption"
+            [value]="option.value"
+            [disabled]="option.disabled"
+            (click)="selectOption(option)"
+          >
+            {{ option.label }}
+          </mat-option>
+        </mat-select>
+      } @else {
+        <mat-select
+          [formControl]="internalControl"
+          [placeholder]="metadata()?.placeholder || ''"
+          [required]="metadata()?.required || false"
+          (openedChange)="onOpened($event)"
+        >
+          <mat-option *ngIf="searchable()" disabled>
+            <input
+              #searchInput
+              matInput
+              type="text"
+              (input)="onSearch($any($event.target).value)"
+              (keydown)="$event.stopPropagation()"
+              placeholder="Search..."
+            />
+          </mat-option>
+          <mat-option
+            *ngFor="let option of filteredOptions(); trackBy: trackByOption"
+            [value]="option.value"
+            [disabled]="option.disabled"
+            (click)="selectOption(option)"
+          >
+            {{ option.label }}
+          </mat-option>
+        </mat-select>
+      }
       @if (
         errorMessage() &&
         internalControl.invalid &&

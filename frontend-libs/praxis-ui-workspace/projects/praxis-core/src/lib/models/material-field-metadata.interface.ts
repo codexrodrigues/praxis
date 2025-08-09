@@ -951,6 +951,15 @@ export interface MaterialPriceRangeMetadata extends FieldMetadata {
   /** Number of decimal places */
   decimalPlaces?: number;
 
+  /** Locale for formatting */
+  locale?: string;
+
+  /** Thousands separator override */
+  thousandsSeparator?: string;
+
+  /** Decimal separator override */
+  decimalSeparator?: string;
+
   /** Allow negative values */
   allowNegative?: boolean;
 
