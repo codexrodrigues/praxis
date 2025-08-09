@@ -36,6 +36,8 @@ import {
   MaterialDatepickerMetadata,
   MaterialDateRangeMetadata,
   DateRangeValue,
+  MaterialPriceRangeMetadata,
+  PriceRangeValue,
 } from '@praxis/core';
 import { DynamicFieldLoaderDirective } from '@praxis/dynamic-fields';
 import {
@@ -871,6 +873,39 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
           }
           return null;
         });
+      } else if (field.controlType === FieldControlType.RANGE_SLIDER) {
+        const md = field as MaterialPriceRangeMetadata;
+        const dv = defaultValue as PriceRangeValue | null;
+        defaultValue = {
+          minPrice: dv?.minPrice ?? null,
+          maxPrice: dv?.maxPrice ?? null,
+        } as PriceRangeValue;
+        const min = md.min ?? null;
+        const max = md.max ?? null;
+        validators.push((control) => {
+          const val = control.value as PriceRangeValue | null;
+          if (!val) {
+            return null;
+          }
+          const start = val.minPrice;
+          const end = val.maxPrice;
+          if (start != null && end != null && start > end) {
+            return { rangeOrder: true };
+          }
+          if (
+            min != null &&
+            ((start != null && start < min) || (end != null && end < min))
+          ) {
+            return { minValue: true };
+          }
+          if (
+            max != null &&
+            ((start != null && start > max) || (end != null && end > max))
+          ) {
+            return { maxValue: true };
+          }
+          return null;
+        });
       }
 
       if (field.required) {
@@ -878,6 +913,13 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
           validators.push((control) => {
             const val = control.value as DateRangeValue | null;
             return val?.startDate && val?.endDate ? null : { required: true };
+          });
+        } else if (field.controlType === FieldControlType.RANGE_SLIDER) {
+          validators.push((control) => {
+            const val = control.value as PriceRangeValue | null;
+            return val?.minPrice != null && val?.maxPrice != null
+              ? null
+              : { required: true };
           });
         } else {
           validators.push(Validators.required);

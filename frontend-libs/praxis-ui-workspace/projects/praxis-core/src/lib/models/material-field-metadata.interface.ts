@@ -928,6 +928,46 @@ export interface MaterialDateRangeMetadata extends FieldMetadata {
 }
 
 /**
+ * Metadata for a price range input using two currency fields.
+ */
+export interface MaterialPriceRangeMetadata extends FieldMetadata {
+  controlType: typeof FieldControlType.RANGE_SLIDER;
+
+  /** Minimum allowed value */
+  min?: number;
+
+  /** Maximum allowed value */
+  max?: number;
+
+  /** Step for value increments */
+  step?: number;
+
+  /** Currency code (USD, EUR, BRL, etc.) */
+  currency: string;
+
+  /** Currency symbol position */
+  currencyPosition?: 'before' | 'after';
+
+  /** Number of decimal places */
+  decimalPlaces?: number;
+
+  /** Allow negative values */
+  allowNegative?: boolean;
+
+  /** Placeholder for start input */
+  startPlaceholder?: string;
+
+  /** Placeholder for end input */
+  endPlaceholder?: string;
+
+  /** Label for start input */
+  startLabel?: string;
+
+  /** Label for end input */
+  endLabel?: string;
+}
+
+/**
  * Specialized metadata for Material Button components.
  *
  * Handles action buttons with various styles,

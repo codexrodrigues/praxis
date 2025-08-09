@@ -54,6 +54,22 @@ describe('FieldDefinition to FieldMetadata mapper', () => {
     expect(meta.options?.length).toBe(1);
   });
 
+  it('should map numeric range properties', () => {
+    const def: FieldDefinition = {
+      name: 'price',
+      controlType: FieldControlType.RANGE_SLIDER,
+      numericMin: 10,
+      numericMax: 100,
+      numericStep: 5,
+    } as any;
+
+    const meta = mapFieldDefinitionToMetadata(def) as any;
+
+    expect(meta.min).toBe(10);
+    expect(meta.max).toBe(100);
+    expect(meta.step).toBe(5);
+  });
+
   it('should map arrays', () => {
     const defs: FieldDefinition[] = [
       { name: 'a', controlType: 'input' },
