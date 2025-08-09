@@ -62,7 +62,6 @@ import { PraxisDynamicFormConfigEditor } from './praxis-dynamic-form-config-edit
 @Component({
   selector: 'praxis-dynamic-form',
   standalone: true,
-  providers: [GenericCrudService],
   imports: [
     CommonModule,
     ReactiveFormsModule,

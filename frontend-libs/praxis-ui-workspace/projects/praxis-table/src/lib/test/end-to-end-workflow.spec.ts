@@ -7,22 +7,58 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { 
+import {
   TableConfig,
   TableConfigService,
-  ColumnDefinition
+  ColumnDefinition,
 } from '@praxis/core';
+import { GenericCrudService } from '@praxis/core';
 
 import { PraxisTable } from '../praxis-table';
 import { PraxisTableConfigEditor } from '../praxis-table-config-editor';
 
 // Mock data for testing
 const SAMPLE_EMPLOYEE_DATA = [
-  { id: 1, name: 'João Silva', email: 'joao@empresa.com', department: 'TI', salary: 5000, active: true },
-  { id: 2, name: 'Maria Santos', email: 'maria@empresa.com', department: 'RH', salary: 4500, active: true },
-  { id: 3, name: 'Pedro Costa', email: 'pedro@empresa.com', department: 'Vendas', salary: 4000, active: false },
-  { id: 4, name: 'Ana Oliveira', email: 'ana@empresa.com', department: 'Marketing', salary: 4200, active: true },
-  { id: 5, name: 'Carlos Pereira', email: 'carlos@empresa.com', department: 'TI', salary: 5500, active: true }
+  {
+    id: 1,
+    name: 'João Silva',
+    email: 'joao@empresa.com',
+    department: 'TI',
+    salary: 5000,
+    active: true,
+  },
+  {
+    id: 2,
+    name: 'Maria Santos',
+    email: 'maria@empresa.com',
+    department: 'RH',
+    salary: 4500,
+    active: true,
+  },
+  {
+    id: 3,
+    name: 'Pedro Costa',
+    email: 'pedro@empresa.com',
+    department: 'Vendas',
+    salary: 4000,
+    active: false,
+  },
+  {
+    id: 4,
+    name: 'Ana Oliveira',
+    email: 'ana@empresa.com',
+    department: 'Marketing',
+    salary: 4200,
+    active: true,
+  },
+  {
+    id: 5,
+    name: 'Carlos Pereira',
+    email: 'carlos@empresa.com',
+    department: 'TI',
+    salary: 5500,
+    active: true,
+  },
 ];
 
 describe('End-to-End Workflow Tests', () => {
@@ -39,22 +75,23 @@ describe('End-to-End Workflow Tests', () => {
         PraxisTableConfigEditor,
         NoopAnimationsModule,
         FormsModule,
-        ReactiveFormsModule
+        ReactiveFormsModule,
       ],
       providers: [
         TableConfigService,
+        { provide: GenericCrudService, useValue: { configure: () => {} } },
         {
           provide: MatDialogRef,
           useValue: {
             close: jasmine.createSpy('close'),
-            afterClosed: () => ({ subscribe: () => {} })
-          }
+            afterClosed: () => ({ subscribe: () => {} }),
+          },
         },
         {
           provide: MAT_DIALOG_DATA,
-          useValue: { config: null }
-        }
-      ]
+          useValue: { config: null },
+        },
+      ],
     }).compileComponents();
 
     tableFixture = TestBed.createComponent(PraxisTable);
@@ -71,12 +108,23 @@ describe('End-to-End Workflow Tests', () => {
       // STEP 1: User starts with basic configuration
       const initialConfig: TableConfig = {
         columns: [
-          { field: 'id', header: 'ID', type: 'number', visible: true, width: '80px' },
+          {
+            field: 'id',
+            header: 'ID',
+            type: 'number',
+            visible: true,
+            width: '80px',
+          },
           { field: 'name', header: 'Nome', type: 'string', visible: true },
           { field: 'email', header: 'Email', type: 'string', visible: true },
-          { field: 'department', header: 'Departamento', type: 'string', visible: true },
+          {
+            field: 'department',
+            header: 'Departamento',
+            type: 'string',
+            visible: true,
+          },
           { field: 'salary', header: 'Salário', type: 'number', visible: true },
-          { field: 'active', header: 'Ativo', type: 'boolean', visible: true }
+          { field: 'active', header: 'Ativo', type: 'boolean', visible: true },
         ],
         behavior: {
           sorting: { enabled: true },
@@ -85,26 +133,33 @@ describe('End-to-End Workflow Tests', () => {
             enabled: true,
             pageSize: 10,
             pageSizeOptions: [5, 10, 25],
-            showFirstLastButtons: true
+            showFirstLastButtons: true,
           },
           selection: {
             enabled: true,
-            type: 'single'
-          }
+            type: 'single',
+          },
         },
         toolbar: {
           visible: true,
           actions: [
-            { id: 'add', label: 'Adicionar', icon: 'add', type: 'button', action: 'add', position: 'start' }
-          ]
+            {
+              id: 'add',
+              label: 'Adicionar',
+              icon: 'add',
+              type: 'button',
+              action: 'add',
+              position: 'start',
+            },
+          ],
         },
         messages: {
           states: {
             loading: 'Carregando funcionários...',
             empty: 'Nenhum funcionário encontrado',
-            error: 'Erro ao carregar dados'
-          }
-        }
+            error: 'Erro ao carregar dados',
+          },
+        },
       };
 
       // STEP 2: Initialize table with basic config
@@ -123,7 +178,7 @@ describe('End-to-End Workflow Tests', () => {
       expect(editorComponent.editedConfig).toEqual(initialConfig);
 
       // STEP 4: User enhances configuration with advanced features
-      
+
       // 4a. Add advanced pagination settings
       const enhancedPagination = {
         ...initialConfig,
@@ -138,88 +193,128 @@ describe('End-to-End Workflow Tests', () => {
             showPageInfo: true,
             position: 'bottom',
             style: 'compact',
-            strategy: 'client'
-          }
-        }
+            strategy: 'client',
+          },
+        },
       };
       editorComponent.onBehaviorConfigChange(enhancedPagination);
 
       // 5b. Add advanced toolbar with search
       const enhancedToolbar = {
-        ...editorComponent.editedConfig as TableConfigV2,
+        ...(editorComponent.editedConfig as TableConfigV2),
         toolbar: {
           visible: true,
           position: 'top' as const,
           title: 'Gerenciamento de Funcionários',
           subtitle: 'Lista completa de funcionários da empresa',
           actions: [
-            { id: 'add', label: 'Adicionar', icon: 'add', type: 'button' as const, action: 'add', position: 'start' as const },
-            { id: 'export', label: 'Exportar', icon: 'download', type: 'button' as const, action: 'export', position: 'end' as const }
+            {
+              id: 'add',
+              label: 'Adicionar',
+              icon: 'add',
+              type: 'button' as const,
+              action: 'add',
+              position: 'start' as const,
+            },
+            {
+              id: 'export',
+              label: 'Exportar',
+              icon: 'download',
+              type: 'button' as const,
+              action: 'export',
+              position: 'end' as const,
+            },
           ],
           search: {
             enabled: true,
             placeholder: 'Pesquisar funcionários...',
             position: 'center' as const,
             realtime: true,
-            delay: 300
-          }
-        }
+            delay: 300,
+          },
+        },
       };
       editorComponent.onToolbarActionsConfigChange(enhancedToolbar);
 
       // 5c. Add bulk actions and row actions
       const enhancedActions = {
-        ...editorComponent.editedConfig as TableConfigV2,
+        ...(editorComponent.editedConfig as TableConfigV2),
         actions: {
           row: {
             enabled: true,
             position: 'end' as const,
             actions: [
-              { id: 'view', label: 'Visualizar', icon: 'visibility', action: 'view' },
+              {
+                id: 'view',
+                label: 'Visualizar',
+                icon: 'visibility',
+                action: 'view',
+              },
               { id: 'edit', label: 'Editar', icon: 'edit', action: 'edit' },
-              { id: 'delete', label: 'Excluir', icon: 'delete', action: 'delete' }
-            ]
+              {
+                id: 'delete',
+                label: 'Excluir',
+                icon: 'delete',
+                action: 'delete',
+              },
+            ],
           },
           bulk: {
             enabled: true,
             actions: [
-              { id: 'activate', label: 'Ativar Selecionados', icon: 'check_circle', action: 'activateSelected' },
-              { id: 'deactivate', label: 'Desativar Selecionados', icon: 'cancel', action: 'deactivateSelected' },
-              { id: 'export', label: 'Exportar Selecionados', icon: 'download', action: 'exportSelected' }
-            ]
-          }
-        }
+              {
+                id: 'activate',
+                label: 'Ativar Selecionados',
+                icon: 'check_circle',
+                action: 'activateSelected',
+              },
+              {
+                id: 'deactivate',
+                label: 'Desativar Selecionados',
+                icon: 'cancel',
+                action: 'deactivateSelected',
+              },
+              {
+                id: 'export',
+                label: 'Exportar Selecionados',
+                icon: 'download',
+                action: 'exportSelected',
+              },
+            ],
+          },
+        },
       };
       editorComponent.onToolbarActionsConfigChange(enhancedActions);
 
       // 5d. Customize messages and localization
       const enhancedMessages = {
-        ...editorComponent.editedConfig as TableConfigV2,
+        ...(editorComponent.editedConfig as TableConfigV2),
         messages: {
           states: {
             loading: 'Carregando funcionários...',
             empty: 'Nenhum funcionário cadastrado',
             error: 'Erro ao carregar lista de funcionários',
             noResults: 'Nenhum funcionário encontrado com os filtros aplicados',
-            loadingMore: 'Carregando mais funcionários...'
+            loadingMore: 'Carregando mais funcionários...',
           },
           actions: {
             confirmations: {
               delete: 'Tem certeza que deseja excluir este funcionário?',
-              deleteMultiple: 'Tem certeza que deseja excluir os funcionários selecionados?',
-              save: 'Deseja salvar as alterações feitas?'
+              deleteMultiple:
+                'Tem certeza que deseja excluir os funcionários selecionados?',
+              save: 'Deseja salvar as alterações feitas?',
             },
             success: {
               save: 'Funcionário salvo com sucesso!',
               delete: 'Funcionário excluído com sucesso!',
-              export: 'Dados exportados com sucesso!'
+              export: 'Dados exportados com sucesso!',
             },
             errors: {
               save: 'Erro ao salvar funcionário',
               delete: 'Erro ao excluir funcionário',
-              network: 'Erro de conexão. Verifique sua internet.'
-            }
-          }
+              network: 'Erro de conexão. Verifique sua internet.',
+            },
+          },
         },
         localization: {
           locale: 'pt-BR',
@@ -227,94 +322,94 @@ describe('End-to-End Workflow Tests', () => {
           dateTime: {
             dateFormat: 'dd/MM/yyyy',
             timeFormat: 'HH:mm',
-            firstDayOfWeek: 0
+            firstDayOfWeek: 0,
           },
           currency: {
             code: 'BRL',
             symbol: 'R$',
             position: 'before' as const,
-            precision: 2
-          }
-        }
+            precision: 2,
+          },
+        },
       };
       editorComponent.onMessagesLocalizationConfigChange(enhancedMessages);
 
       // 5e. Enhance columns with V2 features
       const enhancedColumns = {
-        ...editorComponent.editedConfig as TableConfigV2,
+        ...(editorComponent.editedConfig as TableConfigV2),
         columns: [
-          { 
-            field: 'id', 
-            header: 'ID', 
-            type: 'number', 
-            visible: true, 
+          {
+            field: 'id',
+            header: 'ID',
+            type: 'number',
+            visible: true,
             width: '80px',
             sortable: true,
             filterable: false,
             resizable: false,
             sticky: true,
-            align: 'center'
+            align: 'center',
           },
-          { 
-            field: 'name', 
-            header: 'Nome Completo', 
-            type: 'string', 
+          {
+            field: 'name',
+            header: 'Nome Completo',
+            type: 'string',
             visible: true,
             sortable: true,
             filterable: true,
             resizable: true,
             sticky: false,
-            align: 'left'
+            align: 'left',
           },
-          { 
-            field: 'email', 
-            header: 'Email', 
-            type: 'string', 
+          {
+            field: 'email',
+            header: 'Email',
+            type: 'string',
             visible: true,
             sortable: true,
             filterable: true,
             resizable: true,
-            align: 'left'
+            align: 'left',
           },
-          { 
-            field: 'department', 
-            header: 'Departamento', 
-            type: 'string', 
+          {
+            field: 'department',
+            header: 'Departamento',
+            type: 'string',
             visible: true,
             sortable: true,
             filterable: true,
             resizable: true,
-            align: 'center'
+            align: 'center',
           },
-          { 
-            field: 'salary', 
-            header: 'Salário', 
-            type: 'number', 
+          {
+            field: 'salary',
+            header: 'Salário',
+            type: 'number',
             visible: true,
             sortable: true,
             filterable: false,
             resizable: true,
-            align: 'right'
+            align: 'right',
           },
-          { 
-            field: 'active', 
-            header: 'Status', 
-            type: 'boolean', 
+          {
+            field: 'active',
+            header: 'Status',
+            type: 'boolean',
             visible: true,
             sortable: true,
             filterable: true,
             resizable: false,
-            align: 'center'
-          }
-        ] as ColumnDefinition[]
+            align: 'center',
+          },
+        ] as ColumnDefinition[],
       };
       editorComponent.onColumnsConfigChange(enhancedColumns);
 
       // STEP 6: User saves the enhanced V2 configuration
       expect(editorComponent.canSave).toBe(true);
-      
+
       const finalConfig = editorComponent.editedConfig as TableConfigV2;
-      
+
       // Verify all enhancements are present
       expect(finalConfig.meta?.version).toBe('2.0.0');
       expect(finalConfig.behavior?.pagination?.pageSize).toBe(15);
@@ -322,7 +417,9 @@ describe('End-to-End Workflow Tests', () => {
       expect(finalConfig.toolbar?.search?.enabled).toBe(true);
       expect(finalConfig.actions?.row?.enabled).toBe(true);
       expect(finalConfig.actions?.bulk?.enabled).toBe(true);
-      expect(finalConfig.messages?.states?.loading).toBe('Carregando funcionários...');
+      expect(finalConfig.messages?.states?.loading).toBe(
+        'Carregando funcionários...',
+      );
       expect(finalConfig.localization?.locale).toBe('pt-BR');
       expect(finalConfig.columns[0].sticky).toBe(true);
 
@@ -344,15 +441,52 @@ describe('End-to-End Workflow Tests', () => {
         meta: {
           version: '2.0.0',
           name: 'Products Management',
-          description: 'Product catalog management table'
+          description: 'Product catalog management table',
         },
         columns: [
-          { field: 'sku', header: 'SKU', type: 'string', visible: true, width: '120px', sticky: true },
-          { field: 'name', header: 'Product Name', type: 'string', visible: true, resizable: true },
-          { field: 'category', header: 'Category', type: 'string', visible: true, filterable: true },
-          { field: 'price', header: 'Price', type: 'number', visible: true, align: 'right' },
-          { field: 'stock', header: 'Stock', type: 'number', visible: true, align: 'center' },
-          { field: 'status', header: 'Status', type: 'string', visible: true, filterable: true }
+          {
+            field: 'sku',
+            header: 'SKU',
+            type: 'string',
+            visible: true,
+            width: '120px',
+            sticky: true,
+          },
+          {
+            field: 'name',
+            header: 'Product Name',
+            type: 'string',
+            visible: true,
+            resizable: true,
+          },
+          {
+            field: 'category',
+            header: 'Category',
+            type: 'string',
+            visible: true,
+            filterable: true,
+          },
+          {
+            field: 'price',
+            header: 'Price',
+            type: 'number',
+            visible: true,
+            align: 'right',
+          },
+          {
+            field: 'stock',
+            header: 'Stock',
+            type: 'number',
+            visible: true,
+            align: 'center',
+          },
+          {
+            field: 'status',
+            header: 'Status',
+            type: 'string',
+            visible: true,
+            filterable: true,
+          },
         ],
         behavior: {
           pagination: {
@@ -360,32 +494,59 @@ describe('End-to-End Workflow Tests', () => {
             pageSize: 25,
             pageSizeOptions: [10, 25, 50, 100],
             strategy: 'server',
-            showPageNumbers: true
+            showPageNumbers: true,
           },
           sorting: {
             enabled: true,
             multiSort: true,
-            defaultSort: { column: 'name', direction: 'asc' }
+            defaultSort: { column: 'name', direction: 'asc' },
           },
           filtering: {
             enabled: true,
-            globalFilter: { enabled: true, placeholder: 'Search products...' }
+            globalFilter: { enabled: true, placeholder: 'Search products...' },
           },
           selection: {
             enabled: true,
             type: 'multiple',
-            mode: 'checkbox'
-          }
+            mode: 'checkbox',
+          },
         },
         toolbar: {
           visible: true,
           title: 'Product Catalog',
           actions: [
-            { id: 'add', label: 'Add Product', icon: 'add', type: 'button', action: 'add', position: 'start' },
-            { id: 'import', label: 'Import CSV', icon: 'upload', type: 'button', action: 'import', position: 'start' },
-            { id: 'export', label: 'Export', icon: 'download', type: 'button', action: 'export', position: 'end' }
+            {
+              id: 'add',
+              label: 'Add Product',
+              icon: 'add',
+              type: 'button',
+              action: 'add',
+              position: 'start',
+            },
+            {
+              id: 'import',
+              label: 'Import CSV',
+              icon: 'upload',
+              type: 'button',
+              action: 'import',
+              position: 'start',
+            },
+            {
+              id: 'export',
+              label: 'Export',
+              icon: 'download',
+              type: 'button',
+              action: 'export',
+              position: 'end',
+            },
           ],
-          search: { enabled: true, placeholder: 'Search products...', position: 'center', realtime: true, delay: 250 }
+          search: {
+            enabled: true,
+            placeholder: 'Search products...',
+            position: 'center',
+            realtime: true,
+            delay: 250,
+          },
         },
         actions: {
           row: {
@@ -393,30 +554,60 @@ describe('End-to-End Workflow Tests', () => {
             actions: [
               { id: 'view', label: 'View', icon: 'visibility', action: 'view' },
               { id: 'edit', label: 'Edit', icon: 'edit', action: 'edit' },
-              { id: 'duplicate', label: 'Duplicate', icon: 'content_copy', action: 'duplicate' },
-              { id: 'delete', label: 'Delete', icon: 'delete', action: 'delete' }
-            ]
+              {
+                id: 'duplicate',
+                label: 'Duplicate',
+                icon: 'content_copy',
+                action: 'duplicate',
+              },
+              {
+                id: 'delete',
+                label: 'Delete',
+                icon: 'delete',
+                action: 'delete',
+              },
+            ],
           },
           bulk: {
             enabled: true,
             actions: [
-              { id: 'activate', label: 'Activate Selected', icon: 'check_circle', action: 'activateSelected' },
-              { id: 'deactivate', label: 'Deactivate Selected', icon: 'cancel', action: 'deactivateSelected' },
-              { id: 'updatePrices', label: 'Bulk Price Update', icon: 'attach_money', action: 'bulkPriceUpdate' },
-              { id: 'exportSelected', label: 'Export Selected', icon: 'download', action: 'exportSelected' }
-            ]
-          }
+              {
+                id: 'activate',
+                label: 'Activate Selected',
+                icon: 'check_circle',
+                action: 'activateSelected',
+              },
+              {
+                id: 'deactivate',
+                label: 'Deactivate Selected',
+                icon: 'cancel',
+                action: 'deactivateSelected',
+              },
+              {
+                id: 'updatePrices',
+                label: 'Bulk Price Update',
+                icon: 'attach_money',
+                action: 'bulkPriceUpdate',
+              },
+              {
+                id: 'exportSelected',
+                label: 'Export Selected',
+                icon: 'download',
+                action: 'exportSelected',
+              },
+            ],
+          },
         },
         appearance: {
           density: 'comfortable',
           borders: { showRowBorders: true, showColumnBorders: false },
-          elevation: { level: 1 }
+          elevation: { level: 1 },
         },
         export: {
           enabled: true,
           formats: ['csv', 'xlsx', 'pdf'],
-          defaultFormat: 'xlsx'
-        }
+          defaultFormat: 'xlsx',
+        },
       };
 
       tableComponent.config = ecommerceConfig;
@@ -433,50 +624,108 @@ describe('End-to-End Workflow Tests', () => {
         meta: {
           version: '2.0.0',
           name: 'Financial Reports',
-          description: 'Monthly financial data analysis'
+          description: 'Monthly financial data analysis',
         },
         columns: [
-          { field: 'period', header: 'Period', type: 'string', visible: true, sticky: true, width: '100px' },
-          { field: 'revenue', header: 'Revenue', type: 'number', visible: true, align: 'right' },
-          { field: 'expenses', header: 'Expenses', type: 'number', visible: true, align: 'right' },
-          { field: 'profit', header: 'Profit', type: 'number', visible: true, align: 'right' },
-          { field: 'margin', header: 'Margin %', type: 'number', visible: true, align: 'right' },
-          { field: 'growth', header: 'Growth %', type: 'number', visible: true, align: 'right' }
+          {
+            field: 'period',
+            header: 'Period',
+            type: 'string',
+            visible: true,
+            sticky: true,
+            width: '100px',
+          },
+          {
+            field: 'revenue',
+            header: 'Revenue',
+            type: 'number',
+            visible: true,
+            align: 'right',
+          },
+          {
+            field: 'expenses',
+            header: 'Expenses',
+            type: 'number',
+            visible: true,
+            align: 'right',
+          },
+          {
+            field: 'profit',
+            header: 'Profit',
+            type: 'number',
+            visible: true,
+            align: 'right',
+          },
+          {
+            field: 'margin',
+            header: 'Margin %',
+            type: 'number',
+            visible: true,
+            align: 'right',
+          },
+          {
+            field: 'growth',
+            header: 'Growth %',
+            type: 'number',
+            visible: true,
+            align: 'right',
+          },
         ],
         behavior: {
           pagination: {
             enabled: true,
             pageSize: 12, // Monthly data
             pageSizeOptions: [12, 24, 36],
-            strategy: 'client'
+            strategy: 'client',
           },
           sorting: {
             enabled: true,
             multiSort: false,
-            defaultSort: { column: 'period', direction: 'desc' }
+            defaultSort: { column: 'period', direction: 'desc' },
           },
           filtering: {
             enabled: true,
-            globalFilter: { enabled: false }
+            globalFilter: { enabled: false },
           },
           selection: {
-            enabled: false
-          }
+            enabled: false,
+          },
         },
         toolbar: {
           visible: true,
           title: 'Financial Dashboard',
           subtitle: 'Monthly Performance Analysis',
           actions: [
-            { id: 'refresh', label: 'Refresh Data', icon: 'refresh', type: 'button', action: 'refresh', position: 'start' },
-            { id: 'chart', label: 'View Chart', icon: 'bar_chart', type: 'button', action: 'showChart', position: 'end' },
-            { id: 'export', label: 'Export Report', icon: 'file_download', type: 'button', action: 'exportReport', position: 'end' }
-          ]
+            {
+              id: 'refresh',
+              label: 'Refresh Data',
+              icon: 'refresh',
+              type: 'button',
+              action: 'refresh',
+              position: 'start',
+            },
+            {
+              id: 'chart',
+              label: 'View Chart',
+              icon: 'bar_chart',
+              type: 'button',
+              action: 'showChart',
+              position: 'end',
+            },
+            {
+              id: 'export',
+              label: 'Export Report',
+              icon: 'file_download',
+              type: 'button',
+              action: 'exportReport',
+              position: 'end',
+            },
+          ],
         },
         appearance: {
           density: 'compact',
           borders: { showRowBorders: true, showColumnBorders: true },
-          elevation: { level: 2 }
+          elevation: { level: 2 },
         },
         localization: {
           locale: 'pt-BR',
@@ -484,21 +733,21 @@ describe('End-to-End Workflow Tests', () => {
             code: 'BRL',
             symbol: 'R$',
             position: 'before',
-            precision: 2
+            precision: 2,
           },
           number: {
             thousandsSeparator: '.',
             decimalSeparator: ',',
-            defaultPrecision: 2
-          }
+            defaultPrecision: 2,
+          },
         },
         messages: {
           states: {
             loading: 'Carregando dados financeiros...',
             empty: 'Nenhum dado financeiro disponível',
-            error: 'Erro ao carregar relatório financeiro'
-          }
-        }
+            error: 'Erro ao carregar relatório financeiro',
+          },
+        },
       };
 
       tableComponent.config = financialConfig;
@@ -513,17 +762,68 @@ describe('End-to-End Workflow Tests', () => {
         meta: {
           version: '2.0.0',
           name: 'User Management',
-          description: 'System users administration'
+          description: 'System users administration',
         },
         columns: [
-          { field: 'id', header: 'ID', type: 'number', visible: true, width: '60px', sticky: true },
-          { field: 'avatar', header: 'Avatar', type: 'string', visible: true, width: '80px', sortable: false },
-          { field: 'username', header: 'Username', type: 'string', visible: true, filterable: true },
-          { field: 'email', header: 'Email', type: 'string', visible: true, filterable: true },
-          { field: 'role', header: 'Role', type: 'string', visible: true, filterable: true },
-          { field: 'department', header: 'Department', type: 'string', visible: true, filterable: true },
-          { field: 'lastLogin', header: 'Last Login', type: 'string', visible: true, sortable: true },
-          { field: 'status', header: 'Status', type: 'string', visible: true, filterable: true, width: '100px' }
+          {
+            field: 'id',
+            header: 'ID',
+            type: 'number',
+            visible: true,
+            width: '60px',
+            sticky: true,
+          },
+          {
+            field: 'avatar',
+            header: 'Avatar',
+            type: 'string',
+            visible: true,
+            width: '80px',
+            sortable: false,
+          },
+          {
+            field: 'username',
+            header: 'Username',
+            type: 'string',
+            visible: true,
+            filterable: true,
+          },
+          {
+            field: 'email',
+            header: 'Email',
+            type: 'string',
+            visible: true,
+            filterable: true,
+          },
+          {
+            field: 'role',
+            header: 'Role',
+            type: 'string',
+            visible: true,
+            filterable: true,
+          },
+          {
+            field: 'department',
+            header: 'Department',
+            type: 'string',
+            visible: true,
+            filterable: true,
+          },
+          {
+            field: 'lastLogin',
+            header: 'Last Login',
+            type: 'string',
+            visible: true,
+            sortable: true,
+          },
+          {
+            field: 'status',
+            header: 'Status',
+            type: 'string',
+            visible: true,
+            filterable: true,
+            width: '100px',
+          },
         ],
         behavior: {
           pagination: {
@@ -532,100 +832,179 @@ describe('End-to-End Workflow Tests', () => {
             pageSizeOptions: [10, 20, 50, 100],
             strategy: 'server',
             showPageNumbers: true,
-            showPageInfo: true
+            showPageInfo: true,
           },
           sorting: {
             enabled: true,
             multiSort: true,
-            defaultSort: { column: 'username', direction: 'asc' }
+            defaultSort: { column: 'username', direction: 'asc' },
           },
           filtering: {
             enabled: true,
-            globalFilter: { 
-              enabled: true, 
-              placeholder: 'Search users by name, email, or department...' 
-            }
+            globalFilter: {
+              enabled: true,
+              placeholder: 'Search users by name, email, or department...',
+            },
           },
           selection: {
             enabled: true,
             type: 'multiple',
-            mode: 'checkbox'
+            mode: 'checkbox',
           },
           resizing: {
-            enabled: true
-          }
+            enabled: true,
+          },
         },
         toolbar: {
           visible: true,
           title: 'User Management',
           subtitle: 'Manage system users and permissions',
           actions: [
-            { id: 'addUser', label: 'Add User', icon: 'person_add', type: 'button', action: 'addUser', position: 'start' },
-            { id: 'importUsers', label: 'Import Users', icon: 'upload', type: 'button', action: 'importUsers', position: 'start' },
-            { id: 'exportUsers', label: 'Export Users', icon: 'download', type: 'button', action: 'exportUsers', position: 'end' },
-            { id: 'settings', label: 'Settings', icon: 'settings', type: 'button', action: 'settings', position: 'end' }
+            {
+              id: 'addUser',
+              label: 'Add User',
+              icon: 'person_add',
+              type: 'button',
+              action: 'addUser',
+              position: 'start',
+            },
+            {
+              id: 'importUsers',
+              label: 'Import Users',
+              icon: 'upload',
+              type: 'button',
+              action: 'importUsers',
+              position: 'start',
+            },
+            {
+              id: 'exportUsers',
+              label: 'Export Users',
+              icon: 'download',
+              type: 'button',
+              action: 'exportUsers',
+              position: 'end',
+            },
+            {
+              id: 'settings',
+              label: 'Settings',
+              icon: 'settings',
+              type: 'button',
+              action: 'settings',
+              position: 'end',
+            },
           ],
-          search: { 
-            enabled: true, 
-            placeholder: 'Search users...', 
-            position: 'center', 
-            realtime: true, 
-            delay: 300 
-          }
+          search: {
+            enabled: true,
+            placeholder: 'Search users...',
+            position: 'center',
+            realtime: true,
+            delay: 300,
+          },
         },
         actions: {
           row: {
             enabled: true,
             position: 'end',
             actions: [
-              { id: 'viewProfile', label: 'View Profile', icon: 'visibility', action: 'viewProfile' },
-              { id: 'editUser', label: 'Edit User', icon: 'edit', action: 'editUser' },
-              { id: 'resetPassword', label: 'Reset Password', icon: 'lock_reset', action: 'resetPassword' },
-              { id: 'toggleStatus', label: 'Toggle Status', icon: 'toggle_on', action: 'toggleStatus' },
-              { id: 'deleteUser', label: 'Delete User', icon: 'delete', action: 'deleteUser' }
-            ]
+              {
+                id: 'viewProfile',
+                label: 'View Profile',
+                icon: 'visibility',
+                action: 'viewProfile',
+              },
+              {
+                id: 'editUser',
+                label: 'Edit User',
+                icon: 'edit',
+                action: 'editUser',
+              },
+              {
+                id: 'resetPassword',
+                label: 'Reset Password',
+                icon: 'lock_reset',
+                action: 'resetPassword',
+              },
+              {
+                id: 'toggleStatus',
+                label: 'Toggle Status',
+                icon: 'toggle_on',
+                action: 'toggleStatus',
+              },
+              {
+                id: 'deleteUser',
+                label: 'Delete User',
+                icon: 'delete',
+                action: 'deleteUser',
+              },
+            ],
           },
           bulk: {
             enabled: true,
             actions: [
-              { id: 'activateUsers', label: 'Activate Selected', icon: 'check_circle', action: 'activateUsers' },
-              { id: 'deactivateUsers', label: 'Deactivate Selected', icon: 'block', action: 'deactivateUsers' },
-              { id: 'changeRole', label: 'Change Role', icon: 'group', action: 'changeRole' },
-              { id: 'sendInvite', label: 'Send Invites', icon: 'mail', action: 'sendInvite' },
-              { id: 'exportSelected', label: 'Export Selected', icon: 'download', action: 'exportSelected' }
-            ]
-          }
+              {
+                id: 'activateUsers',
+                label: 'Activate Selected',
+                icon: 'check_circle',
+                action: 'activateUsers',
+              },
+              {
+                id: 'deactivateUsers',
+                label: 'Deactivate Selected',
+                icon: 'block',
+                action: 'deactivateUsers',
+              },
+              {
+                id: 'changeRole',
+                label: 'Change Role',
+                icon: 'group',
+                action: 'changeRole',
+              },
+              {
+                id: 'sendInvite',
+                label: 'Send Invites',
+                icon: 'mail',
+                action: 'sendInvite',
+              },
+              {
+                id: 'exportSelected',
+                label: 'Export Selected',
+                icon: 'download',
+                action: 'exportSelected',
+              },
+            ],
+          },
         },
         messages: {
           states: {
             loading: 'Loading users...',
             empty: 'No users found',
             error: 'Failed to load users',
-            noResults: 'No users match your search criteria'
+            noResults: 'No users match your search criteria',
           },
           actions: {
             confirmations: {
               delete: 'Are you sure you want to delete this user?',
-              deleteMultiple: 'Are you sure you want to delete the selected users?',
-              deactivate: 'This will deactivate the user account. Continue?'
+              deleteMultiple:
+                'Are you sure you want to delete the selected users?',
+              deactivate: 'This will deactivate the user account. Continue?',
             },
             success: {
               save: 'User saved successfully!',
               delete: 'User deleted successfully!',
-              activate: 'Users activated successfully!'
+              activate: 'Users activated successfully!',
             },
             errors: {
               save: 'Failed to save user',
               delete: 'Failed to delete user',
-              network: 'Network error. Please try again.'
-            }
-          }
+              network: 'Network error. Please try again.',
+            },
+          },
         },
         appearance: {
           density: 'comfortable',
           borders: { showRowBorders: true, showColumnBorders: false },
-          elevation: { level: 1 }
-        }
+          elevation: { level: 1 },
+        },
       };
 
       tableComponent.config = userManagementConfig;
@@ -641,7 +1020,7 @@ describe('End-to-End Workflow Tests', () => {
     it('should handle rapid configuration changes without memory leaks', async () => {
       const baseConfig: TableConfigV2 = {
         meta: { version: '2.0.0' },
-        columns: [{ field: 'test', header: 'Test' }]
+        columns: [{ field: 'test', header: 'Test' }],
       };
 
       // Simulate rapid configuration changes
@@ -649,15 +1028,15 @@ describe('End-to-End Workflow Tests', () => {
         const modifiedConfig = {
           ...baseConfig,
           behavior: {
-            pagination: { enabled: true, pageSize: 10 + i }
-          }
+            pagination: { enabled: true, pageSize: 10 + i },
+          },
         };
 
         tableComponent.config = modifiedConfig;
         tableFixture.detectChanges();
 
         // Small delay to simulate real user interaction
-        await new Promise(resolve => setTimeout(resolve, 1));
+        await new Promise((resolve) => setTimeout(resolve, 1));
       }
 
       // Verify the table is still functional
@@ -673,42 +1052,98 @@ describe('End-to-End Workflow Tests', () => {
         department: `Dept ${(i % 10) + 1}`,
         role: `Role ${(i % 5) + 1}`,
         active: i % 3 === 0,
-        salary: 3000 + (i * 10),
-        joinDate: new Date(2020 + (i % 4), i % 12, (i % 28) + 1).toISOString()
+        salary: 3000 + i * 10,
+        joinDate: new Date(2020 + (i % 4), i % 12, (i % 28) + 1).toISOString(),
       }));
 
       const complexConfig: TableConfigV2 = {
         meta: { version: '2.0.0', name: 'Performance Test' },
         columns: [
-          { field: 'id', header: 'ID', type: 'number', visible: true, sortable: true, filterable: true },
-          { field: 'name', header: 'Name', type: 'string', visible: true, sortable: true, filterable: true },
-          { field: 'email', header: 'Email', type: 'string', visible: true, sortable: true, filterable: true },
-          { field: 'department', header: 'Department', type: 'string', visible: true, sortable: true, filterable: true },
-          { field: 'role', header: 'Role', type: 'string', visible: true, sortable: true, filterable: true },
-          { field: 'active', header: 'Active', type: 'boolean', visible: true, sortable: true, filterable: true },
-          { field: 'salary', header: 'Salary', type: 'number', visible: true, sortable: true, filterable: false },
-          { field: 'joinDate', header: 'Join Date', type: 'string', visible: true, sortable: true, filterable: true }
+          {
+            field: 'id',
+            header: 'ID',
+            type: 'number',
+            visible: true,
+            sortable: true,
+            filterable: true,
+          },
+          {
+            field: 'name',
+            header: 'Name',
+            type: 'string',
+            visible: true,
+            sortable: true,
+            filterable: true,
+          },
+          {
+            field: 'email',
+            header: 'Email',
+            type: 'string',
+            visible: true,
+            sortable: true,
+            filterable: true,
+          },
+          {
+            field: 'department',
+            header: 'Department',
+            type: 'string',
+            visible: true,
+            sortable: true,
+            filterable: true,
+          },
+          {
+            field: 'role',
+            header: 'Role',
+            type: 'string',
+            visible: true,
+            sortable: true,
+            filterable: true,
+          },
+          {
+            field: 'active',
+            header: 'Active',
+            type: 'boolean',
+            visible: true,
+            sortable: true,
+            filterable: true,
+          },
+          {
+            field: 'salary',
+            header: 'Salary',
+            type: 'number',
+            visible: true,
+            sortable: true,
+            filterable: false,
+          },
+          {
+            field: 'joinDate',
+            header: 'Join Date',
+            type: 'string',
+            visible: true,
+            sortable: true,
+            filterable: true,
+          },
         ],
         behavior: {
           pagination: {
             enabled: true,
             pageSize: 50,
             pageSizeOptions: [25, 50, 100, 200],
-            strategy: 'client'
+            strategy: 'client',
           },
           sorting: {
             enabled: true,
-            multiSort: true
+            multiSort: true,
           },
           filtering: {
             enabled: true,
-            globalFilter: { enabled: true }
+            globalFilter: { enabled: true },
           },
           selection: {
             enabled: true,
-            type: 'multiple'
-          }
-        }
+            type: 'multiple',
+          },
+        },
       };
 
       const startTime = performance.now();
@@ -730,7 +1165,7 @@ describe('End-to-End Workflow Tests', () => {
       const invalidConfig = {
         meta: { version: '2.0.0' },
         columns: null, // Invalid
-        behavior: 'invalid' // Invalid
+        behavior: 'invalid', // Invalid
       } as any;
 
       expect(() => {
@@ -750,19 +1185,19 @@ describe('End-to-End Workflow Tests', () => {
         meta: { version: '2.0.0' },
         columns: [
           { field: 'id', header: 'ID', type: 'number', visible: true },
-          { field: 'name', header: 'Name', type: 'string', visible: true }
+          { field: 'name', header: 'Name', type: 'string', visible: true },
         ],
         accessibility: {
           announceChanges: true,
           focusManagement: {
             trapFocus: true,
             restoreFocus: true,
-            focusFirstCell: true
+            focusFirstCell: true,
           },
           screenReader: {
             rowSelectionAnnouncement: 'Row {rowNumber} selected',
             sortingAnnouncement: 'Column {columnName} sorted {direction}',
-            paginationAnnouncement: 'Page {pageNumber} of {totalPages}'
+            paginationAnnouncement: 'Page {pageNumber} of {totalPages}',
           },
           keyboard: {
             navigationEnabled: true,
@@ -770,10 +1205,10 @@ describe('End-to-End Workflow Tests', () => {
               nextPage: 'PageDown',
               previousPage: 'PageUp',
               firstPage: 'Home',
-              lastPage: 'End'
-            }
-          }
-        }
+              lastPage: 'End',
+            },
+          },
+        },
       };
 
       tableComponent.config = accessibleConfig;
@@ -782,7 +1217,7 @@ describe('End-to-End Workflow Tests', () => {
       // Verify accessibility features are applied
       const tableElement = tableFixture.nativeElement.querySelector('table');
       expect(tableElement).toBeTruthy();
-      
+
       // Check for ARIA attributes
       expect(tableElement.getAttribute('role')).toBeTruthy();
     });
@@ -790,7 +1225,7 @@ describe('End-to-End Workflow Tests', () => {
     it('should provide consistent user experience during configuration changes', async () => {
       const initialConfig: TableConfig = {
         columns: [{ field: 'test', header: 'Test' }],
-        gridOptions: { sortable: true }
+        gridOptions: { sortable: true },
       };
 
       tableComponent.config = initialConfig;

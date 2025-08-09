@@ -3,16 +3,23 @@ import { Router } from '@angular/router';
 import { PraxisTable } from '@praxis/table';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
+import { GenericCrudService, ApiEndpoint } from '@praxis/core';
 
 @Component({
   selector: 'app-folhas-pagamento-list',
   standalone: true,
   imports: [MatCardModule, MatIconModule, PraxisTable],
+  providers: [GenericCrudService],
   templateUrl: './folhas-pagamento-list.component.html',
   styleUrl: './folhas-pagamento-list.component.scss',
 })
 export class FolhasPagamentoListComponent {
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private crudService: GenericCrudService<any>,
+  ) {
+    this.crudService.configure('folhas-pagamento', ApiEndpoint.HumanResources);
+  }
 
   onRowClick(event: any): void {
     if (event?.row?.id != null) {

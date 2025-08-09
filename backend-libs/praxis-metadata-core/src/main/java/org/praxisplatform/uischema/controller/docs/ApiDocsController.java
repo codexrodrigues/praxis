@@ -311,6 +311,9 @@ public class ApiDocsController {
                         LOGGER.info("Tipo real extraído de {}: {}", wrapperSchemaName, realTypeName);
                         return realTypeName;
                     }
+                } else {
+                    // Quando a resposta referencia diretamente um DTO sem wrapper
+                    return wrapperSchemaName;
                 }
             }
         }

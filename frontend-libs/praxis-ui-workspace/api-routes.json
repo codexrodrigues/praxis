@@ -1,5 +1,5 @@
 {
-  "apiBase": "/api",
-  "humanResources": "/api/human-resources",
-  "uiWrappersTest": "/api/ui-test/wrappers"
+  "apiBase": "http://localhost:8087/api",
+  "humanResources": "http://localhost:8087/api/human-resources",
+  "uiWrappersTest": "http://localhost:8087/api/ui-test/wrappers"
 }

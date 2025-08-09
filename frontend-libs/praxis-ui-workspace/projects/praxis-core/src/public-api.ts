@@ -18,7 +18,7 @@ export * from './lib/models/table-config.model';
 export * from './lib/models/table-config-v2.model';
 export * from './lib/models/page.model';
 export * from './lib/models/field-definition.model';
-export * from './lib/models/rest-api-response.model';
+export * from './lib/models/api-endpoint.enum';
 export * from './lib/models/component-metadata.interface';
 export * from './lib/models/material-field-metadata.interface';
 export * from './lib/models/form/form-config.model';

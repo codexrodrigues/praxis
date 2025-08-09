@@ -3,16 +3,23 @@ import { Router } from '@angular/router';
 import { PraxisTable } from '@praxis/table';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
+import { GenericCrudService, ApiEndpoint } from '@praxis/core';
 
 @Component({
   selector: 'app-enderecos-list',
   standalone: true,
   imports: [MatCardModule, MatIconModule, PraxisTable],
+  providers: [GenericCrudService],
   templateUrl: './enderecos-list.component.html',
   styleUrl: './enderecos-list.component.scss',
 })
 export class EnderecosListComponent {
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private crudService: GenericCrudService<any>,
+  ) {
+    this.crudService.configure('enderecos', ApiEndpoint.HumanResources);
+  }
 
   onRowClick(event: any): void {
     if (event?.row?.id != null) {

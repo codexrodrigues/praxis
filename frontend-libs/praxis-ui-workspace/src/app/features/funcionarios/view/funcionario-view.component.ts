@@ -6,26 +6,31 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { GenericCrudService, ApiEndpoint } from '@praxis/core';
 
 @Component({
   selector: 'app-funcionario-view',
   standalone: true,
   imports: [CommonModule, MatCardModule, MatIconModule, PraxisDynamicForm],
+  providers: [GenericCrudService],
   templateUrl: './funcionario-view.component.html',
-  styleUrl: './funcionario-view.component.scss'
+  styleUrl: './funcionario-view.component.scss',
 })
 export class FuncionarioViewComponent implements OnInit, OnDestroy {
   id: string | null = null;
   private destroy$ = new Subject<void>();
 
-  constructor(private route: ActivatedRoute) {}
+  constructor(
+    private route: ActivatedRoute,
+    private crudService: GenericCrudService<any>,
+  ) {
+    this.crudService.configure('funcionarios', ApiEndpoint.HumanResources);
+  }
 
   ngOnInit(): void {
-    this.route.paramMap
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(params => {
-        this.id = params.get('id');
-      });
+    this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
+      this.id = params.get('id');
+    });
   }
 
   ngOnDestroy(): void {
