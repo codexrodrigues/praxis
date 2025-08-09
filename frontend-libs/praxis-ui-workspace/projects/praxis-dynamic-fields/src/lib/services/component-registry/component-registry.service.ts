@@ -187,10 +187,21 @@ export class ComponentRegistryService implements IComponentRegistry {
       return type as FieldControlType;
     }
 
+    const sanitized = String(type)
+      .toLowerCase()
+      .replace(/[-_\s]/g, '');
+    const synonyms: Record<string, FieldControlType> = {
+      radiogroup: FieldControlTypeEnum.RADIO,
+      checkboxgroup: FieldControlTypeEnum.CHECKBOX,
+    };
+
+    if (synonyms[sanitized]) {
+      return synonyms[sanitized];
+    }
+
     // Try to find matching enum value by string comparison
     const enumEntry = Object.entries(FieldControlTypeEnum).find(
-      ([key, value]) =>
-        value === type || key.toLowerCase() === String(type).toLowerCase(),
+      ([key, value]) => value === type || key.toLowerCase() === sanitized,
     );
 
     if (enumEntry) {
@@ -334,9 +345,9 @@ export class ComponentRegistryService implements IComponentRegistry {
 
     // Material color picker
     const colorPickerFactory = () =>
-      import('../../components/material-colorpicker/material-colorpicker.component').then(
-        (m) => m.MaterialColorPickerComponent,
-      );
+      import(
+        '../../components/material-colorpicker/material-colorpicker.component'
+      ).then((m) => m.MaterialColorPickerComponent);
     this.register(FieldControlTypeEnum.COLOR_PICKER, colorPickerFactory);
 
     // HTML5 date input
