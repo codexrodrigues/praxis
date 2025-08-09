@@ -13,10 +13,17 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
-import { CommonModule, CurrencyPipe } from '@angular/common';
+import {
+  CommonModule,
+  CurrencyPipe,
+  registerLocaleData,
+} from '@angular/common';
+import localePt from '@angular/common/locales/pt';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
+
+registerLocaleData(localePt, 'pt');
 
 import { MaterialCurrencyMetadata } from '@praxis/core';
 import { SimpleBaseInputComponent } from '../../base/simple-base-input.component';
