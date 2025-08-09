@@ -5,14 +5,18 @@ import {
   GenericCrudService,
   CONFIG_STORAGE,
   ConfigStorage,
-
   FieldControlType,
   MaterialDatepickerMetadata,
   MaterialDateRangeMetadata,
   DateRangeValue,
+  MaterialPriceRangeMetadata,
 } from '@praxis/core';
-import { DynamicFieldLoaderDirective } from '@praxis/dynamic-fields';
-
+import {
+  DynamicFieldLoaderDirective,
+  MaterialSelectComponent,
+  MaterialCheckboxGroupComponent,
+  MaterialRadioGroupComponent,
+} from '@praxis/dynamic-fields';
 
 describe('PraxisDynamicForm', () => {
   let fixture: ComponentFixture<PraxisDynamicForm>;
@@ -145,7 +149,6 @@ describe('PraxisDynamicForm', () => {
     expect(submitSpy).toHaveBeenCalled();
   });
 
-
   it('aplica validadores de min/max em campos de data', () => {
     component.config = {
       sections: [],
@@ -222,6 +225,53 @@ describe('PraxisDynamicForm', () => {
       startDate: new Date('2024-01-01'),
       endDate: new Date('2024-01-02'),
     });
+    expect(ctrl.valid).toBeTrue();
+  });
+
+  it('valida campos de faixa de preço', () => {
+    component.config = {
+      sections: [],
+      fieldMetadata: [
+        {
+          name: 'price',
+          controlType: FieldControlType.RANGE_SLIDER,
+          min: 0,
+          max: 1000,
+        } as MaterialPriceRangeMetadata,
+      ],
+    };
+    (component as any).buildFormFromConfig();
+    const ctrl = component.form.get('price')!;
+    ctrl.setValue({ minPrice: 500, maxPrice: 400 });
+    expect(ctrl.hasError('rangeOrder')).toBeTrue();
+    ctrl.setValue({ minPrice: -10, maxPrice: 100 });
+    expect(ctrl.hasError('minValue')).toBeTrue();
+    ctrl.setValue({ minPrice: 100, maxPrice: 1500 });
+    expect(ctrl.hasError('maxValue')).toBeTrue();
+    ctrl.setValue({ minPrice: 100, maxPrice: 200 });
+    expect(ctrl.valid).toBeTrue();
+  });
+
+  it('exige mínimo e máximo quando faixa de preço é obrigatória', () => {
+    component.config = {
+      sections: [],
+      fieldMetadata: [
+        {
+          name: 'budget',
+          controlType: FieldControlType.RANGE_SLIDER,
+          required: true,
+        } as MaterialPriceRangeMetadata,
+      ],
+    };
+    (component as any).buildFormFromConfig();
+    const ctrl = component.form.get('budget')!;
+
+    expect(ctrl.hasError('required')).toBeTrue();
+
+    ctrl.setValue({ minPrice: 100, maxPrice: null });
+    expect(ctrl.hasError('required')).toBeTrue();
+
+    ctrl.setValue({ minPrice: 100, maxPrice: 200 });
     expect(ctrl.valid).toBeTrue();
   });
 });
