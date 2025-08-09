@@ -6,6 +6,7 @@ import {
   ViewChild,
   ViewContainerRef,
 } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FieldMetadata } from '@praxis/core';
 
 /**
@@ -18,6 +19,7 @@ import { FieldMetadata } from '@praxis/core';
 @Component({
   selector: 'praxis-field-shell',
   standalone: true,
+  imports: [CommonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <ng-template #contentTpl>
@@ -30,7 +32,7 @@ import { FieldMetadata } from '@praxis/core';
         [ngTemplateOutletContext]="{
           field: field,
           index: index,
-          content: contentTpl
+          content: contentTpl,
         }"
       ></ng-container>
     </ng-container>
@@ -62,4 +64,3 @@ export class FieldShellComponent {
   @ViewChild('insertionPoint', { read: ViewContainerRef, static: true })
   vc!: ViewContainerRef;
 }
-

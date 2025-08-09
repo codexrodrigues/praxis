@@ -6,6 +6,7 @@ import {
   computed,
   output,
   inject,
+  Input,
 } from '@angular/core';
 import {
   NG_VALUE_ACCESSOR,
@@ -194,6 +195,11 @@ export class MaterialCurrencyComponent extends SimpleBaseInputComponent {
   }
 
   /** Applies component metadata with strong typing. */
+  @Input({ alias: 'metadata', required: true })
+  set metadataInput(metadata: MaterialCurrencyMetadata) {
+    this.setInputMetadata(metadata);
+  }
+
   setInputMetadata(metadata: MaterialCurrencyMetadata): void {
     this.setMetadata(metadata);
   }
