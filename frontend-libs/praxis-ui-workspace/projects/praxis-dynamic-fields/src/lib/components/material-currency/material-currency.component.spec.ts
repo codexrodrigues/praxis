@@ -53,6 +53,25 @@ describe('MaterialCurrencyComponent', () => {
     expect(component.internalControl.value).toBe(1234.5);
   });
 
+  it('should respect locale when parsing and formatting', () => {
+    component.metadata.set({
+      label: 'Preço',
+      currency: 'BRL',
+      locale: 'pt-BR',
+      controlType: 'currency',
+    } as MaterialCurrencyMetadata);
+    fixture.detectChanges();
+    const input: HTMLInputElement =
+      fixture.nativeElement.querySelector('input');
+    input.value = '1.234,56';
+    input.dispatchEvent(new Event('input'));
+    expect(component.internalControl.value).toBe(1234.56);
+    input.dispatchEvent(new Event('blur'));
+    fixture.detectChanges();
+    expect(input.value).toContain('R$');
+    expect(input.value).toContain('1.234,56');
+  });
+
   it('should allow negative numbers when configured', () => {
     component.metadata.set({
       label: 'Price',

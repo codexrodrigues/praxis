@@ -6,6 +6,7 @@ import {
   computed,
   output,
   inject,
+  LOCALE_ID,
 } from '@angular/core';
 import {
   NG_VALUE_ACCESSOR,
@@ -25,7 +26,9 @@ import { MatIconModule } from '@angular/material/icon';
 
 import { MaterialCurrencyMetadata } from '@praxis/core';
 import { SimpleBaseInputComponent } from '../../base/simple-base-input.component';
-registerLocaleData(localePt, 'pt-BR');
+
+// Register Portuguese locale (pt and pt-BR)
+registerLocaleData(localePt);
 
 /**
  * Input component for currency values with basic formatting support.
@@ -114,8 +117,9 @@ registerLocaleData(localePt, 'pt-BR');
 export class MaterialCurrencyComponent extends SimpleBaseInputComponent {
   /** Emits whenever validation state changes. */
   readonly validationChange = output<ValidationErrors | null>();
-
   private readonly currencyPipe = inject(CurrencyPipe);
+  private readonly defaultLocale =
+    inject(LOCALE_ID, { optional: true }) || 'en-US';
 
   @ViewChild('currencyInput', { static: true })
   private readonly inputRef!: ElementRef<HTMLInputElement>;
@@ -139,11 +143,41 @@ export class MaterialCurrencyComponent extends SimpleBaseInputComponent {
       (this.metadata() as MaterialCurrencyMetadata | null)?.decimalPlaces ?? 2,
   );
 
+  /** Locale used for formatting and parsing. */
+  readonly locale = computed(
+    () =>
+      (this.metadata() as MaterialCurrencyMetadata | null)?.locale ||
+      this.defaultLocale,
+  );
+
+  /** Thousands separator based on locale or metadata. */
+  readonly thousandsSeparator = computed(() => {
+    const md = this.metadata() as MaterialCurrencyMetadata | null;
+    if (md?.thousandsSeparator) {
+      return md.thousandsSeparator;
+    }
+    const formatted = new Intl.NumberFormat(this.locale()).format(1111);
+    return formatted.replace(/1/g, '') || ',';
+  });
+
+  /** Decimal separator based on locale or metadata. */
+  readonly decimalSeparator = computed(() => {
+    const md = this.metadata() as MaterialCurrencyMetadata | null;
+    if (md?.decimalSeparator) {
+      return md.decimalSeparator;
+    }
+    const formatted = new Intl.NumberFormat(this.locale()).format(1.1);
+    return formatted.replace(/1/g, '') || '.';
+  });
+
   override ngOnInit(): void {
     const allowNegative =
       (this.metadata() as MaterialCurrencyMetadata | null)?.allowNegative ??
       false;
-    const pattern = allowNegative ? /^-?\d*(\.\d*)?$/ : /^\d*(\.\d*)?$/;
+    const escapedDecimal = this.escapeRegex(this.decimalSeparator());
+    const pattern = allowNegative
+      ? new RegExp(`^-?\\d*(?:${escapedDecimal}\\d*)?$`)
+      : new RegExp(`^\\d*(?:${escapedDecimal}\\d*)?$`);
     this.internalControl.addValidators(Validators.pattern(pattern));
     if (!allowNegative) {
       this.internalControl.addValidators(Validators.min(0));
@@ -156,7 +190,11 @@ export class MaterialCurrencyComponent extends SimpleBaseInputComponent {
   /** Handles raw input and keeps numeric value in the control. */
   onInput(event: Event): void {
     const input = event.target as HTMLInputElement;
-    const number = Number(input.value.replace(/[^0-9.-]+/g, ''));
+    const raw = input.value
+      .replace(new RegExp(this.escapeRegex(this.thousandsSeparator()), 'g'), '')
+      .replace(this.decimalSeparator(), '.')
+      .replace(/[^0-9.-]/g, '');
+    const number = Number(raw);
     this.setValue(isNaN(number) ? null : number);
   }
 
@@ -164,7 +202,10 @@ export class MaterialCurrencyComponent extends SimpleBaseInputComponent {
   onFocus(): void {
     this.handleFocus();
     const value = this.internalControl.value;
-    this.inputRef.nativeElement.value = value === null ? '' : String(value);
+    this.inputRef.nativeElement.value =
+      value === null || value === undefined
+        ? ''
+        : String(value).replace('.', this.decimalSeparator());
   }
 
   /** Formats the current value using CurrencyPipe on blur. */
@@ -180,6 +221,7 @@ export class MaterialCurrencyComponent extends SimpleBaseInputComponent {
         this.currencyCode(),
         '',
         `1.0-${this.decimalPlaces()}`,
+        this.locale(),
       ) ?? String(value);
     this.inputRef.nativeElement.value = formatted;
   }
@@ -191,12 +233,17 @@ export class MaterialCurrencyComponent extends SimpleBaseInputComponent {
       this.currencyCode(),
       '',
       `1.0-0`,
+      this.locale(),
     );
     return formatted ? formatted.replace(/[0]/g, '').trim() : '$';
   }
 
   protected override getSpecificCssClasses(): string[] {
     return ['pdx-material-currency'];
+  }
+
+  private escapeRegex(value: string): string {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
   /** Applies component metadata with strong typing. */
