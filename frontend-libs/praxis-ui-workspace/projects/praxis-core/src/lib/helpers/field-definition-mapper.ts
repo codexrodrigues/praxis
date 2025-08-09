@@ -51,6 +51,16 @@ export function mapFieldDefinitionToMetadata(
     }
   }
 
+  if (field.numericMin !== undefined) {
+    (metadata as any).min = field.numericMin;
+  }
+  if (field.numericMax !== undefined) {
+    (metadata as any).max = field.numericMax;
+  }
+  if (field.numericStep !== undefined) {
+    (metadata as any).step = field.numericStep;
+  }
+
   // AutoComplete fields are always searchable
   if (field.controlType === FieldControlType.AUTO_COMPLETE) {
     metadata.searchable = true;

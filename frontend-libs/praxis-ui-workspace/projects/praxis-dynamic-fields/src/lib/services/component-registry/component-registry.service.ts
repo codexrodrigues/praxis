@@ -278,6 +278,12 @@ export class ComponentRegistryService implements IComponentRegistry {
         '../../components/material-currency/material-currency.component'
       ).then((m) => m.MaterialCurrencyComponent);
 
+    // Specialized price range input
+    const priceRangeFactory = () =>
+      import(
+        '../../components/material-price-range/material-price-range.component'
+      ).then((m) => m.MaterialPriceRangeComponent);
+
     // Specialized search input
     const searchInputFactory = () =>
       import('../../components/search-input/search-input.component').then(
@@ -322,6 +328,7 @@ export class ComponentRegistryService implements IComponentRegistry {
     this.register(FieldControlTypeEnum.PASSWORD, passwordInputFactory);
     this.register(FieldControlTypeEnum.NUMERIC_TEXT_BOX, numberInputFactory);
     this.register(FieldControlTypeEnum.CURRENCY_INPUT, currencyInputFactory);
+    this.register(FieldControlTypeEnum.RANGE_SLIDER, priceRangeFactory);
     this.register(FieldControlTypeEnum.SEARCH_INPUT, searchInputFactory);
     this.register(FieldControlTypeEnum.PHONE, phoneInputFactory);
     this.register(FieldControlTypeEnum.TIME_INPUT, timeInputFactory);
@@ -334,9 +341,9 @@ export class ComponentRegistryService implements IComponentRegistry {
 
     // Material color picker
     const colorPickerFactory = () =>
-      import('../../components/material-colorpicker/material-colorpicker.component').then(
-        (m) => m.MaterialColorPickerComponent,
-      );
+      import(
+        '../../components/material-colorpicker/material-colorpicker.component'
+      ).then((m) => m.MaterialColorPickerComponent);
     this.register(FieldControlTypeEnum.COLOR_PICKER, colorPickerFactory);
 
     // HTML5 date input
