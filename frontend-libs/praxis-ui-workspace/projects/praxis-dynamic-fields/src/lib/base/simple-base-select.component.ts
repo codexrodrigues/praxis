@@ -5,6 +5,7 @@ import {
   computed,
   inject,
   viewChild,
+  effect,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ComponentMetadata, GenericCrudService, Page } from '@praxis/core';
@@ -102,10 +103,12 @@ export abstract class SimpleBaseSelectComponent<
 
   override ngAfterViewInit(): void {
     super.ngAfterViewInit();
-    const select = this.matSelectRef();
-    if (select) {
-      this.registerMatSelect(select);
-    }
+    effect(() => {
+      const select = this.matSelectRef();
+      if (select && select !== this.matSelect) {
+        this.registerMatSelect(select);
+      }
+    });
   }
 
   /** CRUD service for remote option loading (optional) */

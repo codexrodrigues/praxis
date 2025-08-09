@@ -9,9 +9,15 @@ import { SimpleBaseSelectComponent } from './simple-base-select.component';
 @Component({
   template: `
     <mat-form-field>
-      <mat-select [multiple]="multiple()">
-        <mat-option value="one">One</mat-option>
-      </mat-select>
+      @if (multiple()) {
+        <mat-select multiple>
+          <mat-option value="one">One</mat-option>
+        </mat-select>
+      } @else {
+        <mat-select>
+          <mat-option value="one">One</mat-option>
+        </mat-select>
+      }
     </mat-form-field>
   `,
   standalone: true,
