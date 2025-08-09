@@ -8,6 +8,13 @@ import {
 } from '@angular/core';
 import { FieldMetadata } from '@praxis/core';
 
+/**
+ * Internal wrapper used by {@link DynamicFieldLoaderDirective}.
+ *
+ * Provides an insertion point (`vc`) where the resolved field component is
+ * created and optionally wraps it with a host-provided `itemTemplate` that can
+ * project additional chrome around the field.
+ */
 @Component({
   selector: 'praxis-field-shell',
   standalone: true,
@@ -23,7 +30,7 @@ import { FieldMetadata } from '@praxis/core';
         [ngTemplateOutletContext]="{
           field: field,
           index: index,
-          content: contentTpl,
+          content: contentTpl
         }"
       ></ng-container>
     </ng-container>
@@ -34,8 +41,16 @@ import { FieldMetadata } from '@praxis/core';
   `,
 })
 export class FieldShellComponent {
+  /** Metadata for the dynamic field being rendered. */
   @Input() field!: FieldMetadata;
+
+  /** Index position of the field within the directive's list. */
   @Input() index!: number;
+
+  /**
+   * Host wrapper template. Receives `field`, `index` and a `content` template
+   * that projects the actual field component.
+   */
   @Input()
   itemTemplate?: TemplateRef<{
     field: FieldMetadata;
@@ -43,6 +58,8 @@ export class FieldShellComponent {
     content: TemplateRef<any>;
   }>;
 
+  /** View container used as the insertion point for the field component. */
   @ViewChild('insertionPoint', { read: ViewContainerRef, static: true })
   vc!: ViewContainerRef;
 }
+
