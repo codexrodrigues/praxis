@@ -46,6 +46,7 @@ import { SimpleBaseSelectComponent } from '../../base/simple-base-select.compone
           <mat-option
             *ngFor="let option of filteredOptions(); trackBy: trackByOption"
             [value]="option.value"
+            [disabled]="option.disabled"
             (click)="selectOption(option)"
           >
             {{ option.label }}
@@ -71,6 +72,7 @@ import { SimpleBaseSelectComponent } from '../../base/simple-base-select.compone
           <mat-option
             *ngFor="let option of filteredOptions(); trackBy: trackByOption"
             [value]="option.value"
+            [disabled]="option.disabled"
             (click)="selectOption(option)"
           >
             {{ option.label }}
@@ -112,6 +114,7 @@ export class MaterialSearchableSelectComponent extends SimpleBaseSelectComponent
     const mappedOptions = source?.map((o: any) => ({
       label: o.label ?? o.text,
       value: o.value,
+      disabled: o.disabled,
     }));
 
     super.setSelectMetadata({

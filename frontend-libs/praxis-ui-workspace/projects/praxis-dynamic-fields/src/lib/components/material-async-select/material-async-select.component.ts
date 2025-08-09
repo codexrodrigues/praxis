@@ -25,29 +25,56 @@ import { SimpleBaseSelectComponent } from '../../base/simple-base-select.compone
       [class]="componentCssClasses()"
     >
       <mat-label>{{ metadata()?.label || 'Select' }}</mat-label>
-      <mat-select
-        [multiple]="multiple()"
-        [formControl]="internalControl"
-        [placeholder]="metadata()?.placeholder || ''"
-        [required]="metadata()?.required || false"
-        (openedChange)="onOpened($event)"
-      >
-        <mat-option *ngIf="loading()" disabled>
-          <mat-progress-spinner diameter="20" mode="indeterminate" />
-        </mat-option>
-        <ng-container *ngIf="!loading()">
-          <mat-option *ngIf="error()" (click)="retry()" [value]="null">
-            {{ error() }} - Retry
+      @if (multiple()) {
+        <mat-select
+          multiple
+          [formControl]="internalControl"
+          [placeholder]="metadata()?.placeholder || ''"
+          [required]="metadata()?.required || false"
+          (openedChange)="onOpened($event)"
+        >
+          <mat-option *ngIf="loading()" disabled>
+            <mat-progress-spinner diameter="20" mode="indeterminate" />
           </mat-option>
-          <mat-option
-            *ngFor="let option of options(); trackBy: trackByOption"
-            [value]="option.value"
-            (click)="selectOption(option)"
-          >
-            {{ option.label }}
+          <ng-container *ngIf="!loading()">
+            <mat-option *ngIf="error()" (click)="retry()" [value]="null">
+              {{ error() }} - Retry
+            </mat-option>
+            <mat-option
+              *ngFor="let option of options(); trackBy: trackByOption"
+              [value]="option.value"
+              [disabled]="option.disabled"
+              (click)="selectOption(option)"
+            >
+              {{ option.label }}
+            </mat-option>
+          </ng-container>
+        </mat-select>
+      } @else {
+        <mat-select
+          [formControl]="internalControl"
+          [placeholder]="metadata()?.placeholder || ''"
+          [required]="metadata()?.required || false"
+          (openedChange)="onOpened($event)"
+        >
+          <mat-option *ngIf="loading()" disabled>
+            <mat-progress-spinner diameter="20" mode="indeterminate" />
           </mat-option>
-        </ng-container>
-      </mat-select>
+          <ng-container *ngIf="!loading()">
+            <mat-option *ngIf="error()" (click)="retry()" [value]="null">
+              {{ error() }} - Retry
+            </mat-option>
+            <mat-option
+              *ngFor="let option of options(); trackBy: trackByOption"
+              [value]="option.value"
+              [disabled]="option.disabled"
+              (click)="selectOption(option)"
+            >
+              {{ option.label }}
+            </mat-option>
+          </ng-container>
+        </mat-select>
+      }
       @if (
         errorMessage() &&
         internalControl.invalid &&
@@ -81,6 +108,7 @@ export class MaterialAsyncSelectComponent extends SimpleBaseSelectComponent {
     const mappedOptions = source?.map((o: any) => ({
       label: o.label ?? o.text,
       value: o.value,
+      disabled: o.disabled,
     }));
 
     super.setSelectMetadata({

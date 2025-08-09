@@ -7,6 +7,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MaterialSelectMetadata, GenericCrudService } from '@praxis/core';
 import {
   SimpleBaseSelectComponent,
+  SelectOption,
   SimpleSelectMetadata,
 } from '../../base/simple-base-select.component';
 
@@ -43,6 +44,7 @@ import {
         <mat-option
           *ngFor="let option of options(); trackBy: trackByOption"
           [value]="option.value"
+          [disabled]="isOptionDisabled(option)"
           (click)="selectOption(option)"
         >
           {{ option.label }}
@@ -84,6 +86,7 @@ export class MaterialMultiSelectComponent extends SimpleBaseSelectComponent {
     const mappedOptions = source?.map((o) => ({
       label: o.label ?? o.text ?? '',
       value: o.value,
+      disabled: o.disabled,
     }));
 
     super.setSelectMetadata({
@@ -110,5 +113,16 @@ export class MaterialMultiSelectComponent extends SimpleBaseSelectComponent {
     } else {
       this.internalControl.enable({ emitEvent: false });
     }
+  }
+
+  /** Disables options when maxSelections reached */
+  isOptionDisabled(option: SelectOption<any>): boolean {
+    if (option.disabled) return true;
+    if (!this.maxSelections()) return false;
+    const current = Array.isArray(this.internalControl.value)
+      ? this.internalControl.value
+      : [];
+    const isSelected = current.includes(option.value);
+    return !isSelected && current.length >= this.maxSelections()!;
   }
 }
