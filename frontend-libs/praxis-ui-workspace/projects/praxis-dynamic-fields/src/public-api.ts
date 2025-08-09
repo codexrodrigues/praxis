@@ -22,6 +22,7 @@ export * from './lib/components/material-date-range/material-date-range.componen
 export * from './lib/components/datetime-local-input/datetime-local-input.component';
 export * from './lib/components/email-input/email-input.component';
 export * from './lib/components/number-input/number-input.component';
+export * from './lib/components/material-currency/material-currency.component';
 export * from './lib/components/month-input/month-input.component';
 export * from './lib/components/password-input/password-input.component';
 export * from './lib/components/search-input/search-input.component';

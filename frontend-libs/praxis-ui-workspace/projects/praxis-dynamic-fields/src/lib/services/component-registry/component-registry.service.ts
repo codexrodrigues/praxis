@@ -272,6 +272,12 @@ export class ComponentRegistryService implements IComponentRegistry {
         (m) => m.NumberInputComponent,
       );
 
+    // Specialized currency input
+    const currencyInputFactory = () =>
+      import(
+        '../../components/material-currency/material-currency.component'
+      ).then((m) => m.MaterialCurrencyComponent);
+
     // Specialized search input
     const searchInputFactory = () =>
       import('../../components/search-input/search-input.component').then(
@@ -315,6 +321,7 @@ export class ComponentRegistryService implements IComponentRegistry {
     this.register(FieldControlTypeEnum.EMAIL_INPUT, emailInputFactory);
     this.register(FieldControlTypeEnum.PASSWORD, passwordInputFactory);
     this.register(FieldControlTypeEnum.NUMERIC_TEXT_BOX, numberInputFactory);
+    this.register(FieldControlTypeEnum.CURRENCY_INPUT, currencyInputFactory);
     this.register(FieldControlTypeEnum.SEARCH_INPUT, searchInputFactory);
     this.register(FieldControlTypeEnum.PHONE, phoneInputFactory);
     this.register(FieldControlTypeEnum.TIME_INPUT, timeInputFactory);
