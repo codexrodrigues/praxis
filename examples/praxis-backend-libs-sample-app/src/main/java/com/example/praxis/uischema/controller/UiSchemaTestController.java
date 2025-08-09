@@ -40,6 +40,7 @@ public class UiSchemaTestController {
                 .queryParam("path", ApiRouteDefinitions.UI_WRAPPERS_TEST_PATH)
                 .queryParam("operation", "get")
                 .queryParam("schemaType", "response")
+                .queryParam("document", ApiRouteDefinitions.UI_WRAPPERS_TEST_GROUP)
                 .build()
                 .toUri();
         return ResponseEntity.status(HttpStatus.FOUND).location(location).build();

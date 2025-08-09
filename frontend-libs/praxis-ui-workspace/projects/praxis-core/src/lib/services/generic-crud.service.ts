@@ -389,7 +389,8 @@ export class GenericCrudService<T> {
 
     const entry = this.resolveEndpointEntry();
     const baseUrl = buildApiUrl(entry);
-    const url = `${baseUrl}/schemas/filtered`;
+    const origin = new URL(baseUrl).origin;
+    const url = `${origin}/schemas/filtered`;
     return this.http
       .get<any>(url, {
         params: httpParams,
