@@ -3,6 +3,7 @@ import {
   FieldMetadata,
   ValidatorOptions,
 } from '../models/component-metadata.interface';
+import { FieldControlType } from '../metadata/field-control-type.constants';
 
 /**
  * Convert a `FieldDefinition` coming from the backend schema into
@@ -48,6 +49,11 @@ export function mapFieldDefinitionToMetadata(
     if (value !== undefined) {
       (metadata as any)[prop] = value;
     }
+  }
+
+  // AutoComplete fields are always searchable
+  if (field.controlType === FieldControlType.AUTO_COMPLETE) {
+    metadata.searchable = true;
   }
 
   if (field.displayField) {

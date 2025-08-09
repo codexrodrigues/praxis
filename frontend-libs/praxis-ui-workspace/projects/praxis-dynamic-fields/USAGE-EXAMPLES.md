@@ -164,9 +164,11 @@ export class EnterpriseFormComponent {
       {
         name: "position",
         label: "Cargo",
-        controlType: "select",
+        controlType: "autoComplete",
         required: true,
+        endpoint: "/api/positions",
         dependencyFields: ["department"],
+        // `searchable` é verdadeiro por padrão para autoComplete
       },
       {
         name: "startDate",
