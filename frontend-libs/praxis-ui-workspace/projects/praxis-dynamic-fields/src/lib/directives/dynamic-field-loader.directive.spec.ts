@@ -576,6 +576,11 @@ describe('DynamicFieldLoaderDirective', () => {
       const compB = directive.getComponent('b');
       const compC = directive.getComponent('c');
 
+      const moveSpy = spyOn(
+        (directive as any).viewContainer,
+        'move',
+      ).and.callThrough();
+
       component.fields = [
         { name: 'b', controlType: 'input' },
         { name: 'a', controlType: 'input' },
@@ -587,6 +592,14 @@ describe('DynamicFieldLoaderDirective', () => {
       expect(directive.getComponent('a')).toBe(compA);
       expect(directive.getComponent('b')).toBe(compB);
       expect(directive.getComponent('c')).toBe(compC);
+      expect(moveSpy.calls.count()).toBe(2);
+
+      const shellA = (directive as any).shellRefs.get('a');
+      const shellB = (directive as any).shellRefs.get('b');
+      const shellC = (directive as any).shellRefs.get('c');
+      expect(shellB.instance.index).toBe(0);
+      expect(shellA.instance.index).toBe(1);
+      expect(shellC.instance.index).toBe(2);
     });
 
     it('should insert new fields without recreating existing ones', async () => {
@@ -616,6 +629,13 @@ describe('DynamicFieldLoaderDirective', () => {
       expect(directive.getComponent('a')).toBe(compA);
       expect(directive.getComponent('c')).toBe(compC);
       expect(directive.getComponent('b')).toBeDefined();
+
+      const shellA = (directive as any).shellRefs.get('a');
+      const shellB = (directive as any).shellRefs.get('b');
+      const shellC = (directive as any).shellRefs.get('c');
+      expect(shellA.instance.index).toBe(0);
+      expect(shellB.instance.index).toBe(1);
+      expect(shellC.instance.index).toBe(2);
     });
 
     it('should remove fields individually', async () => {
@@ -661,6 +681,24 @@ describe('DynamicFieldLoaderDirective', () => {
       component.fields = [
         { name: 'a', controlType: 'button' },
       ] as FieldMetadata[];
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(directive.getComponent('a')).not.toBe(original);
+    });
+
+    it('should detect mutated controlType without array replacement', async () => {
+      component.fields = [
+        { name: 'a', controlType: 'input' },
+      ] as FieldMetadata[];
+      component.testForm = new FormBuilder().group({ a: [''] });
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const original = directive.getComponent('a');
+
+      component.fields[0].controlType = 'button';
+      directive.refresh();
       fixture.detectChanges();
       await fixture.whenStable();
 

@@ -233,15 +233,11 @@ export class DynamicFieldLoaderDirective
 
   /** Ordem atual dos nomes de campo renderizados */
   private currentOrder: string[] = [];
-
-  /** Snapshot dos fields para detectar mudanças de controlType */
-  private lastFieldsSnapshot: FieldMetadata[] = [];
-
-  /** Contador de detecções consecutivas sem mudanças (para throttling de logs) */
-  private consecutiveNoChanges = 0;
-
-  /** Threshold para reduzir frequência de logs repetitivos */
-  private readonly LOG_THROTTLE_THRESHOLD = 10;
+  /** Snapshot compacto para detectar mudanças de tipo */
+  private lastFieldsSnapshot: Array<{
+    name: string;
+    controlType: string;
+  }> = [];
 
   // =============================================================================
   // LIFECYCLE HOOKS
@@ -338,7 +334,6 @@ export class DynamicFieldLoaderDirective
 
       // Se é primeira renderização, sempre renderizar
       if (fieldsChange.isFirstChange()) {
-        this.consecutiveNoChanges = 0; // Reset counter on actual changes
         return true;
       }
 
@@ -355,7 +350,6 @@ export class DynamicFieldLoaderDirective
         prevNames.length !== currNames.length ||
         prevNames.some((name, i) => name !== currNames[i])
       ) {
-        this.consecutiveNoChanges = 0;
         return true;
       }
 
@@ -363,20 +357,8 @@ export class DynamicFieldLoaderDirective
       for (const curr of currentFields) {
         const prev = previousFields.find((f) => f.name === curr.name);
         if (!prev || prev.controlType !== curr.controlType) {
-          this.consecutiveNoChanges = 0;
           return true;
         }
-      }
-
-      this.consecutiveNoChanges++;
-      if (
-        this.consecutiveNoChanges === 1 ||
-        this.consecutiveNoChanges % this.LOG_THROTTLE_THRESHOLD === 0
-      ) {
-        logger.debug(
-          `[DynamicFieldLoader] No actual field changes detected, skipping re-render ` +
-            `(${this.consecutiveNoChanges} consecutive detections)`,
-        );
       }
 
       return false;
@@ -539,7 +521,10 @@ export class DynamicFieldLoaderDirective
         }
         this.componentsCreated.emit(new Map(this.componentRefs));
         this.currentOrder = nextOrder;
-        this.lastFieldsSnapshot = fieldsSnapshot;
+        this.lastFieldsSnapshot = fieldsSnapshot.map((f) => ({
+          name: f.name,
+          controlType: f.controlType,
+        }));
       } catch (error) {
         createdFieldNames.forEach((name) => this.destroySingle(name));
         this.viewContainer.clear();
@@ -586,14 +571,22 @@ export class DynamicFieldLoaderDirective
       nextOrder.forEach((name, index) => {
         const shellRef = this.shellRefs.get(name);
         if (shellRef) {
-          this.viewContainer.move(shellRef.hostView, index);
-          shellRef.instance.index = index;
-          shellRef.changeDetectorRef.detectChanges();
+          const currentIndex = this.viewContainer.indexOf(shellRef.hostView);
+          if (currentIndex !== index && currentIndex !== -1) {
+            this.viewContainer.move(shellRef.hostView, index);
+          }
+          if (shellRef.instance.index !== index) {
+            shellRef.instance.index = index;
+            shellRef.changeDetectorRef.detectChanges();
+          }
         }
       });
 
       this.currentOrder = nextOrder;
-      this.lastFieldsSnapshot = fieldsSnapshot;
+      this.lastFieldsSnapshot = fieldsSnapshot.map((f) => ({
+        name: f.name,
+        controlType: f.controlType,
+      }));
     } finally {
       this.cdr.detectChanges();
     }
@@ -626,6 +619,7 @@ export class DynamicFieldLoaderDirective
           `[DynamicFieldLoader] No component found for controlType '${field.controlType}', skipping field '${field.name}'`,
         );
         shellRef.destroy();
+        // TODO (issue futura): this.fieldError.emit({ field, error: 'not-found' });
         return null;
       }
 
@@ -650,6 +644,7 @@ export class DynamicFieldLoaderDirective
         `[DynamicFieldLoader] Failed to create component for field '${field.name}':`,
         error,
       );
+      // TODO (issue futura): this.fieldError.emit({ field, error });
       throw error;
     }
   }
@@ -866,9 +861,9 @@ export class DynamicFieldLoaderDirective
    */
   private destroyComponents(): void {
     const names = Array.from(this.componentRefs.keys());
-    names.forEach((fieldName) => this.destroySingle(fieldName));
-    this.lastFieldsSnapshot = [];
+    for (const name of names) this.destroySingle(name);
     this.currentOrder = [];
+    this.lastFieldsSnapshot = [];
   }
 
   private destroySingle(fieldName: string): void {
