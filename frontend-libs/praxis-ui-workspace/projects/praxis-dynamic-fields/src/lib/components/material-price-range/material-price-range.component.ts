@@ -83,10 +83,9 @@ export class MaterialPriceRangeComponent
     maxPrice: new FormControl<number | null>(null),
   });
 
-  readonly startCurrencyMetadata = computed(() => {
-    const md = this.metadata() as MaterialPriceRangeMetadata | null;
-    if (!md) return null;
-    const meta: MaterialCurrencyMetadata = {
+  readonly startCurrencyMetadata = computed<MaterialCurrencyMetadata>(() => {
+    const md = this.metadata() as MaterialPriceRangeMetadata;
+    return {
       controlType: FieldControlType.CURRENCY_INPUT,
       name: `${md.name}_min`,
       label: md.startLabel || 'Min',
@@ -98,13 +97,11 @@ export class MaterialPriceRangeComponent
       placeholder: md.startPlaceholder,
       required: md.required,
     };
-    return meta;
   });
 
-  readonly endCurrencyMetadata = computed(() => {
-    const md = this.metadata() as MaterialPriceRangeMetadata | null;
-    if (!md) return null;
-    const meta: MaterialCurrencyMetadata = {
+  readonly endCurrencyMetadata = computed<MaterialCurrencyMetadata>(() => {
+    const md = this.metadata() as MaterialPriceRangeMetadata;
+    return {
       controlType: FieldControlType.CURRENCY_INPUT,
       name: `${md.name}_max`,
       label: md.endLabel || 'Max',
@@ -116,7 +113,6 @@ export class MaterialPriceRangeComponent
       placeholder: md.endPlaceholder,
       required: md.required,
     };
-    return meta;
   });
 
   /** Custom error messages for range-specific validations */
