@@ -90,4 +90,14 @@ export class MaterialSelectComponent extends SimpleBaseSelectComponent {
         matMetadata.optionValueKey ?? (matMetadata as any).valueField,
     });
   }
+
+  override ngOnInit(): void {
+    super.ngOnInit();
+    const disabled = this.metadata()?.disabled;
+    if (disabled) {
+      this.internalControl.disable({ emitEvent: false });
+    } else {
+      this.internalControl.enable({ emitEvent: false });
+    }
+  }
 }
