@@ -210,13 +210,6 @@ export abstract class SimpleBaseSelectComponent<
       this.matSelect.ariaLabelledby = meta.ariaLabelledby;
   }
 
-  override setDisabledState(isDisabled: boolean): void {
-    super.setDisabledState(isDisabled);
-    if (this.matSelect) {
-      this.matSelect.disabled = isDisabled;
-    }
-  }
-
   /**
    * Updates the current search term and emits the change event.
    */

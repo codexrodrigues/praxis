@@ -27,8 +27,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MaterialCurrencyMetadata } from '@praxis/core';
 import { SimpleBaseInputComponent } from '../../base/simple-base-input.component';
 
-// Register Portuguese locale (pt and pt-BR)
+// Register Portuguese locale data for both generic 'pt' and region-specific 'pt-BR'
 registerLocaleData(localePt);
+registerLocaleData(localePt, 'pt-BR');
 
 /**
  * Input component for currency values with basic formatting support.
