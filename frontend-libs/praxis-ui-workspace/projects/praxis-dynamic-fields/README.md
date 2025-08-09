@@ -43,7 +43,7 @@ O sistema usa as constantes do `@praxis/core` para garantir consistência:
 - `FieldControlType.CURRENCY_INPUT` - Campo monetário
 - `FieldControlType.NUMERIC_TEXT_BOX` - Campo numérico
 - `FieldControlType.MULTI_SELECT` - Seleção múltipla
-- `FieldControlType.AUTO_COMPLETE` - Auto completar
+- `FieldControlType.AUTO_COMPLETE` - Auto completar (busca habilitada por padrão)
 - `FieldControlType.DATE_TIME_PICKER` - Data e hora
 - `FieldControlType.DATE_RANGE` - Intervalo de datas
 - `FieldControlType.FILE_UPLOAD` - Upload de arquivos
@@ -52,6 +52,8 @@ O sistema usa as constantes do `@praxis/core` para garantir consistência:
 - `FieldControlType.TIME_PICKER` - Seletor de horário
 - `FieldControlType.RATING` - Classificação por estrelas
 - `FieldControlType.COLOR_PICKER` - Seletor de cores
+
+Campos com `FieldControlType.AUTO_COMPLETE` utilizam internamente o `MaterialSearchableSelectComponent`, habilitando busca automaticamente.
 
 ## 🧩 MaterialSelectComponent
 

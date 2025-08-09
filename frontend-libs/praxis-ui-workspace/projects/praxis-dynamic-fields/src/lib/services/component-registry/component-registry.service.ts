@@ -375,6 +375,9 @@ export class ComponentRegistryService implements IComponentRegistry {
       searchableSelectFactory,
     );
 
+    // Alias for auto-complete fields
+    this.register(FieldControlTypeEnum.AUTO_COMPLETE, searchableSelectFactory);
+
     const asyncSelectFactory = () =>
       import(
         '../../components/material-async-select/material-async-select.component'

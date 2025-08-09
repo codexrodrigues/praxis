@@ -4,6 +4,7 @@ import {
 } from './helpers/field-definition-mapper';
 import { FieldDefinition } from './models/field-definition.model';
 import { FieldMetadata } from './models/component-metadata.interface';
+import { FieldControlType } from './metadata/field-control-type.constants';
 
 describe('FieldDefinition to FieldMetadata mapper', () => {
   it('should map basic properties', () => {
@@ -91,5 +92,16 @@ describe('FieldDefinition to FieldMetadata mapper', () => {
     expect(meta.optionValueKey).toBe('id');
     expect(meta.filterCriteria).toEqual({ active: true });
     expect(meta.selectOptions?.[0]).toEqual({ value: '1', text: 'Open' });
+  });
+
+  it('should force searchable true for autoComplete control type', () => {
+    const def: FieldDefinition = {
+      name: 'city',
+      controlType: FieldControlType.AUTO_COMPLETE,
+    } as any;
+
+    const meta = mapFieldDefinitionToMetadata(def);
+
+    expect(meta.searchable).toBeTrue();
   });
 });
