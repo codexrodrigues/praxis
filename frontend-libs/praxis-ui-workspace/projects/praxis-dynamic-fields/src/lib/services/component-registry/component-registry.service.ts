@@ -325,6 +325,13 @@ export class ComponentRegistryService implements IComponentRegistry {
     // HTML5 color input
     this.register(FieldControlTypeEnum.COLOR_INPUT, colorInputFactory);
 
+    // Material color picker
+    const colorPickerFactory = () =>
+      import('../../components/material-colorpicker/material-colorpicker.component').then(
+        (m) => m.MaterialColorPickerComponent,
+      );
+    this.register(FieldControlTypeEnum.COLOR_PICKER, colorPickerFactory);
+
     // HTML5 date input
     this.register(FieldControlTypeEnum.DATE_INPUT, dateInputFactory);
 

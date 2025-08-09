@@ -37,6 +37,7 @@ export * from './lib/components/time-input/time-input.component';
 export * from './lib/components/material-timepicker/material-timepicker.component';
 export * from './lib/components/url-input/url-input.component';
 export * from './lib/components/week-input/week-input.component';
+export * from './lib/components/material-colorpicker/material-colorpicker.component';
 
 // Services
 export * from './lib/services/action-resolver.service';
