@@ -34,7 +34,6 @@ import {
         <mat-option
           *ngFor="let option of options(); trackBy: trackByOption"
           [value]="option.value"
-          [disabled]="option.disabled"
           (click)="selectOption(option)"
         >
           {{ option.label }}
@@ -74,7 +73,6 @@ export class MaterialSelectComponent extends SimpleBaseSelectComponent {
     const mappedOptions = source?.map((o: any) => ({
       label: o.label ?? o.text,
       value: o.value,
-      disabled: o.disabled,
     }));
 
     super.setSelectMetadata({
@@ -89,5 +87,15 @@ export class MaterialSelectComponent extends SimpleBaseSelectComponent {
       optionValueKey:
         matMetadata.optionValueKey ?? (matMetadata as any).valueField,
     });
+  }
+
+  override ngOnInit(): void {
+    super.ngOnInit();
+    const disabled = this.metadata()?.disabled;
+    if (disabled) {
+      this.internalControl.disable({ emitEvent: false });
+    } else {
+      this.internalControl.enable({ emitEvent: false });
+    }
   }
 }
