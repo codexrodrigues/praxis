@@ -44,8 +44,6 @@ import {
   TemplateRef,
 } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { Subject } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
 
 import { FieldMetadata } from '@praxis/core';
 import { ComponentRegistryService } from '../services/component-registry/component-registry.service';
@@ -99,7 +97,6 @@ export class DynamicFieldLoaderDirective
   private readonly viewContainer = inject(ViewContainerRef);
   private readonly componentRegistry = inject(ComponentRegistryService);
   private readonly cdr = inject(ChangeDetectorRef);
-  private readonly destroy$ = new Subject<void>();
 
   // =============================================================================
   // INPUTS
@@ -151,8 +148,35 @@ export class DynamicFieldLoaderDirective
 
   /**
    * Template opcional para embrulhar cada campo renderizado.
+   *
+   * O contexto fornece:
+   * - `field`: metadata do campo
+   * - `index`: posição do campo na lista
+   * - `content`: `TemplateRef` com o conteúdo do campo a ser projetado
+   *
+   * @example
+   * ```html
+   * <ng-template #fieldItem let-field="field" let-index="index" let-content="content">
+   *   <div class="field-wrapper">
+   *     <button class="drag-handle">::</button>
+   *     <ng-container [ngTemplateOutlet]="content"></ng-container>
+   *     <button class="edit">⚙</button>
+   *   </div>
+   * </ng-template>
+   *
+   * <ng-container
+   *   dynamicFieldLoader
+   *   [fields]="fields"
+   *   [formGroup]="form"
+   *   [itemTemplate]="fieldItem">
+   * </ng-container>
+   * ```
    */
-  @Input() itemTemplate?: TemplateRef<{ field: FieldMetadata; index: number }>;
+  @Input() itemTemplate?: TemplateRef<{
+    field: FieldMetadata;
+    index: number;
+    content: TemplateRef<any>;
+  }>;
 
   // =============================================================================
   // OUTPUTS
@@ -207,11 +231,11 @@ export class DynamicFieldLoaderDirective
   /** Mapa de shells criados */
   private shellRefs = new Map<string, ComponentRef<FieldShellComponent>>();
 
-  /** Flag para evitar múltiplas renderizações simultâneas */
-  private isRendering = false;
+  /** Ordem atual dos nomes de campo renderizados */
+  private currentOrder: string[] = [];
 
-  /** Cache do último snapshot dos fields para evitar re-renderizações desnecessárias */
-  private lastFieldsSnapshot: string | null = null;
+  /** Snapshot dos fields para detectar mudanças de controlType */
+  private lastFieldsSnapshot: FieldMetadata[] = [];
 
   /** Contador de detecções consecutivas sem mudanças (para throttling de logs) */
   private consecutiveNoChanges = 0;
@@ -240,8 +264,6 @@ export class DynamicFieldLoaderDirective
   }
 
   ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
     this.destroyComponents();
   }
 
@@ -325,31 +347,28 @@ export class DynamicFieldLoaderDirective
       const currentFields =
         (fieldsChange.currentValue as FieldMetadata[]) || [];
 
-      // Se o número de campos mudou, re-renderizar
-      if (previousFields.length !== currentFields.length) {
-        this.consecutiveNoChanges = 0; // Reset counter on actual changes
+      const prevNames = previousFields.map((f) => f.name);
+      const currNames = currentFields.map((f) => f.name);
+
+      // Mudança de tamanho ou ordem
+      if (
+        prevNames.length !== currNames.length ||
+        prevNames.some((name, i) => name !== currNames[i])
+      ) {
+        this.consecutiveNoChanges = 0;
         return true;
       }
 
-      // Verificar se algum campo mudou de fato
-      for (let i = 0; i < currentFields.length; i++) {
-        const current = currentFields[i];
-        const previous = previousFields[i];
-
-        if (
-          !previous ||
-          current.name !== previous.name ||
-          current.controlType !== previous.controlType
-        ) {
-          this.consecutiveNoChanges = 0; // Reset counter on actual changes
+      // ControlType diferente para mesmo nome
+      for (const curr of currentFields) {
+        const prev = previousFields.find((f) => f.name === curr.name);
+        if (!prev || prev.controlType !== curr.controlType) {
+          this.consecutiveNoChanges = 0;
           return true;
         }
       }
 
-      // Se chegou até aqui, não houve mudança real
       this.consecutiveNoChanges++;
-
-      // Log throttling: só fazer log a cada N detecções consecutivas ou na primeira
       if (
         this.consecutiveNoChanges === 1 ||
         this.consecutiveNoChanges % this.LOG_THROTTLE_THRESHOLD === 0
@@ -488,9 +507,6 @@ export class DynamicFieldLoaderDirective
   private async renderFields(): Promise<void> {
     // Se já há um rendering em andamento, aguardar conclusão
     if (this.currentRenderingPromise) {
-      console.debug(
-        '[DynamicFieldLoader] Waiting for current rendering to complete...',
-      );
       return this.currentRenderingPromise;
     }
 
@@ -508,61 +524,76 @@ export class DynamicFieldLoaderDirective
    * @private
    */
   private async executeRendering(): Promise<void> {
-    const fieldsSnapshot = [...this.fields]; // Snapshot para consistência
-    const currentFieldsSignature = JSON.stringify(
-      fieldsSnapshot.map((f) => ({ name: f.name, controlType: f.controlType })),
-    );
+    const fieldsSnapshot = [...this.fields];
+    const nextOrder = fieldsSnapshot.map((f) => f.name);
 
-    // Verificar se já não renderizamos este mesmo conjunto de fields
-    if (this.lastFieldsSnapshot === currentFieldsSignature) {
-      console.debug(
-        '[DynamicFieldLoader] Fields snapshot unchanged, skipping render',
-      );
-      return;
-    }
-
-    try {
-      // Limpar componentes existentes
-      this.destroyComponents();
-      this.viewContainer.clear();
-
-      // Criar novos componentes com rollback em caso de erro
+    // Primeira renderização: criar todos e emitir componentsCreated
+    if (this.currentOrder.length === 0) {
       const createdFieldNames: string[] = [];
-
-      for (const [index, field] of fieldsSnapshot.entries()) {
-        try {
+      try {
+        for (const [index, field] of fieldsSnapshot.entries()) {
           const componentRef = await this.createFieldComponent(field, index);
           if (componentRef) {
             createdFieldNames.push(field.name);
           }
-        } catch (error) {
-          console.error(
-            `[DynamicFieldLoader] Failed to create component for '${field.name}', rolling back...`,
-            error,
-          );
+        }
+        this.componentsCreated.emit(new Map(this.componentRefs));
+        this.currentOrder = nextOrder;
+        this.lastFieldsSnapshot = fieldsSnapshot;
+      } catch (error) {
+        createdFieldNames.forEach((name) => this.destroySingle(name));
+        this.viewContainer.clear();
+        throw error;
+      } finally {
+        this.cdr.detectChanges();
+      }
+      return;
+    }
 
-          // Rollback: destruir componentes criados até agora
-          createdFieldNames.forEach((name) => this.destroySingle(name));
-          this.viewContainer.clear();
-          throw error;
+    // Reconciliação incremental
+    try {
+      // Remoções e mudanças de tipo
+      for (const name of [...this.currentOrder]) {
+        const newField = fieldsSnapshot.find((f) => f.name === name);
+        const prevField = this.lastFieldsSnapshot.find((f) => f.name === name);
+        if (
+          !newField ||
+          !prevField ||
+          newField.controlType !== prevField.controlType
+        ) {
+          this.destroySingle(name);
         }
       }
 
-      // Emitir mapa de componentes criados apenas se tudo deu certo
-      this.componentsCreated.emit(new Map(this.componentRefs));
-
-      // Armazenar snapshot apenas após sucesso
-      this.lastFieldsSnapshot = currentFieldsSignature;
-
-      // Log apenas quando há mudanças significativas (não para cache hits)
-      if (this.componentRefs.size > 0) {
-        logger.info(
-          `[DynamicFieldLoader] ✅ Renderizados ${this.componentRefs.size} componentes`,
-        );
+      // Inserções
+      const createdNames: string[] = [];
+      for (let i = 0; i < fieldsSnapshot.length; i++) {
+        const field = fieldsSnapshot[i];
+        if (!this.componentRefs.has(field.name)) {
+          try {
+            const ref = await this.createFieldComponent(field, i);
+            if (ref) {
+              createdNames.push(field.name);
+            }
+          } catch (error) {
+            createdNames.forEach((n) => this.destroySingle(n));
+            throw error;
+          }
+        }
       }
-    } catch (error) {
-      logger.error('[DynamicFieldLoader] Error during field rendering:', error);
-      throw error;
+
+      // Movimentos e atualização de índices
+      nextOrder.forEach((name, index) => {
+        const shellRef = this.shellRefs.get(name);
+        if (shellRef) {
+          this.viewContainer.move(shellRef.hostView, index);
+          shellRef.instance.index = index;
+          shellRef.changeDetectorRef.detectChanges();
+        }
+      });
+
+      this.currentOrder = nextOrder;
+      this.lastFieldsSnapshot = fieldsSnapshot;
     } finally {
       this.cdr.detectChanges();
     }
@@ -580,7 +611,9 @@ export class DynamicFieldLoaderDirective
   ): Promise<ComponentRef<BaseDynamicFieldComponent> | null> {
     try {
       // 1) cria shell
-      const shellRef = this.viewContainer.createComponent(FieldShellComponent);
+      const shellRef = this.viewContainer.createComponent(FieldShellComponent, {
+        index,
+      });
       shellRef.instance.field = field;
       shellRef.instance.index = index;
       shellRef.instance.itemTemplate = this.itemTemplate;
@@ -610,14 +643,6 @@ export class DynamicFieldLoaderDirective
         componentRef: componentRef as any,
         index,
       });
-
-      // Log reduzido - apenas para debug quando necessário
-      if (console.debug.length) {
-        console.debug(
-          `[` +
-            `DynamicFieldLoader] Campo '${field.name}' (${field.controlType}) criado`,
-        );
-      }
 
       return componentRef as any;
     } catch (error) {
@@ -840,8 +865,10 @@ export class DynamicFieldLoaderDirective
    * Garante que não há vazamentos de memória.
    */
   private destroyComponents(): void {
-    this.componentRefs.forEach((_, fieldName) => this.destroySingle(fieldName));
-    this.lastFieldsSnapshot = null; // Reset snapshot quando destruir componentes
+    const names = Array.from(this.componentRefs.keys());
+    names.forEach((fieldName) => this.destroySingle(fieldName));
+    this.lastFieldsSnapshot = [];
+    this.currentOrder = [];
   }
 
   private destroySingle(fieldName: string): void {

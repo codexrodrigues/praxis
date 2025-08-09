@@ -57,8 +57,16 @@ class TestHostComponent {
 
 @Component({
   template: `
-    <ng-template #item let-field="field" let-index="index">
-      <div class="wrapper" [attr.data-index]="index">{{ field.name }}</div>
+    <ng-template
+      #item
+      let-field="field"
+      let-index="index"
+      let-content="content"
+    >
+      <div class="wrapper" [attr.data-index]="index">
+        <span class="label">{{ field.name }}</span>
+        <ng-container [ngTemplateOutlet]="content"></ng-container>
+      </div>
     </ng-template>
     <form [formGroup]="testForm">
       <ng-container
@@ -543,32 +551,120 @@ describe('DynamicFieldLoaderDirective', () => {
         ),
       );
     });
+  });
 
-    it('should prevent multiple simultaneous renders', async () => {
+  // =============================================================================
+  // KEYED RECONCILIATION TESTS
+  // =============================================================================
+
+  describe('Keyed Reconciliation', () => {
+    it('should preserve components on reorder', async () => {
       component.fields = [
-        {
-          name: 'test',
-          label: 'Test',
-          controlType: 'input',
-        },
+        { name: 'a', controlType: 'input' },
+        { name: 'b', controlType: 'input' },
+        { name: 'c', controlType: 'input' },
       ] as FieldMetadata[];
-
       component.testForm = new FormBuilder().group({
-        test: [''],
+        a: [''],
+        b: [''],
+        c: [''],
       });
-
-      spyOn(console, 'debug');
-
-      // Tentar múltiplas renderizações simultâneas
-      directive.refresh();
-      directive.refresh();
-      directive.refresh();
-
+      fixture.detectChanges();
       await fixture.whenStable();
 
-      expect(console.debug).toHaveBeenCalledWith(
-        '[DynamicFieldLoader] Waiting for current rendering to complete...',
-      );
+      const compA = directive.getComponent('a');
+      const compB = directive.getComponent('b');
+      const compC = directive.getComponent('c');
+
+      component.fields = [
+        { name: 'b', controlType: 'input' },
+        { name: 'a', controlType: 'input' },
+        { name: 'c', controlType: 'input' },
+      ] as FieldMetadata[];
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(directive.getComponent('a')).toBe(compA);
+      expect(directive.getComponent('b')).toBe(compB);
+      expect(directive.getComponent('c')).toBe(compC);
+    });
+
+    it('should insert new fields without recreating existing ones', async () => {
+      component.fields = [
+        { name: 'a', controlType: 'input' },
+        { name: 'c', controlType: 'input' },
+      ] as FieldMetadata[];
+      component.testForm = new FormBuilder().group({
+        a: [''],
+        c: [''],
+      });
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const compA = directive.getComponent('a');
+      const compC = directive.getComponent('c');
+
+      component.fields = [
+        { name: 'a', controlType: 'input' },
+        { name: 'b', controlType: 'input' },
+        { name: 'c', controlType: 'input' },
+      ] as FieldMetadata[];
+      component.testForm.addControl('b', new FormBuilder().control(''));
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(directive.getComponent('a')).toBe(compA);
+      expect(directive.getComponent('c')).toBe(compC);
+      expect(directive.getComponent('b')).toBeDefined();
+    });
+
+    it('should remove fields individually', async () => {
+      component.fields = [
+        { name: 'a', controlType: 'input' },
+        { name: 'b', controlType: 'input' },
+        { name: 'c', controlType: 'input' },
+      ] as FieldMetadata[];
+      component.testForm = new FormBuilder().group({
+        a: [''],
+        b: [''],
+        c: [''],
+      });
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const compA = directive.getComponent('a');
+      const compC = directive.getComponent('c');
+
+      component.fields = [
+        { name: 'a', controlType: 'input' },
+        { name: 'c', controlType: 'input' },
+      ] as FieldMetadata[];
+      component.testForm.removeControl('b');
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(directive.getComponent('a')).toBe(compA);
+      expect(directive.getComponent('c')).toBe(compC);
+      expect(directive.getComponent('b')).toBeUndefined();
+    });
+
+    it('should recreate field when controlType changes', async () => {
+      component.fields = [
+        { name: 'a', controlType: 'input' },
+      ] as FieldMetadata[];
+      component.testForm = new FormBuilder().group({ a: [''] });
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const original = directive.getComponent('a');
+
+      component.fields = [
+        { name: 'a', controlType: 'button' },
+      ] as FieldMetadata[];
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(directive.getComponent('a')).not.toBe(original);
     });
   });
 
@@ -613,7 +709,10 @@ describe('DynamicFieldLoaderDirective', () => {
 
       const wrappers = itemFixture.debugElement.queryAll(By.css('.wrapper'));
       expect(wrappers.length).toBe(2);
-      expect(wrappers[0].nativeElement.textContent).toContain('email');
+      expect(
+        wrappers[0].nativeElement.querySelector('input') instanceof
+          HTMLInputElement,
+      ).toBeTrue();
       expect(wrappers[1].nativeElement.getAttribute('data-index')).toBe('1');
     });
 
