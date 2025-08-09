@@ -202,7 +202,6 @@ export abstract class SimpleBaseSelectComponent<
       this.matSelect.disableOptionCentering = meta.disableOptionCentering;
     if (meta.tabIndex !== undefined) this.matSelect.tabIndex = meta.tabIndex;
     if (meta.placeholder) this.matSelect.placeholder = meta.placeholder;
-    if (meta.multiple !== undefined) this.matSelect.multiple = meta.multiple;
     if (meta.required !== undefined) this.matSelect.required = meta.required;
     if (meta.errorStateMatcher)
       this.matSelect.errorStateMatcher = meta.errorStateMatcher;

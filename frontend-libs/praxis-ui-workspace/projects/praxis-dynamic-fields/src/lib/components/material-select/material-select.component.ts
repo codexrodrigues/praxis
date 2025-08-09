@@ -30,7 +30,6 @@ import {
         [formControl]="internalControl"
         [placeholder]="metadata()?.placeholder || ''"
         [required]="metadata()?.required || false"
-        [disabled]="metadata()?.disabled || false"
       >
         <mat-option
           *ngFor="let option of options(); trackBy: trackByOption"
