@@ -1,59 +1,47 @@
-// Arquivo: frontend-libs/praxis-ui-workspace/src/styles.scss
+/* =============================
+ * 2) src/styles.scss
+ * ============================= */
 @use 'theme-dark' as *;
 
 html, body { height: 100%; }
-body { 
-  margin: 0; 
-  font-family: Roboto, "Helvetica Neue", sans-serif;
-  overflow: hidden; // Previne scroll no body
-}
-
 body {
-  background-color: #121212;
-  color: #f2f4f8;
-  font-family: Roboto, sans-serif;
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background-color: var(--background);
+  color: var(--text-regular);
+  overflow: hidden;
 }
 
-/* Webkit-based browsers (Chrome, Edge, Safari) */
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
+/* Scrollbars */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background-color: rgba(255,255,255,0.2); border-radius: 8px; transition: background-color .3s var(--ease-smooth); }
+::-webkit-scrollbar-thumb:hover { background-color: #00364d; }
 
-::-webkit-scrollbar-track {
-  background: transparent; // sem fundo visível
-}
+* { scrollbar-width: auto; scrollbar-color: #1a2c50 transparent; }
+*:hover { scrollbar-color: #222222 transparent; }
 
-::-webkit-scrollbar-thumb {
-  background-color: rgba(255, 255, 255, 0.2); // thumb padrão com contraste sutil
-  border-radius: 8px;
-  transition: background-color 0.3s ease;
-}
+/* Form fields take full width by default */
+mat-form-field { width: 100%; }
 
-::-webkit-scrollbar-thumb:hover {
-  background-color: #00364d; // azul claro (cor de destaque da sua paleta)
-}
+/* Select menus / options alignment with tokens */
+.cdk-overlay-container .mat-mdc-select-panel { background: var(--surface-2); border: 1px solid var(--border-color); }
+.mat-mdc-option.mdc-list-item--selected { background: var(--select-selected-bg) !important; color: #000 !important; }
+.mat-mdc-option:hover { background: var(--select-hover-bg) !important; }
 
-/* Firefox */
-* {
-  scrollbar-width: auto;
-  scrollbar-color: #1a2c50;
-}
+/* Cards & elevation */
+.mdc-elevation--z4, .mat-mdc-card { box-shadow: var(--elevation-shadow) !important; }
 
-*:hover {
-  scrollbar-color: #222222 transparent;
-}
+/* Typography utilities */
+.text-primary   { color: var(--text-primary) !important; }
+.text-secondary { color: var(--text-secondary) !important; }
+.text-tertiary  { color: var(--text-tertiary) !important; }
+.text-caption   { color: var(--text-caption) !important; }
 
+/* Focus ring helper */
+.focus-ring { outline: 2px solid var(--primary-very-light); outline-offset: 2px; }
 
-mat-form-field {
-  width: 100%;
-}
-
-// Media queries para responsividade
+/* Small responsive tweak */
 @media (max-width: 599px) {
-  :root {
-    --spacing-lg: 16px;
-    --spacing-xl: 24px;
-    --card-padding: var(--spacing-sm);
-  }
+  :root { --spacing-lg: 16px; --spacing-xl: 24px; }
 }
