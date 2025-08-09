@@ -91,6 +91,55 @@ class ApiDocsControllerTest {
     }
 
     @Test
+    void getFilteredSchemaHandlesDirectDtoResponse() throws Exception {
+        String doc = "{\n" +
+                "  \"paths\": {\n" +
+                "    \"/api/ui-test/wrappers\": {\n" +
+                "      \"get\": {\n" +
+                "        \"responses\": {\n" +
+                "          \"200\": {\n" +
+                "            \"content\": {\n" +
+                "              \"*/*\": {\n" +
+                "                \"schema\": {\n" +
+                "                  \"$ref\": \"#/components/schemas/UiSchemaTestDTO\"\n" +
+                "                }\n" +
+                "              }\n" +
+                "            }\n" +
+                "          }\n" +
+                "        }\n" +
+                "      }\n" +
+                "    }\n" +
+                "  },\n" +
+                "  \"components\": {\n" +
+                "    \"schemas\": {\n" +
+                "      \"UiSchemaTestDTO\": {\n" +
+                "        \"type\": \"object\",\n" +
+                "        \"properties\": {\n" +
+                "          \"textField\": {\n" +
+                "            \"type\": \"string\"\n" +
+                "          }\n" +
+                "        }\n" +
+                "      }\n" +
+                "    }\n" +
+                "  }\n" +
+                "}";
+
+        server.expect(requestTo("http://localhost/v3/api-docs/ui-wrappers-test"))
+                .andRespond(withSuccess(doc, MediaType.APPLICATION_JSON));
+        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(new MockHttpServletRequest()));
+
+        Map<String, Object> responseSchema = controller.getFilteredSchema(
+                "/api/ui-test/wrappers",
+                "ui-wrappers-test",
+                "get",
+                false,
+                "response");
+
+        assertTrue(((Map<?, ?>) responseSchema.get("properties")).containsKey("textField"));
+        server.verify();
+    }
+
+    @Test
     void invalidSchemaTypeThrowsException() {
         server.expect(requestTo("http://localhost/v3/api-docs/test"))
                 .andRespond(withSuccess(openApiDoc, MediaType.APPLICATION_JSON));
