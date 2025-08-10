@@ -43,14 +43,20 @@ import { SimpleBaseInputComponent } from '../../base/simple-base-input.component
           [checked]="isAllSelected()"
           (change)="toggleSelectAll()"
         >
-          Selecionar todos
+          {{ selectAllLabel() }}
         </mat-checkbox>
       }
 
       <mat-tree [dataSource]="dataSource" [treeControl]="treeControl">
-        <mat-tree-node *matTreeNodeDef="let node; when: hasChild">
+        <mat-nested-tree-node *matTreeNodeDef="let node; when: hasChild">
           <div class="pdx-tree-node">
-            <button mat-icon-button matTreeNodeToggle>
+            <button
+              mat-icon-button
+              matTreeNodeToggle
+              [attr.aria-label]="
+                treeControl.isExpanded(node) ? 'Recolher' : 'Expandir'
+              "
+            >
               <mat-icon class="mat-icon-rtl-mirror">
                 {{
                   treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right'
@@ -66,7 +72,14 @@ import { SimpleBaseInputComponent } from '../../base/simple-base-input.component
               {{ node.label }}
             </mat-checkbox>
           </div>
-        </mat-tree-node>
+          <div
+            class="pdx-tree-children"
+            role="group"
+            [class.pdx-tree-hidden]="!treeControl.isExpanded(node)"
+          >
+            <ng-container matTreeNodeOutlet></ng-container>
+          </div>
+        </mat-nested-tree-node>
 
         <mat-tree-node *matTreeNodeDef="let node">
           <div class="pdx-tree-node">
@@ -94,6 +107,16 @@ import { SimpleBaseInputComponent } from '../../base/simple-base-input.component
       }
     </div>
   `,
+  styles: [
+    `
+      .pdx-tree-children {
+        margin-left: 24px;
+      }
+      .pdx-tree-hidden {
+        display: none;
+      }
+    `,
+  ],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -128,6 +151,8 @@ export class MaterialMultiSelectTreeComponent extends SimpleBaseInputComponent {
   readonly selectAll = signal<boolean>(false);
   /** Maximum allowed selections */
   readonly maxSelections = signal<number | null>(null);
+  /** Label for select all option */
+  readonly selectAllLabel = signal<string>('Selecionar todos');
   /** Emits whenever the selection changes */
   readonly selectionChange = new EventEmitter<any[]>();
 
@@ -149,8 +174,10 @@ export class MaterialMultiSelectTreeComponent extends SimpleBaseInputComponent {
     this.buildParentMap(nodes, null);
     this.selectAll.set(!!metadata.selectAll);
     this.maxSelections.set(metadata.maxSelections ?? null);
+    this.selectAllLabel.set(
+      (metadata as any).selectAllLabel ?? 'Selecionar todos',
+    );
     super.setMetadata({ ...rest, nodes });
-
   }
 
   private normalizeNodes(nodes: any[]): MaterialTreeNode[] {
@@ -285,6 +312,7 @@ export class MaterialMultiSelectTreeComponent extends SimpleBaseInputComponent {
     for (const node of nodes) {
       if (!this.isNodeDisabled(node)) {
         this.selection.select(node);
+        this.updateAllParents(node);
       }
       if (node.children) {
         this.selectAllRecursive(node.children);

@@ -65,6 +65,28 @@ describe('MaterialMultiSelectTreeComponent', () => {
     expect(labels).toEqual(['IT', 'HR']);
   });
 
+  it('should render child nodes when parent expanded', () => {
+    const parent = component.dataSource.data[0];
+    component.treeControl.expand(parent);
+    fixture.detectChanges();
+    const labels = Array.from<HTMLElement>(
+      fixture.nativeElement.querySelectorAll('.mat-tree-node .mdc-label'),
+    ).map((el) => el.textContent?.trim());
+    expect(labels).toEqual(['IT', 'Dev', 'QA', 'HR']);
+  });
+
+  it('should mark parent indeterminate when only some children selected', () => {
+    const parent = component.dataSource.data[0];
+    const child = parent.children![0];
+    component.toggleNode(child);
+    fixture.detectChanges();
+    expect(component.selection.isSelected(parent)).toBeFalse();
+    const checkbox: HTMLInputElement = fixture.nativeElement.querySelector(
+      'mat-nested-tree-node mat-checkbox input',
+    );
+    expect(checkbox.indeterminate).toBeTrue();
+  });
+
   it('should toggle select all', () => {
     component.toggleSelectAll();
     expect(component.isAllSelected()).toBeTrue();
