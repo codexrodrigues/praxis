@@ -1,6 +1,7 @@
 package com.example.praxis.uischema.dto;
 
 import io.swagger.v3.oas.annotations.extensions.ExtensionProperty;
+import com.example.praxis.common.config.ApiRouteDefinitions;
 import org.praxisplatform.uischema.FieldControlType;
 import org.praxisplatform.uischema.FieldDataType;
 import org.praxisplatform.uischema.NumericFormat;
@@ -219,15 +220,15 @@ public class UiSchemaTestDTO {
     private List<String> departments;
 
     @UISchema(
-            label = "Country",
+            label = "Department",
             controlType = FieldControlType.AUTO_COMPLETE,
-            endpoint = "/api/countries",
+            endpoint = ApiRouteDefinitions.HR_DEPARTAMENTOS_PATH,
             order = 16,
             group = "selection",
-            displayField = "name",
-            valueField = "code"
+            displayField = "nome",
+            valueField = "id"
     )
-    private String country;
+    private Long departmentId;
 
     @UISchema(
             label = "Favorite Color",
@@ -288,16 +289,18 @@ public class UiSchemaTestDTO {
     private String internalNotes;
 
     @UISchema(
-            label = "City",
+            label = "Job Position",
             controlType = FieldControlType.SELECT,
-            endpoint = "/api/cities",
+            endpoint = ApiRouteDefinitions.HR_CARGOS_PATH,
             order = 22,
             group = "selection",
             filter = "contains",
             filterOptions = "[{\"label\":\"Starts With\",\"value\":\"startsWith\"}]",
-            filterControlType = "input"
+            filterControlType = "input",
+            displayField = "nome",
+            valueField = "id"
     )
-    private String city;
+    private Long jobPositionId;
 
     @UISchema(
             label = "Tags",
@@ -430,12 +433,12 @@ public class UiSchemaTestDTO {
         this.departments = departments;
     }
 
-    public String getCountry() {
-        return country;
+    public Long getDepartmentId() {
+        return departmentId;
     }
 
-    public void setCountry(String country) {
-        this.country = country;
+    public void setDepartmentId(Long departmentId) {
+        this.departmentId = departmentId;
     }
 
     public String getFavoriteColor() {
@@ -478,12 +481,12 @@ public class UiSchemaTestDTO {
         this.internalNotes = internalNotes;
     }
 
-    public String getCity() {
-        return city;
+    public Long getJobPositionId() {
+        return jobPositionId;
     }
 
-    public void setCity(String city) {
-        this.city = city;
+    public void setJobPositionId(Long jobPositionId) {
+        this.jobPositionId = jobPositionId;
     }
 
     public List<String> getTags() {

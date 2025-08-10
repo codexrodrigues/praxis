@@ -63,6 +63,13 @@ import { SimpleBaseSelectComponent } from '../../base/simple-base-select.compone
               {{ error() }} - Retry
             </mat-option>
             <mat-option
+              *ngIf="emptyOptionText()"
+              [value]="null"
+              (click)="selectOption({ label: emptyOptionText()!, value: null })"
+            >
+              {{ emptyOptionText() }}
+            </mat-option>
+            <mat-option
               *ngFor="let option of options(); trackBy: trackByOption"
               [value]="option.value"
               [disabled]="option.disabled"

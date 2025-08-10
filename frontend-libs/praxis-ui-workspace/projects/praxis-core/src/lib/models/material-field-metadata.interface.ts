@@ -748,6 +748,9 @@ export interface MaterialSelectMetadata extends FieldMetadata {
     group?: string;
   }>;
 
+  /** Placeholder option text for empty selection */
+  emptyOptionText?: string;
+
   /** Enable multiple selection */
   multiple?: boolean;
 

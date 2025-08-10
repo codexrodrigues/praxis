@@ -42,6 +42,7 @@ export function mapFieldDefinitionToMetadata(
     'searchable',
     'selectAll',
     'maxSelections',
+    'emptyOptionText',
   ];
 
   for (const prop of simpleProps) {

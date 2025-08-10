@@ -49,6 +49,8 @@ export interface SimpleSelectMetadata<T = any> extends ComponentMetadata {
   optionLabelKey?: string;
   /** Key for option value when loading from backend */
   optionValueKey?: string;
+  /** Placeholder option text when no value is selected */
+  emptyOptionText?: string;
 }
 
 /**
@@ -91,6 +93,8 @@ export abstract class SimpleBaseSelectComponent<
   readonly optionLabelKey = signal<string>('label');
   /** Field used for option values when loading from backend */
   readonly optionValueKey = signal<string>('value');
+  /** Text displayed for an empty option */
+  readonly emptyOptionText = signal<string | null>(null);
   /** Current page index when fetching remote options */
   readonly pageIndex = signal(0);
   /** Number of options retrieved per request */
@@ -144,10 +148,14 @@ export abstract class SimpleBaseSelectComponent<
     if (metadata.options) {
       this.options.set(metadata.options);
     }
-    this.multiple.set(!!metadata.multiple);
+    const isMultiple = !!metadata.multiple;
+    this.multiple.set(isMultiple);
     this.searchable.set(!!metadata.searchable);
     this.selectAll.set(!!metadata.selectAll);
     this.maxSelections.set(metadata.maxSelections ?? null);
+    this.emptyOptionText.set(
+      isMultiple ? null : (metadata.emptyOptionText ?? null),
+    );
 
     const path = metadata.resourcePath || metadata.endpoint;
     if (path) {

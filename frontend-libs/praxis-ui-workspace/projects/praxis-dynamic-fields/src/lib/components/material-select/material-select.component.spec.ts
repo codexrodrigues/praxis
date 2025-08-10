@@ -79,4 +79,20 @@ describe('MaterialSelectComponent', () => {
     expect(matSelect.required).toBeTrue();
     expect(matSelect.disabled).toBeTrue();
   });
+
+  it('should render an empty option when emptyOptionText is provided', () => {
+    const meta: MaterialSelectMetadata = {
+      controlType: FieldControlType.SELECT,
+      name: 'status',
+      label: 'Status',
+      emptyOptionText: 'None',
+      selectOptions: [{ label: 'A', text: 'A', value: 'a' }],
+    } as any;
+    component.setSelectMetadata(meta as any);
+    fixture.detectChanges();
+    const options = fixture.debugElement.queryAll(By.css('mat-option'));
+    expect(options[0].nativeElement.textContent.trim()).toBe('None');
+    options[0].triggerEventHandler('click', {});
+    expect(component.internalControl.value).toBeNull();
+  });
 });

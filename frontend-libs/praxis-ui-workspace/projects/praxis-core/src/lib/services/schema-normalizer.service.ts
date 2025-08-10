@@ -3,7 +3,6 @@ import { FieldDefinition } from '../models/field-definition.model';
 
 @Injectable({ providedIn: 'root' })
 export class SchemaNormalizerService {
-
   /** Convert value to boolean. Accepts boolean, string or number. */
   private parseBoolean(value: any): boolean {
     if (typeof value === 'boolean') {
@@ -83,7 +82,7 @@ export class SchemaNormalizerService {
       'maxFileSize',
       'customValidator',
       'asyncValidator',
-      'minWords'
+      'minWords',
     ];
 
     for (const p of props) {
@@ -127,7 +126,10 @@ export class SchemaNormalizerService {
     for (const [name, prop] of Object.entries(properties)) {
       const field: FieldDefinition = { name };
 
-      const ui = prop && typeof prop === 'object' && typeof prop['x-ui'] === 'object' ? prop['x-ui'] : {};
+      const ui =
+        prop && typeof prop === 'object' && typeof prop['x-ui'] === 'object'
+          ? prop['x-ui']
+          : {};
 
       // -------------------------------------------------------------------
       // Basic information
@@ -166,15 +168,21 @@ export class SchemaNormalizerService {
       Object.assign(field, this.parseValidators(ui));
 
       // Inline conditional functions
-      const condDisplay = this.parseFunction(ui.conditionalDisplay) as (() => boolean) | undefined;
+      const condDisplay = this.parseFunction(ui.conditionalDisplay) as
+        | (() => boolean)
+        | undefined;
       if (condDisplay) {
         field.conditionalDisplay = condDisplay;
       }
-      const condRequired = this.parseFunction(ui.conditionalRequired) as (() => boolean) | undefined;
+      const condRequired = this.parseFunction(ui.conditionalRequired) as
+        | (() => boolean)
+        | undefined;
       if (condRequired) {
         field.conditionalRequired = condRequired;
       }
-      const transformFn = this.parseFunction(ui.transformValueFunction) as ((val: any) => any) | undefined;
+      const transformFn = this.parseFunction(ui.transformValueFunction) as
+        | ((val: any) => any)
+        | undefined;
       if (transformFn) {
         field.transformValueFunction = transformFn;
       }
@@ -216,11 +224,25 @@ export class SchemaNormalizerService {
       if (ui.endpoint !== undefined) {
         field.endpoint = ui.endpoint;
       }
+      if (ui.valueField !== undefined) {
+        field.valueField = ui.valueField;
+      }
+      if (ui.displayField !== undefined) {
+        field.displayField = ui.displayField;
+      }
+      if (ui.multiple !== undefined) {
+        field.multiple = this.parseBoolean(ui.multiple);
+      }
+      if (ui.emptyOptionText !== undefined) {
+        field.emptyOptionText = ui.emptyOptionText;
+      }
       if (ui.dependentField !== undefined) {
         field.dependentField = ui.dependentField;
       }
       if (ui.resetOnDependentChange !== undefined) {
-        field.resetOnDependentChange = this.parseBoolean(ui.resetOnDependentChange);
+        field.resetOnDependentChange = this.parseBoolean(
+          ui.resetOnDependentChange,
+        );
       }
 
       if (ui.buttons !== undefined) {
