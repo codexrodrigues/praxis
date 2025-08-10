@@ -17,6 +17,32 @@ import {
   MAX_LOAD_ATTEMPTS,
   RETRY_DELAY,
 } from './component-registry.interface';
+import { TextInputComponent } from '../../components/text-input/text-input.component';
+import { EmailInputComponent } from '../../components/email-input/email-input.component';
+import { PasswordInputComponent } from '../../components/password-input/password-input.component';
+import { ColorInputComponent } from '../../components/color-input/color-input.component';
+import { DateInputComponent } from '../../components/date-input/date-input.component';
+import { MaterialDatepickerComponent } from '../../components/material-datepicker/material-datepicker.component';
+import { MaterialDateRangeComponent } from '../../components/material-date-range/material-date-range.component';
+import { DatetimeLocalInputComponent } from '../../components/datetime-local-input/datetime-local-input.component';
+import { MonthInputComponent } from '../../components/month-input/month-input.component';
+import { NumberInputComponent } from '../../components/number-input/number-input.component';
+import { MaterialCurrencyComponent } from '../../components/material-currency/material-currency.component';
+import { MaterialPriceRangeComponent } from '../../components/material-price-range/material-price-range.component';
+import { SearchInputComponent } from '../../components/search-input/search-input.component';
+import { PhoneInputComponent } from '../../components/phone-input/phone-input.component';
+import { TimeInputComponent } from '../../components/time-input/time-input.component';
+import { MaterialTimepickerComponent } from '../../components/material-timepicker/material-timepicker.component';
+import { UrlInputComponent } from '../../components/url-input/url-input.component';
+import { WeekInputComponent } from '../../components/week-input/week-input.component';
+import { MaterialColorPickerComponent } from '../../components/material-colorpicker/material-colorpicker.component';
+import { MaterialTextareaComponent } from '../../components/material-textarea/material-textarea.component';
+import { MaterialSelectComponent } from '../../components/material-select/material-select.component';
+import { MaterialMultiSelectComponent } from '../../components/material-multi-select/material-multi-select.component';
+import { MaterialSearchableSelectComponent } from '../../components/material-searchable-select/material-searchable-select.component';
+import { MaterialAsyncSelectComponent } from '../../components/material-async-select/material-async-select.component';
+import { MaterialRadioGroupComponent } from '../../components/material-radio-group/material-radio-group.component';
+import { MaterialCheckboxGroupComponent } from '../../components/material-checkbox-group/material-checkbox-group.component';
 
 @Injectable({
   providedIn: 'root',
@@ -223,338 +249,105 @@ export class ComponentRegistryService implements IComponentRegistry {
    * Registra componentes Material Design padrão
    */
   private initializeDefaultComponents(): void {
-    // TextInputComponent para inputs genéricos
-    const textInputFactory = () =>
-      import('../../components/text-input/text-input.component').then(
-        (m) => m.TextInputComponent,
-      );
+    const wrap = <T>(c: import('@angular/core').Type<T>) => Promise.resolve(c);
 
-    // Specialized email input
-    const emailInputFactory = () =>
-      import('../../components/email-input/email-input.component').then(
-        (m) => m.EmailInputComponent,
-      );
-
-    // Specialized password input
-    const passwordInputFactory = () =>
-      import('../../components/password-input/password-input.component').then(
-        (m) => m.PasswordInputComponent,
-      );
-
-    // Specialized color input
-    const colorInputFactory = () =>
-      import('../../components/color-input/color-input.component').then(
-        (m) => m.ColorInputComponent,
-      );
-
-    // Specialized date input
-    const dateInputFactory = () =>
-      import('../../components/date-input/date-input.component').then(
-        (m) => m.DateInputComponent,
-      );
-
-    // Angular Material Datepicker
-    const datepickerFactory = () =>
-      import(
-        '../../components/material-datepicker/material-datepicker.component'
-      ).then((m) => m.MaterialDatepickerComponent);
-
-    // Angular Material Date Range Picker
-    const dateRangeFactory = () =>
-      import(
-        '../../components/material-date-range/material-date-range.component'
-      ).then((m) => m.MaterialDateRangeComponent);
-
-    // Specialized datetime-local input
-    const datetimeLocalInputFactory = () =>
-      import(
-        '../../components/datetime-local-input/datetime-local-input.component'
-      ).then((m) => m.DatetimeLocalInputComponent);
-
-    // Specialized month input
-    const monthInputFactory = () =>
-      import('../../components/month-input/month-input.component').then(
-        (m) => m.MonthInputComponent,
-      );
-
-    // Specialized number input
-    const numberInputFactory = () =>
-      import('../../components/number-input/number-input.component').then(
-        (m) => m.NumberInputComponent,
-      );
-
-    // Specialized currency input
-    const currencyInputFactory = () =>
-      import(
-        '../../components/material-currency/material-currency.component'
-      ).then((m) => m.MaterialCurrencyComponent);
-
-    // Specialized price range input
-    const priceRangeFactory = () =>
-      import(
-        '../../components/material-price-range/material-price-range.component'
-      ).then((m) => m.MaterialPriceRangeComponent);
-
-    // Specialized search input
-    const searchInputFactory = () =>
-      import('../../components/search-input/search-input.component').then(
-        (m) => m.SearchInputComponent,
-      );
-
-    // Specialized phone input
-    const phoneInputFactory = () =>
-      import('../../components/phone-input/phone-input.component').then(
-        (m) => m.PhoneInputComponent,
-      );
-
-    // Specialized time input
-    const timeInputFactory = () =>
-      import('../../components/time-input/time-input.component').then(
-        (m) => m.TimeInputComponent,
-      );
-
-    // Angular Material timepicker
-    const timepickerFactory = () =>
-      import(
-        '../../components/material-timepicker/material-timepicker.component'
-      ).then((m) => m.MaterialTimepickerComponent);
-
-    // HTML5 url input
-    const urlInputFactory = () =>
-      import('../../components/url-input/url-input.component').then(
-        (m) => m.UrlInputComponent,
-      );
-
-    // HTML5 week input
-    const weekInputFactory = () =>
-      import('../../components/week-input/week-input.component').then(
-        (m) => m.WeekInputComponent,
-      );
-
-    // Input básico
-    this.register(FieldControlTypeEnum.INPUT, textInputFactory);
-
-    // Variantes de input especializadas
-    this.register(FieldControlTypeEnum.EMAIL_INPUT, emailInputFactory);
-    this.register(FieldControlTypeEnum.PASSWORD, passwordInputFactory);
-    this.register(FieldControlTypeEnum.NUMERIC_TEXT_BOX, numberInputFactory);
-    this.register(FieldControlTypeEnum.CURRENCY_INPUT, currencyInputFactory);
-    this.register(FieldControlTypeEnum.RANGE_SLIDER, priceRangeFactory);
-    this.register(FieldControlTypeEnum.SEARCH_INPUT, searchInputFactory);
-    this.register(FieldControlTypeEnum.PHONE, phoneInputFactory);
-    this.register(FieldControlTypeEnum.TIME_INPUT, timeInputFactory);
-    this.register(FieldControlTypeEnum.TIME_PICKER, timepickerFactory);
-    this.register(FieldControlTypeEnum.URL_INPUT, urlInputFactory);
-    this.register(FieldControlTypeEnum.WEEK_INPUT, weekInputFactory);
-
-    // HTML5 color input
-    this.register(FieldControlTypeEnum.COLOR_INPUT, colorInputFactory);
-
-    // Material color picker
-    const colorPickerFactory = () =>
-      import(
-        '../../components/material-colorpicker/material-colorpicker.component'
-      ).then((m) => m.MaterialColorPickerComponent);
-    this.register(FieldControlTypeEnum.COLOR_PICKER, colorPickerFactory);
-
-    // HTML5 date input
-    this.register(FieldControlTypeEnum.DATE_INPUT, dateInputFactory);
-
-    // Material Datepicker
-    this.register(FieldControlTypeEnum.DATE_PICKER, datepickerFactory);
-    this.register(FieldControlTypeEnum.DATE_RANGE, dateRangeFactory);
-
-    // HTML5 datetime-local input
-    this.register(
-      FieldControlTypeEnum.DATETIME_LOCAL_INPUT,
-      datetimeLocalInputFactory,
+    // Inputs básicos e variantes
+    this.register(FieldControlTypeEnum.INPUT, () => wrap(TextInputComponent));
+    this.register(FieldControlTypeEnum.EMAIL_INPUT, () =>
+      wrap(EmailInputComponent),
+    );
+    this.register(FieldControlTypeEnum.PASSWORD, () =>
+      wrap(PasswordInputComponent),
+    );
+    this.register(FieldControlTypeEnum.COLOR_INPUT, () =>
+      wrap(ColorInputComponent),
+    );
+    this.register(FieldControlTypeEnum.DATE_INPUT, () =>
+      wrap(DateInputComponent),
+    );
+    this.register(FieldControlTypeEnum.DATETIME_LOCAL_INPUT, () =>
+      wrap(DatetimeLocalInputComponent),
+    );
+    this.register(FieldControlTypeEnum.MONTH_INPUT, () =>
+      wrap(MonthInputComponent),
+    );
+    this.register(FieldControlTypeEnum.NUMERIC_TEXT_BOX, () =>
+      wrap(NumberInputComponent),
+    );
+    this.register(FieldControlTypeEnum.CURRENCY_INPUT, () =>
+      wrap(MaterialCurrencyComponent),
+    );
+    this.register(FieldControlTypeEnum.RANGE_SLIDER, () =>
+      wrap(MaterialPriceRangeComponent),
+    );
+    this.register(FieldControlTypeEnum.SEARCH_INPUT, () =>
+      wrap(SearchInputComponent),
+    );
+    this.register(FieldControlTypeEnum.PHONE, () => wrap(PhoneInputComponent));
+    this.register(FieldControlTypeEnum.TIME_INPUT, () =>
+      wrap(TimeInputComponent),
+    );
+    this.register(FieldControlTypeEnum.TIME_PICKER, () =>
+      wrap(MaterialTimepickerComponent),
+    );
+    this.register(FieldControlTypeEnum.URL_INPUT, () =>
+      wrap(UrlInputComponent),
+    );
+    this.register(FieldControlTypeEnum.WEEK_INPUT, () =>
+      wrap(WeekInputComponent),
+    );
+    this.register(FieldControlTypeEnum.COLOR_PICKER, () =>
+      wrap(MaterialColorPickerComponent),
     );
 
-    // HTML5 month input
-    this.register(FieldControlTypeEnum.MONTH_INPUT, monthInputFactory);
+    // Date inputs com Material
+    this.register(FieldControlTypeEnum.DATE_PICKER, () =>
+      wrap(MaterialDatepickerComponent),
+    );
+    this.register(FieldControlTypeEnum.DATE_RANGE, () =>
+      wrap(MaterialDateRangeComponent),
+    );
+
+    // Textarea e selects
+    this.register(FieldControlTypeEnum.TEXTAREA, () =>
+      wrap(MaterialTextareaComponent),
+    );
+    this.register(FieldControlTypeEnum.SELECT, () =>
+      wrap(MaterialSelectComponent),
+    );
+    this.register(FieldControlTypeEnum.MULTI_SELECT, () =>
+      wrap(MaterialMultiSelectComponent),
+    );
+    this.register('searchable-select' as FieldControlType, () =>
+      wrap(MaterialSearchableSelectComponent),
+    );
+    this.register(FieldControlTypeEnum.AUTO_COMPLETE, () =>
+      wrap(MaterialSearchableSelectComponent),
+    );
+    this.register('async-select' as FieldControlType, () =>
+      wrap(MaterialAsyncSelectComponent),
+    );
+    this.register(FieldControlTypeEnum.RADIO, () =>
+      wrap(MaterialRadioGroupComponent),
+    );
+    this.register(FieldControlTypeEnum.CHECKBOX, () =>
+      wrap(MaterialCheckboxGroupComponent),
+    );
 
     // Mapeamentos para controlTypes do JSON Schema/OpenAPI
-    this.register('numericTextBox' as FieldControlType, numberInputFactory);
-    this.register('phone' as FieldControlType, phoneInputFactory);
-    this.register('date' as FieldControlType, datepickerFactory);
-    this.register('dateRange' as FieldControlType, dateRangeFactory);
-    this.register('checkbox' as FieldControlType, textInputFactory);
-
-    // Textarea
-    this.register(FieldControlTypeEnum.TEXTAREA, () =>
-      import(
-        '../../components/material-textarea/material-textarea.component'
-      ).then((m) => m.MaterialTextareaComponent),
+    this.register('numericTextBox' as FieldControlType, () =>
+      wrap(NumberInputComponent),
     );
-    const selectFactory = () =>
-      import('../../components/material-select/material-select.component').then(
-        (m) => m.MaterialSelectComponent,
-      );
-    this.register(FieldControlTypeEnum.SELECT, selectFactory);
-
-    const multiSelectFactory = () =>
-      import(
-        '../../components/material-multi-select/material-multi-select.component'
-      ).then((m) => m.MaterialMultiSelectComponent);
-    this.register(FieldControlTypeEnum.MULTI_SELECT, multiSelectFactory);
-
-    const searchableSelectFactory = () =>
-      import(
-        '../../components/material-searchable-select/material-searchable-select.component'
-      ).then((m) => m.MaterialSearchableSelectComponent);
-    this.register(
-      'searchable-select' as FieldControlType,
-      searchableSelectFactory,
+    this.register('phone' as FieldControlType, () => wrap(PhoneInputComponent));
+    this.register('date' as FieldControlType, () =>
+      wrap(MaterialDatepickerComponent),
     );
-
-    // Alias for auto-complete fields
-    this.register(FieldControlTypeEnum.AUTO_COMPLETE, searchableSelectFactory);
-
-    const asyncSelectFactory = () =>
-      import(
-        '../../components/material-async-select/material-async-select.component'
-      ).then((m) => m.MaterialAsyncSelectComponent);
-    this.register('async-select' as FieldControlType, asyncSelectFactory);
-
-    const radioGroupFactory = () =>
-      import(
-        '../../components/material-radio-group/material-radio-group.component'
-      ).then((m) => m.MaterialRadioGroupComponent);
-    this.register(FieldControlTypeEnum.RADIO, radioGroupFactory);
-
-    const checkboxGroupFactory = () =>
-      import(
-        '../../components/material-checkbox-group/material-checkbox-group.component'
-      ).then((m) => m.MaterialCheckboxGroupComponent);
-    this.register(FieldControlTypeEnum.CHECKBOX, checkboxGroupFactory);
-
-    // // Checkbox
-    // this.register(
-    //   FieldControlTypeEnum.CHECKBOX,
-    //   () => import('../../components/material-checkbox/material-checkbox.component').then(m => m.MaterialCheckboxComponent)
-    // );
-    //
-    // // Radio
-    // this.register(
-    //   FieldControlTypeEnum.RADIO,
-    //   () => import('../../components/material-radio/material-radio.component').then(m => m.MaterialRadioComponent)
-    // );
-    //
-    // // Date
-    // this.register(
-    //   FieldControlTypeEnum.DATE_PICKER,
-    //   () => import('../../components/material-date-picker/material-date-picker.component').then(m => m.MaterialDatePickerComponent)
-    // );
-    //
-    // // Currency Input (componente especializado)
-    // this.register(
-    //   FieldControlTypeEnum.CURRENCY_INPUT,
-    //   () => import('../../components/material-currency/material-currency.component').then(m => m.MaterialCurrencyComponent)
-    // );
-    //
-    // // Email Input
-    // this.register(
-    //   FieldControlTypeEnum.EMAIL_INPUT,
-    //   () => import('../../components/material-input/material-input.component').then(m => m.MaterialInputComponent)
-    // );
-    //
-    // // Password
-    // this.register(
-    //   FieldControlTypeEnum.PASSWORD,
-    //   () => import('../../components/material-input/material-input.component').then(m => m.MaterialInputComponent)
-    // );
-    //
-    // // Numeric TextBox
-    // this.register(
-    //   FieldControlTypeEnum.NUMERIC_TEXT_BOX,
-    //   () => import('../../components/material-input/material-input.component').then(m => m.MaterialInputComponent)
-    // );
-    //
-    // // Multi Select
-    // this.register(
-    //   FieldControlTypeEnum.MULTI_SELECT,
-    //   () => import('../../components/material-select/material-select.component').then(m => m.MaterialSelectComponent)
-    // );
-    //
-    // // Auto Complete
-    // this.register(
-    //   FieldControlTypeEnum.AUTO_COMPLETE,
-    //   () => import('../../components/material-select/material-select.component').then(m => m.MaterialSelectComponent)
-    // );
-    //
-    // // Date Time Picker
-    // this.register(
-    //   FieldControlTypeEnum.DATE_TIME_PICKER,
-    //   () => import('../../components/material-date-picker/material-date-picker.component').then(m => m.MaterialDatePickerComponent)
-    // );
-    //
-    // // Date Range
-    // this.register(
-    //   FieldControlTypeEnum.DATE_RANGE,
-    //   () => import('../../components/material-date-range/material-date-range.component').then(m => m.MaterialDateRangeComponent)
-    // );
-    //
-    // // Button
-    // this.register(
-    //   FieldControlTypeEnum.BUTTON,
-    //   () => import('../../components/material-button/material-button.component').then(m => m.MaterialButtonComponent)
-    // );
-    //
-    // // File Upload
-    // this.register(
-    //   FieldControlTypeEnum.FILE_UPLOAD,
-    //   () => import('../../components/material-button/material-button.component').then(m => m.MaterialButtonComponent)
-    // );
-    //
-    // // Toggle
-    // this.register(
-    //   FieldControlTypeEnum.TOGGLE,
-    //   () => import('../../components/material-toggle/material-toggle.component').then(m => m.MaterialToggleComponent)
-    // );
-    //
-    // // Slider
-    // this.register(
-    //   FieldControlTypeEnum.SLIDER,
-    //   () => import('../../components/material-slider/material-slider.component').then(m => m.MaterialSliderComponent)
-    // );
-    //
-    // // Time Picker
-    // this.register(
-    //   FieldControlTypeEnum.TIME_PICKER,
-    //   () => import('../../components/material-timepicker/material-timepicker.component').then(m => m.MaterialTimepickerComponent)
-    // );
-    //
-    // // Rating
-    // this.register(
-    //   FieldControlTypeEnum.RATING,
-    //   () => import('../../components/material-rating/material-rating.component').then(m => m.MaterialRatingComponent)
-    // );
-    //
-    // // Color Picker
-    // this.register(
-    //   FieldControlTypeEnum.COLOR_PICKER,
-    //   () => import('../../components/material-colorpicker/material-colorpicker.component').then(m => m.MaterialColorPickerComponent)
-    // );
-    //
-    // // Array Input - using textarea as fallback for now
-    // this.register(
-    //   'array' as FieldControlType,
-    //   () => import('../../components/material-textarea/material-textarea.component').then(m => m.MaterialTextareaComponent)
-    // );
-
-    // COMPONENTES PLANEJADOS PARA IMPLEMENTAÇÃO FUTURA
-
-    // Rating (futura implementação)
-    // this.register(
-    //   FieldControlTypeEnum.RATING,
-    //   () => import('../../components/material-rating/material-rating.component').then(m => m.MaterialRatingComponent)
-    // );
-
-    // Color Picker (futura implementação)
-    // this.register(
-    //   FieldControlTypeEnum.COLOR_PICKER,
-    //   () => import('../../components/material-color-picker/material-color-picker.component').then(m => m.MaterialColorPickerComponent)
-    // );
+    this.register('dateRange' as FieldControlType, () =>
+      wrap(MaterialDateRangeComponent),
+    );
+    this.register('checkbox' as FieldControlType, () =>
+      wrap(TextInputComponent),
+    );
   }
 
   // =============================================================================
@@ -610,6 +403,9 @@ export class ComponentRegistryService implements IComponentRegistry {
       }
 
       const component = await registration.factory();
+      if (!component) {
+        throw new Error(`Factory for '${type}' returned undefined`);
+      }
 
       // Sucesso: resetar contadores e cachear
       registration.cached = component;

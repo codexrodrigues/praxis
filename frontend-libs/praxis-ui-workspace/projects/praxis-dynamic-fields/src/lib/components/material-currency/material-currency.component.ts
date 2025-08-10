@@ -6,6 +6,7 @@ import {
   computed,
   output,
   inject,
+  Input,
   LOCALE_ID,
 } from '@angular/core';
 import {
@@ -18,13 +19,15 @@ import {
   CommonModule,
   CurrencyPipe,
   registerLocaleData,
+  getCurrencySymbol,
 } from '@angular/common';
 import localePt from '@angular/common/locales/pt';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
+registerLocaleData(localePt);
+registerLocaleData(localePt, 'pt-BR');
 
-registerLocaleData(localePt, 'pt');
 
 import { MaterialCurrencyMetadata } from '@praxis/core';
 import { SimpleBaseInputComponent } from '../../base/simple-base-input.component';
@@ -218,14 +221,24 @@ export class MaterialCurrencyComponent extends SimpleBaseInputComponent {
     if (value === null || value === undefined || value === '') {
       return;
     }
-    const formatted =
-      this.currencyPipe.transform(
-        value,
-        this.currencyCode(),
-        '',
-        `1.0-${this.decimalPlaces()}`,
-        this.locale(),
-      ) ?? String(value);
+    let formatted: string;
+    try {
+      formatted =
+        this.currencyPipe.transform(
+          value,
+          this.currencyCode(),
+          '',
+          `1.0-${this.decimalPlaces()}`,
+          this.locale(),
+        ) ?? String(value);
+    } catch {
+      formatted = new Intl.NumberFormat(this.locale() || 'en-US', {
+        style: 'currency',
+        currency: this.currencyCode(),
+        minimumFractionDigits: 0,
+        maximumFractionDigits: this.decimalPlaces(),
+      }).format(value);
+    }
     this.inputRef.nativeElement.value = formatted;
   }
 
@@ -250,6 +263,11 @@ export class MaterialCurrencyComponent extends SimpleBaseInputComponent {
   }
 
   /** Applies component metadata with strong typing. */
+  @Input({ alias: 'metadata', required: true })
+  set metadataInput(metadata: MaterialCurrencyMetadata) {
+    this.setInputMetadata(metadata);
+  }
+
   setInputMetadata(metadata: MaterialCurrencyMetadata): void {
     this.setMetadata(metadata);
   }

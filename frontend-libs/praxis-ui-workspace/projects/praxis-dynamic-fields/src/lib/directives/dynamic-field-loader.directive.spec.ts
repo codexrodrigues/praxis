@@ -55,6 +55,52 @@ class TestHostComponent {
   }
 }
 
+@Component({
+  template: `
+    <ng-template
+      #item
+      let-field="field"
+      let-index="index"
+      let-content="content"
+    >
+      <div class="wrapper" [attr.data-index]="index">
+        <span class="label">{{ field.name }}</span>
+        <ng-container [ngTemplateOutlet]="content"></ng-container>
+      </div>
+    </ng-template>
+    <form [formGroup]="testForm">
+      <ng-container
+        dynamicFieldLoader
+        [fields]="fields"
+        [formGroup]="testForm"
+        [itemTemplate]="item"
+        (fieldCreated)="onFieldCreated($event)"
+        (fieldDestroyed)="onFieldDestroyed($event)"
+      ></ng-container>
+    </form>
+  `,
+  standalone: true,
+  imports: [ReactiveFormsModule, DynamicFieldLoaderDirective],
+})
+class ItemTemplateHostComponent {
+  testForm: FormGroup;
+  fields: FieldMetadata[] = [];
+  created: any[] = [];
+  destroyed: any[] = [];
+
+  constructor(private fb: FormBuilder) {
+    this.testForm = this.fb.group({});
+  }
+
+  onFieldCreated(e: any) {
+    this.created.push(e);
+  }
+
+  onFieldDestroyed(e: any) {
+    this.destroyed.push(e);
+  }
+}
+
 // =============================================================================
 // MOCK SERVICES
 // =============================================================================
@@ -505,32 +551,276 @@ describe('DynamicFieldLoaderDirective', () => {
         ),
       );
     });
+  });
 
-    it('should prevent multiple simultaneous renders', async () => {
+  // =============================================================================
+  // KEYED RECONCILIATION TESTS
+  // =============================================================================
+
+  describe('Keyed Reconciliation', () => {
+    it('should preserve components on reorder', async () => {
       component.fields = [
-        {
-          name: 'test',
-          label: 'Test',
-          controlType: 'input',
-        },
+        { name: 'a', controlType: 'input' },
+        { name: 'b', controlType: 'input' },
+        { name: 'c', controlType: 'input' },
       ] as FieldMetadata[];
-
       component.testForm = new FormBuilder().group({
-        test: [''],
+        a: [''],
+        b: [''],
+        c: [''],
       });
-
-      spyOn(console, 'debug');
-
-      // Tentar múltiplas renderizações simultâneas
-      directive.refresh();
-      directive.refresh();
-      directive.refresh();
-
+      fixture.detectChanges();
       await fixture.whenStable();
 
-      expect(console.debug).toHaveBeenCalledWith(
-        '[DynamicFieldLoader] Waiting for current rendering to complete...',
-      );
+      const compA = directive.getComponent('a');
+      const compB = directive.getComponent('b');
+      const compC = directive.getComponent('c');
+
+      const moveSpy = spyOn(
+        (directive as any).viewContainer,
+        'move',
+      ).and.callThrough();
+
+      component.fields = [
+        { name: 'b', controlType: 'input' },
+        { name: 'a', controlType: 'input' },
+        { name: 'c', controlType: 'input' },
+      ] as FieldMetadata[];
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(directive.getComponent('a')).toBe(compA);
+      expect(directive.getComponent('b')).toBe(compB);
+      expect(directive.getComponent('c')).toBe(compC);
+      expect(moveSpy.calls.count()).toBe(2);
+
+      const shellA = (directive as any).shellRefs.get('a');
+      const shellB = (directive as any).shellRefs.get('b');
+      const shellC = (directive as any).shellRefs.get('c');
+      expect(shellB.instance.index).toBe(0);
+      expect(shellA.instance.index).toBe(1);
+      expect(shellC.instance.index).toBe(2);
+    });
+
+    it('should insert new fields without recreating existing ones', async () => {
+      component.fields = [
+        { name: 'a', controlType: 'input' },
+        { name: 'c', controlType: 'input' },
+      ] as FieldMetadata[];
+      component.testForm = new FormBuilder().group({
+        a: [''],
+        c: [''],
+      });
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const compA = directive.getComponent('a');
+      const compC = directive.getComponent('c');
+
+      component.fields = [
+        { name: 'a', controlType: 'input' },
+        { name: 'b', controlType: 'input' },
+        { name: 'c', controlType: 'input' },
+      ] as FieldMetadata[];
+      component.testForm.addControl('b', new FormBuilder().control(''));
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(directive.getComponent('a')).toBe(compA);
+      expect(directive.getComponent('c')).toBe(compC);
+      expect(directive.getComponent('b')).toBeDefined();
+
+      const shellA = (directive as any).shellRefs.get('a');
+      const shellB = (directive as any).shellRefs.get('b');
+      const shellC = (directive as any).shellRefs.get('c');
+      expect(shellA.instance.index).toBe(0);
+      expect(shellB.instance.index).toBe(1);
+      expect(shellC.instance.index).toBe(2);
+    });
+
+    it('should remove fields individually', async () => {
+      component.fields = [
+        { name: 'a', controlType: 'input' },
+        { name: 'b', controlType: 'input' },
+        { name: 'c', controlType: 'input' },
+      ] as FieldMetadata[];
+      component.testForm = new FormBuilder().group({
+        a: [''],
+        b: [''],
+        c: [''],
+      });
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const compA = directive.getComponent('a');
+      const compC = directive.getComponent('c');
+
+      component.fields = [
+        { name: 'a', controlType: 'input' },
+        { name: 'c', controlType: 'input' },
+      ] as FieldMetadata[];
+      component.testForm.removeControl('b');
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(directive.getComponent('a')).toBe(compA);
+      expect(directive.getComponent('c')).toBe(compC);
+      expect(directive.getComponent('b')).toBeUndefined();
+    });
+
+    it('should recreate field when controlType changes', async () => {
+      component.fields = [
+        { name: 'a', controlType: 'input' },
+      ] as FieldMetadata[];
+      component.testForm = new FormBuilder().group({ a: [''] });
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const original = directive.getComponent('a');
+
+      component.fields = [
+        { name: 'a', controlType: 'button' },
+      ] as FieldMetadata[];
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(directive.getComponent('a')).not.toBe(original);
+    });
+
+    it('should detect mutated controlType without array replacement', async () => {
+      component.fields = [
+        { name: 'a', controlType: 'input' },
+      ] as FieldMetadata[];
+      component.testForm = new FormBuilder().group({ a: [''] });
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const original = directive.getComponent('a');
+
+      component.fields[0].controlType = 'button';
+      directive.refresh();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(directive.getComponent('a')).not.toBe(original);
+    });
+  });
+
+  // =============================================================================
+  // ITEM TEMPLATE & EVENTS TESTS
+  // =============================================================================
+
+  describe('Item Template and Events', () => {
+    let itemFixture: ComponentFixture<ItemTemplateHostComponent>;
+    let itemComponent: ItemTemplateHostComponent;
+
+    beforeEach(async () => {
+      await TestBed.configureTestingModule({
+        imports: [
+          ItemTemplateHostComponent,
+          NoopAnimationsModule,
+          ReactiveFormsModule,
+        ],
+        providers: [
+          {
+            provide: ComponentRegistryService,
+            useClass: MockComponentRegistryService,
+          },
+        ],
+      }).compileComponents();
+
+      itemFixture = TestBed.createComponent(ItemTemplateHostComponent);
+      itemComponent = itemFixture.componentInstance;
+    });
+
+    it('should wrap each field with the itemTemplate', async () => {
+      itemComponent.fields = [
+        { name: 'email', controlType: 'input' },
+        { name: 'submit', controlType: 'button' },
+      ] as FieldMetadata[];
+      itemComponent.testForm = new FormBuilder().group({
+        email: [''],
+        submit: [''],
+      });
+      itemFixture.detectChanges();
+      await itemFixture.whenStable();
+
+      const wrappers = itemFixture.debugElement.queryAll(By.css('.wrapper'));
+      expect(wrappers.length).toBe(2);
+      expect(
+        wrappers[0].nativeElement.querySelector('input') instanceof
+          HTMLInputElement,
+      ).toBeTrue();
+      expect(wrappers[1].nativeElement.getAttribute('data-index')).toBe('1');
+    });
+
+    it('should emit fieldCreated with correct order', async () => {
+      itemComponent.fields = [
+        { name: 'first', controlType: 'input' },
+        { name: 'second', controlType: 'button' },
+      ] as FieldMetadata[];
+      itemComponent.testForm = new FormBuilder().group({
+        first: [''],
+        second: [''],
+      });
+      itemFixture.detectChanges();
+      await itemFixture.whenStable();
+
+      expect(itemComponent.created.length).toBe(2);
+      expect(itemComponent.created[0].field.name).toBe('first');
+      expect(itemComponent.created[0].index).toBe(0);
+      expect(itemComponent.created[1].field.name).toBe('second');
+      expect(itemComponent.created[1].index).toBe(1);
+    });
+
+    it('should emit fieldDestroyed on re-render and on destroy', async () => {
+      itemComponent.fields = [
+        { name: 'a', controlType: 'input' },
+        { name: 'b', controlType: 'button' },
+      ] as FieldMetadata[];
+      itemComponent.testForm = new FormBuilder().group({
+        a: [''],
+        b: [''],
+      });
+      itemFixture.detectChanges();
+      await itemFixture.whenStable();
+
+      // remove field b
+      itemComponent.fields = [
+        { name: 'a', controlType: 'input' },
+      ] as FieldMetadata[];
+      itemComponent.testForm.removeControl('b');
+      itemFixture.detectChanges();
+      await itemFixture.whenStable();
+      expect(
+        itemComponent.destroyed.some((e) => e.fieldName === 'b'),
+      ).toBeTrue();
+
+      // destroy fixture
+      itemFixture.destroy();
+      expect(
+        itemComponent.destroyed.some((e) => e.fieldName === 'a'),
+      ).toBeTrue();
+    });
+
+    it('should keep FormControl state intact', async () => {
+      itemComponent.fields = [
+        { name: 'x', controlType: 'input' },
+      ] as FieldMetadata[];
+      itemComponent.testForm = new FormBuilder().group({ x: [''] });
+      itemFixture.detectChanges();
+      await itemFixture.whenStable();
+
+      const control = itemComponent.testForm.get('x');
+      control?.setValue('test');
+      control?.markAsTouched();
+      control?.markAsDirty();
+
+      const created = itemComponent.created[0];
+      const fieldControl = created.componentRef.instance.formControl();
+      expect(fieldControl.value).toBe('test');
+      expect(fieldControl.touched).toBeTrue();
+      expect(fieldControl.dirty).toBeTrue();
     });
   });
 });
