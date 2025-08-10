@@ -1455,3 +1455,32 @@ export interface MaterialTimepickerMetadata extends BaseMaterialInputMetadata {
   /** Identifier of a custom filter function to disable specific times. */
   timeFilter?: string;
 }
+
+/**
+ * Node structure used by `MaterialMultiSelectTreeMetadata`.
+ */
+export interface MaterialTreeNode {
+  /** Display label for the node */
+  label: string;
+  /** Value associated with the node */
+  value: any;
+  /** Whether the node is disabled */
+  disabled?: boolean;
+  /** Child nodes */
+  children?: MaterialTreeNode[];
+}
+
+/**
+ * Metadata configuration for the Material Multi Select Tree component.
+ */
+export interface MaterialMultiSelectTreeMetadata extends FieldMetadata {
+  controlType: typeof FieldControlType.MULTI_SELECT_TREE;
+  /** Tree nodes to display */
+  nodes?: MaterialTreeNode[];
+  /** Enable search input */
+  searchable?: boolean;
+  /** Show select all option */
+  selectAll?: boolean;
+  /** Maximum number of selections allowed */
+  maxSelections?: number;
+}
