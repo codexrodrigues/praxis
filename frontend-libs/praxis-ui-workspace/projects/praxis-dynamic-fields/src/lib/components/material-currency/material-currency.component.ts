@@ -28,7 +28,6 @@ import { MatIconModule } from '@angular/material/icon';
 registerLocaleData(localePt);
 registerLocaleData(localePt, 'pt-BR');
 
-
 import { MaterialCurrencyMetadata } from '@praxis/core';
 import { SimpleBaseInputComponent } from '../../base/simple-base-input.component';
 
@@ -50,7 +49,7 @@ registerLocaleData(localePt, 'pt-BR');
       [color]="materialColor()"
       [class]="componentCssClasses()"
     >
-      <mat-label>{{ metadata()?.label || 'Amount' }}</mat-label>
+      <mat-label>{{ label }}</mat-label>
 
       @if (metadata()?.prefixIcon) {
         <mat-icon matPrefix>{{ metadata()!.prefixIcon }}</mat-icon>
@@ -65,10 +64,10 @@ registerLocaleData(localePt, 'pt-BR');
         #currencyInput
         type="text"
         [formControl]="internalControl"
-        [placeholder]="metadata()?.placeholder || ''"
+        [placeholder]="shouldShowPlaceholder ? placeholder : null"
         [required]="metadata()?.required || false"
         [readonly]="metadata()?.readonly || false"
-        [attr.aria-label]="metadata()?.ariaLabel || metadata()?.label"
+        [attr.aria-label]="!label && placeholder ? placeholder : null"
         [attr.aria-required]="metadata()?.required ? 'true' : 'false'"
         (input)="onInput($event)"
         (focus)="onFocus()"

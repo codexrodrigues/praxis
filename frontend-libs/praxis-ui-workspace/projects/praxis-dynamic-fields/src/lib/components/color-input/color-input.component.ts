@@ -29,7 +29,7 @@ import { SimpleBaseInputComponent } from '../../base/simple-base-input.component
       [color]="materialColor()"
       [class]="componentCssClasses()"
     >
-      <mat-label>{{ metadata()?.label || 'Color' }}</mat-label>
+      <mat-label>{{ label }}</mat-label>
 
       @if (metadata()?.prefixIcon) {
         <mat-icon matPrefix>{{ metadata()!.prefixIcon }}</mat-icon>
@@ -41,7 +41,7 @@ import { SimpleBaseInputComponent } from '../../base/simple-base-input.component
         [required]="metadata()?.required || false"
         [readonly]="metadata()?.readonly || false"
         [type]="inputType()"
-        [attr.aria-label]="metadata()?.ariaLabel || metadata()?.label"
+        [attr.aria-label]="!label && placeholder ? placeholder : null"
         [attr.aria-required]="metadata()?.required ? 'true' : 'false'"
       />
 
@@ -105,6 +105,7 @@ export class ColorInputComponent extends SimpleBaseInputComponent {
 
   /** Applies component metadata with strong typing. */
   setInputMetadata(metadata: MaterialColorInputMetadata): void {
-    this.setMetadata(metadata);
+    const { placeholder, ...rest } = metadata;
+    this.setMetadata(rest);
   }
 }

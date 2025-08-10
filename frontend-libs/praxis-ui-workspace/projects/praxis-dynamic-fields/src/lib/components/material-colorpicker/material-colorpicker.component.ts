@@ -25,7 +25,7 @@ import { SimpleBaseInputComponent } from '../../base/simple-base-input.component
       [color]="materialColor()"
       [class]="componentCssClasses()"
     >
-      <mat-label>{{ metadata()?.label || 'Color' }}</mat-label>
+      <mat-label>{{ label }}</mat-label>
 
       <span
         matPrefix
@@ -39,7 +39,7 @@ import { SimpleBaseInputComponent } from '../../base/simple-base-input.component
         [formControl]="internalControl"
         [required]="metadata()?.required || false"
         [readonly]="metadata()?.readonly || false"
-        [attr.aria-label]="metadata()?.ariaLabel || metadata()?.label"
+        [attr.aria-label]="!label && placeholder ? placeholder : null"
         [attr.aria-required]="metadata()?.required ? 'true' : 'false'"
       />
 
@@ -49,7 +49,11 @@ import { SimpleBaseInputComponent } from '../../base/simple-base-input.component
         type="button"
         (click)="openPicker()"
         [disabled]="internalControl.disabled || metadata()?.readonly || false"
-        [attr.aria-label]="metadata()?.ariaLabel ? metadata()!.ariaLabel + ' color palette' : 'Open color palette'"
+        [attr.aria-label]="
+          metadata()?.ariaLabel
+            ? metadata()!.ariaLabel + ' color palette'
+            : 'Open color palette'
+        "
       >
         <mat-icon>palette</mat-icon>
       </button>
@@ -67,14 +71,14 @@ import { SimpleBaseInputComponent } from '../../base/simple-base-input.component
           internalControl.invalid &&
           (internalControl.dirty || internalControl.touched)
         "
-        >
+      >
         {{ errorMessage() }}
       </mat-error>
 
       <mat-hint
         *ngIf="metadata()?.hint && !hasValidationError()"
         [align]="metadata()?.hintAlign || 'start'"
-        >
+      >
         {{ metadata()!.hint }}
       </mat-hint>
     </mat-form-field>
@@ -121,8 +125,9 @@ export class MaterialColorPickerComponent extends SimpleBaseInputComponent {
 
   /** Applies component metadata with strong typing. */
   setInputMetadata(metadata: MaterialColorPickerMetadata): void {
-    this.setMetadata(metadata);
-    if (metadata.disabled) {
+    const { placeholder, ...rest } = metadata;
+    this.setMetadata(rest);
+    if (rest.disabled) {
       this.internalControl.disable();
     } else {
       this.internalControl.enable();

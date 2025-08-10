@@ -34,7 +34,7 @@ import { SimpleBaseInputComponent } from '../../base/simple-base-input.component
       [color]="materialColor()"
       [class]="componentCssClasses()"
     >
-      <mat-label>{{ metadata()?.label || 'Time' }}</mat-label>
+      <mat-label>{{ label }}</mat-label>
 
       @if (metadata()?.prefixIcon) {
         <mat-icon matPrefix>{{ metadata()!.prefixIcon }}</mat-icon>
@@ -43,11 +43,12 @@ import { SimpleBaseInputComponent } from '../../base/simple-base-input.component
       <input
         matInput
         [formControl]="internalControl"
+        [placeholder]="shouldShowPlaceholder ? placeholder : null"
         [required]="metadata()?.required || false"
         [readonly]="metadata()?.readonly || false"
         [matTimepicker]="picker"
         [step]="stepAttribute()"
-        [attr.aria-label]="metadata()?.ariaLabel || metadata()?.label"
+        [attr.aria-label]="!label && placeholder ? placeholder : null"
         [attr.aria-required]="metadata()?.required ? 'true' : 'false'"
       />
 
@@ -101,7 +102,6 @@ import { SimpleBaseInputComponent } from '../../base/simple-base-input.component
 export class MaterialTimepickerComponent extends SimpleBaseInputComponent {
   /** Emits whenever validation state changes. */
   readonly validationChange = output<ValidationErrors | null>();
-
 
   override ngOnInit(): void {
     const meta = this.metadata();
@@ -162,5 +162,4 @@ export class MaterialTimepickerComponent extends SimpleBaseInputComponent {
     }
     return null;
   }
-
 }

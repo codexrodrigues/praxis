@@ -30,7 +30,7 @@ import { SimpleBaseInputComponent } from '../../base/simple-base-input.component
       [color]="materialColor()"
       [class]="componentCssClasses()"
     >
-      <mat-label>{{ metadata()?.label || 'Month' }}</mat-label>
+      <mat-label>{{ label }}</mat-label>
 
       @if (metadata()?.prefixIcon) {
         <mat-icon matPrefix>{{ metadata()!.prefixIcon }}</mat-icon>
@@ -39,12 +39,13 @@ import { SimpleBaseInputComponent } from '../../base/simple-base-input.component
       <input
         matInput
         [formControl]="internalControl"
+        [placeholder]="shouldShowPlaceholder ? placeholder : null"
         [required]="metadata()?.required || false"
         [readonly]="metadata()?.readonly || false"
         [type]="inputType()"
         [min]="metadata()?.min || null"
         [max]="metadata()?.max || null"
-        [attr.aria-label]="metadata()?.ariaLabel || metadata()?.label"
+        [attr.aria-label]="!label && placeholder ? placeholder : null"
         [attr.aria-required]="metadata()?.required ? 'true' : 'false'"
       />
 

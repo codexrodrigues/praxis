@@ -171,7 +171,9 @@ export abstract class SimpleBaseSelectComponent<
   }
 
   protected override setMetadata(metadata: ComponentMetadata): void {
-    super.setMetadata(metadata);
+    const { placeholder, ...rest } = metadata as any;
+    super.setMetadata(rest);
+    this.placeholder = undefined;
     this.applySelectAttributes();
   }
 
@@ -201,7 +203,6 @@ export abstract class SimpleBaseSelectComponent<
     if (meta.disableOptionCentering !== undefined)
       this.matSelect.disableOptionCentering = meta.disableOptionCentering;
     if (meta.tabIndex !== undefined) this.matSelect.tabIndex = meta.tabIndex;
-    if (meta.placeholder) this.matSelect.placeholder = meta.placeholder;
     if (meta.required !== undefined) this.matSelect.required = meta.required;
     if (meta.errorStateMatcher)
       this.matSelect.errorStateMatcher = meta.errorStateMatcher;

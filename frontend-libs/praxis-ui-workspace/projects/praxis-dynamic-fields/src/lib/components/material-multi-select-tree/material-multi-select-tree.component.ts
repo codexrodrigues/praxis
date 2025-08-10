@@ -33,8 +33,8 @@ import { SimpleBaseInputComponent } from '../../base/simple-base-input.component
   ],
   template: `
     <div class="pdx-multi-select-tree-wrapper">
-      @if (metadata()?.label) {
-        <label class="pdx-tree-label">{{ metadata()!.label }}</label>
+      @if (label) {
+        <label class="pdx-tree-label">{{ label }}</label>
       }
 
       @if (selectAll()) {
@@ -140,8 +140,8 @@ export class MaterialMultiSelectTreeComponent extends SimpleBaseInputComponent {
 
   /** Configure component metadata */
   setTreeMetadata(metadata: MaterialMultiSelectTreeMetadata): void {
-    const { options, ...rest } = metadata as any;
-    const nodes = metadata.nodes ?? options ?? [];
+    const { options, nodes: rawNodes, ...rest } = metadata as any;
+    const nodes = this.normalizeNodes(rawNodes ?? options ?? []);
     this.dataSource.data = nodes;
     this.selection.clear();
     this.parentMap.clear();
@@ -150,6 +150,16 @@ export class MaterialMultiSelectTreeComponent extends SimpleBaseInputComponent {
     this.selectAll.set(!!metadata.selectAll);
     this.maxSelections.set(metadata.maxSelections ?? null);
     super.setMetadata({ ...rest, nodes });
+
+  }
+
+  private normalizeNodes(nodes: any[]): MaterialTreeNode[] {
+    return nodes.map((n) => ({
+      label: n.label ?? n.name ?? n.text ?? '',
+      value: n.value,
+      disabled: n.disabled,
+      children: n.children ? this.normalizeNodes(n.children) : undefined,
+    }));
   }
 
   /** Whether a node has children */

@@ -18,9 +18,7 @@ import { ComponentMetadata } from '@praxis/core';
   imports: [CommonModule, ReactiveFormsModule],
   template: `
     <div class="pdx-file-upload">
-      <label [attr.for]="componentId()">{{
-        metadata()?.label || 'Upload'
-      }}</label>
+      <label [attr.for]="componentId()">{{ label }}</label>
       <input
         [attr.id]="componentId()"
         type="file"
@@ -67,7 +65,8 @@ export class MaterialFileUploadComponent extends SimpleBaseInputComponent {
    * Exposes metadata setter for integration with dynamic form loader.
    */
   setFileUploadMetadata(metadata: ComponentMetadata): void {
-    this.setMetadata(metadata);
+    const { placeholder, ...rest } = metadata as any;
+    this.setMetadata(rest);
   }
 
   /**

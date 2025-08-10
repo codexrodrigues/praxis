@@ -16,8 +16,8 @@ import {
   imports: [CommonModule, ReactiveFormsModule, MatCheckboxModule],
   template: `
     <div class="pdx-checkbox-group-wrapper">
-      @if (metadata()?.label) {
-        <label class="pdx-checkbox-label">{{ metadata()!.label }}</label>
+      @if (label) {
+        <label class="pdx-checkbox-label">{{ label }}</label>
       }
       @if (selectAll()) {
         <mat-checkbox
