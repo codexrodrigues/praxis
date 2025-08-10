@@ -1,0 +1,231 @@
+{
+  "version": "1.0.0",
+  "description": "Matriz de decisão para escolher entre modal, drawer ou página com base em device, quantidade de campos e dependências.",
+  "thresholds": {
+    "fieldCount": {
+      "small_max": 12,
+      "medium_max": 24
+    },
+    "dependencyCount": {
+      "low_max": 3,
+      "medium_max": 7
+    }
+  },
+  "rules_ordered": [
+    {
+      "match": {
+        "device": [
+          "mobile"
+        ],
+        "fieldCount": {
+          "max": 4
+        },
+        "dependencyCount": {
+          "max": 0
+        }
+      },
+      "use": {
+        "pattern": "bottom-sheet",
+        "config": {
+          "blockBackdrop": true,
+          "trapFocus": true,
+          "height": "auto"
+        },
+        "reason": "Formulários curtíssimos sem dependências em telas pequenas."
+      }
+    },
+    {
+      "match": {
+        "device": [
+          "mobile"
+        ],
+        "fieldCount": {
+          "max": 12
+        },
+        "dependencyCount": {
+          "max": 3
+        }
+      },
+      "use": {
+        "pattern": "full-screen-dialog",
+        "config": {
+          "trapFocus": true
+        },
+        "reason": "Mobile com poucos campos e dependência baixa: foco total."
+      }
+    },
+    {
+      "match": {
+        "device": [
+          "mobile"
+        ],
+        "fieldCount": {
+          "min": 13
+        }
+      },
+      "use": {
+        "pattern": "page",
+        "config": {
+          "preserveScrollPosition": true
+        },
+        "reason": "Formulário extenso no mobile deve ser promovido para página."
+      }
+    },
+    {
+      "match": {
+        "device": [
+          "tablet"
+        ],
+        "fieldCount": {
+          "max": 12
+        },
+        "dependencyCount": {
+          "max": 3
+        }
+      },
+      "use": {
+        "pattern": "modal",
+        "config": {
+          "width": "min(70vw, 720px)",
+          "footerFixed": true,
+          "trapFocus": true
+        },
+        "reason": "Tablet com poucos campos e dependência baixa."
+      }
+    },
+    {
+      "match": {
+        "device": [
+          "tablet"
+        ],
+        "fieldCount": {
+          "min": 13,
+          "max": 24
+        },
+        "dependencyCount": {
+          "max": 7
+        }
+      },
+      "use": {
+        "pattern": "drawer",
+        "config": {
+          "side": "end",
+          "width": "min(65vw, 840px)",
+          "modal": true,
+          "footerFixed": true
+        },
+        "reason": "Tamanho médio: manter contexto ao lado."
+      }
+    },
+    {
+      "match": {
+        "device": [
+          "tablet"
+        ],
+        "fieldCount": {
+          "min": 25
+        }
+      },
+      "use": {
+        "pattern": "page",
+        "config": {},
+        "reason": "Grande: melhor navegação em página dedicada."
+      }
+    },
+    {
+      "match": {
+        "device": [
+          "desktop"
+        ],
+        "fieldCount": {
+          "max": 12
+        },
+        "dependencyCount": {
+          "max": 3
+        }
+      },
+      "use": {
+        "pattern": "modal",
+        "config": {
+          "width": "min(50vw, 860px)",
+          "footerFixed": true,
+          "trapFocus": true
+        },
+        "reason": "Casos simples e focados funcionam melhor em modal central."
+      }
+    },
+    {
+      "match": {
+        "device": [
+          "desktop"
+        ],
+        "fieldCount": {
+          "min": 13,
+          "max": 24
+        },
+        "dependencyCount": {
+          "max": 7
+        }
+      },
+      "use": {
+        "pattern": "drawer",
+        "config": {
+          "side": "end",
+          "width": "min(45vw, 920px)",
+          "modal": true,
+          "footerFixed": true
+        },
+        "reason": "Formulário médio: manter contexto (lista ao fundo)."
+      }
+    },
+    {
+      "match": {
+        "device": [
+          "desktop"
+        ],
+        "any": [
+          {
+            "fieldCount": {
+              "min": 25
+            }
+          },
+          {
+            "dependencyCount": {
+              "min": 8
+            }
+          }
+        ]
+      },
+      "use": {
+        "pattern": "page",
+        "config": {},
+        "reason": "Muito grande/complexo: requer URL, navegação e performance."
+      }
+    }
+  ],
+  "fallback": {
+    "pattern": "modal",
+    "config": {
+      "width": "min(60vw, 900px)",
+      "footerFixed": true,
+      "trapFocus": true
+    },
+    "reason": "Padrão seguro quando não houver correspondência."
+  },
+  "ui_hints": {
+    "modal": {
+      "headerSticky": true,
+      "bodyScroll": true,
+      "footerFixed": true
+    },
+    "drawer": {
+      "modal": true,
+      "headerSticky": true,
+      "footerFixed": true
+    },
+    "page": {
+      "breadcrumbs": true,
+      "actionsToolbar": true
+    }
+  }
+}
