@@ -7,6 +7,7 @@ import {
   output,
   inject,
   Input,
+  LOCALE_ID,
 } from '@angular/core';
 import {
   NG_VALUE_ACCESSOR,
@@ -14,12 +15,7 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
-import {
-  CommonModule,
-  CurrencyPipe,
-  LOCALE_ID,
-  getCurrencySymbol,
-} from '@angular/common';
+import { CommonModule, CurrencyPipe, getCurrencySymbol } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
@@ -116,7 +112,7 @@ export class MaterialCurrencyComponent extends SimpleBaseInputComponent {
   readonly validationChange = output<ValidationErrors | null>();
 
   private readonly currencyPipe = inject(CurrencyPipe);
-  private readonly locale = inject(LOCALE_ID);
+  private readonly locale = inject<string>(LOCALE_ID);
 
   @ViewChild('currencyInput', { static: true })
   private readonly inputRef!: ElementRef<HTMLInputElement>;
