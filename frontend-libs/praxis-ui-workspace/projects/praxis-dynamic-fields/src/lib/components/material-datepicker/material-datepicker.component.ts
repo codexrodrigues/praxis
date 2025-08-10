@@ -66,7 +66,6 @@ import { SimpleBaseInputComponent } from '../../base/simple-base-input.component
         [startAt]="startAt()"
         [touchUi]="metadata()?.touchUi || false"
         [color]="materialColor()"
-        [disabled]="metadata()?.disabled || false"
       ></mat-datepicker>
 
       @if (

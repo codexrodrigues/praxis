@@ -32,7 +32,6 @@ import {
         [formControl]="internalControl"
         [placeholder]="metadata()?.placeholder || ''"
         [required]="metadata()?.required || false"
-        [disabled]="metadata()?.disabled || false"
       >
         @if (selectAll()) {
           <mat-option

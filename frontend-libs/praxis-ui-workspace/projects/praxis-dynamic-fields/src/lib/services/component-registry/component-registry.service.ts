@@ -610,6 +610,9 @@ export class ComponentRegistryService implements IComponentRegistry {
       }
 
       const component = await registration.factory();
+      if (!component) {
+        throw new Error(`Factory for '${type}' returned undefined`);
+      }
 
       // Sucesso: resetar contadores e cachear
       registration.cached = component;

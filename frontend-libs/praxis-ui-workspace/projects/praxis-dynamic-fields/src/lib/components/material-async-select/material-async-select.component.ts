@@ -30,7 +30,6 @@ import { SimpleBaseSelectComponent } from '../../base/simple-base-select.compone
         [formControl]="internalControl"
         [placeholder]="metadata()?.placeholder || ''"
         [required]="metadata()?.required || false"
-        [disabled]="metadata()?.disabled || false"
         (openedChange)="onOpened($event)"
       >
         <mat-option *ngIf="loading()" disabled>
