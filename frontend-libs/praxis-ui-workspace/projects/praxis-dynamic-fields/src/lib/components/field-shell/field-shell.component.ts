@@ -61,6 +61,6 @@ export class FieldShellComponent {
   }>;
 
   /** View container used as the insertion point for the field component. */
-  @ViewChild('insertionPoint', { read: ViewContainerRef, static: true })
+  @ViewChild('insertionPoint', { read: ViewContainerRef })
   vc!: ViewContainerRef;
 }
