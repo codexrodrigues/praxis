@@ -9,9 +9,11 @@ export * from './lib/services/generic-crud.service';
 export * from './lib/services/schema-normalizer.service';
 export * from './lib/services/table-config.service';
 export * from './lib/services/config-storage.service';
+export * from './lib/services/overlay-decider.service';
 
 // Tokens
 export * from './lib/tokens/api-url.token';
+export * from './lib/tokens/overlay-decision-matrix.token';
 
 // Models
 export * from './lib/models/table-config.model';
@@ -24,6 +26,7 @@ export * from './lib/models/material-field-metadata.interface';
 export * from './lib/models/form/form-config.model';
 export * from './lib/models/form/form-events.model';
 export * from './lib/models/form/form-layout.model';
+export * from './lib/models/overlay-decision.model';
 
 // Metadata constants
 export * from './lib/metadata/field-control-type.constants';
