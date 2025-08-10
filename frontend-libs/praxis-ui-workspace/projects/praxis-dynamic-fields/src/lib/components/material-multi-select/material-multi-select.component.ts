@@ -105,6 +105,16 @@ export class MaterialMultiSelectComponent extends SimpleBaseSelectComponent {
     });
   }
 
+  override ngOnInit(): void {
+    super.ngOnInit();
+    const disabled = this.metadata()?.disabled;
+    if (disabled) {
+      this.internalControl.disable({ emitEvent: false });
+    } else {
+      this.internalControl.enable({ emitEvent: false });
+    }
+  }
+
   /** Disables options when maxSelections reached */
   isOptionDisabled(option: SelectOption<any>): boolean {
     if (option.disabled) return true;

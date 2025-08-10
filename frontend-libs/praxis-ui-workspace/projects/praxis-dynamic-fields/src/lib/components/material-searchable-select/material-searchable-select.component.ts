@@ -131,6 +131,16 @@ export class MaterialSearchableSelectComponent extends SimpleBaseSelectComponent
     });
   }
 
+  override ngOnInit(): void {
+    super.ngOnInit();
+    const disabled = this.metadata()?.disabled;
+    if (disabled) {
+      this.internalControl.disable({ emitEvent: false });
+    } else {
+      this.internalControl.enable({ emitEvent: false });
+    }
+  }
+
   onOpened(opened: boolean): void {
     if (opened && this.searchable() && this.searchInput) {
       queueMicrotask(() => this.searchInput!.nativeElement.focus());

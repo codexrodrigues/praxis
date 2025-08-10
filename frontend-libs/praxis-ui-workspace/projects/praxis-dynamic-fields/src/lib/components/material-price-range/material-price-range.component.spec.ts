@@ -74,4 +74,23 @@ describe('MaterialPriceRangeComponent', () => {
       'O valor inicial deve ser menor ou igual ao final',
     );
   });
+
+  it('should format inputs according to locale', () => {
+    component.setPriceRangeMetadata({
+      name: 'price',
+      label: 'Preço',
+      controlType: 'rangeSlider' as any,
+      currency: 'BRL',
+      locale: 'pt-BR',
+    });
+    fixture.detectChanges();
+    const inputs: NodeListOf<HTMLInputElement> =
+      fixture.nativeElement.querySelectorAll('input');
+    const first = inputs[0];
+    first.value = '1.234,56';
+    first.dispatchEvent(new Event('input'));
+    first.dispatchEvent(new Event('blur'));
+    fixture.detectChanges();
+    expect(first.value).toContain('1.234,56');
+  });
 });

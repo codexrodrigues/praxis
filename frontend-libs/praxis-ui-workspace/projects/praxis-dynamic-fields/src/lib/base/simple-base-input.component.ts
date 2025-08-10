@@ -473,6 +473,9 @@ export abstract class SimpleBaseInputComponent
     // Reaplica validators quando metadata muda
     this.setupValidators();
     this.applyNativeAttributes();
+    if (metadata.disabled !== undefined) {
+      this.setDisabledState(metadata.disabled);
+    }
     this.emitLifecycleEvent('change');
   }
 

@@ -25,12 +25,16 @@ import localePt from '@angular/common/locales/pt';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
-
 registerLocaleData(localePt);
 registerLocaleData(localePt, 'pt-BR');
 
+
 import { MaterialCurrencyMetadata } from '@praxis/core';
 import { SimpleBaseInputComponent } from '../../base/simple-base-input.component';
+
+// Register Portuguese locale data for both generic 'pt' and region-specific 'pt-BR'
+registerLocaleData(localePt);
+registerLocaleData(localePt, 'pt-BR');
 
 /**
  * Input component for currency values with basic formatting support.
@@ -240,11 +244,14 @@ export class MaterialCurrencyComponent extends SimpleBaseInputComponent {
 
   /** Extracts the symbol for the configured currency. */
   protected currencySymbol(): string {
-    try {
-      return getCurrencySymbol(this.currencyCode(), 'narrow', this.locale());
-    } catch {
-      return getCurrencySymbol(this.currencyCode(), 'narrow', 'en-US');
-    }
+    const formatted = this.currencyPipe.transform(
+      0,
+      this.currencyCode(),
+      '',
+      `1.0-0`,
+      this.locale(),
+    );
+    return formatted ? formatted.replace(/[0]/g, '').trim() : '$';
   }
 
   protected override getSpecificCssClasses(): string[] {
