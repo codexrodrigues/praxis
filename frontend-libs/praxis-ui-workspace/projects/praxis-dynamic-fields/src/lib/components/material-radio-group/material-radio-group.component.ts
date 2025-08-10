@@ -15,8 +15,8 @@ import {
   imports: [CommonModule, ReactiveFormsModule, MatRadioModule],
   template: `
     <div class="pdx-radio-group-wrapper">
-      @if (metadata()?.label) {
-        <label class="pdx-radio-label">{{ metadata()!.label }}</label>
+      @if (label) {
+        <label class="pdx-radio-label">{{ label }}</label>
       }
       <mat-radio-group
         [formControl]="internalControl"

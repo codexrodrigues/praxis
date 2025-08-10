@@ -24,12 +24,11 @@ import { SimpleBaseSelectComponent } from '../../base/simple-base-select.compone
       [color]="materialColor()"
       [class]="componentCssClasses()"
     >
-      <mat-label>{{ metadata()?.label || 'Select' }}</mat-label>
+      <mat-label>{{ label }}</mat-label>
       @if (multiple()) {
         <mat-select
           multiple
           [formControl]="internalControl"
-          [placeholder]="metadata()?.placeholder || ''"
           [required]="metadata()?.required || false"
           (openedChange)="onOpened($event)"
         >
@@ -55,7 +54,6 @@ import { SimpleBaseSelectComponent } from '../../base/simple-base-select.compone
       } @else {
         <mat-select
           [formControl]="internalControl"
-          [placeholder]="metadata()?.placeholder || ''"
           [required]="metadata()?.required || false"
           (openedChange)="onOpened($event)"
         >
