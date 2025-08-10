@@ -72,4 +72,16 @@ describe('SimpleBaseSelectComponent', () => {
     (component as any).matSelect.openedChange.emit(true);
     expect(spy).toHaveBeenCalledWith(true);
   });
+
+  it('should expose empty option text from metadata', () => {
+    component.apply({ name: 'test', emptyOptionText: 'None' });
+    fixture.detectChanges();
+    expect(component.emptyOptionText()).toBe('None');
+  });
+
+  it('should ignore empty option text when multiple is true', () => {
+    component.apply({ name: 'multi', emptyOptionText: 'None', multiple: true });
+    fixture.detectChanges();
+    expect(component.emptyOptionText()).toBeNull();
+  });
 });

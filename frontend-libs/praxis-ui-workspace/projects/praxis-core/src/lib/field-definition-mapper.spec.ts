@@ -94,6 +94,7 @@ describe('FieldDefinition to FieldMetadata mapper', () => {
       selectAll: true,
       maxSelections: 5,
       filter: { active: true },
+      emptyOptionText: 'Select...',
       options: [{ key: '1', value: 'Open' }],
     } as any;
 
@@ -107,6 +108,7 @@ describe('FieldDefinition to FieldMetadata mapper', () => {
     expect(meta.optionLabelKey).toBe('name');
     expect(meta.optionValueKey).toBe('id');
     expect(meta.filterCriteria).toEqual({ active: true });
+    expect((meta as any).emptyOptionText).toBe('Select...');
     expect(meta.selectOptions?.[0]).toEqual({ value: '1', text: 'Open' });
   });
 

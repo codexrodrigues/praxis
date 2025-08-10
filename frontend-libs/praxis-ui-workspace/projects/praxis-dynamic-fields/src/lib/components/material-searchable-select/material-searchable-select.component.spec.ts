@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { MaterialSearchableSelectComponent } from './material-searchable-select.component';
 import { GenericCrudService, API_URL, Page } from '@praxis/core';
 import { of } from 'rxjs';
@@ -75,5 +76,15 @@ describe('MaterialSearchableSelectComponent', () => {
       { name: 'On' },
       { pageNumber: 0, pageSize: 50 },
     );
+  });
+
+  it('renders empty option when emptyOptionText is provided', () => {
+    component.setSelectMetadata({
+      selectOptions: [{ label: 'Apple', value: 'a' }],
+      emptyOptionText: 'None',
+    } as any);
+    fixture.detectChanges();
+    const option = fixture.debugElement.query(By.css('mat-option'));
+    expect(option.nativeElement.textContent.trim()).toBe('None');
   });
 });

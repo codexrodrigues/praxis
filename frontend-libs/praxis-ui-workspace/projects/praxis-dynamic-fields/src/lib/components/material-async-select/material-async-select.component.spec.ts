@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { MaterialAsyncSelectComponent } from './material-async-select.component';
 import { GenericCrudService, API_URL, Page } from '@praxis/core';
 import { of, throwError } from 'rxjs';
@@ -76,5 +77,27 @@ describe('MaterialAsyncSelectComponent', () => {
     component.retry();
     expect(crudService.filter).toHaveBeenCalledTimes(2);
     expect(component.options()).toEqual([{ label: 'One', value: '1' }]);
+  });
+
+  it('should render empty option text when provided', () => {
+    component.setSelectMetadata({
+      selectOptions: [{ label: 'One', value: '1' }],
+      emptyOptionText: 'None',
+    } as any);
+    fixture.detectChanges();
+    const option = fixture.debugElement.query(By.css('mat-option'));
+    expect(option.nativeElement.textContent.trim()).toBe('None');
+  });
+
+  it('should not render empty option when multiple is true', () => {
+    component.setSelectMetadata({
+      selectOptions: [{ label: 'One', value: '1' }],
+      emptyOptionText: 'None',
+      multiple: true,
+    } as any);
+    fixture.detectChanges();
+    const options = fixture.debugElement.queryAll(By.css('mat-option'));
+    expect(options.length).toBe(1);
+    expect(options[0].nativeElement.textContent.trim()).toBe('One');
   });
 });

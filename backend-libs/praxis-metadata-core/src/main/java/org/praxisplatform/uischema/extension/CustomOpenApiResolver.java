@@ -895,6 +895,18 @@ public class CustomOpenApiResolver extends ModelResolver {
         if (!annotation.helpText().isEmpty()) {
             uiExtension.put(FieldConfigProperties.HELP_TEXT.getValue(), annotation.helpText());
         }
+        if (!annotation.valueField().isEmpty()) {
+            uiExtension.put(FieldConfigProperties.VALUE_FIELD.getValue(), annotation.valueField());
+        }
+        if (!annotation.displayField().isEmpty()) {
+            uiExtension.put(FieldConfigProperties.DISPLAY_FIELD.getValue(), annotation.displayField());
+        }
+        if (!annotation.endpoint().isEmpty()) {
+            uiExtension.put(FieldConfigProperties.ENDPOINT.getValue(), annotation.endpoint());
+        }
+        if (!annotation.emptyOptionText().isEmpty()) {
+            uiExtension.put(FieldConfigProperties.EMPTY_OPTION_TEXT.getValue(), annotation.emptyOptionText());
+        }
         if (!annotation.options().isEmpty()) {
             OpenApiUiUtils.populateUiOptionsFromString(uiExtension, annotation.options(), this._mapper);
         }
@@ -925,6 +937,9 @@ public class CustomOpenApiResolver extends ModelResolver {
         }
         if (!annotation.sortable()) { // padrão é true
             uiExtension.put(FieldConfigProperties.SORTABLE.getValue(), false);
+        }
+        if (annotation.multiple()) {
+            uiExtension.put(FieldConfigProperties.MULTIPLE.getValue(), true);
         }
         if (annotation.filterable()) { // padrão é false
             uiExtension.put(FieldConfigProperties.FILTERABLE.getValue(), true);
