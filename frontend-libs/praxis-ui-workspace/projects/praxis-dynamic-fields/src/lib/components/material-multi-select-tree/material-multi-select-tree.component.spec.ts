@@ -58,6 +58,13 @@ describe('MaterialMultiSelectTreeComponent', () => {
     expect(component.selection.isSelected(child)).toBeTrue();
   });
 
+  it('should display node labels', () => {
+    const labels = Array.from<HTMLElement>(
+      fixture.nativeElement.querySelectorAll('.mat-tree-node .mdc-label'),
+    ).map((el) => el.textContent?.trim());
+    expect(labels).toEqual(['IT', 'HR']);
+  });
+
   it('should toggle select all', () => {
     component.toggleSelectAll();
     expect(component.isAllSelected()).toBeTrue();
