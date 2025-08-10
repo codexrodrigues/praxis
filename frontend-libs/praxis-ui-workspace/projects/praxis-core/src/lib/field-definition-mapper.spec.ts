@@ -100,7 +100,8 @@ describe('FieldDefinition to FieldMetadata mapper', () => {
 
     const meta = mapFieldDefinitionToMetadata(def);
 
-    expect(meta.endpoint).toBe('/api/status');
+    expect(meta.resourcePath).toBe('status');
+    expect(meta.endpoint).toBe('status');
     expect(meta.multiple).toBeTrue();
     expect(meta.searchable).toBeTrue();
     expect(meta.selectAll).toBeTrue();
@@ -121,5 +122,30 @@ describe('FieldDefinition to FieldMetadata mapper', () => {
     const meta = mapFieldDefinitionToMetadata(def);
 
     expect(meta.searchable).toBeTrue();
+  });
+
+  it('should normalize endpoints removing duplicate api segments', () => {
+    const def: FieldDefinition = {
+      name: 'department',
+      controlType: 'select',
+      endpoint: '/api/api/human-resources/departamentos',
+    } as any;
+
+    const meta = mapFieldDefinitionToMetadata(def);
+
+    expect(meta.resourcePath).toBe('human-resources/departamentos');
+    expect(meta.endpoint).toBe('human-resources/departamentos');
+  });
+
+  it('should normalize absolute endpoints to relative paths', () => {
+    const def: FieldDefinition = {
+      name: 'job',
+      controlType: 'select',
+      endpoint: 'http://localhost:8087/api/human-resources/cargos',
+    } as any;
+
+    const meta = mapFieldDefinitionToMetadata(def);
+
+    expect(meta.resourcePath).toBe('human-resources/cargos');
   });
 });
