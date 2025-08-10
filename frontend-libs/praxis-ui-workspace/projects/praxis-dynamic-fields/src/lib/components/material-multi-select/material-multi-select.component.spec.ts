@@ -7,6 +7,8 @@ import {
   API_URL,
 } from '@praxis/core';
 import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { TestbedHarnessEnvironment } from '@angular/cdk/testing/testbed';
+import { MatSelectHarness } from '@angular/material/select/testing';
 
 import { MaterialMultiSelectComponent } from './material-multi-select.component';
 
@@ -67,5 +69,14 @@ describe('MaterialMultiSelectComponent', () => {
     expect(component.internalControl.value).toEqual(['one', 'two']); // limited by maxSelections
     component.toggleSelectAll();
     expect(component.internalControl.value).toEqual([]);
+  });
+
+  it('should select option on click', async () => {
+    const loader = TestbedHarnessEnvironment.loader(fixture);
+    const select = await loader.getHarness(MatSelectHarness);
+    await select.open();
+    const options = await select.getOptions();
+    await options[0].click();
+    expect(component.internalControl.value).toEqual(['one']);
   });
 });
