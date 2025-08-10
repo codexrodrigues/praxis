@@ -26,7 +26,7 @@ import { FieldMetadata } from '@praxis/core';
       <ng-container #insertionPoint></ng-container>
     </ng-template>
 
-    <ng-container *ngIf="itemTemplate; else defaultTpl">
+    @if (itemTemplate) {
       <ng-container
         [ngTemplateOutlet]="itemTemplate"
         [ngTemplateOutletContext]="{
@@ -35,11 +35,9 @@ import { FieldMetadata } from '@praxis/core';
           content: contentTpl,
         }"
       ></ng-container>
-    </ng-container>
-
-    <ng-template #defaultTpl>
+    } @else {
       <ng-container [ngTemplateOutlet]="contentTpl"></ng-container>
-    </ng-template>
+    }
   `,
 })
 export class FieldShellComponent {
