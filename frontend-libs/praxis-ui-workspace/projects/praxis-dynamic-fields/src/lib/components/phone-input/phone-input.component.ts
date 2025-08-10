@@ -38,7 +38,9 @@ import { SimpleBaseInputComponent } from '../../base/simple-base-input.component
       <input
         matInput
         [formControl]="internalControl"
-        [placeholder]="shouldShowPlaceholder ? placeholder : null"
+        [attr.placeholder]="
+          shouldShowPlaceholder && placeholder ? placeholder : null
+        "
         [required]="metadata()?.required || false"
         [readonly]="metadata()?.readonly || false"
         [autocomplete]="metadata()?.autocomplete || 'tel'"

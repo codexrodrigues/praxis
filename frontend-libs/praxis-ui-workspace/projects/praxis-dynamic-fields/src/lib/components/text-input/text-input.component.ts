@@ -41,7 +41,9 @@ import {
       <input
         matInput
         [formControl]="internalControl"
-        [placeholder]="shouldShowPlaceholder ? placeholder : null"
+        [attr.placeholder]="
+          shouldShowPlaceholder && placeholder ? placeholder : null
+        "
         [required]="metadata()?.required || false"
         [type]="inputType()"
         [autocomplete]="metadata()?.autocomplete || 'off'"

@@ -44,7 +44,9 @@ import { SimpleBaseInputComponent } from '../../base/simple-base-input.component
         [matDatepicker]="picker"
         [matDatepickerFilter]="metadata()?.dateFilter"
         [formControl]="internalControl"
-        [placeholder]="shouldShowPlaceholder ? placeholder : null"
+        [attr.placeholder]="
+          shouldShowPlaceholder && placeholder ? placeholder : null
+        "
         [required]="metadata()?.required || false"
         [readonly]="metadata()?.readonly || false"
         [min]="minDate()"
