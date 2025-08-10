@@ -3,6 +3,7 @@ import { NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
+import { MatOptionSelectionChange } from '@angular/material/core';
 
 import { MaterialSelectMetadata, GenericCrudService } from '@praxis/core';
 import {
@@ -45,7 +46,7 @@ import {
           *ngFor="let option of options(); trackBy: trackByOption"
           [value]="option.value"
           [disabled]="isOptionDisabled(option)"
-          (click)="selectOption(option)"
+          (onSelectionChange)="onOptionSelectionChange(option, $event)"
         >
           {{ option.label }}
         </mat-option>
@@ -124,5 +125,15 @@ export class MaterialMultiSelectComponent extends SimpleBaseSelectComponent {
       : [];
     const isSelected = current.includes(option.value);
     return !isSelected && current.length >= this.maxSelections()!;
+  }
+
+  /** Emits optionSelected when a user picks an option */
+  onOptionSelectionChange(
+    option: SelectOption<any>,
+    event: MatOptionSelectionChange,
+  ): void {
+    if (event.isUserInput && event.source.selected) {
+      this.optionSelected.emit(option);
+    }
   }
 }
