@@ -41,12 +41,13 @@ describe('MaterialMultiSelectTreeComponent', () => {
         { label: 'HR', value: 'hr' },
       ],
     };
-    component.setTreeMetadata(metadata);
+    component.metadata.set(metadata);
     fixture.detectChanges();
   });
 
-  it('should create', () => {
+  it('should initialize tree from metadata', () => {
     expect(component).toBeTruthy();
+    expect(component.dataSource.data.length).toBe(2);
   });
 
   it('should select parent and its children', () => {
@@ -70,5 +71,35 @@ describe('MaterialMultiSelectTreeComponent', () => {
     component.toggleNode(first);
     component.toggleNode(second);
     expect(component.selection.selected.map((n) => n.value)).toEqual(['it']);
+  });
+
+  it('should render nodes from options', () => {
+    const optionMeta: MaterialMultiSelectTreeMetadata = {
+      controlType: FieldControlType.MULTI_SELECT_TREE,
+      name: 'departments',
+      label: 'Departments',
+      options: [
+        {
+          label: 'Ops',
+          value: 'ops',
+          children: [{ label: 'HR', value: 'hr' }],
+        },
+        { label: 'Sales', value: 'sales' },
+      ],
+    } as any;
+
+    component.metadata.set(optionMeta);
+    component.onComponentInit();
+    expect(component.dataSource.data.length).toBe(2);
+    expect(component.dataSource.data[0].label).toBe('Ops');
+  });
+
+  it('should reflect preselected values via writeValue', () => {
+    component.writeValue(['dev', 'qa']);
+    const parent = component.dataSource.data[0];
+    expect(component.selection.isSelected(parent)).toBeTrue();
+    expect(component.selection.selected.map((n) => n.value).sort()).toEqual(
+      ['dev', 'qa', 'it'].sort(),
+    );
   });
 });
