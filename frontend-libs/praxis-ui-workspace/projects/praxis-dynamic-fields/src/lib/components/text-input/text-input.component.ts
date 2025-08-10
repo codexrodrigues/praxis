@@ -29,9 +29,10 @@ import {
     <mat-form-field
       [appearance]="materialAppearance()"
       [color]="materialColor()"
+      floatLabel="auto"
       [class]="componentCssClasses()"
     >
-      <mat-label>{{ metadata()?.label || 'Text' }}</mat-label>
+      <mat-label>{{ label }}</mat-label>
 
       @if (metadata()?.prefixIcon) {
         <mat-icon matPrefix>{{ metadata()!.prefixIcon }}</mat-icon>
@@ -40,7 +41,7 @@ import {
       <input
         matInput
         [formControl]="internalControl"
-        [placeholder]="metadata()?.placeholder || ''"
+        [placeholder]="shouldShowPlaceholder ? placeholder : null"
         [required]="metadata()?.required || false"
         [type]="inputType()"
         [autocomplete]="metadata()?.autocomplete || 'off'"
@@ -48,7 +49,7 @@ import {
         [readonly]="metadata()?.readonly || false"
         [maxlength]="metadata()?.maxLength || null"
         [minlength]="metadata()?.minLength || null"
-        [attr.aria-label]="metadata()?.ariaLabel || metadata()?.label"
+        [attr.aria-label]="!label && placeholder ? placeholder : null"
         [attr.aria-required]="metadata()?.required ? 'true' : 'false'"
       />
 

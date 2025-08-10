@@ -1,33 +1,37 @@
 <!-- Container principal do textarea -->
 <div class="pdx-textarea-container">
-
   <!-- Form field principal -->
-  <mat-form-field 
+  <mat-form-field
     [appearance]="materialAppearance()"
     [color]="materialColor()"
     [floatLabel]="floatLabelBehavior()"
     [subscriptSizing]="metadata()?.materialDesign?.subscriptSizing || 'fixed'"
-    [hideRequiredMarker]="metadata()?.materialDesign?.hideRequiredMarker || false"
+    [hideRequiredMarker]="
+      metadata()?.materialDesign?.hideRequiredMarker || false
+    "
     [class]="textareaSpecificClasses()"
->
-
+  >
     <!-- Label estático -->
-    <mat-label 
+    <mat-label
       [matTooltip]="metadata()?.description || ''"
       [matTooltipDisabled]="!metadata()?.description"
-      matTooltipPosition="above">
-      {{ metadata()?.label }}
-      @if (metadata()?.required && !metadata()?.materialDesign?.hideRequiredMarker) {
+      matTooltipPosition="above"
+    >
+      {{ label }}
+      @if (
+        metadata()?.required && !metadata()?.materialDesign?.hideRequiredMarker
+      ) {
         <span class="pdx-required-marker" aria-label="required"> *</span>
       }
     </mat-label>
 
     <!-- Ícone de prefixo -->
     @if (metadata()?.prefixIcon) {
-      <mat-icon 
-        matPrefix 
+      <mat-icon
+        matPrefix
         [matTooltip]="'Icon: ' + metadata()?.prefixIcon"
-        matTooltipPosition="above">
+        matTooltipPosition="above"
+      >
         {{ metadata()?.prefixIcon }}
       </mat-icon>
     }
@@ -37,7 +41,7 @@
       #textareaElement
       matInput
       [formControl]="internalControl"
-      [placeholder]="metadata()?.placeholder || ''"
+      [placeholder]="shouldShowPlaceholder ? placeholder : null"
       [maxlength]="metadata()?.maxLength || null"
       [minlength]="metadata()?.minLength || null"
       [readonly]="metadata()?.readonly || metadata()?.readOnly || false"
@@ -49,59 +53,61 @@
       [cdkAutosizeMinRows]="metadata()?.minRows || 4"
       [cdkAutosizeMaxRows]="metadata()?.maxRows || 12"
       [style.resize]="metadata()?.resize || 'vertical'"
-      [attr.aria-describedby]="metadata()?.hint ? componentId() + '-hint' : null"
+      [attr.aria-describedby]="
+        metadata()?.hint ? componentId() + '-hint' : null
+      "
+      [attr.aria-label]="!label && placeholder ? placeholder : null"
       (input)="onTextareaInput($event)"
       (focus)="onTextareaFocus($event)"
       (blur)="onTextareaBlur($event)"
-      (keydown)="onTextareaKeyDown($event)">
+      (keydown)="onTextareaKeyDown($event)"
+    >
     </textarea>
-
 
     <!-- Ícone de sufixo customizado -->
     @if (metadata()?.suffixIcon) {
-      <mat-icon 
+      <mat-icon
         matSuffix
         [matTooltip]="'Icon: ' + metadata()?.suffixIcon"
-        matTooltipPosition="above">
+        matTooltipPosition="above"
+      >
         {{ metadata()?.suffixIcon }}
       </mat-icon>
     }
 
     <!-- Texto de ajuda -->
     @if (metadata()?.hint) {
-      <mat-hint 
-        [id]="componentId() + '-hint'"
-        align="start">
+      <mat-hint [id]="componentId() + '-hint'" align="start">
         {{ metadata()?.hint }}
       </mat-hint>
     }
 
     <!-- Contador de caracteres -->
     @if (shouldShowCharacterCount()) {
-      <mat-hint 
+      <mat-hint
         align="end"
         class="pdx-character-count"
-        [class.pdx-character-count-warning]="textareaState().characterCount > (metadata()?.maxLength! * 0.8)"
-        [class.pdx-character-count-error]="textareaState().characterCount >= metadata()?.maxLength!">
-        {{ textareaState().characterCount }}{{ metadata()?.maxLength ? '/' + metadata()?.maxLength : '' }}
+        [class.pdx-character-count-warning]="
+          textareaState().characterCount > metadata()?.maxLength! * 0.8
+        "
+        [class.pdx-character-count-error]="
+          textareaState().characterCount >= metadata()?.maxLength!
+        "
+      >
+        {{ textareaState().characterCount
+        }}{{ metadata()?.maxLength ? "/" + metadata()?.maxLength : "" }}
       </mat-hint>
     }
 
     <!-- Mensagens de erro -->
     @if (hasValidationError()) {
-      <mat-error 
-        [id]="componentId() + '-error'"
-        class="pdx-error-message">
+      <mat-error [id]="componentId() + '-error'" class="pdx-error-message">
         <mat-icon class="pdx-error-icon">error_outline</mat-icon>
         {{ errorMessage() }}
       </mat-error>
     }
-
   </mat-form-field>
-
 </div>
-
-
 
 <!-- Indicador de debug simplificado -->
 @if (metadata()?.security) {

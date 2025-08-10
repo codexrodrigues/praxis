@@ -28,7 +28,7 @@ import { SimpleBaseInputComponent } from '../../base/simple-base-input.component
       [color]="materialColor()"
       [class]="componentCssClasses()"
     >
-      <mat-label>{{ metadata()?.label || 'Password' }}</mat-label>
+      <mat-label>{{ label }}</mat-label>
 
       @if (metadata()?.prefixIcon) {
         <mat-icon matPrefix>{{ metadata()!.prefixIcon }}</mat-icon>
@@ -37,12 +37,12 @@ import { SimpleBaseInputComponent } from '../../base/simple-base-input.component
       <input
         matInput
         [formControl]="internalControl"
-        [placeholder]="metadata()?.placeholder || ''"
+        [placeholder]="shouldShowPlaceholder ? placeholder : null"
         [required]="metadata()?.required || false"
         [readonly]="metadata()?.readonly || false"
         [type]="inputType()"
         [attr.autocomplete]="metadata()?.autocomplete || 'off'"
-        [attr.aria-label]="metadata()?.ariaLabel || metadata()?.label"
+        [attr.aria-label]="!label && placeholder ? placeholder : null"
         [attr.aria-required]="metadata()?.required ? 'true' : 'false'"
       />
 

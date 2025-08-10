@@ -23,12 +23,12 @@ import {
     <mat-form-field
       [appearance]="materialAppearance()"
       [color]="materialColor()"
+      floatLabel="auto"
       [class]="componentCssClasses()"
     >
-      <mat-label>{{ metadata()?.label || 'Select' }}</mat-label>
+      <mat-label>{{ label }}</mat-label>
       <mat-select
         [formControl]="internalControl"
-        [placeholder]="metadata()?.placeholder || ''"
         [required]="metadata()?.required || false"
       >
         <mat-option

@@ -33,8 +33,8 @@ import { SimpleBaseInputComponent } from '../../base/simple-base-input.component
   ],
   template: `
     <div class="pdx-multi-select-tree-wrapper">
-      @if (metadata()?.label) {
-        <label class="pdx-tree-label">{{ metadata()!.label }}</label>
+      @if (label) {
+        <label class="pdx-tree-label">{{ label }}</label>
       }
 
       @if (selectAll()) {
