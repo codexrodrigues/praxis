@@ -41,7 +41,9 @@
       #textareaElement
       matInput
       [formControl]="internalControl"
-      [placeholder]="shouldShowPlaceholder ? placeholder : null"
+      [attr.placeholder]="
+        shouldShowPlaceholder && placeholder ? placeholder : null
+      "
       [maxlength]="metadata()?.maxLength || null"
       [minlength]="metadata()?.minLength || null"
       [readonly]="metadata()?.readonly || metadata()?.readOnly || false"

@@ -53,10 +53,10 @@ import { SimpleBaseInputComponent } from '../../base/simple-base-input.component
         <input
           matStartDate
           formControlName="start"
-          [placeholder]="
+          [attr.placeholder]="
             metadata()?.startPlaceholder &&
             metadata()?.startPlaceholder.trim() !== (label ?? '').trim()
-              ? metadata()?.startPlaceholder
+              ? metadata()!.startPlaceholder
               : null
           "
           [readonly]="metadata()?.readonly || false"
@@ -70,10 +70,10 @@ import { SimpleBaseInputComponent } from '../../base/simple-base-input.component
         <input
           matEndDate
           formControlName="end"
-          [placeholder]="
+          [attr.placeholder]="
             metadata()?.endPlaceholder &&
             metadata()?.endPlaceholder.trim() !== (label ?? '').trim()
-              ? metadata()?.endPlaceholder
+              ? metadata()!.endPlaceholder
               : null
           "
           [readonly]="metadata()?.readonly || false"

@@ -64,7 +64,9 @@ registerLocaleData(localePt, 'pt-BR');
         #currencyInput
         type="text"
         [formControl]="internalControl"
-        [placeholder]="shouldShowPlaceholder ? placeholder : null"
+        [attr.placeholder]="
+          shouldShowPlaceholder && placeholder ? placeholder : null
+        "
         [required]="metadata()?.required || false"
         [readonly]="metadata()?.readonly || false"
         [attr.aria-label]="!label && placeholder ? placeholder : null"
