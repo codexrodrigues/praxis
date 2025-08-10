@@ -39,6 +39,8 @@ import { MaterialColorPickerComponent } from '../../components/material-colorpic
 import { MaterialTextareaComponent } from '../../components/material-textarea/material-textarea.component';
 import { MaterialSelectComponent } from '../../components/material-select/material-select.component';
 import { MaterialMultiSelectComponent } from '../../components/material-multi-select/material-multi-select.component';
+import { MaterialMultiSelectTreeComponent } from '../../components/material-multi-select-tree/material-multi-select-tree.component';
+import { MaterialFileUploadComponent } from '../../components/material-file-upload/material-file-upload.component';
 import { MaterialSearchableSelectComponent } from '../../components/material-searchable-select/material-searchable-select.component';
 import { MaterialAsyncSelectComponent } from '../../components/material-async-select/material-async-select.component';
 import { MaterialRadioGroupComponent } from '../../components/material-radio-group/material-radio-group.component';
@@ -317,6 +319,12 @@ export class ComponentRegistryService implements IComponentRegistry {
     );
     this.register(FieldControlTypeEnum.MULTI_SELECT, () =>
       wrap(MaterialMultiSelectComponent),
+    );
+    this.register(FieldControlTypeEnum.MULTI_SELECT_TREE, () =>
+      wrap(MaterialMultiSelectTreeComponent),
+    );
+    this.register(FieldControlTypeEnum.FILE_UPLOAD, () =>
+      wrap(MaterialFileUploadComponent),
     );
     this.register('searchable-select' as FieldControlType, () =>
       wrap(MaterialSearchableSelectComponent),
