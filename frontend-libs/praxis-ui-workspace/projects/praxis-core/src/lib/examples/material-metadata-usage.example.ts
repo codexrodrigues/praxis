@@ -27,7 +27,7 @@ import {
   MaterialButtonMetadata,
   MaterialNumericMetadata,
   MaterialTextareaMetadata,
-  MaterialTimepickerMetadata
+  MaterialTimepickerMetadata,
 } from '../models/material-field-metadata.interface';
 
 // =============================================================================
@@ -165,7 +165,7 @@ export const countrySelect: MaterialSelectMetadata = {
   required: true,
   searchable: true,
   searchPlaceholder: 'Search countries...',
-  endpoint: '/api/countries',
+  endpoint: 'countries',
   valueField: 'code',
   displayField: 'name',
   validators: {
@@ -289,8 +289,8 @@ export const meetingTimePicker: MaterialTimepickerMetadata = {
   openOnClick: true,
   materialDesign: {
     appearance: 'outline',
-    color: 'primary'
-  }
+    color: 'primary',
+  },
 };
 
 // =============================================================================
@@ -434,7 +434,7 @@ export const productForm: FieldMetadata[] = [
     controlType: 'select',
     required: true,
     order: 3,
-    endpoint: '/api/categories',
+    endpoint: 'categories',
     valueField: 'id',
     displayField: 'name',
     materialDesign: {
@@ -677,7 +677,7 @@ export const contactFormConfig: FormConfiguration = {
     scrollToFirstError: true,
   },
   submission: {
-    endpoint: '/api/contact',
+    endpoint: 'contact',
     method: 'POST',
     successMessage: 'Thank you! Your message has been sent.',
     errorMessage:

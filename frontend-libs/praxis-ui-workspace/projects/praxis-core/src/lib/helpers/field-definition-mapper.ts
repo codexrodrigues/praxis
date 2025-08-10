@@ -5,6 +5,25 @@ import {
 } from '../models/component-metadata.interface';
 import { FieldControlType } from '../metadata/field-control-type.constants';
 
+function normalizeEndpoint(path?: string): string | undefined {
+  if (!path) {
+    return undefined;
+  }
+
+  // Convert absolute URLs to relative paths by removing the origin
+  if (/^https?:\/\//i.test(path)) {
+    try {
+      const url = new URL(path);
+      path = url.pathname;
+    } catch {
+      // If URL parsing fails, fallback to original string
+    }
+  }
+
+  // Remove leading slashes and any duplicated `api` segments
+  return path.replace(/^\/+/, '').replace(/^(?:api\/)+/, '');
+}
+
 /**
  * Convert a `FieldDefinition` coming from the backend schema into
  * `FieldMetadata` used by the dynamic field loader.
@@ -36,8 +55,6 @@ export function mapFieldDefinitionToMetadata(
     'unique',
     'mask',
     'inlineEditing',
-    'endpoint',
-    'resourcePath',
     'multiple',
     'searchable',
     'selectAll',
@@ -50,6 +67,12 @@ export function mapFieldDefinitionToMetadata(
     if (value !== undefined) {
       (metadata as any)[prop] = value;
     }
+  }
+
+  const endpointPath = normalizeEndpoint(field.resourcePath ?? field.endpoint);
+  if (endpointPath) {
+    metadata.resourcePath = endpointPath;
+    (metadata as any).endpoint = endpointPath;
   }
 
   if (field.numericMin !== undefined) {

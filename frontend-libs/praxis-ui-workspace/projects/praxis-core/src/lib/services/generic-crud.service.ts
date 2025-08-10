@@ -146,10 +146,32 @@ export class GenericCrudService<T> {
     this.baseApiUrl = buildApiUrl(entry);
 
     const base = this.baseApiUrl.replace(/\/+$/, '');
-    const resource = resourcePath.replace(/^\/+/, '');
+    let resource = resourcePath.trim();
+
+    // Convert absolute URLs to their path component
+    if (/^https?:\/\//i.test(resource)) {
+      try {
+        const url = new URL(resource);
+        resource = url.pathname;
+      } catch {
+        // ignore parse errors and treat as relative string
+      }
+    }
+
+    resource = resource.replace(/^\/+/, '');
+
+    // Remove duplicated `api` segments only if base URL already contains `/api`
+    try {
+      const basePath = new URL(base).pathname;
+      if (/\/api(\/|$)/.test(basePath)) {
+        resource = resource.replace(/^(?:api\/)+/, '');
+      }
+    } catch {
+      // ignore invalid base URLs
+    }
 
     this.resourcePath = resource;
-    this.apiUrl = `${base}/${resource}`;
+    this.apiUrl = `${base}/${resource}`.replace(/\/+$/, '');
     this.configured = true;
   }
 
