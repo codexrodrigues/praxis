@@ -1,8 +1,11 @@
 package org.praxisplatform.uischema.util;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.praxisplatform.uischema.FieldConfigProperties;
 import org.praxisplatform.uischema.FieldControlType;
 import org.praxisplatform.uischema.FieldDataType;
@@ -12,6 +15,8 @@ import java.util.List;
 import java.util.Map;
 
 public class OpenApiUiUtils {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(OpenApiUiUtils.class);
 
     private OpenApiUiUtils() {
         // Private constructor to prevent instantiation
@@ -238,6 +243,38 @@ public class OpenApiUiUtils {
                 optionsNode.add(optionNode);
             }
             xUiMap.put(FieldConfigProperties.OPTIONS.getValue(), optionsNode);
+        }
+    }
+
+    public static void populateUiOptionsFromString(Map<String, Object> xUiMap,
+                                                  String options,
+                                                  ObjectMapper objectMapper) {
+        if (options == null || options.isEmpty() || xUiMap.containsKey(FieldConfigProperties.OPTIONS.getValue())) {
+            return;
+        }
+
+        try {
+            JsonNode node = objectMapper.readTree(options);
+            if (!node.isArray()) {
+                LOGGER.warn("Options JSON is not an array: {}", options);
+                return;
+            }
+
+            ArrayNode arrayNode = objectMapper.createArrayNode();
+            for (JsonNode element : node) {
+                if (element.isObject()) {
+                    arrayNode.add(element);
+                } else {
+                    ObjectNode optionNode = objectMapper.createObjectNode();
+                    String text = element.asText();
+                    optionNode.put("label", text);
+                    optionNode.put("value", text);
+                    arrayNode.add(optionNode);
+                }
+            }
+            xUiMap.put(FieldConfigProperties.OPTIONS.getValue(), arrayNode);
+        } catch (Exception e) {
+            LOGGER.warn("Invalid options JSON: {}", options, e);
         }
     }
 

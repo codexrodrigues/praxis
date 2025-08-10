@@ -895,6 +895,9 @@ public class CustomOpenApiResolver extends ModelResolver {
         if (!annotation.helpText().isEmpty()) {
             uiExtension.put(FieldConfigProperties.HELP_TEXT.getValue(), annotation.helpText());
         }
+        if (!annotation.options().isEmpty()) {
+            OpenApiUiUtils.populateUiOptionsFromString(uiExtension, annotation.options(), this._mapper);
+        }
         
         // Inteiros não zero
         if (annotation.order() != 0) {
