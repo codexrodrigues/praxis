@@ -10,19 +10,18 @@
  * A) Design tokens (CSS variables) from the reference
  * ------------------------------------------------- */
 :root {
-  /* Surfaces */
-  --background: #2b2b2b;
-  --surface: #333333;            /* off-background-2 */
-  --surface-2: #444444;          /* off-background-3 */
-  --surface-3: #2b2b2b;          /* off-background-4 */
-  --surface-contrast-weak: #111111; /* off-background-8 */
+  /* Surfaces — abre ~8–10% entre níveis */
+  --background: #17191d;
+  --surface:   #21252b;
+  --surface-2: #2a3038;
+  --surface-3: #1d2127;
 
-  /* Borders & shadows */
-  --border-color: #444444;
-  --border-color-normal: #444444;
-  --border-color-dark: #444444;
-  --shadow-color: rgba(0,0,0,0.2);
-  --elevation-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.2), 0 4px 6px -4px rgb(0 0 0 / 0.2);
+  /* Bordas & sombra */
+  --border-color:        #2a3036;
+  --border-color-normal: #2a3036;
+  --border-color-dark:   #2f3640;
+  --shadow-color: rgba(0,0,0,.35);
+  --elevation-shadow: 0 10px 15px -3px rgb(0 0 0 / .35), 0 4px 6px -4px rgb(0 0 0 / .35);
 
   /* Brand / Primary */
   --primary: #48A1FF;                 /* primary-blue */
@@ -33,7 +32,8 @@
 
   /* Text */
   --text-primary: #FFFFFF;
-  --text-regular: #F2F2F2;
+  --text-regular: #e6eaf2;
+  --text-strong:  #ffffff;
   --text-secondary: #A4A4A4;
   --text-tertiary: #9C9C9C;
   --text-caption: #8a8a8a;
@@ -181,6 +181,67 @@ $dark-theme: mat.m2-define-dark-theme((
   outline-variant: #80868b,
 ));
 
+/* ===== Data table – dark harmony ===== */
+
+/* Container da tabela destacado do fundo */
+.mat-mdc-table {
+  background: var(--surface);
+  border: 1px solid var(--border-color-dark);
+  border-radius: 12px;
+  box-shadow: var(--elevation-shadow);
+  overflow: clip;
+}
+
+/* Cabeçalho num nível acima do surface */
+.mat-mdc-header-row { background: var(--surface-2); }
+
+
+.mat-mdc-header-cell {
+  color: var(--text-regular);
+  border-bottom-color: var(--border-color-normal);
+  font-weight: 600;
+}
+
+/* Zebra sutil (não escurece demais) */
+//.mat-mdc-row {
+//  background: var(--surface);
+//  color: var(--text-regular);
+//  border-bottom: 1px solid var(--border-color-normal);
+//}
+
+.mat-mdc-row:nth-child(even) { background: var(--surface-3); }
+
+/* 4) Estados (hover, focus, selected) coerentes com o primary */
+.mat-mdc-row:hover {
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface) 90%);
+  cursor: pointer;
+}
+.mat-mdc-row:focus-within {
+  outline: 2px solid color-mix(in srgb, var(--primary) 55%, white 45%);
+  outline-offset: -2px;
+}
+
+/* Selecionada visível mas elegante */
+.mat-mdc-row.selected-row {
+  background: color-mix(in srgb, var(--primary) 18%, var(--surface) 82%) !important;
+}
+
+/* 5) Painéis de seleção/dropdowns no mesmo nível de surface */
+.mat-mdc-select-panel,
+.mdc-menu-surface {
+  background: var(--surface-2) !important;
+  border: 1px solid var(--border-color-dark);
+  box-shadow: var(--elevation-shadow);
+  color: var(--text-regular);
+}
+.mat-mdc-option.mdc-list-item--selected,
+.mat-mdc-option:hover {
+  background: color-mix(in srgb, var(--primary) 14%, var(--surface-2) 86%);
+  color: var(--text-strong);
+}
+.mdc-list-item--disabled { opacity: .45; }
+
+
 /* ---------------------------------
  * D) Component-level fine overrides
  * --------------------------------- */
@@ -203,11 +264,12 @@ $dark-theme: mat.m2-define-dark-theme((
   row-item-outline-color: rgba(255,255,255,0.12),
 ));
 
-/* Row hover and selected states */
+/* Hover com leve “tinte” da primária */
 .mat-mdc-row:not(.mat-mdc-header-row):hover {
-  background-color: rgba(255, 255, 255, 0.04);
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface) 90%);
   cursor: pointer;
 }
+
 .mat-mdc-row.selected-row {
   background-color: var(--mat-sys-primary-container) !important;
 }

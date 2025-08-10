@@ -41,6 +41,140 @@ mat-form-field { width: 100%; }
 /* Focus ring helper */
 .focus-ring { outline: 2px solid var(--primary-very-light); outline-offset: 2px; }
 
+/* ===========================
+   Dark Harmony — Overrides
+   =========================== */
+.mdc-theme-dark {
+  /* Layers: página vs containers */
+  --background: #17191d;
+  --surface:   #21252b;
+  --surface-2: #2a3038;
+  --surface-3: #303642;
+
+  --divider-color: rgba(255,255,255,.08);
+  --border-color:  rgba(255,255,255,.10);
+  --border-color-hover: rgba(255,255,255,.18);
+  --focus-ring: 0 0 0 3px rgba(72,161,255,.35);
+  --radius-md: 12px;
+  --elevation-shadow: 0 10px 20px rgba(0,0,0,.28);
+
+  /* ===== Mat Table ===== */
+  .mat-mdc-table {
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--elevation-shadow);
+    overflow: hidden;
+  }
+  .mat-mdc-header-row {
+    background: var(--surface-3);
+    border-bottom: 1px solid var(--divider-color);
+    font-weight: 600;
+  }
+  .mat-mdc-row {
+    background: var(--surface);
+    border-bottom: 1px solid var(--divider-color);
+  }
+  .mat-mdc-row:nth-child(even) { background: var(--surface-2); }
+  .mat-mdc-row:hover { background: color-mix(in oklab, var(--mat-sys-primary) 12%, transparent); }
+
+  /* ===== Form fields ===== */
+  .mat-mdc-form-field .mdc-text-field {
+    background: var(--surface-2);
+    border-radius: var(--radius-md);
+  }
+  .mat-mdc-form-field-appearance-outline .mdc-notched-outline__leading,
+  .mat-mdc-form-field-appearance-outline .mdc-notched-outline__notch,
+  .mat-mdc-form-field-appearance-outline .mdc-notched-outline__trailing {
+    border-color: var(--border-color);
+  }
+  .mat-mdc-form-field-appearance-outline:hover .mdc-notched-outline__leading,
+  .mat-mdc-form-field-appearance-outline:hover .mdc-notched-outline__notch,
+  .mat-mdc-form-field-appearance-outline:hover .mdc-notched-outline__trailing {
+    border-color: var(--border-color-hover);
+  }
+  .mat-mdc-form-field.mat-focused .mdc-notched-outline__leading,
+  .mat-mdc-form-field.mat-focused .mdc-notched-outline__notch,
+  .mat-mdc-form-field.mat-focused .mdc-notched-outline__trailing {
+    border-color: var(--mat-sys-primary) !important;
+    box-shadow: var(--focus-ring);
+  }
+  .mdc-text-field__input::placeholder,
+  .mat-mdc-floating-label {
+    color: rgba(var(--mat-sys-on-surface-rgb), .68) !important;
+  }
+
+  /* ===== Select / Menu / Autocomplete ===== */
+  .mat-mdc-select-panel,
+  .mat-mdc-menu-panel,
+  .mat-mdc-autocomplete-panel {
+    background: var(--surface-2) !important;
+    color: var(--mat-sys-on-surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--elevation-shadow);
+  }
+  .mat-mdc-option.mat-mdc-option-active,
+  .mat-mdc-option.mdc-list-item--selected {
+    background: color-mix(in oklab, var(--mat-sys-primary) 18%, transparent) !important;
+  }
+  .mat-mdc-option:hover {
+    background: rgba(255,255,255,.06) !important;
+  }
+
+  /* ===== Dialog ===== */
+  .mat-mdc-dialog-container .mdc-dialog__surface {
+    background: var(--surface) !important;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--elevation-shadow);
+  }
+
+  /* ===== Cards genéricos (se usar) ===== */
+  .mat-mdc-card, .panel, .card {
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--elevation-shadow);
+  }
+
+  /* ===== Hierarquia tipográfica de seção ===== */
+  h1, .mat-headline-5 { font-weight: 600; }
+  h2, .mat-headline-6 { font-weight: 600; opacity: .92; }
+  .section-title, .mat-subtitle-1 { opacity: .82; letter-spacing: .2px; }
+}
+
+.mdc-theme-dark .mat-mdc-table {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.mdc-theme-dark .mat-mdc-paginator {
+  background: var(--surface) !important;
+  margin: 0 !important;                 /* remove faixa vazia */
+  border: 1px solid var(--border-color);
+  border-top: 0;                        /* “cola” na tabela */
+  border-bottom-left-radius: var(--radius-md);
+  border-bottom-right-radius: var(--radius-md);
+  box-shadow: var(--elevation-shadow);
+}
+
+.mdc-theme-dark .mat-mdc-paginator .mat-mdc-paginator-container {
+  padding: 4px 12px;                    /* altura enxuta */
+}
+
+/* Evita quebra e garante uma linha só no rótulo */
+.mdc-theme-dark .mat-mdc-floating-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: none;
+  line-height: 1.25;
+}
+
+
+
+
 /* Small responsive tweak */
 @media (max-width: 599px) {
   :root { --spacing-lg: 16px; --spacing-xl: 24px; }
