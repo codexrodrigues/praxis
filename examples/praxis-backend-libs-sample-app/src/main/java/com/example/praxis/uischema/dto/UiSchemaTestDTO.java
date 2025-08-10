@@ -299,6 +299,15 @@ public class UiSchemaTestDTO {
     )
     private String city;
 
+    @UISchema(
+            label = "Tags",
+            controlType = FieldControlType.MULTI_SELECT,
+            options = "[\"alpha\",\"beta\"]",
+            order = 23,
+            group = "selection"
+    )
+    private List<String> tags;
+
     // Getters and setters
 
     public String getTextField() {
@@ -475,6 +484,14 @@ public class UiSchemaTestDTO {
 
     public void setCity(String city) {
         this.city = city;
+    }
+
+    public List<String> getTags() {
+        return tags;
+    }
+
+    public void setTags(List<String> tags) {
+        this.tags = tags;
     }
 }
 
