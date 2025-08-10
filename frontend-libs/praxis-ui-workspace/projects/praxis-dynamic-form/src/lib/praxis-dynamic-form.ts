@@ -583,7 +583,12 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
     }
 
     // Initialize form based on the new flow
-    if (this.formId && this.resourcePath && !this.isInitialized) {
+    if (
+      this.formId &&
+      this.resourcePath &&
+      !this.isInitialized &&
+      !this.isLoading
+    ) {
       this.initializeForm();
     }
   }
@@ -593,7 +598,7 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
       this.crud.configure(this.resourcePath);
 
       // Only initialize if not already initialized or if resourcePath actually changed
-      if (!this.isInitialized && this.formId) {
+      if (!this.isInitialized && !this.isLoading && this.formId) {
         this.initializeForm();
       }
     }

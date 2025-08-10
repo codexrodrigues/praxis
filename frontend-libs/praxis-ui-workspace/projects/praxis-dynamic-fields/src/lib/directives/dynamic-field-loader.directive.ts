@@ -602,9 +602,10 @@ export class DynamicFieldLoaderDirective
     field: FieldMetadata,
     index: number,
   ): Promise<ComponentRef<BaseDynamicFieldComponent> | null> {
+    let shellRef: ComponentRef<FieldShellComponent> | null = null;
     try {
       // 1) cria shell
-      const shellRef = this.viewContainer.createComponent(FieldShellComponent, {
+      shellRef = this.viewContainer.createComponent(FieldShellComponent, {
         index,
       });
       shellRef.instance.field = field;
@@ -644,8 +645,9 @@ export class DynamicFieldLoaderDirective
         `[DynamicFieldLoader] Failed to create component for field '${field.name}':`,
         error,
       );
+      shellRef?.destroy();
       // TODO (issue futura): this.fieldError.emit({ field, error });
-      throw error;
+      return null;
     }
   }
 
