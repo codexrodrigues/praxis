@@ -27,11 +27,10 @@ import {
       [color]="materialColor()"
       [class]="componentCssClasses()"
     >
-      <mat-label>{{ metadata()?.label || 'Select' }}</mat-label>
+      <mat-label>{{ label }}</mat-label>
       <mat-select
         multiple
         [formControl]="internalControl"
-        [placeholder]="metadata()?.placeholder || ''"
         [required]="metadata()?.required || false"
       >
         @if (selectAll()) {

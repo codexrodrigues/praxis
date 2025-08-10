@@ -37,9 +37,7 @@ import { SimpleBaseInputComponent } from '../../base/simple-base-input.component
   ],
   template: `
     <div class="price-range-container">
-      <label class="range-label">{{
-        metadata()?.label || 'Price range'
-      }}</label>
+      <label class="range-label">{{ label }}</label>
       <div class="range-inputs" [formGroup]="rangeGroup">
         <pdx-material-currency
           formControlName="minPrice"

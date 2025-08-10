@@ -36,7 +36,7 @@ import { SimpleBaseInputComponent } from '../../base/simple-base-input.component
       [color]="materialColor()"
       [class]="componentCssClasses()"
     >
-      <mat-label>{{ metadata()?.label || 'Date range' }}</mat-label>
+      <mat-label>{{ label }}</mat-label>
 
       @if (metadata()?.prefixIcon) {
         <mat-icon matPrefix>{{ metadata()!.prefixIcon }}</mat-icon>
@@ -53,16 +53,36 @@ import { SimpleBaseInputComponent } from '../../base/simple-base-input.component
         <input
           matStartDate
           formControlName="start"
-          [placeholder]="metadata()?.startPlaceholder || ''"
+          [placeholder]="
+            metadata()?.startPlaceholder &&
+            metadata()?.startPlaceholder.trim() !== (label ?? '').trim()
+              ? metadata()?.startPlaceholder
+              : null
+          "
           [readonly]="metadata()?.readonly || false"
-          [attr.aria-label]="metadata()?.startAriaLabel || metadata()?.label"
+          [attr.aria-label]="
+            metadata()?.startAriaLabel ||
+            (!label && metadata()?.startPlaceholder
+              ? metadata()?.startPlaceholder
+              : null)
+          "
         />
         <input
           matEndDate
           formControlName="end"
-          [placeholder]="metadata()?.endPlaceholder || ''"
+          [placeholder]="
+            metadata()?.endPlaceholder &&
+            metadata()?.endPlaceholder.trim() !== (label ?? '').trim()
+              ? metadata()?.endPlaceholder
+              : null
+          "
           [readonly]="metadata()?.readonly || false"
-          [attr.aria-label]="metadata()?.endAriaLabel || metadata()?.label"
+          [attr.aria-label]="
+            metadata()?.endAriaLabel ||
+            (!label && metadata()?.endPlaceholder
+              ? metadata()?.endPlaceholder
+              : null)
+          "
         />
       </mat-date-range-input>
 

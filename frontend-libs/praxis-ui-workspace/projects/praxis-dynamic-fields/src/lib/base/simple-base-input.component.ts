@@ -24,6 +24,7 @@ import {
   computed,
   output,
   inject,
+  Input,
   OnInit,
   OnDestroy,
   AfterViewInit,
@@ -130,6 +131,18 @@ export abstract class SimpleBaseInputComponent
 
   /** ID único do componente */
   readonly componentId = signal<string>('');
+
+  /** Rótulo visível do campo */
+  @Input() label?: string;
+  /** Placeholder opcional */
+  @Input() placeholder?: string;
+
+  /** Indica se o placeholder deve ser exibido */
+  get shouldShowPlaceholder(): boolean {
+    const p = (this.placeholder ?? '').trim();
+    const l = (this.label ?? '').trim();
+    return !!p && p !== l;
+  }
 
   // =============================================================================
   // FORM CONTROL
@@ -469,6 +482,8 @@ export abstract class SimpleBaseInputComponent
    */
   protected setMetadata(metadata: ComponentMetadata): void {
     this.metadata.set(metadata);
+    this.label = (metadata as any).label;
+    this.placeholder = (metadata as any).placeholder;
     this.setDisabledState(!!metadata.disabled);
     // Reaplica validators quando metadata muda
     this.setupValidators();
@@ -494,8 +509,9 @@ export abstract class SimpleBaseInputComponent
 
     if (meta.name) this.nativeElement.setAttribute('name', meta.name);
     if (meta.id) this.nativeElement.id = meta.id;
-    if (meta.placeholder)
-      this.nativeElement.setAttribute('placeholder', meta.placeholder);
+    if (this.shouldShowPlaceholder && this.placeholder)
+      this.nativeElement.setAttribute('placeholder', this.placeholder);
+    else this.nativeElement.removeAttribute('placeholder');
     if (meta.readonly) this.nativeElement.setAttribute('readonly', '');
     if (meta.autocomplete)
       this.nativeElement.setAttribute('autocomplete', meta.autocomplete);

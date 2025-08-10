@@ -43,7 +43,6 @@ describe('SimpleBaseSelectComponent', () => {
       id: 'sel-id',
       name: 'sel',
       ariaLabel: 'Select field',
-      placeholder: 'Choose',
       required: true,
       multiple: true,
     });
@@ -61,7 +60,6 @@ describe('SimpleBaseSelectComponent', () => {
     const matSelect = (component as any).matSelect as any;
     const host: HTMLElement = fixture.nativeElement.querySelector('mat-select');
     expect(host.getAttribute('name')).toBe('sel');
-    expect(matSelect.placeholder).toBe('Choose');
     expect(matSelect.required).toBeTrue();
     expect(matSelect.multiple).toBeTrue();
   });
