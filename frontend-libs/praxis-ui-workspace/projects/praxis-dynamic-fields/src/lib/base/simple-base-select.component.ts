@@ -101,15 +101,12 @@ export abstract class SimpleBaseSelectComponent<
   /** Holds error message when option loading fails */
   readonly error = signal<string | null>(null);
 
-  override ngAfterViewInit(): void {
-    super.ngAfterViewInit();
-    effect(() => {
-      const select = this.matSelectRef();
-      if (select && select !== this.matSelect) {
-        this.registerMatSelect(select);
-      }
-    });
-  }
+  private readonly matSelectInitEffect = effect(() => {
+    const select = this.matSelectRef();
+    if (select && select !== this.matSelect) {
+      this.registerMatSelect(select);
+    }
+  });
 
   /** CRUD service for remote option loading (optional) */
   protected readonly crudService = inject(GenericCrudService as any, {
