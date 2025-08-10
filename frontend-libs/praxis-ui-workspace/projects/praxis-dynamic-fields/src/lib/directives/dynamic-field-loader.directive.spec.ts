@@ -352,12 +352,55 @@ describe('DynamicFieldLoaderDirective', () => {
         test: [''],
       });
 
-      try {
-        fixture.detectChanges();
-        await fixture.whenStable();
-      } catch (error) {
-        expect(console.error).toHaveBeenCalled();
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(console.error).toHaveBeenCalledWith(
+        jasmine.stringContaining(
+          "[DynamicFieldLoader] Error resolving component type 'input'",
+        ),
+        jasmine.any(Error),
+      );
+      expect(component.createdComponents.size).toBe(0);
+    });
+
+    it('should continue rendering other fields if component creation fails', async () => {
+      @Component({ selector: 'fail-comp', standalone: true, template: '' })
+      class FailingComponent {
+        constructor() {
+          throw new Error('boom');
+        }
       }
+
+      spyOn(registryService, 'getComponent').and.callFake(
+        async (type: string): Promise<any> => {
+          return type === 'fail' ? FailingComponent : TextInputComponent;
+        },
+      );
+
+      component.fields = [
+        { name: 'failField', controlType: 'fail' },
+        { name: 'okField', controlType: 'input' },
+      ] as FieldMetadata[];
+
+      component.testForm = new FormBuilder().group({
+        failField: [''],
+        okField: [''],
+      });
+
+      spyOn(console, 'error');
+
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(console.error).toHaveBeenCalledWith(
+        jasmine.stringContaining(
+          "[DynamicFieldLoader] Failed to create component for field 'failField'",
+        ),
+        jasmine.any(Error),
+      );
+      expect(component.createdComponents.size).toBe(1);
+      expect(component.createdComponents.has('okField')).toBeTrue();
     });
   });
 

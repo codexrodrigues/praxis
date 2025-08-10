@@ -1,8 +1,6 @@
 import { Component, forwardRef } from '@angular/core';
 import { NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 
 import { SimpleBaseInputComponent } from '../../base/simple-base-input.component';
 import { ComponentMetadata } from '@praxis/core';
@@ -17,20 +15,14 @@ import { ComponentMetadata } from '@praxis/core';
 @Component({
   selector: 'pdx-material-file-upload',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-  ],
+  imports: [CommonModule, ReactiveFormsModule],
   template: `
-    <mat-form-field
-      [appearance]="materialAppearance()"
-      [color]="materialColor()"
-    >
-      <mat-label>{{ metadata()?.label || 'Upload' }}</mat-label>
+    <div class="pdx-file-upload">
+      <label [attr.for]="componentId()">{{
+        metadata()?.label || 'Upload'
+      }}</label>
       <input
-        matInput
+        [attr.id]="componentId()"
         type="file"
         (change)="onFileSelected($event)"
         [disabled]="metadata()?.disabled || false"
@@ -40,12 +32,12 @@ import { ComponentMetadata } from '@praxis/core';
         internalControl.invalid &&
         (internalControl.dirty || internalControl.touched)
       ) {
-        <mat-error>{{ errorMessage() }}</mat-error>
+        <div class="error">{{ errorMessage() }}</div>
       }
       @if (metadata()?.hint && !hasValidationError()) {
-        <mat-hint>{{ metadata()!.hint }}</mat-hint>
+        <div class="hint">{{ metadata()!.hint }}</div>
       }
-    </mat-form-field>
+    </div>
   `,
   providers: [
     {
