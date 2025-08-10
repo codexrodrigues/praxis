@@ -28,7 +28,7 @@ import {
     >
       <mat-label>{{ metadata()?.label || 'Select' }}</mat-label>
       <mat-select
-        multiple
+        [multiple]="multiple()"
         [formControl]="internalControl"
         [placeholder]="metadata()?.placeholder || ''"
         [required]="metadata()?.required || false"
@@ -81,8 +81,9 @@ import {
 export class MaterialMultiSelectComponent extends SimpleBaseSelectComponent {
   override setSelectMetadata(metadata: SimpleSelectMetadata<any>): void {
     const matMetadata = metadata as MaterialSelectMetadata;
-    const source: Array<{ label?: string; text?: string; value: any; disabled?: boolean }> | undefined =
-      matMetadata.selectOptions ?? (matMetadata as any).options;
+    const source:
+      | Array<{ label?: string; text?: string; value: any; disabled?: boolean }>
+      | undefined = matMetadata.selectOptions ?? (matMetadata as any).options;
     const mappedOptions = source?.map((o) => ({
       label: o.label ?? o.text ?? '',
       value: o.value,

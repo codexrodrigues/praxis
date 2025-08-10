@@ -14,7 +14,12 @@ import {
   ValidationErrors,
   Validators,
 } from '@angular/forms';
-import { CommonModule, CurrencyPipe } from '@angular/common';
+import {
+  CommonModule,
+  CurrencyPipe,
+  LOCALE_ID,
+  getCurrencySymbol,
+} from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
@@ -111,6 +116,7 @@ export class MaterialCurrencyComponent extends SimpleBaseInputComponent {
   readonly validationChange = output<ValidationErrors | null>();
 
   private readonly currencyPipe = inject(CurrencyPipe);
+  private readonly locale = inject(LOCALE_ID);
 
   @ViewChild('currencyInput', { static: true })
   private readonly inputRef!: ElementRef<HTMLInputElement>;
@@ -169,25 +175,34 @@ export class MaterialCurrencyComponent extends SimpleBaseInputComponent {
     if (value === null || value === undefined || value === '') {
       return;
     }
-    const formatted =
-      this.currencyPipe.transform(
-        value,
-        this.currencyCode(),
-        '',
-        `1.0-${this.decimalPlaces()}`,
-      ) ?? String(value);
+    let formatted: string;
+    try {
+      formatted =
+        this.currencyPipe.transform(
+          value,
+          this.currencyCode(),
+          '',
+          `1.0-${this.decimalPlaces()}`,
+          this.locale,
+        ) ?? String(value);
+    } catch {
+      formatted = new Intl.NumberFormat(this.locale || 'en-US', {
+        style: 'currency',
+        currency: this.currencyCode(),
+        minimumFractionDigits: 0,
+        maximumFractionDigits: this.decimalPlaces(),
+      }).format(value);
+    }
     this.inputRef.nativeElement.value = formatted;
   }
 
   /** Extracts the symbol for the configured currency. */
   protected currencySymbol(): string {
-    const formatted = this.currencyPipe.transform(
-      0,
-      this.currencyCode(),
-      '',
-      `1.0-0`,
-    );
-    return formatted ? formatted.replace(/[0]/g, '').trim() : '$';
+    try {
+      return getCurrencySymbol(this.currencyCode(), 'narrow', this.locale);
+    } catch {
+      return getCurrencySymbol(this.currencyCode(), 'narrow', 'en-US');
+    }
   }
 
   protected override getSpecificCssClasses(): string[] {

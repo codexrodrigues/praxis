@@ -27,6 +27,7 @@ import {
     >
       <mat-label>{{ metadata()?.label || 'Select' }}</mat-label>
       <mat-select
+        [multiple]="multiple()"
         [formControl]="internalControl"
         [placeholder]="metadata()?.placeholder || ''"
         [required]="metadata()?.required || false"
