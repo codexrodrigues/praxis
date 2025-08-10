@@ -122,6 +122,7 @@ export class MaterialMultiSelectTreeComponent extends SimpleBaseInputComponent {
     MaterialTreeNode,
     MaterialTreeNode | null
   >();
+  private readonly valueMap = new Map<any, MaterialTreeNode>();
 
   /** Show select all option */
   readonly selectAll = signal<boolean>(false);
@@ -130,15 +131,25 @@ export class MaterialMultiSelectTreeComponent extends SimpleBaseInputComponent {
   /** Emits whenever the selection changes */
   readonly selectionChange = new EventEmitter<any[]>();
 
+  override onComponentInit(): void {
+    const meta = this.metadata() as MaterialMultiSelectTreeMetadata | null;
+    if (meta) {
+      this.setTreeMetadata(meta);
+    }
+  }
+
   /** Configure component metadata */
   setTreeMetadata(metadata: MaterialMultiSelectTreeMetadata): void {
-    const nodes = metadata.nodes ?? [];
+    const { options, ...rest } = metadata as any;
+    const nodes = metadata.nodes ?? options ?? [];
     this.dataSource.data = nodes;
+    this.selection.clear();
     this.parentMap.clear();
+    this.valueMap.clear();
     this.buildParentMap(nodes, null);
     this.selectAll.set(!!metadata.selectAll);
     this.maxSelections.set(metadata.maxSelections ?? null);
-    super.setMetadata(metadata);
+    super.setMetadata({ ...rest, nodes });
   }
 
   /** Whether a node has children */
@@ -213,6 +224,7 @@ export class MaterialMultiSelectTreeComponent extends SimpleBaseInputComponent {
   ): void {
     nodes.forEach((n) => {
       this.parentMap.set(n, parent);
+      this.valueMap.set(n.value, n);
       if (n.children) {
         this.buildParentMap(n.children, n);
       }
@@ -232,6 +244,21 @@ export class MaterialMultiSelectTreeComponent extends SimpleBaseInputComponent {
     const values = this.selection.selected.map((n) => n.value);
     this.setValue(values);
     this.selectionChange.emit(values);
+  }
+
+  override writeValue(value: any): void {
+    super.writeValue(value);
+    this.selection.clear();
+    if (Array.isArray(value)) {
+      value.forEach((val) => {
+        const node = this.valueMap.get(val);
+        if (node) {
+          this.selection.select(node);
+          this.toggleDescendants(node, true);
+          this.updateAllParents(node);
+        }
+      });
+    }
   }
 
   /** Toggle select all nodes */
