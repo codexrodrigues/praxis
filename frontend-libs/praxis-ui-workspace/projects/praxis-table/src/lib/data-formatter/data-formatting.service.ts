@@ -93,6 +93,27 @@ export class DataFormattingService {
           }
           return isNaN(date.getTime()) ? null : date;
         }
+        if (Array.isArray(value)) {
+          const [
+            year,
+            month = 1,
+            day = 1,
+            hour = 0,
+            minute = 0,
+            second = 0,
+            millisecond = 0,
+          ] = value;
+          const date = new Date(
+            Number(year),
+            Number(month) - 1,
+            Number(day),
+            Number(hour),
+            Number(minute),
+            Number(second),
+            Number(millisecond),
+          );
+          return isNaN(date.getTime()) ? null : date;
+        }
         return null;
 
       case 'number':
