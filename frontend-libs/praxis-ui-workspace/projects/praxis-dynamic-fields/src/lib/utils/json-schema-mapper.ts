@@ -11,6 +11,16 @@
 import { FieldMetadata } from '@praxis/core';
 
 /**
+ * Estrutura de nó para controles do tipo multiSelectTree
+ */
+interface TreeNode {
+  label: string;
+  value: any;
+  disabled?: boolean;
+  children?: TreeNode[];
+}
+
+/**
  * Interface para propriedades JSON Schema básicas
  */
 export interface JsonSchemaProperty {
@@ -162,10 +172,14 @@ export function mapPropertyToFieldMetadata(
   };
 
   if (controlType === 'multiSelectTree') {
-    const nodes = uiConfig.nodes ?? uiConfig.options;
-    if (nodes) {
-      (fieldMetadata as any).nodes = nodes;
-    }
+    const labelKey = uiConfig.displayField ?? 'label';
+    const valueKey = uiConfig.valueField ?? 'value';
+    const nodes = mapTreeNodes(
+      uiConfig.nodes ?? uiConfig.options ?? [],
+      labelKey,
+      valueKey,
+    );
+    (fieldMetadata as any).nodes = nodes;
     delete (fieldMetadata as any).options;
   }
 
@@ -252,6 +266,33 @@ function extractTypeSpecificProperties(
   if (uiConfig.color) specificProps.color = uiConfig.color;
 
   return specificProps;
+}
+
+function mapTreeNodes(
+  options: any[] | undefined,
+  labelKey: string,
+  valueKey: string,
+): TreeNode[] {
+  if (!Array.isArray(options)) {
+    return [];
+  }
+
+  return options
+    .filter((opt) => opt && (opt[valueKey] ?? opt.value) !== undefined)
+    .map((opt) => {
+      const children = mapTreeNodes(opt.children, labelKey, valueKey);
+      const node: TreeNode = {
+        label: String(opt[labelKey] ?? opt.label ?? opt.text ?? ''),
+        value: opt[valueKey] ?? opt.value,
+        disabled: Boolean(opt.disabled),
+      };
+
+      if (children.length) {
+        node.children = children;
+      }
+
+      return node;
+    });
 }
 
 /**
