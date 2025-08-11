@@ -1,7 +1,7 @@
 /* =============================
  * 1) src/theme-dark.scss
  * ============================= */
-@use '@angular/material' as mat;
+@use "@angular/material" as mat;
 
 /* --- Material core (required) --- */
 @include mat.core();
@@ -12,55 +12,56 @@
 :root {
   /* Surfaces — abre ~8–10% entre níveis */
   --background: #17191d;
-  --surface:   #21252b;
+  --surface: #21252b;
   --surface-2: #2a3038;
   --surface-3: #1d2127;
 
   /* Bordas & sombra */
-  --border-color:        #2a3036;
+  --border-color: #2a3036;
   --border-color-normal: #2a3036;
-  --border-color-dark:   #2f3640;
-  --shadow-color: rgba(0,0,0,.35);
-  --elevation-shadow: 0 10px 15px -3px rgb(0 0 0 / .35), 0 4px 6px -4px rgb(0 0 0 / .35);
+  --border-color-dark: #2f3640;
+  --shadow-color: rgba(0, 0, 0, 0.35);
+  --elevation-shadow:
+    0 10px 15px -3px rgb(0 0 0 / 0.35), 0 4px 6px -4px rgb(0 0 0 / 0.35);
 
   /* Brand / Primary */
-  --primary: #48A1FF;                 /* primary-blue */
-  --primary-light: #66A8FF;           /* primary-color-light */
-  --primary-very-light: rgba(93,150,255,0.2);
-  --primary-dark: #045ACA;
-  --accent: #ffffff;                  /* accent-color */
+  --primary: #48a1ff; /* primary-blue */
+  --primary-light: #66a8ff; /* primary-color-light */
+  --primary-very-light: rgba(93, 150, 255, 0.2);
+  --primary-dark: #045aca;
+  --accent: #ffffff; /* accent-color */
 
   /* Text */
-  --text-primary: #FFFFFF;
+  --text-primary: #ffffff;
   --text-regular: #e6eaf2;
-  --text-strong:  #ffffff;
-  --text-secondary: #A4A4A4;
-  --text-tertiary: #9C9C9C;
+  --text-strong: #ffffff;
+  --text-secondary: #a4a4a4;
+  --text-tertiary: #9c9c9c;
   --text-caption: #8a8a8a;
-  --text-error: #FF655B;
+  --text-error: #ff655b;
   --icon-muted: #666666;
 
   /* Alerts */
   --bg-info: hsl(215.29 100% 50%);
-  --bg-warning: #382303;              /* background-alert-warning */
-  --bg-orange: rgba(56, 35, 3, 1);    /* background-alert-orange */
-  --bg-error: #320000;                /* background-alert-red */
+  --bg-warning: #382303; /* background-alert-warning */
+  --bg-orange: rgba(56, 35, 3, 1); /* background-alert-orange */
+  --bg-error: #320000; /* background-alert-red */
   --border-orange: rgba(169, 105, 8, 1);
-  --border-red: #FD6666;
-  --icon-orange: #E18C0B;
-  --icon-red: #EC5757;
-  --error-hover: #E73333;             /* background-alert-error-hover */
+  --border-red: #fd6666;
+  --icon-orange: #e18c0b;
+  --icon-red: #ec5757;
+  --error-hover: #e73333; /* background-alert-error-hover */
 
   /* Controls */
   --control-border: #444444;
-  --control-border-hover: #B3B3B3;
+  --control-border-hover: #b3b3b3;
   --select-selected-bg: rgb(237, 244, 253);
   --select-hover-bg: rgb(245, 245, 245);
 
   /* Misc */
   --white: #ffffff;
   --black: #000000;
-  --ease-smooth: cubic-bezier(.37,.01,0,.98);
+  --ease-smooth: cubic-bezier(0.37, 0.01, 0, 0.98);
 }
 
 /* -----------------------------------------------
@@ -78,12 +79,19 @@ $brand-primary: (
   600: #48a1ff,
   700: #1f7ef0,
   800: #0a69db,
-  900: #045ACA,
+  900: #045aca,
   contrast: (
-    50: #000, 100: #000, 200: #000, 300: #000,
-    400: #000, 500: #000, 600: #000, 700: #fff,
-    800: #fff, 900: #fff
-  )
+    50: #000,
+    100: #000,
+    200: #000,
+    300: #000,
+    400: #000,
+    500: #000,
+    600: #000,
+    700: #fff,
+    800: #fff,
+    900: #fff,
+  ),
 );
 
 /* Accent palette is neutral light/white-based for contrast utilities */
@@ -103,11 +111,21 @@ $brand-accent: (
   A400: #cccccc,
   A700: #999999,
   contrast: (
-    50: #000, 100: #000, 200: #000, 300: #000,
-    400: #000, 500: #000, 600: #fff, 700: #fff,
-    800: #fff, 900: #fff,
-    A100: #000, A200: #000, A400: #000, A700: #000
-  )
+    50: #000,
+    100: #000,
+    200: #000,
+    300: #000,
+    400: #000,
+    500: #000,
+    600: #fff,
+    700: #fff,
+    800: #fff,
+    900: #fff,
+    A100: #000,
+    A200: #000,
+    A400: #000,
+    A700: #000,
+  ),
 );
 
 /* Warn palette aligned to your red/orange tones */
@@ -117,69 +135,76 @@ $brand-warn: (
   200: #ffa1a1,
   300: #ff8b8b,
   400: #ff6f6f,
-  500: #FF655B, /* text-error */
-  600: #fd5950,
-  700: #ec5757, /* icon-alert-red */
-  800: #e73333, /* error hover */
-  900: #a30000,
+  500: #ff655b,
+  /* text-error */ 600: #fd5950,
+  700: #ec5757,
+  /* icon-alert-red */ 800: #e73333,
+  /* error hover */ 900: #a30000,
   contrast: (
-    50: #000, 100: #000, 200: #000, 300: #000,
-    400: #000, 500: #000, 600: #000, 700: #000,
-    800: #fff, 900: #fff
-  )
+    50: #000,
+    100: #000,
+    200: #000,
+    300: #000,
+    400: #000,
+    500: #000,
+    600: #000,
+    700: #000,
+    800: #fff,
+    900: #fff,
+  ),
 );
 
 $my-primary: mat.m2-define-palette($brand-primary, 600, 400, 900);
-$my-accent:  mat.m2-define-palette($brand-accent, A100, 200, A400);
-$my-warn:    mat.m2-define-palette($brand-warn, 500, 100, 700);
+$my-accent: mat.m2-define-palette($brand-accent, A100, 200, A400);
+$my-warn: mat.m2-define-palette($brand-warn, 500, 100, 700);
 
-$dark-theme: mat.m2-define-dark-theme((
-  color: (
-    primary: $my-primary,
-    accent:  $my-accent,
-    warn:    $my-warn,
-  ),
-  density: 0
-));
+$dark-theme: mat.m2-define-dark-theme(
+  (
+    color: (
+      primary: $my-primary,
+      accent: $my-accent,
+      warn: $my-warn,
+    ),
+    density: 0,
+  )
+);
 
 /* -----------------------------------------
  * C) Material system tokens override (M3-ish)
  * ----------------------------------------- */
-@include mat.theme-overrides((
-  primary: var(--primary),
-  on-primary: #000000,
-  primary-container: var(--surface-2),
-  on-primary-container: var(--text-regular),
+@include mat.theme-overrides(
+  (
+    primary: var(--primary),
+    on-primary: #000000,
+    primary-container: var(--surface-2),
+    on-primary-container: var(--text-regular),
+    secondary: var(--accent),
+    on-secondary: #000000,
+    secondary-container: var(--surface),
+    on-secondary-container: var(--text-regular),
+    tertiary: #1ea446,
+    on-tertiary: #ffffff,
+    tertiary-container: #00522c,
+    on-tertiary-container: #81c995,
 
-  secondary: var(--accent),
-  on-secondary: #000000,
-  secondary-container: var(--surface),
-  on-secondary-container: var(--text-regular),
+    error: var(--text-error),
+    on-error: #000000,
+    error-container: var(--bg-error),
+    on-error-container: var(--border-red),
+    surface: var(--background),
+    on-surface: var(--text-regular),
+    surface-dim: var(--surface-contrast-weak),
+    surface-bright: #2a2a2a,
+    surface-container-lowest: var(--background),
+    surface-container-low: var(--surface-3),
+    surface-container: var(--surface),
+    surface-container-high: #37393b,
+    surface-container-highest: #474747,
 
-  tertiary: #1ea446,
-  on-tertiary: #ffffff,
-  tertiary-container: #00522c,
-  on-tertiary-container: #81c995,
-
-  error: var(--text-error),
-  on-error: #000000,
-  error-container: var(--bg-error),
-  on-error-container: var(--border-red),
-
-  surface: var(--background),
-  on-surface: var(--text-regular),
-
-  surface-dim: var(--surface-contrast-weak),
-  surface-bright: #2a2a2a,
-  surface-container-lowest: var(--background),
-  surface-container-low: var(--surface-3),
-  surface-container: var(--surface),
-  surface-container-high: #37393b,
-  surface-container-highest: #474747,
-
-  outline: #ababab,
-  outline-variant: #80868b,
-));
+    outline: #ababab,
+    outline-variant: #80868b,
+  )
+);
 
 /* ===== Data table – dark harmony ===== */
 
@@ -193,8 +218,9 @@ $dark-theme: mat.m2-define-dark-theme((
 }
 
 /* Cabeçalho num nível acima do surface */
-.mat-mdc-header-row { background: var(--surface-2); }
-
+.mat-mdc-header-row {
+  background: var(--surface-2);
+}
 
 .mat-mdc-header-cell {
   color: var(--text-regular);
@@ -209,7 +235,9 @@ $dark-theme: mat.m2-define-dark-theme((
 //  border-bottom: 1px solid var(--border-color-normal);
 //}
 
-.mat-mdc-row:nth-child(even) { background: var(--surface-3); }
+.mat-mdc-row:nth-child(even) {
+  background: var(--surface-3);
+}
 
 /* 4) Estados (hover, focus, selected) coerentes com o primary */
 .mat-mdc-row:hover {
@@ -223,7 +251,11 @@ $dark-theme: mat.m2-define-dark-theme((
 
 /* Selecionada visível mas elegante */
 .mat-mdc-row.selected-row {
-  background: color-mix(in srgb, var(--primary) 18%, var(--surface) 82%) !important;
+  background: color-mix(
+    in srgb,
+    var(--primary) 18%,
+    var(--surface) 82%
+  ) !important;
 }
 
 /* 5) Painéis de seleção/dropdowns no mesmo nível de surface */
@@ -239,30 +271,37 @@ $dark-theme: mat.m2-define-dark-theme((
   background: color-mix(in srgb, var(--primary) 14%, var(--surface-2) 86%);
   color: var(--text-strong);
 }
-.mdc-list-item--disabled { opacity: .45; }
-
+.mdc-list-item--disabled {
+  opacity: 0.45;
+}
 
 /* ---------------------------------
  * D) Component-level fine overrides
  * --------------------------------- */
-@include mat.card-overrides((
-  subtitle-text-color: var(--mat-sys-on-surface),
-  title-text-size: 1.25rem,
-  elevated-container-color: var(--mat-sys-surface-container-highest),
-));
+@include mat.card-overrides(
+  (
+    subtitle-text-color: var(--mat-sys-on-surface),
+    title-text-size: 1.25rem,
+    elevated-container-color: var(--mat-sys-surface-container-highest),
+  )
+);
 
-@include mat.dialog-overrides((
-  container-color: var(--mat-sys-surface-container-high),
-  subhead-color: var(--mat-sys-on-surface),
-  supporting-text-color: var(--mat-sys-on-surface),
-));
+@include mat.dialog-overrides(
+  (
+    container-color: var(--mat-sys-surface-container-high),
+    subhead-color: var(--mat-sys-on-surface),
+    supporting-text-color: var(--mat-sys-on-surface),
+  )
+);
 
-@include mat.table-overrides((
-  background-color: var(--mat-sys-surface),
-  header-headline-color: var(--mat-sys-on-surface),
-  row-item-label-text-color: var(--mat-sys-on-surface),
-  row-item-outline-color: rgba(255,255,255,0.12),
-));
+@include mat.table-overrides(
+  (
+    background-color: var(--mat-sys-surface),
+    header-headline-color: var(--mat-sys-on-surface),
+    row-item-label-text-color: var(--mat-sys-on-surface),
+    row-item-outline-color: rgba(255, 255, 255, 0.12),
+  )
+);
 
 /* Hover com leve “tinte” da primária */
 .mat-mdc-row:not(.mat-mdc-header-row):hover {
@@ -275,61 +314,130 @@ $dark-theme: mat.m2-define-dark-theme((
 }
 
 /* Sort/headers */
-.mat-sort-header-button { color: var(--mat-sys-on-surface); display: flex; align-items: center; }
-.mat-sort-header-button:hover { color: var(--mat-sys-primary); }
-.mat-sort-header-arrow { color: var(--mat-sys-primary); opacity: .8; }
-@include mat.sort-overrides(( arrow-color: var(--mat-sys-primary) ));
+.mat-sort-header-button {
+  color: var(--mat-sys-on-surface);
+  display: flex;
+  align-items: center;
+}
+.mat-sort-header-button:hover {
+  color: var(--mat-sys-primary);
+}
+.mat-sort-header-arrow {
+  color: var(--mat-sys-primary);
+  opacity: 0.8;
+}
+@include mat.sort-overrides(
+  (
+    arrow-color: var(--mat-sys-primary),
+  )
+);
 
 /* Tabs */
-@include mat.tabs-overrides((
-  active-focus-indicator-color: var(--mat-sys-primary),
-  active-focus-label-text-color: var(--mat-sys-primary),
-  active-hover-indicator-color: var(--mat-sys-primary),
-  active-hover-label-text-color: var(--mat-sys-primary),
-  active-indicator-color: var(--mat-sys-primary),
-  active-label-text-color: var(--mat-sys-primary),
-  inactive-focus-label-text-color: var(--mat-sys-on-surface),
-  inactive-hover-label-text-color: var(--mat-sys-on-surface),
-  inactive-label-text-color: rgba(var(--mat-sys-on-surface-rgb), 0.6),
-  inactive-ripple-color: rgba(var(--mat-sys-on-surface-rgb), 0.05),
-  pagination-icon-color: var(--mat-sys-on-surface),
-  background-color: var(--mat-sys-surface-container),
-  divider-color: rgba(255, 255, 255, 0.12),
-));
-.mat-mdc-tab:focus { outline: 2px solid var(--mat-sys-primary); outline-offset: -2px; }
+@include mat.tabs-overrides(
+  (
+    active-focus-indicator-color: var(--mat-sys-primary),
+    active-focus-label-text-color: var(--mat-sys-primary),
+    active-hover-indicator-color: var(--mat-sys-primary),
+    active-hover-label-text-color: var(--mat-sys-primary),
+    active-indicator-color: var(--mat-sys-primary),
+    active-label-text-color: var(--mat-sys-primary),
+    inactive-focus-label-text-color: var(--mat-sys-on-surface),
+    inactive-hover-label-text-color: var(--mat-sys-on-surface),
+    inactive-label-text-color: rgba(var(--mat-sys-on-surface-rgb), 0.6),
+    inactive-ripple-color: rgba(var(--mat-sys-on-surface-rgb), 0.05),
+    pagination-icon-color: var(--mat-sys-on-surface),
+    background-color: var(--mat-sys-surface-container),
+    divider-color: rgba(255, 255, 255, 0.12),
+  )
+);
+.mat-mdc-tab:focus {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: -2px;
+}
 
 /* Toolbar */
-@include mat.toolbar-overrides((
-  container-background-color: var(--surface-2),
-  container-text-color: var(--text-regular),
-));
+@include mat.toolbar-overrides(
+  (
+    container-background-color: var(--surface-2),
+    container-text-color: var(--text-regular),
+  )
+);
 
 /* Inputs & form hints */
 .mdc-notched-outline__leading,
-.mdc-notched-outline__trailing { border-color: rgba(255, 255, 255, 0.10); }
+.mdc-notched-outline__notch,
+.mdc-notched-outline__trailing {
+  border-color: rgba(255, 255, 255, 0.1);
+  outline: none;
+  background: transparent;
+}
 
-.mat-mdc-form-field-hint { color: var(--text-secondary); font-size: 0.75rem; }
-.mdc-text-field--outlined:not(.mdc-text-field--disabled).mdc-text-field--focused .mdc-floating-label {
+/* Prevent duplicate inner focus outline on MDC text fields */
+.mdc-text-field__input:focus,
+.mdc-text-field__input:focus-visible {
+  outline: none;
+}
+
+/* Emphasize focus state on the field container for accessibility */
+.mdc-text-field--outlined.mdc-text-field--focused .mdc-notched-outline {
+  border-color: var(--primary);
+  border-width: 2px;
+}
+
+.mat-mdc-form-field-hint {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+.mdc-text-field--outlined:not(.mdc-text-field--disabled).mdc-text-field--focused
+  .mdc-floating-label {
   color: var(--mat-sys-on-primary-container) !important;
+  z-index: 1;
+  background-color: var(--surface);
+  padding: 0 0.25rem;
 }
 
 /* Buttons */
-.mat-mdc-button-disabled { background-color: #444444 !important; color: #6D6D6D !important; }
-.mat-mdc-button:hover, .mat-mdc-unelevated-button:hover, .mat-mdc-card:hover { background-color: rgba(255, 255, 255, 0.04); }
-.mat-mdc-button.mat-primary:focus { box-shadow: 0 0 0 3px var(--primary-very-light); }
+.mat-mdc-button-disabled {
+  background-color: #444444 !important;
+  color: #6d6d6d !important;
+}
+.mat-mdc-button:hover,
+.mat-mdc-unelevated-button:hover,
+.mat-mdc-card:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+.mat-mdc-button.mat-primary:focus {
+  box-shadow: 0 0 0 3px var(--primary-very-light);
+}
 
 /* Dividers */
-.mat-divider, .mat-mdc-dialog-container::before { background-color: rgba(255, 255, 255, 0.12); }
+.mat-divider,
+.mat-mdc-dialog-container::before {
+  background-color: rgba(255, 255, 255, 0.12);
+}
 
 /* Disabled text */
-[disabled], .mat-mdc-button-disabled { color: #6D6D6D !important; }
+[disabled],
+.mat-mdc-button-disabled {
+  color: #6d6d6d !important;
+}
 
 /* Alerts helpers (utility classes) */
-.alert--info    { background: var(--bg-info);    color: var(--black); }
-.alert--warning { background: var(--bg-warning); color: var(--text-regular); border: 1px solid var(--border-orange); }
-.alert--error   { background: var(--bg-error);   color: var(--text-regular); border: 1px solid var(--border-red); }
+.alert--info {
+  background: var(--bg-info);
+  color: var(--black);
+}
+.alert--warning {
+  background: var(--bg-warning);
+  color: var(--text-regular);
+  border: 1px solid var(--border-orange);
+}
+.alert--error {
+  background: var(--bg-error);
+  color: var(--text-regular);
+  border: 1px solid var(--border-red);
+}
 
 /* Apply the theme */
 @include mat.all-component-themes($dark-theme);
 @include mat.color-variants-backwards-compatibility($dark-theme);
-
