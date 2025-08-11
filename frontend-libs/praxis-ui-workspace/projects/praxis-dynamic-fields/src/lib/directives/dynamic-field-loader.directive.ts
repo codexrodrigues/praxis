@@ -720,6 +720,19 @@ export class DynamicFieldLoaderDirective
         }
       }
 
+
+      // Atribui label diretamente quando o componente expõe essa propriedade
+      if ('label' in instance && field.label !== undefined) {
+        try {
+          (instance as any).label = field.label;
+        } catch (error) {
+          logger.error(
+            `[DynamicFieldLoader] Error assigning label for field '${field.name}':`,
+            error,
+          );
+        }
+      }
+
       if (!metadataAssigned) {
         logger.warn(
           `[DynamicFieldLoader] Component for field '${field.name}' does not support metadata assignment`,

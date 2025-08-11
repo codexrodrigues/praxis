@@ -127,6 +127,22 @@ class FaultyComponent implements BaseDynamicFieldComponent {
   blur(): void {}
 }
 
+
+@Component({
+  selector: 'pdx-no-meta',
+  standalone: true,
+  template: '',
+})
+class NoMetadataComponent implements BaseDynamicFieldComponent {
+  metadata = signal<ComponentMetadata | null>(null);
+  componentId = signal('no-meta');
+  formControl = signal<AbstractControl | null>(null);
+  label?: string;
+
+  focus(): void {}
+  blur(): void {}
+}
+
 class MockComponentRegistryService {
   async getComponent(controlType: string): Promise<any> {
     switch (controlType) {
@@ -136,13 +152,15 @@ class MockComponentRegistryService {
         return MaterialButtonComponent;
       case 'faulty':
         return FaultyComponent;
+      case 'noMeta':
+        return NoMetadataComponent;
       default:
         return null;
     }
   }
 
   isRegistered(controlType: string): boolean {
-    return ['input', 'button', 'faulty'].includes(controlType);
+    return ['input', 'button', 'faulty', 'noMeta'].includes(controlType);
   }
 }
 
@@ -347,7 +365,28 @@ describe('DynamicFieldLoaderDirective', () => {
 
       const badComponent = component.createdComponents.get('bad');
       expect(badComponent.instance.metadata()?.label).toBe('Bad');
+
+      expect(badComponent.instance.label).toBe('Bad');
       expect(errorSpy).toHaveBeenCalled();
+    });
+
+    it('should apply label when component lacks setInputMetadata', async () => {
+      const fb = new FormBuilder();
+      component.fields = [
+        {
+          name: 'plain',
+          label: 'Plain',
+          controlType: 'noMeta',
+        } as any,
+      ];
+      component.testForm = fb.group({ plain: [''] });
+
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const plainComponent = component.createdComponents.get('plain');
+      expect(plainComponent.instance.metadata()?.label).toBe('Plain');
+      expect(plainComponent.instance.label).toBe('Plain');
     });
 
     it('should associate FormControls with components', async () => {
