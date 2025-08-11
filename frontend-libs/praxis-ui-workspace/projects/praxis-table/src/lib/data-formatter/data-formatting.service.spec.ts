@@ -39,6 +39,25 @@ describe('DataFormattingService', () => {
     expect(result).toBe('15/05/1990');
   });
 
+  it('formats date arrays', () => {
+    const result = service.formatValue([1990, 5, 15], 'date', 'dd/MM/yyyy');
+    expect(result).toBe('15/05/1990');
+  });
+
+  it('formats date arrays with time components', () => {
+    const result = service.formatValue(
+      [1990, 5, 15, 13, 30, 0],
+      'date',
+      'dd/MM/yyyy',
+    );
+    expect(result).toBe('15/05/1990');
+  });
+
+  it('returns empty string for invalid date arrays', () => {
+    const result = service.formatValue([1990, 15, 40], 'date', 'dd/MM/yyyy');
+    expect(result).toBe('');
+  });
+
   it('returns empty string for invalid comma-separated date strings', () => {
     const result = service.formatValue('1990,15,40', 'date', 'dd/MM/yyyy');
     expect(result).toBe('');
