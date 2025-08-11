@@ -720,6 +720,7 @@ export class DynamicFieldLoaderDirective
         }
       }
 
+
       // Atribui label diretamente quando o componente expõe essa propriedade
       if ('label' in instance && field.label !== undefined) {
         try {

@@ -127,6 +127,7 @@ class FaultyComponent implements BaseDynamicFieldComponent {
   blur(): void {}
 }
 
+
 @Component({
   selector: 'pdx-no-meta',
   standalone: true,
@@ -364,6 +365,7 @@ describe('DynamicFieldLoaderDirective', () => {
 
       const badComponent = component.createdComponents.get('bad');
       expect(badComponent.instance.metadata()?.label).toBe('Bad');
+
       expect(badComponent.instance.label).toBe('Bad');
       expect(errorSpy).toHaveBeenCalled();
     });
