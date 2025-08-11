@@ -403,7 +403,7 @@ export class DynamicFieldLoaderDirective
 
     // Validações não-críticas (warnings)
     if (this.fields.length === 0) {
-      console.warn(
+      logger.warn(
         '[DynamicFieldLoader] Fields array is empty - no components will be rendered',
       );
       return;
@@ -412,7 +412,7 @@ export class DynamicFieldLoaderDirective
     // Validar e normalizar estrutura básica dos fields
     this.fields = this.fields.map((field, index) => {
       if (!field.name) {
-        console.error(
+        logger.error(
           `[DynamicFieldLoader] Field at index ${index} is missing required 'name' property:`,
           field,
         );
@@ -433,7 +433,7 @@ export class DynamicFieldLoaderDirective
           );
           return inferredField;
         } else {
-          console.error(
+          logger.error(
             `[DynamicFieldLoader] Field '${field.name}' is missing required 'controlType' property and couldn't be inferred:`,
             field,
           );
@@ -445,7 +445,7 @@ export class DynamicFieldLoaderDirective
 
       // Verificar se FormControl existe
       if (!this.formGroup!.get(field.name)) {
-        console.warn(
+        logger.warn(
           `[DynamicFieldLoader] FormControl for field '${field.name}' not found in FormGroup`,
         );
       }
@@ -459,7 +459,7 @@ export class DynamicFieldLoaderDirective
       (name, index) => fieldNames.indexOf(name) !== index,
     );
     if (duplicates.length > 0) {
-      console.error(
+      logger.error(
         `[DynamicFieldLoader] Duplicate field names found:`,
         duplicates,
       );
@@ -616,7 +616,7 @@ export class DynamicFieldLoaderDirective
       // 2) cria componente do campo dentro do shell
       const componentType = await this.resolveComponentType(field.controlType);
       if (!componentType) {
-        console.warn(
+        logger.warn(
           `[DynamicFieldLoader] No component found for controlType '${field.controlType}', skipping field '${field.name}'`,
         );
         shellRef.destroy();
@@ -641,7 +641,7 @@ export class DynamicFieldLoaderDirective
 
       return componentRef as any;
     } catch (error) {
-      console.error(
+      logger.error(
         `[DynamicFieldLoader] Failed to create component for field '${field.name}':`,
         error,
       );
@@ -666,7 +666,7 @@ export class DynamicFieldLoaderDirective
         await this.componentRegistry.getComponent(controlType);
       return componentType;
     } catch (error) {
-      console.error(
+      logger.error(
         `[DynamicFieldLoader] Error resolving component type '${controlType}':`,
         error,
       );
@@ -690,22 +690,39 @@ export class DynamicFieldLoaderDirective
     const instance = componentRef.instance;
 
     try {
-      // Associar metadata com verificação robusta
-      if (instance && 'metadata' in instance) {
+      // Associar metadata utilizando método público quando disponível
+      let metadataAssigned = false;
+      if (instance && 'setInputMetadata' in instance) {
+        try {
+          (instance as any).setInputMetadata(field);
+          metadataAssigned = true;
+        } catch (error) {
+          logger.error(
+            `[DynamicFieldLoader] Error calling setInputMetadata for field '${field.name}':`,
+            error,
+          );
+        }
+      }
+
+      if (!metadataAssigned && instance && 'metadata' in instance) {
+        // Fallback para componentes que expõem o signal diretamente
         const instanceWithMetadata = instance as any;
         if (
           typeof instanceWithMetadata.metadata === 'function' &&
           'set' in instanceWithMetadata.metadata
         ) {
           instanceWithMetadata.metadata.set(field);
+          metadataAssigned = true;
         } else {
-          console.error(
+          logger.error(
             `[DynamicFieldLoader] Component '${field.name}' metadata property is not a WritableSignal`,
           );
         }
-      } else {
-        console.warn(
-          `[DynamicFieldLoader] Component for field '${field.name}' does not have metadata property`,
+      }
+
+      if (!metadataAssigned) {
+        logger.warn(
+          `[DynamicFieldLoader] Component for field '${field.name}' does not support metadata assignment`,
         );
       }
 
@@ -720,17 +737,17 @@ export class DynamicFieldLoaderDirective
           ) {
             instanceWithFormControl.formControl.set(formControl);
           } else {
-            console.error(
+            logger.error(
               `[DynamicFieldLoader] Component '${field.name}' formControl property is not a WritableSignal`,
             );
           }
         } else {
-          console.warn(
+          logger.warn(
             `[DynamicFieldLoader] Component for field '${field.name}' does not have formControl property`,
           );
         }
       } else {
-        console.warn(
+        logger.warn(
           `[DynamicFieldLoader] No FormControl found for field '${field.name}' in FormGroup`,
         );
       }
@@ -746,7 +763,7 @@ export class DynamicFieldLoaderDirective
       // Detectar mudanças após configuração
       componentRef.changeDetectorRef.detectChanges();
     } catch (error) {
-      console.error(
+      logger.error(
         `[DynamicFieldLoader] Error configuring component for field '${field.name}':`,
         error,
       );
