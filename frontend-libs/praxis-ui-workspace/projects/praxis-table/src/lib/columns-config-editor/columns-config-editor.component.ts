@@ -1198,6 +1198,9 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
     }
 
     this.selectedColumn.format = format;
+    if (!this.selectedColumn.type) {
+      this.selectedColumn.type = this.selectedColumnDataType;
+    }
     this.onColumnPropertyChange();
   }
 
