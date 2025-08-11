@@ -1,9 +1,12 @@
 /* =============================
  * 2) src/styles.scss
  * ============================= */
-@use 'theme-dark' as *;
+@use "theme-dark" as *;
 
-html, body { height: 100%; }
+html,
+body {
+  height: 100%;
+}
 body {
   margin: 0;
   font-family: Roboto, "Helvetica Neue", sans-serif;
@@ -13,33 +16,73 @@ body {
 }
 
 /* Scrollbars */
-::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background-color: rgba(255,255,255,0.2); border-radius: 8px; transition: background-color .3s var(--ease-smooth); }
-::-webkit-scrollbar-thumb:hover { background-color: #00364d; }
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  transition: background-color 0.3s var(--ease-smooth);
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: #00364d;
+}
 
-* { scrollbar-width: auto; scrollbar-color: #1a2c50 transparent; }
-*:hover { scrollbar-color: #222222 transparent; }
+* {
+  scrollbar-width: auto;
+  scrollbar-color: #1a2c50 transparent;
+}
+*:hover {
+  scrollbar-color: #222222 transparent;
+}
 
 /* Form fields take full width by default */
-mat-form-field { width: 100%; }
+mat-form-field {
+  width: 100%;
+}
 
 /* Select menus / options alignment with tokens */
-.cdk-overlay-container .mat-mdc-select-panel { background: var(--surface-2); border: 1px solid var(--border-color); }
-.mat-mdc-option.mdc-list-item--selected { background: var(--select-selected-bg) !important; color: #000 !important; }
-.mat-mdc-option:hover { background: var(--select-hover-bg) !important; }
+.cdk-overlay-container .mat-mdc-select-panel {
+  background: var(--surface-2);
+  border: 1px solid var(--border-color);
+}
+.mat-mdc-option.mdc-list-item--selected {
+  background: var(--select-selected-bg) !important;
+  color: #000 !important;
+}
+.mat-mdc-option:hover {
+  background: var(--select-hover-bg) !important;
+}
 
 /* Cards & elevation */
-.mdc-elevation--z4, .mat-mdc-card { box-shadow: var(--elevation-shadow) !important; }
+.mdc-elevation--z4,
+.mat-mdc-card {
+  box-shadow: var(--elevation-shadow) !important;
+}
 
 /* Typography utilities */
-.text-primary   { color: var(--text-primary) !important; }
-.text-secondary { color: var(--text-secondary) !important; }
-.text-tertiary  { color: var(--text-tertiary) !important; }
-.text-caption   { color: var(--text-caption) !important; }
+.text-primary {
+  color: var(--text-primary) !important;
+}
+.text-secondary {
+  color: var(--text-secondary) !important;
+}
+.text-tertiary {
+  color: var(--text-tertiary) !important;
+}
+.text-caption {
+  color: var(--text-caption) !important;
+}
 
 /* Focus ring helper */
-.focus-ring { outline: 2px solid var(--primary-very-light); outline-offset: 2px; }
+.focus-ring {
+  outline: 2px solid var(--primary-very-light);
+  outline-offset: 2px;
+}
 
 /* ===========================
    Dark Harmony — Overrides
@@ -47,16 +90,16 @@ mat-form-field { width: 100%; }
 .mdc-theme-dark {
   /* Layers: página vs containers */
   --background: #17191d;
-  --surface:   #21252b;
+  --surface: #21252b;
   --surface-2: #2a3038;
   --surface-3: #303642;
 
-  --divider-color: rgba(255,255,255,.08);
-  --border-color:  rgba(255,255,255,.10);
-  --border-color-hover: rgba(255,255,255,.18);
-  --focus-ring: 0 0 0 3px rgba(72,161,255,.35);
+  --divider-color: rgba(255, 255, 255, 0.08);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --border-color-hover: rgba(255, 255, 255, 0.18);
+  --focus-ring: 0 0 0 3px rgba(72, 161, 255, 0.35);
   --radius-md: 12px;
-  --elevation-shadow: 0 10px 20px rgba(0,0,0,.28);
+  --elevation-shadow: 0 10px 20px rgba(0, 0, 0, 0.28);
 
   /* ===== Mat Table ===== */
   .mat-mdc-table {
@@ -75,8 +118,12 @@ mat-form-field { width: 100%; }
     background: var(--surface);
     border-bottom: 1px solid var(--divider-color);
   }
-  .mat-mdc-row:nth-child(even) { background: var(--surface-2); }
-  .mat-mdc-row:hover { background: color-mix(in oklab, var(--mat-sys-primary) 12%, transparent); }
+  .mat-mdc-row:nth-child(even) {
+    background: var(--surface-2);
+  }
+  .mat-mdc-row:hover {
+    background: color-mix(in oklab, var(--mat-sys-primary) 12%, transparent);
+  }
 
   /* ===== Form fields ===== */
   .mat-mdc-form-field .mdc-text-field {
@@ -93,15 +140,18 @@ mat-form-field { width: 100%; }
   .mat-mdc-form-field-appearance-outline:hover .mdc-notched-outline__trailing {
     border-color: var(--border-color-hover);
   }
+  .mat-mdc-form-field.mat-focused .mdc-text-field {
+    box-shadow: var(--focus-ring);
+  }
   .mat-mdc-form-field.mat-focused .mdc-notched-outline__leading,
   .mat-mdc-form-field.mat-focused .mdc-notched-outline__notch,
   .mat-mdc-form-field.mat-focused .mdc-notched-outline__trailing {
     border-color: var(--mat-sys-primary) !important;
-    box-shadow: var(--focus-ring);
+    outline: none;
   }
   .mdc-text-field__input::placeholder,
   .mat-mdc-floating-label {
-    color: rgba(var(--mat-sys-on-surface-rgb), .68) !important;
+    color: rgba(var(--mat-sys-on-surface-rgb), 0.68) !important;
   }
 
   /* ===== Select / Menu / Autocomplete ===== */
@@ -116,10 +166,14 @@ mat-form-field { width: 100%; }
   }
   .mat-mdc-option.mat-mdc-option-active,
   .mat-mdc-option.mdc-list-item--selected {
-    background: color-mix(in oklab, var(--mat-sys-primary) 18%, transparent) !important;
+    background: color-mix(
+      in oklab,
+      var(--mat-sys-primary) 18%,
+      transparent
+    ) !important;
   }
   .mat-mdc-option:hover {
-    background: rgba(255,255,255,.06) !important;
+    background: rgba(255, 255, 255, 0.06) !important;
   }
 
   /* ===== Dialog ===== */
@@ -131,7 +185,9 @@ mat-form-field { width: 100%; }
   }
 
   /* ===== Cards genéricos (se usar) ===== */
-  .mat-mdc-card, .panel, .card {
+  .mat-mdc-card,
+  .panel,
+  .card {
     background: var(--surface);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
@@ -139,9 +195,20 @@ mat-form-field { width: 100%; }
   }
 
   /* ===== Hierarquia tipográfica de seção ===== */
-  h1, .mat-headline-5 { font-weight: 600; }
-  h2, .mat-headline-6 { font-weight: 600; opacity: .92; }
-  .section-title, .mat-subtitle-1 { opacity: .82; letter-spacing: .2px; }
+  h1,
+  .mat-headline-5 {
+    font-weight: 600;
+  }
+  h2,
+  .mat-headline-6 {
+    font-weight: 600;
+    opacity: 0.92;
+  }
+  .section-title,
+  .mat-subtitle-1 {
+    opacity: 0.82;
+    letter-spacing: 0.2px;
+  }
 }
 
 .mdc-theme-dark .mat-mdc-table {
@@ -151,16 +218,16 @@ mat-form-field { width: 100%; }
 
 .mdc-theme-dark .mat-mdc-paginator {
   background: var(--surface) !important;
-  margin: 0 !important;                 /* remove faixa vazia */
+  margin: 0 !important; /* remove faixa vazia */
   border: 1px solid var(--border-color);
-  border-top: 0;                        /* “cola” na tabela */
+  border-top: 0; /* “cola” na tabela */
   border-bottom-left-radius: var(--radius-md);
   border-bottom-right-radius: var(--radius-md);
   box-shadow: var(--elevation-shadow);
 }
 
 .mdc-theme-dark .mat-mdc-paginator .mat-mdc-paginator-container {
-  padding: 4px 12px;                    /* altura enxuta */
+  padding: 4px 12px; /* altura enxuta */
 }
 
 /* Evita quebra e garante uma linha só no rótulo */
@@ -172,10 +239,10 @@ mat-form-field { width: 100%; }
   line-height: 1.25;
 }
 
-
-
-
 /* Small responsive tweak */
 @media (max-width: 599px) {
-  :root { --spacing-lg: 16px; --spacing-xl: 24px; }
+  :root {
+    --spacing-lg: 16px;
+    --spacing-xl: 24px;
+  }
 }
