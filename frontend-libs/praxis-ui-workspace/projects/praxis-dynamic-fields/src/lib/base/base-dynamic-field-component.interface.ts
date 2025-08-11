@@ -1,6 +1,6 @@
 /**
  * @fileoverview Interface base para todos os componentes de campos dinâmicos
- * 
+ *
  * Define o contrato comum que todos os componentes dinâmicos devem implementar
  * para garantir compatibilidade com o DynamicFieldLoaderDirective e outros
  * serviços do sistema.
@@ -40,33 +40,32 @@ export interface ValueChangeOptions {
 
 /**
  * Interface base que todos os componentes de campos dinâmicos devem implementar.
- * 
+ *
  * Esta interface define o contrato mínimo necessário para que um componente
  * seja compatível com o sistema de renderização dinâmica do Praxis.
- * 
+ *
  * ## Responsabilidades Principais
- * 
+ *
  * - Gerenciar metadata do componente através de signals
  * - Integrar com Angular Reactive Forms
  * - Fornecer controles de foco e blur
  * - Implementar lifecycle hooks customizados
  * - Manter identificação única do componente
- * 
+ *
  * ## Implementação
- * 
+ *
  * Componentes podem implementar esta interface diretamente ou herdar de:
  * - SimpleBaseInputComponent (para campos de entrada)
  * - SimpleBaseButtonComponent (para ações/botões)
  */
 export interface BaseDynamicFieldComponent {
-
   // =============================================================================
   // PROPRIEDADES OBRIGATÓRIAS
   // =============================================================================
 
   /**
    * Metadata do componente que define sua configuração e comportamento.
-   * 
+   *
    * Contém informações como label, tipo de controle, validações,
    * propriedades visuais e outras configurações específicas.
    */
@@ -74,7 +73,7 @@ export interface BaseDynamicFieldComponent {
 
   /**
    * ID único do componente para identificação e debugging.
-   * 
+   *
    * Gerado automaticamente durante a inicialização e usado
    * para logging, testes e identificação em runtime.
    */
@@ -86,15 +85,23 @@ export interface BaseDynamicFieldComponent {
 
   /**
    * FormControl associado ao componente para integração com Angular Reactive Forms.
-   * 
+   *
    * Opcional porque nem todos os componentes precisam de FormControl
    * (ex: botões, labels, componentes de exibição).
    */
   readonly formControl?: WritableSignal<AbstractControl | null>;
 
   /**
+   * Label textual exibido para o usuário, quando aplicável.
+   *
+   * Útil para componentes que apresentam uma descrição direta do campo
+   * como inputs e seletores. Implementação opcional.
+   */
+  label?: string;
+
+  /**
    * Observable de eventos de lifecycle do componente.
-   * 
+   *
    * Permite monitorar o ciclo de vida do componente externamente
    * para debugging, analytics ou integração com outros sistemas.
    */
@@ -106,7 +113,7 @@ export interface BaseDynamicFieldComponent {
 
   /**
    * Foca no elemento principal do componente.
-   * 
+   *
    * Deve focar no input, botão ou elemento interativo principal.
    * Implementação deve ser robusta e não falhar se elemento não existir.
    */
@@ -114,10 +121,24 @@ export interface BaseDynamicFieldComponent {
 
   /**
    * Remove o foco do elemento principal do componente.
-   * 
+   *
    * Útil para controle programático de foco e navegação por teclado.
    */
   blur(): void;
+
+  // =============================================================================
+  // MÉTODOS OPCIONAIS - METADATA
+  // =============================================================================
+
+  /**
+   * Define os metadados de entrada do componente.
+   *
+   * Permite que o componente ajuste propriedades derivadas (como label
+   * e placeholders) antes da configuração padrão.
+   *
+   * @param metadata Metadados do campo
+   */
+  setInputMetadata?(metadata: ComponentMetadata): void;
 
   // =============================================================================
   // MÉTODOS OPCIONAIS - LIFECYCLE
@@ -125,7 +146,7 @@ export interface BaseDynamicFieldComponent {
 
   /**
    * Hook chamado após a inicialização completa do componente.
-   * 
+   *
    * Executado depois que metadata e formControl foram configurados.
    * Ideal para configurações específicas do componente.
    */
@@ -133,7 +154,7 @@ export interface BaseDynamicFieldComponent {
 
   /**
    * Hook chamado antes da destruição do componente.
-   * 
+   *
    * Usado para limpeza de recursos, cancelamento de subscriptions,
    * ou salvamento de estado.
    */
@@ -145,7 +166,7 @@ export interface BaseDynamicFieldComponent {
 
   /**
    * Define o valor do campo programaticamente.
-   * 
+   *
    * Implementação opcional para componentes que gerenciam valores.
    * Deve atualizar tanto o FormControl quanto o estado interno.
    */
@@ -153,21 +174,21 @@ export interface BaseDynamicFieldComponent {
 
   /**
    * Obtém o valor atual do campo.
-   * 
+   *
    * @returns Valor atual ou null se não aplicável
    */
   getValue?(): any;
 
   /**
    * Marca o componente como tocado (touched).
-   * 
+   *
    * Usado para controle de validação e exibição de mensagens de erro.
    */
   markAsTouched?(): void;
 
   /**
    * Marca o componente como modificado (dirty).
-   * 
+   *
    * Indica que o valor foi alterado pelo usuário.
    */
   markAsDirty?(): void;
@@ -178,7 +199,7 @@ export interface BaseDynamicFieldComponent {
 
   /**
    * Define o estado de loading do componente.
-   * 
+   *
    * Útil para botões e componentes que executam ações assíncronas.
    */
   setLoading?(loading: boolean): void;
@@ -190,7 +211,7 @@ export interface BaseDynamicFieldComponent {
 
   /**
    * Força a validação do componente.
-   * 
+   *
    * @returns Promise com erros de validação ou null se válido
    */
   validateField?(): Promise<any>;
@@ -208,27 +229,39 @@ export interface BaseDynamicFieldComponent {
 /**
  * Type guard para verificar se um objeto implementa BaseDynamicFieldComponent
  */
-export function isBaseDynamicFieldComponent(obj: any): obj is BaseDynamicFieldComponent {
-  return obj &&
+export function isBaseDynamicFieldComponent(
+  obj: any,
+): obj is BaseDynamicFieldComponent {
+  return (
+    obj &&
     typeof obj === 'object' &&
     'metadata' in obj &&
     'componentId' in obj &&
     typeof obj.focus === 'function' &&
     typeof obj.blur === 'function' &&
     typeof obj.metadata === 'function' &&
-    typeof obj.componentId === 'function';
+    typeof obj.componentId === 'function'
+  );
 }
 
 /**
  * Type guard para verificar se componente suporta valores (tem FormControl)
  */
-export function isValueBasedComponent(component: BaseDynamicFieldComponent): component is BaseDynamicFieldComponent & { formControl: WritableSignal<AbstractControl | null> } {
+export function isValueBasedComponent(
+  component: BaseDynamicFieldComponent,
+): component is BaseDynamicFieldComponent & {
+  formControl: WritableSignal<AbstractControl | null>;
+} {
   return 'formControl' in component && component.formControl !== undefined;
 }
 
 /**
  * Type guard para verificar se componente suporta loading
  */
-export function isLoadingCapableComponent(component: BaseDynamicFieldComponent): component is BaseDynamicFieldComponent & { setLoading: (loading: boolean) => void } {
+export function isLoadingCapableComponent(
+  component: BaseDynamicFieldComponent,
+): component is BaseDynamicFieldComponent & {
+  setLoading: (loading: boolean) => void;
+} {
   return typeof (component as any).setLoading === 'function';
 }

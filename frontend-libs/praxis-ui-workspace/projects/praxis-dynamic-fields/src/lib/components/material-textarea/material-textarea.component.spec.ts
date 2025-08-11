@@ -25,7 +25,7 @@ describe('MaterialTextareaComponent', () => {
       name: 'description',
       label: 'Description',
     } as any;
-    component.setTextareaMetadata(metadata);
+    component.setInputMetadata(metadata);
     fixture.detectChanges();
   });
 

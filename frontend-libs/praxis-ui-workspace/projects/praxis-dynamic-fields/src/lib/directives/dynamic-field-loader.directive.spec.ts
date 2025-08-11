@@ -6,12 +6,13 @@
  */
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Component, DebugElement } from '@angular/core';
+import { Component, DebugElement, signal } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
   ReactiveFormsModule,
   Validators,
+  AbstractControl,
 } from '@angular/forms';
 import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -20,7 +21,9 @@ import { DynamicFieldLoaderDirective } from './dynamic-field-loader.directive';
 import { ComponentRegistryService } from '../services/component-registry/component-registry.service';
 import { TextInputComponent } from '../components/text-input/text-input.component';
 import { MaterialButtonComponent } from '../components/material-button/material-button.component';
-import { FieldMetadata } from '@praxis/core';
+import { FieldMetadata, ComponentMetadata } from '@praxis/core';
+import { BaseDynamicFieldComponent } from '../base/base-dynamic-field-component.interface';
+import { logger } from '../utils/logger';
 
 // =============================================================================
 // TEST COMPONENTS
@@ -105,6 +108,40 @@ class ItemTemplateHostComponent {
 // MOCK SERVICES
 // =============================================================================
 
+@Component({
+  selector: 'pdx-faulty',
+  standalone: true,
+  template: '',
+})
+class FaultyComponent implements BaseDynamicFieldComponent {
+  metadata = signal<ComponentMetadata | null>(null);
+  componentId = signal('faulty');
+  formControl = signal<AbstractControl | null>(null);
+  label?: string;
+
+  setInputMetadata(): void {
+    throw new Error('fail');
+  }
+
+  focus(): void {}
+  blur(): void {}
+}
+
+@Component({
+  selector: 'pdx-no-meta',
+  standalone: true,
+  template: '',
+})
+class NoMetadataComponent implements BaseDynamicFieldComponent {
+  metadata = signal<ComponentMetadata | null>(null);
+  componentId = signal('no-meta');
+  formControl = signal<AbstractControl | null>(null);
+  label?: string;
+
+  focus(): void {}
+  blur(): void {}
+}
+
 class MockComponentRegistryService {
   async getComponent(controlType: string): Promise<any> {
     switch (controlType) {
@@ -112,13 +149,17 @@ class MockComponentRegistryService {
         return TextInputComponent;
       case 'button':
         return MaterialButtonComponent;
+      case 'faulty':
+        return FaultyComponent;
+      case 'noMeta':
+        return NoMetadataComponent;
       default:
         return null;
     }
   }
 
   isRegistered(controlType: string): boolean {
-    return ['input', 'button'].includes(controlType);
+    return ['input', 'button', 'faulty', 'noMeta'].includes(controlType);
   }
 }
 
@@ -134,7 +175,12 @@ describe('DynamicFieldLoaderDirective', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TestHostComponent, NoopAnimationsModule, ReactiveFormsModule],
+      imports: [
+        TestHostComponent,
+        NoopAnimationsModule,
+        ReactiveFormsModule,
+        FaultyComponent,
+      ],
       providers: [
         {
           provide: ComponentRegistryService,
@@ -290,6 +336,55 @@ describe('DynamicFieldLoaderDirective', () => {
       expect(emailMetadata.label).toBe('Email');
       expect(emailMetadata.controlType).toBe('input');
       expect(emailMetadata.required).toBe(true);
+    });
+
+    it('should apply label from metadata to component instance', async () => {
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const emailComponent = component.createdComponents.get('email');
+      expect(emailComponent.instance.label).toBe('Email');
+    });
+
+    it('should fallback to metadata signal when setInputMetadata throws', async () => {
+      const fb = new FormBuilder();
+      component.fields = [
+        {
+          name: 'bad',
+          label: 'Bad',
+          controlType: 'faulty',
+        } as any,
+      ];
+      component.testForm = fb.group({ bad: [''] });
+
+      const errorSpy = spyOn(logger, 'error');
+
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const badComponent = component.createdComponents.get('bad');
+      expect(badComponent.instance.metadata()?.label).toBe('Bad');
+      expect(badComponent.instance.label).toBe('Bad');
+      expect(errorSpy).toHaveBeenCalled();
+    });
+
+    it('should apply label when component lacks setInputMetadata', async () => {
+      const fb = new FormBuilder();
+      component.fields = [
+        {
+          name: 'plain',
+          label: 'Plain',
+          controlType: 'noMeta',
+        } as any,
+      ];
+      component.testForm = fb.group({ plain: [''] });
+
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const plainComponent = component.createdComponents.get('plain');
+      expect(plainComponent.instance.metadata()?.label).toBe('Plain');
+      expect(plainComponent.instance.label).toBe('Plain');
     });
 
     it('should associate FormControls with components', async () => {

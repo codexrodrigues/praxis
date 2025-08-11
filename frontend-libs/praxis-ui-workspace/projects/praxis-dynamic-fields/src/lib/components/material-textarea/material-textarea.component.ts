@@ -171,7 +171,7 @@ export class MaterialTextareaComponent
   /**
    * Define metadata e aplica configurações
    */
-  setTextareaMetadata(metadata: MaterialTextareaMetadata): void {
+  setInputMetadata(metadata: MaterialTextareaMetadata): void {
     this.setMetadata(metadata);
   }
 
