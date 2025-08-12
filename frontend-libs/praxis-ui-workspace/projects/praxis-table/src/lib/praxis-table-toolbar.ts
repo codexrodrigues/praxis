@@ -18,24 +18,29 @@ import { TableConfig } from '@praxis/core';
     MatIconModule,
     MatMenuModule,
     MatFormFieldModule,
-    MatInputModule
+    MatInputModule,
   ],
   template: `
     <mat-toolbar class="praxis-toolbar">
       <!-- Add button via actions array -->
       <ng-container *ngFor="let action of getStartActions()">
-        <button mat-button [color]="action.color || 'primary'"
-                (click)="toolbarAction.emit({action: action.action})">
-          <mat-icon *ngIf="action.icon">{{action.icon}}</mat-icon>
+        <button
+          mat-button
+          [color]="action.color || 'primary'"
+          (click)="emitToolbarAction($event, action.action)"
+        >
+          <mat-icon *ngIf="action.icon">{{ action.icon }}</mat-icon>
           {{ action.label }}
         </button>
       </ng-container>
       <ng-container *ngFor="let action of config?.toolbar?.actions">
-        <button mat-button
-                [color]="action.color"
-                [disabled]="action.disabled"
-                (click)="toolbarAction.emit({action: action.action})">
-          <mat-icon *ngIf="action.icon">{{action.icon}}</mat-icon>
+        <button
+          mat-button
+          [color]="action.color"
+          [disabled]="action.disabled"
+          (click)="emitToolbarAction($event, action.action)"
+        >
+          <mat-icon *ngIf="action.icon">{{ action.icon }}</mat-icon>
           {{ action.label }}
         </button>
       </ng-container>
@@ -43,7 +48,7 @@ import { TableConfig } from '@praxis/core';
         <span class="spacer"></span>
         <mat-form-field appearance="outline" style="margin-right:8px;">
           <mat-label>Filtro</mat-label>
-          <input matInput  [value]="filterValue" />
+          <input matInput [value]="filterValue" />
         </mat-form-field>
       </ng-container>
       <ng-content select="[advancedFilter]"></ng-content>
@@ -55,24 +60,41 @@ import { TableConfig } from '@praxis/core';
         </button>
         <mat-menu #exportMenu="matMenu">
           <button mat-menu-item *ngFor="let format of config?.export?.formats">
-            <mat-icon>{{getExportIcon(format)}}</mat-icon>
-            {{format.toUpperCase()}}
+            <mat-icon>{{ getExportIcon(format) }}</mat-icon>
+            {{ format.toUpperCase() }}
           </button>
         </mat-menu>
       </ng-container>
     </mat-toolbar>
   `,
-  styles: [`:host{display:block;} .spacer{flex:1 1 auto;}`]
+  styles: [
+    `
+      :host {
+        display: block;
+      }
+      .spacer {
+        flex: 1 1 auto;
+      }
+    `,
+  ],
 })
 export class PraxisTableToolbar {
-
   @Input() config?: TableConfig;
   @Input() showFilter = false;
   @Input() filterValue = '';
-  @Output() toolbarAction = new EventEmitter<{action: string}>();
+  @Output() toolbarAction = new EventEmitter<{ action: string }>();
+
+  emitToolbarAction(event: Event, action: string): void {
+    (event.target as HTMLElement).blur();
+    this.toolbarAction.emit({ action });
+  }
 
   getStartActions() {
-    return this.config?.toolbar?.actions?.filter(action => action.position === 'start') || [];
+    return (
+      this.config?.toolbar?.actions?.filter(
+        (action) => action.position === 'start',
+      ) || []
+    );
   }
 
   getExportIcon(format: string): string {

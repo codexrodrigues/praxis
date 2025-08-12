@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { FuncionariosListComponent } from './features/funcionarios/list/funcionarios-list.component';
 import { FuncionarioViewComponent } from './features/funcionarios/view/funcionario-view.component';
-import { CargosListComponent } from './features/cargos/list/cargos-list.component';
+import { CargosCrudComponent } from './features/cargos/crud/cargos-crud.component';
 import { CargoViewComponent } from './features/cargos/view/cargo-view.component';
 import { DepartamentosListComponent } from './features/departamentos/list/departamentos-list.component';
 import { DepartamentoViewComponent } from './features/departamentos/view/departamento-view.component';
@@ -21,7 +21,7 @@ import { UiWrappersTestComponent } from './features/ui-wrappers-test/ui-wrappers
 export const routes: Routes = [
   { path: 'funcionarios', component: FuncionariosListComponent },
   { path: 'funcionarios/view/:id', component: FuncionarioViewComponent },
-  { path: 'cargos', component: CargosListComponent },
+  { path: 'cargos', component: CargosCrudComponent },
   { path: 'cargos/view/:id', component: CargoViewComponent },
   { path: 'departamentos', component: DepartamentosListComponent },
   { path: 'departamentos/view/:id', component: DepartamentoViewComponent },

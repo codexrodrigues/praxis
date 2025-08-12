@@ -58,6 +58,7 @@ import { ColumnDataType } from './data-formatter/data-formatter-types';
       [config]="config"
       [showFilter]="showFilter"
       [filterValue]="filterValue"
+      (toolbarAction)="onToolbarAction($event)"
     >
       <ng-content select="[advancedFilter]" />
       <ng-content select="[toolbar]" />
@@ -166,6 +167,7 @@ export class PraxisTable
 
   @Output() rowClick = new EventEmitter<{ row: any; index: number }>();
   @Output() rowAction = new EventEmitter<{ action: string; row: any }>();
+  @Output() toolbarAction = new EventEmitter<{ action: string }>();
 
   @ViewChild(MatPaginator) paginator?: MatPaginator;
   @ViewChild(MatSort) sort?: MatSort;
@@ -248,7 +250,12 @@ export class PraxisTable
 
   onRowAction(action: string, row: any, event: Event): void {
     event.stopPropagation();
+    (event.target as HTMLElement).blur();
     this.rowAction.emit({ action, row });
+  }
+
+  onToolbarAction(event: { action: string }): void {
+    this.toolbarAction.emit(event);
   }
 
   openConfigEditor(): void {
@@ -485,6 +492,10 @@ export class PraxisTable
           this.paginator.length = page.totalElements;
         }
       });
+  }
+
+  refetch(): void {
+    this.fetchData();
   }
 
   /**
