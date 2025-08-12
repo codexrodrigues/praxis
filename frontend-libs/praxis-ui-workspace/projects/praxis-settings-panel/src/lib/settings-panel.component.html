@@ -1,0 +1,27 @@
+<div
+  class="settings-panel"
+  [style.width.px]="width"
+  cdkTrapFocus
+  cdkTrapFocusAutoCapture
+>
+  <header class="settings-panel-header">
+    <h2 class="settings-panel-title">{{ title }}</h2>
+    <button mat-icon-button type="button" (click)="onCancel()">
+      <mat-icon>close</mat-icon>
+    </button>
+  </header>
+  <section class="settings-panel-content">
+    <ng-template cdkPortalOutlet></ng-template>
+  </section>
+  <footer class="settings-panel-footer">
+    <button mat-button type="button" (click)="onReset()">Redefinir</button>
+    <span class="spacer"></span>
+    <button mat-stroked-button type="button" (click)="onApply()">
+      Aplicar
+    </button>
+    <button mat-raised-button color="primary" type="button" (click)="onSave()">
+      Salvar &amp; Fechar
+    </button>
+    <button mat-button type="button" (click)="onCancel()">Cancelar</button>
+  </footer>
+</div>

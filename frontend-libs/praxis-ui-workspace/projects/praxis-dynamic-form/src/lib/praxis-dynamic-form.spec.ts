@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, Subject } from 'rxjs';
 import { PraxisDynamicForm } from './praxis-dynamic-form';
 import {
   GenericCrudService,
@@ -10,6 +10,7 @@ import {
   MaterialDateRangeMetadata,
   DateRangeValue,
   MaterialPriceRangeMetadata,
+  FormConfig,
 } from '@praxis/core';
 import {
   DynamicFieldLoaderDirective,
@@ -17,12 +18,14 @@ import {
   MaterialCheckboxGroupComponent,
   MaterialRadioGroupComponent,
 } from '@praxis/dynamic-fields';
+import { SettingsPanelService } from '@praxis/settings-panel';
 
 describe('PraxisDynamicForm', () => {
   let fixture: ComponentFixture<PraxisDynamicForm>;
   let component: PraxisDynamicForm;
   let crudService: jasmine.SpyObj<GenericCrudService<any>>;
   let configStorage: jasmine.SpyObj<ConfigStorage>;
+  let settingsPanel: jasmine.SpyObj<SettingsPanelService>;
 
   beforeEach(async () => {
     crudService = jasmine.createSpyObj('GenericCrudService', [
@@ -40,6 +43,7 @@ describe('PraxisDynamicForm', () => {
       'saveConfig',
       'clearConfig',
     ]);
+    settingsPanel = jasmine.createSpyObj('SettingsPanelService', ['open']);
 
     TestBed.overrideComponent(MaterialSelectComponent, {
       set: {
@@ -64,6 +68,7 @@ describe('PraxisDynamicForm', () => {
       providers: [
         { provide: GenericCrudService, useValue: crudService },
         { provide: CONFIG_STORAGE, useValue: configStorage },
+        { provide: SettingsPanelService, useValue: settingsPanel },
       ],
     }).compileComponents();
 
@@ -127,6 +132,48 @@ describe('PraxisDynamicForm', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     expect(readySpy).toHaveBeenCalled();
+  });
+
+  it('propaga alterações aplicadas, salvas e resetadas via painel de configurações', () => {
+    const ref: any = {
+      applied$: new Subject<FormConfig>(),
+      saved$: new Subject<FormConfig>(),
+      reset$: new Subject<void>(),
+    };
+    settingsPanel.open.and.returnValue(ref);
+
+    component.formId = 'f1';
+    component.config = { sections: [], fieldMetadata: [] } as any;
+    const changeSpy = jasmine.createSpy('configChange');
+    component.configChange.subscribe(changeSpy);
+
+    component.openConfigEditor();
+
+    const applied = {
+      sections: [{ id: 'a', rows: [] }],
+      fieldMetadata: [],
+    } as any;
+    ref.applied$.next(applied);
+    expect(component.config).toEqual(applied);
+    expect(changeSpy).toHaveBeenCalledWith(applied);
+
+    const saved = {
+      sections: [{ id: 'b', rows: [] }],
+      fieldMetadata: [],
+    } as any;
+    ref.saved$.next(saved);
+    expect(configStorage.saveConfig).toHaveBeenCalledWith(
+      'form-config:f1',
+      saved,
+    );
+    expect(changeSpy).toHaveBeenCalledWith(saved);
+
+    ref.reset$.next();
+    expect(component.config).toEqual({
+      sections: [],
+      fieldMetadata: [],
+    } as any);
+    expect(changeSpy).toHaveBeenCalledWith(component.config);
   });
 
   it('configura endpoints customizados quando informados', () => {

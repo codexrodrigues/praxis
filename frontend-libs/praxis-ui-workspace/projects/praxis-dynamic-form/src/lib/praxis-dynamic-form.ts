@@ -54,12 +54,13 @@ import {
   FormSection,
   FormRow,
   FormColumn,
-  PraxisResizableWindowService,
 } from '@praxis/core';
 import { FormLayoutService } from './services/form-layout.service';
 import { FormContextService } from './services/form-context.service';
 import { CONFIG_STORAGE, ConfigStorage } from '@praxis/core';
 import { PraxisDynamicFormConfigEditor } from './praxis-dynamic-form-config-editor';
+import { SettingsPanelService } from '@praxis/settings-panel';
+import { normalizeFormConfig } from './utils/normalize-form-config';
 
 @Component({
   selector: 'praxis-dynamic-form',
@@ -459,7 +460,7 @@ import { PraxisDynamicFormConfigEditor } from './praxis-dynamic-form-config-edit
 export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   private readonly DEBUG =
     typeof window !== 'undefined' &&
-    ((window as any)['__PRAXIS_DEBUG__'] || true); // Temporariamente true para debug
+    Boolean((window as any)['__PRAXIS_DEBUG__']);
   @Input() resourcePath?: string;
   @Input() resourceId?: string | number;
   @Input() mode: 'create' | 'edit' | 'view' = 'create';
@@ -539,7 +540,7 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
     private cdr: ChangeDetectorRef,
     private layoutService: FormLayoutService,
     private contextService: FormContextService,
-    private windowService: PraxisResizableWindowService,
+    private settingsPanel: SettingsPanelService,
     @Inject(CONFIG_STORAGE) private configStorage: ConfigStorage,
   ) {
     this.form = this.fb.group({});
@@ -764,7 +765,7 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
       this.config = syncResult.config;
 
       if (syncResult.syncResult.hasChanges) {
-        console.log('📋 Form sync detected changes:', syncResult.syncResult);
+        this.debugLog('📋 Form sync detected changes:', syncResult.syncResult);
         // Save updated config after sync
         const configKey = `praxis-form-config-${this.formId}`;
         this.configStorage.saveConfig(configKey, this.config);
@@ -1155,43 +1156,41 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   }
 
   openConfigEditor(): void {
-    console.log('🔧 [PraxisDynamicForm] Abrindo editor de configuração');
-    console.log('🔧 [PraxisDynamicForm] Config atual:', this.config);
-
-    // Config already has everything needed (layout + metadata)
-    const ref = this.windowService.open({
-      title: 'Configuração do Formulário Dinâmico',
-      contentComponent: PraxisDynamicFormConfigEditor,
-      data: this.config,
-      initialWidth: '90vw',
-      initialHeight: '90vh',
-      minWidth: '320px',
-      minHeight: '600px',
-      autoCenterAfterResize: false,
-      enableTouch: true,
-      disableResize: false,
-      disableMaximize: false,
+    const initialConfig = normalizeFormConfig(this.config as FormConfig);
+    const ref = this.settingsPanel.open({
+      id: `form.${this.formId}`,
+      title: 'Configuração do Formulário',
+      width: 720,
+      content: {
+        component: PraxisDynamicFormConfigEditor,
+        inputs: initialConfig,
+      },
     });
 
-    ref.closed.pipe(takeUntil(this.destroy$)).subscribe((result) => {
-      if (result) {
-        console.log(
-          '🔧 [PraxisDynamicForm] Nova configuração recebida do editor:',
-          result,
-        );
-        this.config = result as FormConfig;
-
-        // Save updated config
-        if (this.formId) {
-          const configKey = `praxis-form-config-${this.formId}`;
-          this.configStorage.saveConfig(configKey, this.config);
-        }
-
+    ref.applied$.pipe(takeUntil(this.destroy$)).subscribe((cfg) => {
+      if (cfg) {
+        this.config = normalizeFormConfig(cfg as FormConfig);
         this.configChange.emit(this.config);
-
-        // Rebuild form with new config
         this.buildFormFromConfig();
       }
+    });
+
+    ref.saved$.pipe(takeUntil(this.destroy$)).subscribe((cfg) => {
+      if (cfg) {
+        this.config = normalizeFormConfig(cfg as FormConfig);
+        if (this.formId) {
+          const key = `form-config:${this.formId}`;
+          this.configStorage.saveConfig(key, this.config);
+        }
+        this.configChange.emit(this.config);
+        this.buildFormFromConfig();
+      }
+    });
+
+    ref.reset$.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.config = initialConfig;
+      this.configChange.emit(this.config);
+      this.buildFormFromConfig();
     });
   }
 
