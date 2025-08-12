@@ -6,7 +6,7 @@ import { GenericCrudService, ApiEndpoint } from '@praxis/core';
 
 const metadata: CrudMetadata = {
   component: 'praxis-crud',
-  resource: { path: 'cargos', idField: 'id' },
+  resource: { path: 'cargos', idField: 'id', endpointKey: ApiEndpoint.HumanResources },
   table: {
     columns: [],
     actions: {

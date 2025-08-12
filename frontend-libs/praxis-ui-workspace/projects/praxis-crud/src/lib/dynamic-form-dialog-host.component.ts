@@ -172,6 +172,7 @@ export class DynamicFormDialogHostComponent implements OnInit {
     public dialogRef: DialogRef<DynamicFormDialogHostComponent>,
     @Inject(DIALOG_DATA) public data: any,
     private dialogService: DialogService,
+    private crud: GenericCrudService<any>,
   ) {
     this.dialogRef.disableClose = true;
 
@@ -191,6 +192,13 @@ export class DynamicFormDialogHostComponent implements OnInit {
     this.resourcePath =
       this.data.metadata?.resource?.path ??
       this.data.metadata?.table?.resourcePath;
+
+    if (this.resourcePath) {
+      this.crud.configure(
+        this.resourcePath,
+        this.data.metadata?.resource?.endpointKey,
+      );
+    }
 
     this.idField = this.data.metadata?.resource?.idField ?? 'id';
     this.resourceId = this.data.inputs?.[this.idField];

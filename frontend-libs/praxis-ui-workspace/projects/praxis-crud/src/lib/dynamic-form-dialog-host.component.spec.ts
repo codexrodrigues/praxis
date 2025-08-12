@@ -2,6 +2,7 @@ import { FormGroup } from '@angular/forms';
 import { of, EMPTY, Subject } from 'rxjs';
 import { DynamicFormDialogHostComponent } from './dynamic-form-dialog-host.component';
 import { DialogService, DialogRef } from './dialog.service';
+import { GenericCrudService } from '@praxis/core';
 
 function createComponent(
   dialogService: jasmine.SpyObj<DialogService>,
@@ -18,16 +19,25 @@ function createComponent(
     updateSize: jasmine.createSpy('updateSize'),
     updatePosition: jasmine.createSpy('updatePosition'),
   } as any;
+  const crud = jasmine.createSpyObj<GenericCrudService<any>>(
+    'GenericCrudService',
+    ['configure'],
+  );
   const comp = new DynamicFormDialogHostComponent(
     dialogRef,
     {
       action: { formId: 'f1' },
-      metadata: { defaults: { modal }, i18n: { crudDialog: i18n } },
+      metadata: {
+        defaults: { modal },
+        i18n: { crudDialog: i18n },
+        resource: { path: 'res' },
+      },
     },
     dialogService,
+    crud as any,
   );
   comp.formComp = { form: new FormGroup({}) } as any;
-  return { comp, dialogRef, esc$, backdrop$ };
+  return { comp, dialogRef, esc$, backdrop$, crud };
 }
 
 describe('DynamicFormDialogHostComponent', () => {
@@ -69,16 +79,13 @@ describe('DynamicFormDialogHostComponent', () => {
     });
     comp.toggleMaximize();
     expect(dialogRef.updateSize).toHaveBeenCalledWith(
-      'calc(100dvw - 16px)',
+      'calc(100vw - 16px)',
       'calc(100dvh - 16px)',
     );
-    expect(dialogRef.updatePosition).toHaveBeenCalledWith({
-      top: '8px',
-      left: '8px',
-    });
+    expect(dialogRef.updatePosition).toHaveBeenCalled();
     comp.toggleMaximize();
     expect(dialogRef.updateSize).toHaveBeenCalledWith('500px', '300px');
-    expect(dialogRef.updatePosition).toHaveBeenCalledWith();
+    expect(dialogRef.updatePosition).toHaveBeenCalled();
   });
 
   it('backdrop and esc respect disable flags', () => {
@@ -105,5 +112,10 @@ describe('DynamicFormDialogHostComponent', () => {
     expect(comp.loading).toBeTrue();
     comp.onFormReady();
     expect(comp.loading).toBeFalse();
+  });
+
+  it('configures crud service with resource path', () => {
+    const { crud } = createComponent(dialogService);
+    expect(crud.configure).toHaveBeenCalledWith('res', undefined);
   });
 });

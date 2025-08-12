@@ -4,6 +4,7 @@ import {
   FormConfig,
   RowAction,
   ToolbarAction,
+  ApiEndpoint,
 } from '@praxis/core';
 
 export type FormOpenMode = 'route' | 'modal';
@@ -29,6 +30,7 @@ export interface CrudDefaults {
 export interface CrudResource {
   path: string;
   idField?: string | number;
+  endpointKey?: ApiEndpoint;
 }
 
 export interface CrudMetadata {
