@@ -200,9 +200,6 @@ $dark-theme: mat.m2-define-dark-theme(
     surface-container: var(--surface),
     surface-container-high: #37393b,
     surface-container-highest: #474747,
-
-    outline: #ababab,
-    outline-variant: #80868b,
   )
 );
 
@@ -243,10 +240,6 @@ $dark-theme: mat.m2-define-dark-theme(
 .mat-mdc-row:hover {
   background: color-mix(in srgb, var(--primary) 10%, var(--surface) 90%);
   cursor: pointer;
-}
-.mat-mdc-row:focus-within {
-  outline: 2px solid color-mix(in srgb, var(--primary) 55%, white 45%);
-  outline-offset: -2px;
 }
 
 /* Selecionada visível mas elegante */
@@ -363,38 +356,11 @@ $dark-theme: mat.m2-define-dark-theme(
   )
 );
 
-/* Inputs & form hints */
-.mdc-notched-outline__leading,
-.mdc-notched-outline__notch,
-.mdc-notched-outline__trailing {
-  border-color: rgba(255, 255, 255, 0.1);
-  outline: none;
-  background: transparent;
-}
-
-/* Prevent duplicate inner focus outline on MDC text fields */
-.mdc-text-field__input:focus,
-.mdc-text-field__input:focus-visible {
-  outline: none;
-}
-
-/* Emphasize focus state on the field container for accessibility */
-.mdc-text-field--outlined.mdc-text-field--focused .mdc-notched-outline {
-  border-color: var(--primary);
-  border-width: 2px;
-}
-
 .mat-mdc-form-field-hint {
   color: var(--text-secondary);
   font-size: 0.75rem;
 }
-.mdc-text-field--outlined:not(.mdc-text-field--disabled).mdc-text-field--focused
-  .mdc-floating-label {
-  color: var(--mat-sys-on-primary-container) !important;
-  z-index: 1;
-  background-color: var(--surface);
-  padding: 0 0.25rem;
-}
+
 
 /* Buttons */
 .mat-mdc-button-disabled {

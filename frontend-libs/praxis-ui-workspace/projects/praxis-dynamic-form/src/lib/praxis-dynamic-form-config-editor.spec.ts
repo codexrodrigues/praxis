@@ -3,6 +3,7 @@ import { PraxisDynamicFormConfigEditor } from './praxis-dynamic-form-config-edit
 import { FormConfig, createDefaultFormConfig } from '@praxis/core';
 import { FormConfigService } from './services/form-config.service';
 import { JsonConfigEditorComponent } from './json-config-editor/json-config-editor.component';
+import { SETTINGS_PANEL_DATA } from '@praxis/settings-panel';
 
 describe('PraxisDynamicFormConfigEditor', () => {
   let component: PraxisDynamicFormConfigEditor;
@@ -16,7 +17,10 @@ describe('PraxisDynamicFormConfigEditor', () => {
 
     await TestBed.configureTestingModule({
       imports: [PraxisDynamicFormConfigEditor],
-      providers: [{ provide: FormConfigService, useValue: service }],
+      providers: [
+        { provide: FormConfigService, useValue: service },
+        { provide: SETTINGS_PANEL_DATA, useValue: undefined },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(PraxisDynamicFormConfigEditor);
@@ -24,43 +28,67 @@ describe('PraxisDynamicFormConfigEditor', () => {
     fixture.detectChanges();
   });
 
-  it('initializes editedConfig from service', () => {
-    expect(component.editedConfig).toEqual(service.currentConfig);
+  it('initializes editedConfig with default config and loads service', () => {
+    expect(component.editedConfig).toEqual(createDefaultFormConfig());
+    expect(service.loadConfig).toHaveBeenCalled();
   });
 
-  it('onReset sets default config and syncs editor', () => {
+  it('clones injected data to prevent external mutation', async () => {
+    const injected: FormConfig = {
+      sections: [{ id: 's1', rows: [] }],
+      fieldMetadata: [],
+    } as any;
+
+    TestBed.resetTestingModule();
+    await TestBed.configureTestingModule({
+      imports: [PraxisDynamicFormConfigEditor],
+      providers: [
+        { provide: FormConfigService, useValue: service },
+        { provide: SETTINGS_PANEL_DATA, useValue: injected },
+      ],
+    }).compileComponents();
+
+    const fix = TestBed.createComponent(PraxisDynamicFormConfigEditor);
+    const comp = fix.componentInstance;
+    fix.detectChanges();
+    comp.editedConfig.sections[0].id = 'changed';
+    expect(injected.sections[0].id).toBe('s1');
+  });
+
+  it('reset restores initial config and syncs editor', async () => {
+    const injected: FormConfig = {
+      sections: [{ id: 's1', rows: [] }],
+      fieldMetadata: [],
+    } as any;
+
+    TestBed.resetTestingModule();
+    await TestBed.configureTestingModule({
+      imports: [PraxisDynamicFormConfigEditor],
+      providers: [
+        { provide: FormConfigService, useValue: service },
+        { provide: SETTINGS_PANEL_DATA, useValue: injected },
+      ],
+    }).compileComponents();
+
+    const fix = TestBed.createComponent(PraxisDynamicFormConfigEditor);
+    const comp = fix.componentInstance;
     const editorSpy = jasmine.createSpyObj<JsonConfigEditorComponent>(
       'JsonConfigEditorComponent',
       ['updateJsonFromConfig'],
     );
-    component.jsonEditor = editorSpy;
-    component.editedConfig = { sections: [{ id: 'x', rows: [] }] } as any;
+    comp.jsonEditor = editorSpy;
+    comp.editedConfig = { sections: [{ id: 'x', rows: [] }] } as any;
 
-    component.onReset();
+    comp.reset();
 
-    expect(component.editedConfig).toEqual(createDefaultFormConfig());
-    expect(editorSpy.updateJsonFromConfig).toHaveBeenCalledWith(
-      component.editedConfig,
-    );
+    expect(comp.editedConfig).toEqual(injected);
+    expect(editorSpy.updateJsonFromConfig).toHaveBeenCalledWith(injected);
   });
 
-  it('onSave persists config via service and emits', () => {
+  it('getSettingsValue returns current config', () => {
     const cfg: FormConfig = { sections: [{ id: 's1', rows: [] }] } as any;
     component.editedConfig = cfg;
-    const saveSpy = jasmine.createSpy('saved');
-    component.configSaved.subscribe(saveSpy);
-
-    component.onSave();
-
-    expect(service.loadConfig).toHaveBeenCalledWith(cfg);
-    expect(saveSpy).toHaveBeenCalledWith(cfg);
-  });
-
-  it('onCancel emits cancelled', () => {
-    const cancelSpy = jasmine.createSpy('cancelled');
-    component.cancelled.subscribe(cancelSpy);
-    component.onCancel();
-    expect(cancelSpy).toHaveBeenCalled();
+    expect(component.getSettingsValue()).toBe(cfg);
   });
 
   it('onJsonConfigChange updates editedConfig', () => {

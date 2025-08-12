@@ -1,11 +1,21 @@
-import { Injectable } from '@angular/core';
-import { DatePipe, DecimalPipe, CurrencyPipe, PercentPipe, UpperCasePipe, LowerCasePipe, TitleCasePipe } from '@angular/common';
+import { Inject, Injectable, LOCALE_ID } from '@angular/core';
+import {
+  DatePipe,
+  DecimalPipe,
+  CurrencyPipe,
+  PercentPipe,
+  UpperCasePipe,
+  LowerCasePipe,
+  TitleCasePipe,
+} from '@angular/common';
 import { ColumnDataType } from './data-formatter-types';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class DataFormattingService {
+  private groupSeparator: string;
+  private decimalSeparator: string;
 
   constructor(
     private datePipe: DatePipe,
@@ -14,13 +24,23 @@ export class DataFormattingService {
     private percentPipe: PercentPipe,
     private upperCasePipe: UpperCasePipe,
     private lowerCasePipe: LowerCasePipe,
-    private titleCasePipe: TitleCasePipe
-  ) {}
+    private titleCasePipe: TitleCasePipe,
+    @Inject(LOCALE_ID) private locale: string,
+  ) {
+    const parts = new Intl.NumberFormat(this.locale).formatToParts(12345.6);
+    this.groupSeparator = parts.find((p) => p.type === 'group')?.value || ',';
+    this.decimalSeparator =
+      parts.find((p) => p.type === 'decimal')?.value || '.';
+  }
 
   /**
    * Apply formatting to a value based on column type and format string
    */
-  formatValue(value: any, columnType: ColumnDataType, formatString: string): any {
+  formatValue(
+    value: any,
+    columnType: ColumnDataType,
+    formatString: string,
+  ): any {
     if (value === null || value === undefined) {
       return value;
     }
@@ -47,7 +67,10 @@ export class DataFormattingService {
           return value;
       }
     } catch (error) {
-      console.warn(`Error formatting value ${value} with type ${columnType} and format ${formatString}:`, error);
+      console.warn(
+        `Error formatting value ${value} with type ${columnType} and format ${formatString}:`,
+        error,
+      );
       return value; // Return original value on error
     }
   }
@@ -60,7 +83,35 @@ export class DataFormattingService {
       case 'date':
         if (value instanceof Date) return value;
         if (typeof value === 'string' || typeof value === 'number') {
-          const date = new Date(value);
+          let date = new Date(value);
+          if (typeof value === 'string' && isNaN(date.getTime())) {
+            const parts = value.split(',');
+            if (parts.length === 3) {
+              const [year, month, day] = parts.map(Number);
+              date = new Date(year, month - 1, day);
+            }
+          }
+          return isNaN(date.getTime()) ? null : date;
+        }
+        if (Array.isArray(value)) {
+          const [
+            year,
+            month = 1,
+            day = 1,
+            hour = 0,
+            minute = 0,
+            second = 0,
+            millisecond = 0,
+          ] = value;
+          const date = new Date(
+            Number(year),
+            Number(month) - 1,
+            Number(day),
+            Number(hour),
+            Number(minute),
+            Number(second),
+            Number(millisecond),
+          );
           return isNaN(date.getTime()) ? null : date;
         }
         return null;
@@ -70,7 +121,10 @@ export class DataFormattingService {
       case 'percentage':
         if (typeof value === 'number') return value;
         if (typeof value === 'string') {
-          const num = parseFloat(value);
+          const normalized = value
+            .replace(new RegExp(`\\${this.groupSeparator}`, 'g'), '')
+            .replace(this.decimalSeparator, '.');
+          const num = parseFloat(normalized);
           return isNaN(num) ? 0 : num;
         }
         return 0;
@@ -114,11 +168,16 @@ export class DataFormattingService {
     if (formatString.includes('|nosep')) {
       // No thousands separator
       const format = formatString.replace('|nosep', '');
-      const formatted = this.decimalPipe.transform(value, format, 'pt-BR') || value.toString();
-      return formatted.replace(/\./g, '').replace(/,/g, '.');
+      const formatted =
+        this.decimalPipe.transform(value, format, this.locale) ||
+        value.toString();
+      return this.removeGrouping(formatted);
     }
 
-    return this.decimalPipe.transform(value, formatString, 'pt-BR') || value.toString();
+    return (
+      this.decimalPipe.transform(value, formatString, this.locale) ||
+      value.toString()
+    );
   }
 
   /**
@@ -128,22 +187,55 @@ export class DataFormattingService {
     // Parse format: "BRL|symbol|2" or "USD|code|2"
     const parts = formatString.split('|');
     if (parts.length < 3) {
-      return this.currencyPipe.transform(value, 'BRL', 'symbol', '1.2-2', 'pt-BR') || value.toString();
+      return (
+        this.currencyPipe.transform(
+          value,
+          'BRL',
+          'symbol',
+          '1.2-2',
+          this.locale,
+        ) || value.toString()
+      );
     }
 
     const currencyCode = parts[0];
     const display = parts[1]; // 'symbol' or 'code'
     const decimals = parts[2];
+    const noSep = parts.includes('nosep');
     const digitsInfo = `1.${decimals}-${decimals}`;
 
-    return this.currencyPipe.transform(value, currencyCode, display, digitsInfo, 'pt-BR') || value.toString();
+    const formatted =
+      this.currencyPipe.transform(
+        value,
+        currencyCode,
+        display,
+        digitsInfo,
+        this.locale,
+      ) || value.toString();
+
+    return noSep ? this.removeGrouping(formatted) : formatted;
   }
 
   /**
    * Format percentage values
    */
   private formatPercentage(value: number, formatString: string): string {
-    return this.percentPipe.transform(value, formatString, 'pt-BR') || value.toString();
+    if (formatString.includes('|x100')) {
+      const format = formatString.replace('|x100', '');
+      const formatted =
+        this.decimalPipe.transform(value * 100, format, this.locale) ||
+        (value * 100).toString();
+      return `${formatted}%`;
+    }
+
+    return (
+      this.percentPipe.transform(value, formatString, this.locale) ||
+      value.toString()
+    );
+  }
+
+  private removeGrouping(value: string): string {
+    return value.replace(new RegExp(`\\${this.groupSeparator}`, 'g'), '');
   }
 
   /**
@@ -212,7 +304,7 @@ export class DataFormattingService {
       'yes-no': { true: 'Sim', false: 'Não' },
       'active-inactive': { true: 'Ativo', false: 'Inativo' },
       'on-off': { true: 'Ligado', false: 'Desligado' },
-      'enabled-disabled': { true: 'Habilitado', false: 'Desabilitado' }
+      'enabled-disabled': { true: 'Habilitado', false: 'Desabilitado' },
     };
 
     const display = displays[formatString] || displays['true-false'];
