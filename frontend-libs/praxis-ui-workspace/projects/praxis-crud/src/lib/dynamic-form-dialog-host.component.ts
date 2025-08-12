@@ -58,7 +58,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
         [resourcePath]="resourcePath"
         [resourceId]="resourceId"
         [mode]="mode"
-        [inputs]="data.inputs"
         (formSubmit)="onSave($event)"
         (formCancel)="onCancel()"
       ></praxis-dynamic-form>
