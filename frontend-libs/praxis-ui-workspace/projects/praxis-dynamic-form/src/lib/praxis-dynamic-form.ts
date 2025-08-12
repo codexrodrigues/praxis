@@ -530,6 +530,7 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   form!: FormGroup;
   private pendingEntityId: string | number | null = null;
   private loadedEntityId: string | number | null = null;
+  private loadedEntityData: Record<string, any> | null = null;
   private schemaCache: any = null;
   private destroy$ = new Subject<void>();
 
@@ -812,11 +813,16 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
       return;
     }
 
-    // Avoid duplicate entity loading
+    // Avoid duplicate network requests but allow re-patching after form build
     if (this.loadedEntityId === this.pendingEntityId) {
-      console.debug('[PDF] loadEntity:duplicate', {
-        id: this.pendingEntityId,
-      });
+      if (this.loadedEntityData && Object.keys(this.form.controls).length) {
+        this.form.patchValue(this.loadedEntityData);
+        console.debug('[PDF] loadEntity:repatch', { id: this.pendingEntityId });
+      } else {
+        console.debug('[PDF] loadEntity:duplicate', {
+          id: this.pendingEntityId,
+        });
+      }
       return;
     }
 
@@ -827,7 +833,10 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((data: Record<string, any>) => {
         if (data && typeof data === 'object') {
-          this.form.patchValue(data);
+          this.loadedEntityData = data;
+          if (Object.keys(this.form.controls).length) {
+            this.form.patchValue(data);
+          }
           console.debug('[PDF] loadEntity:success', {
             id: this.pendingEntityId,
           });
