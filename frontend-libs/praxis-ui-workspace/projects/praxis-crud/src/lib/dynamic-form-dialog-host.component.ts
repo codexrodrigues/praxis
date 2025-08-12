@@ -60,23 +60,14 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
       class="dialog-content"
       aria-labelledby="crudDialogTitle"
     >
-      @if (loading) {
-        <div class="skeleton">
-          <div class="line"></div>
-          <div class="line"></div>
-          <div class="line"></div>
-        </div>
-      } @else {
-        <praxis-dynamic-form
-          [formId]="data.action?.formId"
-          [resourcePath]="resourcePath"
-          [resourceId]="resourceId"
-          [mode]="mode"
-          (formSubmit)="onSave($event)"
-          (formCancel)="onCancel()"
-          (formReady)="onFormReady()"
-        ></praxis-dynamic-form>
-      }
+      <praxis-dynamic-form
+        [formId]="data.action?.formId"
+        [resourcePath]="resourcePath"
+        [resourceId]="resourceId"
+        [mode]="mode"
+        (formSubmit)="onSave($event)"
+        (formCancel)="onCancel()"
+      ></praxis-dynamic-form>
     </mat-dialog-content>
   `,
   styles: [
@@ -123,25 +114,14 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
         z-index: 1;
         padding: var(--dlg-pad);
       }
-      .skeleton {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-      .skeleton .line {
-        height: 16px;
-        border-radius: 4px;
-        background: rgba(0, 0, 0, 0.1);
-      }
     `,
   ],
 })
 export class DynamicFormDialogHostComponent implements OnInit {
   @ViewChild(PraxisDynamicForm) formComp?: PraxisDynamicForm;
   modal: any = {};
-  maximized = false;
-  private initialSize: { width?: string; height?: string } = {};
-  loading = true;
+    maximized = false;
+    private initialSize: { width?: string; height?: string } = {};
 
   resourcePath?: string;
   resourceId?: string | number;
@@ -251,9 +231,6 @@ export class DynamicFormDialogHostComponent implements OnInit {
     this.dialogRef.close({ type: 'save', data: result });
   }
 
-  onFormReady(): void {
-    this.loading = false;
-  }
 
   onCancel(): void {
     const dirty = this.formComp?.form.dirty;
