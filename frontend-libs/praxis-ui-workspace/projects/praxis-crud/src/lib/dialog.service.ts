@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import {
   MatDialog,
   MatDialogRef,
@@ -26,13 +26,13 @@ export { MAT_DIALOG_DATA as DIALOG_DATA } from '@angular/material/dialog';
 
 @Injectable({ providedIn: 'root' })
 export class DialogService {
-  constructor(private matDialog: MatDialog) {}
+  constructor(private matDialog: MatDialog, private zone: NgZone) {}
 
   open<T, D = unknown, R = unknown>(
     component: ComponentType<T>,
     config?: DialogConfig<D>,
   ): DialogRef<T, R> {
-    return this.matDialog.open(component, config);
+    return this.zone.run(() => this.matDialog.open(component, config));
   }
 
   async openAsync<T, D = unknown, R = unknown>(
@@ -40,6 +40,6 @@ export class DialogService {
     config?: DialogConfig<D>,
   ): Promise<DialogRef<T, R>> {
     const component = await loader();
-    return this.matDialog.open(component, config);
+    return this.zone.run(() => this.matDialog.open(component, config));
   }
 }
