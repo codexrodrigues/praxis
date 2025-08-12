@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { PraxisDynamicForm } from '@praxis/dynamic-form';
+import { GenericCrudService } from '@praxis/core';
 import { DialogService, DialogRef, DIALOG_DATA } from './dialog.service';
 import { ConfirmDialogComponent } from '@praxis/dynamic-fields';
 import { filter } from 'rxjs/operators';
@@ -19,6 +20,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     MatIconModule,
     PraxisDynamicForm,
   ],
+  providers: [GenericCrudService],
   host: { class: 'praxis-dialog' },
   template: `
     <div class="dialog-header">
