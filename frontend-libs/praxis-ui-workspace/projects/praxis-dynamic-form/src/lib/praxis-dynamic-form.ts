@@ -310,7 +310,6 @@ import { normalizeFormConfig } from './utils/normalize-form-config';
       .praxis-dynamic-form {
         display: flex;
         flex-direction: column;
-        gap: 1.5rem;
         transition: all 0.3s ease;
       }
 
@@ -343,7 +342,7 @@ import { normalizeFormConfig } from './utils/normalize-form-config';
       .form-section {
         border: 1px solid var(--md-sys-color-outline-variant);
         border-radius: 8px;
-        padding: 1.5rem;
+        padding: 1.0rem;
         background-color: var(--md-sys-color-surface-container-lowest);
         transition: all 0.2s ease;
         position: relative;

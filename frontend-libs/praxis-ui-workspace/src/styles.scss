@@ -78,12 +78,6 @@ mat-form-field {
   color: var(--text-caption) !important;
 }
 
-/* Focus ring helper */
-.focus-ring {
-  outline: 2px solid var(--primary-very-light);
-  outline-offset: 2px;
-}
-
 /* ===========================
    Dark Harmony — Overrides
    =========================== */
@@ -100,6 +94,7 @@ mat-form-field {
   --focus-ring: 0 0 0 3px rgba(72, 161, 255, 0.35);
   --radius-md: 12px;
   --elevation-shadow: 0 10px 20px rgba(0, 0, 0, 0.28);
+
 
   /* ===== Mat Table ===== */
   .mat-mdc-table {
@@ -125,30 +120,7 @@ mat-form-field {
     background: color-mix(in oklab, var(--mat-sys-primary) 12%, transparent);
   }
 
-  /* ===== Form fields ===== */
-  .mat-mdc-form-field .mdc-text-field {
-    background: var(--surface-2);
-    border-radius: var(--radius-md);
-  }
-  .mat-mdc-form-field-appearance-outline .mdc-notched-outline__leading,
-  .mat-mdc-form-field-appearance-outline .mdc-notched-outline__notch,
-  .mat-mdc-form-field-appearance-outline .mdc-notched-outline__trailing {
-    border-color: var(--border-color);
-  }
-  .mat-mdc-form-field-appearance-outline:hover .mdc-notched-outline__leading,
-  .mat-mdc-form-field-appearance-outline:hover .mdc-notched-outline__notch,
-  .mat-mdc-form-field-appearance-outline:hover .mdc-notched-outline__trailing {
-    border-color: var(--border-color-hover);
-  }
-  .mat-mdc-form-field.mat-focused .mdc-text-field {
-    box-shadow: var(--focus-ring);
-  }
-  .mat-mdc-form-field.mat-focused .mdc-notched-outline__leading,
-  .mat-mdc-form-field.mat-focused .mdc-notched-outline__notch,
-  .mat-mdc-form-field.mat-focused .mdc-notched-outline__trailing {
-    border-color: var(--mat-sys-primary) !important;
-    outline: none;
-  }
+  /* ===== manter o label branco ===== */
   .mdc-text-field__input::placeholder,
   .mat-mdc-floating-label {
     color: rgba(var(--mat-sys-on-surface-rgb), 0.68) !important;
@@ -193,6 +165,12 @@ mat-form-field {
     border-radius: var(--radius-md);
     box-shadow: var(--elevation-shadow);
   }
+
+  .mat-mdc-form-field-has-icon-prefix .mat-mdc-text-field-wrapper{
+    padding-left: 16px;          /* >= largura do prefix/símbolo */
+    --mat-mdc-form-field-label-offset-x: 0;  /* não puxe o label p/ a esquerda */
+  }
+
 
   /* ===== Hierarquia tipográfica de seção ===== */
   h1,
