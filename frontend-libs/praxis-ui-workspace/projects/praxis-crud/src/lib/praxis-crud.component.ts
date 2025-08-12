@@ -18,12 +18,14 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   standalone: true,
   imports: [PraxisTable],
   template: `
-    <praxis-table
-      [config]="resolvedMetadata?.table"
-      [resourcePath]="(resolvedMetadata?.table as any).resourcePath"
-      (rowAction)="onAction($event.action, $event.row)"
-      (toolbarAction)="onAction($event.action)"
-    ></praxis-table>
+    @if (resolvedMetadata as meta) {
+      <praxis-table
+        [config]="meta.table"
+        [resourcePath]="meta.resource?.path"
+        (rowAction)="onAction($event.action, $event.row)"
+        (toolbarAction)="onAction($event.action)"
+      ></praxis-table>
+    }
   `,
 })
 export class PraxisCrudComponent implements OnChanges {

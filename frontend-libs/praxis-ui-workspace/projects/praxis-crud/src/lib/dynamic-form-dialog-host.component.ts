@@ -1,7 +1,7 @@
 import { Component, Inject, ViewChild, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialogModule } from '@angular/material/dialog';
+import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { PraxisDynamicForm } from '@praxis/dynamic-form';
 import { DialogService, DialogRef, DIALOG_DATA } from './dialog.service';
@@ -107,6 +107,7 @@ export class DynamicFormDialogHostComponent implements OnInit {
   } as Record<string, string>;
 
   constructor(
+    @Inject(MatDialogRef)
     public dialogRef: DialogRef<DynamicFormDialogHostComponent>,
     @Inject(DIALOG_DATA) public data: any,
     private dialogService: DialogService,

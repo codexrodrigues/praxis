@@ -26,8 +26,14 @@ export interface CrudDefaults {
   modal?: DialogConfig;
 }
 
+export interface CrudResource {
+  path: string;
+  idField?: string | number;
+}
+
 export interface CrudMetadata {
   component: 'praxis-crud';
+  resource?: CrudResource;
   table: TableConfig;
   form?: FormConfig;
   defaults?: CrudDefaults;
