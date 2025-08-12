@@ -24,7 +24,10 @@
       "@praxis/visual-builder": [
         "projects/praxis-visual-builder/src/public-api.ts"
       ],
-      "@praxis/dynamic-form": ["projects/praxis-dynamic-form/src/public-api.ts"]
+      "@praxis/dynamic-form": [
+        "projects/praxis-dynamic-form/src/public-api.ts"
+      ],
+      "praxis-crud": ["./dist/praxis-crud"]
     },
     "importHelpers": true,
     "target": "ES2022",
@@ -75,6 +78,12 @@
     },
     {
       "path": "./projects/praxis-dynamic-fields/tsconfig.spec.json"
+    },
+    {
+      "path": "./projects/praxis-crud/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/praxis-crud/tsconfig.spec.json"
     }
   ]
 }

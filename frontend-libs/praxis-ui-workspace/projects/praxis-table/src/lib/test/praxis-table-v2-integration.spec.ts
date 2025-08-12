@@ -267,4 +267,27 @@ describe('PraxisTable Unified Architecture', () => {
       expect(component.config.columns.length).toBe(1);
     });
   });
+
+  describe('Action Handling', () => {
+    it('should emit toolbar actions', () => {
+      const config: TableConfig = {
+        columns: [],
+        toolbar: {
+          visible: true,
+          actions: [{ id: 'add', label: 'Add', action: 'add' }],
+        },
+      };
+
+      component.config = config;
+      fixture.detectChanges();
+
+      const spy = jasmine.createSpy('toolbar');
+      component.toolbarAction.subscribe(spy);
+      const button: HTMLButtonElement = fixture.nativeElement.querySelector(
+        'praxis-table-toolbar button',
+      );
+      button.click();
+      expect(spy).toHaveBeenCalledWith({ action: 'add' });
+    });
+  });
 });
