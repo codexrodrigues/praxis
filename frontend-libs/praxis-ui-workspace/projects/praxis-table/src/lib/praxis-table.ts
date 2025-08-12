@@ -250,6 +250,7 @@ export class PraxisTable
 
   onRowAction(action: string, row: any, event: Event): void {
     event.stopPropagation();
+    (event.target as HTMLElement).blur();
     this.rowAction.emit({ action, row });
   }
 

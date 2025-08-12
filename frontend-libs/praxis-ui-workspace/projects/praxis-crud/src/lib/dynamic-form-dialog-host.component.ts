@@ -91,7 +91,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
         --dlg-header-h: 56px;
         --dlg-footer-h: 56px;
         --dlg-pad: 16px;
-        --dlg-gap: 16px;
         display: flex;
         flex-direction: column;
         height: 100%;
@@ -101,7 +100,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
         --dlg-header-h: 44px;
         --dlg-footer-h: 44px;
         --dlg-pad: 12px;
-        --dlg-gap: 12px;
       }
       .dialog-header {
         position: sticky;
@@ -129,7 +127,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
         position: sticky;
         bottom: 0;
         z-index: 1;
-        background: inherit;
         padding: var(--dlg-pad);
       }
       .skeleton {
@@ -141,18 +138,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
         height: 16px;
         border-radius: 4px;
         background: rgba(0, 0, 0, 0.1);
-      }
-      :host ::ng-deep .praxis-dialog-backdrop {
-        backdrop-filter: blur(4px);
-      }
-      :host ::ng-deep .praxis-dialog-panel {
-        margin: var(--dlg-gap);
-        width: clamp(360px, 88vw, var(--praxis-dialog-max-width, 960px));
-        transition:
-          width 200ms ease,
-          height 200ms ease,
-          top 200ms ease,
-          left 200ms ease;
       }
     `,
   ],
@@ -281,19 +266,22 @@ export class DynamicFormDialogHostComponent implements OnInit {
 
   toggleMaximize(initial = false): void {
     this.maximized = initial ? true : !this.maximized;
-    if (this.maximized) {
-      const gap = this.modal.fullscreenGap ?? 8;
-      this.dialogRef.updateSize(
-        `calc(100dvw - ${gap * 2}px)`,
-        `calc(100dvh - ${gap * 2}px)`,
-      );
-      this.dialogRef.updatePosition({ top: `${gap}px`, left: `${gap}px` });
-    } else {
-      this.dialogRef.updateSize(
-        this.initialSize.width,
-        this.initialSize.height,
-      );
-      this.dialogRef.updatePosition();
+
+    const gap = this.maximized ? 8 : undefined;
+    const width = this.maximized
+      ? `calc(100vw - ${2 * (gap ?? 0)}px)`
+      : this.initialSize.width;
+    const height = this.maximized
+      ? `calc(100dvh - ${2 * (gap ?? 0)}px)`
+      : this.initialSize.height;
+
+    this.dialogRef.updateSize(width, height);
+    this.dialogRef.updatePosition();
+
+    const pane: HTMLElement | undefined = (this.dialogRef as any)
+      ?._containerInstance?._elementRef?.nativeElement?.parentElement;
+    if (pane && pane.classList.contains('pfx-dialog-pane')) {
+      pane.style.margin = this.maximized ? `${gap}px` : '';
     }
   }
 }

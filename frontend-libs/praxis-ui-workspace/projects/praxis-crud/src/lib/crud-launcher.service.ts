@@ -32,11 +32,11 @@ export class CrudLauncherService {
     }
     const inputs = this.mapInputs(action, row);
     const modalCfg = { ...(metadata.defaults?.modal || {}) } as any;
-    const panelClasses = ['praxis-dialog-panel'];
+    const panelClasses = ['pfx-dialog-pane', 'pfx-dialog-frosted'];
     if (modalCfg.panelClass) {
       panelClasses.push(modalCfg.panelClass);
     }
-    const backdropClasses = ['praxis-dialog-backdrop'];
+    const backdropClasses = ['pfx-blur-backdrop'];
     if (modalCfg.backdropClass) {
       backdropClasses.push(modalCfg.backdropClass);
     }
@@ -51,6 +51,8 @@ export class CrudLauncherService {
         backdropClass: backdropClasses,
         autoFocus: true,
         restoreFocus: true,
+        minWidth: '360px',
+        maxWidth: '95vw',
         ariaLabelledBy: 'crudDialogTitle',
         data: { action, row, metadata, inputs },
       },
