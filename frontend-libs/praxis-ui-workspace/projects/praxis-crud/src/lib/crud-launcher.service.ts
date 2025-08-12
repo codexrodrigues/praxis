@@ -69,7 +69,9 @@ export class CrudLauncherService {
     const missing = route.match(/:[a-zA-Z0-9_-]+/g);
     if (missing) {
       throw new Error(
-        `Missing route parameters: ${missing.map((m) => m.slice(1)).join(', ')}`,
+        `Missing route parameters for action "${action.action}": ${missing
+          .map((m) => m.slice(1))
+          .join(', ')}`,
       );
     }
     const queryString = new URLSearchParams(query).toString();

@@ -18,9 +18,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   standalone: true,
   imports: [PraxisTable],
   template: `
-    @if (resolvedMetadata as meta) {
+    @if (resolvedMetadata; as meta) {
       <praxis-table
         [config]="meta.table"
+        [resourcePath]="meta.table?.resourcePath"
         (rowAction)="onAction($event.action, $event.row)"
         (toolbarAction)="onAction($event.action)"
       ></praxis-table>
@@ -76,18 +77,19 @@ export class PraxisCrudComponent implements OnChanges {
       );
       this.afterOpen.emit({ mode, action: actionMeta.action });
       if (ref) {
+        const idField = this.getIdField();
         ref
           .afterClosed()
           .pipe(takeUntilDestroyed())
           .subscribe((result) => {
             this.afterClose.emit();
             if (result?.type === 'save') {
-              const id = (result.data as any)?.id;
+              const id = (result.data as any)?.[idField];
               this.afterSave.emit({ id, data: result.data });
               this.refreshTable();
             }
             if (result?.type === 'delete') {
-              const id = (result.data as any)?.id;
+              const id = (result.data as any)?.[idField];
               this.afterDelete.emit({ id });
               this.refreshTable();
             }
@@ -100,5 +102,9 @@ export class PraxisCrudComponent implements OnChanges {
 
   private refreshTable(): void {
     this.table.refetch();
+  }
+
+  private getIdField(): string {
+    return (this.resolvedMetadata?.resource?.idField as string) || 'id';
   }
 }

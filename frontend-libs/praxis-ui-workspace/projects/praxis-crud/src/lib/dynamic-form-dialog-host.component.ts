@@ -1,7 +1,7 @@
 import { Component, Inject, ViewChild, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatDialogModule } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { PraxisDynamicForm } from '@praxis/dynamic-form';
 import { DialogService, DialogRef, DIALOG_DATA } from './dialog.service';
@@ -35,9 +35,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
             maximized ? texts.restoreLabel : texts.maximizeLabel
           "
         >
-          <mat-icon>{
-            maximized ? 'close_fullscreen' : 'open_in_full'
-          }</mat-icon>
+          <mat-icon>{{ maximized ? 'close_fullscreen' : 'open_in_full' }}</mat-icon>
         </button>
       }
       <button
@@ -52,11 +50,12 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     <mat-dialog-content
       class="dialog-content"
       aria-labelledby="crudDialogTitle"
-      role="dialog"
-      aria-modal="true"
     >
       <praxis-dynamic-form
         [formId]="data.action?.formId"
+        [resourcePath]="resourcePath"
+        [resourceId]="resourceId"
+        [mode]="mode"
         [inputs]="data.inputs"
         (formSubmit)="onSave($event)"
         (formCancel)="onCancel()"
@@ -100,42 +99,64 @@ export class DynamicFormDialogHostComponent implements OnInit {
   modal: any = {};
   maximized = false;
   private initialSize: { width?: string; height?: string } = {};
+
+  resourcePath?: string;
+  resourceId?: string | number;
+  mode: 'create' | 'edit' | 'view' = 'create';
+  private idField = 'id';
+
   texts = {
-    title: 'Form',
-    close: 'Close',
-    closeLabel: 'Close dialog',
-    maximizeLabel: 'Maximize',
-    restoreLabel: 'Restore',
-    discardTitle: 'Discard changes?',
-    discardMessage: 'You have unsaved changes. Close anyway?',
-    discardConfirm: 'Discard',
-    discardCancel: 'Cancel',
+    title: 'Formulário',
+    close: 'Fechar',
+    closeLabel: 'Fechar diálogo',
+    maximizeLabel: 'Maximizar',
+    restoreLabel: 'Restaurar',
+    discardTitle: 'Descartar alterações?',
+    discardMessage:
+      'Você tem alterações não salvas. Deseja fechar assim mesmo?',
+    discardConfirm: 'Descartar',
+    discardCancel: 'Cancelar',
   } as Record<string, string>;
 
   constructor(
-    @Inject(MatDialogRef)
     public dialogRef: DialogRef<DynamicFormDialogHostComponent>,
     @Inject(DIALOG_DATA) public data: any,
     private dialogService: DialogService,
   ) {
     this.dialogRef.disableClose = true;
+
+    // i18n
     this.texts = {
       ...this.texts,
       ...(this.data.metadata?.i18n?.crudDialog || {}),
     };
 
-    this.modal = this.data.metadata?.defaults?.modal || {};
+    // defaults do modal (inclui canMaximize: true)
+    this.modal = {
+      canMaximize: true,
+      ...(this.data.metadata?.defaults?.modal || {}),
+    };
 
+    // derivar path/id/mode
+    this.resourcePath =
+      this.data.metadata?.resource?.path ??
+      this.data.metadata?.table?.resourcePath;
+
+    this.idField = this.data.metadata?.resource?.idField ?? 'id';
+    this.resourceId = this.data.inputs?.[this.idField];
+
+    const act = this.data.action?.action;
+    this.mode = act === 'edit' ? 'edit' : act === 'view' ? 'view' : 'create';
+
+    // Esc
     if (!this.modal.disableCloseOnEsc) {
       this.dialogRef
         .keydownEvents()
-        .pipe(
-          filter((e) => e.key === 'Escape'),
-          takeUntilDestroyed(),
-        )
+        .pipe(filter((e) => e.key === 'Escape'), takeUntilDestroyed())
         .subscribe(() => this.onCancel());
     }
 
+    // Backdrop
     if (!this.modal.disableCloseOnBackdrop) {
       this.dialogRef
         .backdropClick()

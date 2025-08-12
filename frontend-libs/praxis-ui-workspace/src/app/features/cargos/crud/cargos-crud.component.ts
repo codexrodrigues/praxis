@@ -6,11 +6,9 @@ import { GenericCrudService, ApiEndpoint } from '@praxis/core';
 
 const metadata: CrudMetadata = {
   component: 'praxis-crud',
+  resource: { path: 'cargos', idField: 'id' },
   table: {
-    columns: [
-      { field: 'id', header: 'ID' } as any,
-      { field: 'descricao', header: 'Descrição' } as any,
-    ],
+    columns: [],
     actions: {
       row: {
         enabled: true,
@@ -55,10 +53,7 @@ const metadata: CrudMetadata = {
   ],
   defaults: {
     openMode: 'modal',
-    modal: {
-      width: '880px',
-      maxWidth: '95vw',
-    },
+    modal: { width: '880px', maxWidth: '95vw' },
   },
 };
 
@@ -68,7 +63,7 @@ const metadata: CrudMetadata = {
   imports: [MatCardModule, MatIconModule, PraxisCrudComponent],
   providers: [GenericCrudService],
   templateUrl: './cargos-crud.component.html',
-  styleUrl: './cargos-crud.component.scss',
+  styleUrls: ['./cargos-crud.component.scss'],
 })
 export class CargosCrudComponent {
   metadata = metadata;
