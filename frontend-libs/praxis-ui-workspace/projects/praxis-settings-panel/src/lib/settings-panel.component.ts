@@ -35,6 +35,8 @@ export class SettingsPanelComponent {
   width = 720;
   ref!: SettingsPanelRef;
   contentRef?: ComponentRef<any>;
+  private static nextId = 0;
+  titleId = `praxis-settings-panel-title-${SettingsPanelComponent.nextId++}`;
 
   @ViewChild(CdkPortalOutlet, { static: true }) portalOutlet!: CdkPortalOutlet;
 
@@ -64,14 +66,15 @@ export class SettingsPanelComponent {
   }
 
   onCancel(): void {
-    this.ref.close();
+    this.ref.close('cancel');
   }
 
   @HostListener('document:keydown', ['$event'])
   handleKeydown(event: KeyboardEvent): void {
     if (event.key === 'Escape') {
-      this.ref.close();
+      this.ref.close('esc');
     } else if (event.key === 'Enter' && event.ctrlKey) {
+      event.preventDefault();
       this.onApply();
     } else if ((event.key === 's' || event.key === 'S') && event.ctrlKey) {
       event.preventDefault();

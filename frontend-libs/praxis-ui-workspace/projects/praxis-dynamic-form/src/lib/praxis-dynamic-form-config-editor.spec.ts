@@ -55,20 +55,34 @@ describe('PraxisDynamicFormConfigEditor', () => {
     expect(injected.sections[0].id).toBe('s1');
   });
 
-  it('reset sets default config and syncs editor', () => {
+  it('reset restores initial config and syncs editor', async () => {
+    const injected: FormConfig = {
+      sections: [{ id: 's1', rows: [] }],
+      fieldMetadata: [],
+    } as any;
+
+    TestBed.resetTestingModule();
+    await TestBed.configureTestingModule({
+      imports: [PraxisDynamicFormConfigEditor],
+      providers: [
+        { provide: FormConfigService, useValue: service },
+        { provide: SETTINGS_PANEL_DATA, useValue: injected },
+      ],
+    }).compileComponents();
+
+    const fix = TestBed.createComponent(PraxisDynamicFormConfigEditor);
+    const comp = fix.componentInstance;
     const editorSpy = jasmine.createSpyObj<JsonConfigEditorComponent>(
       'JsonConfigEditorComponent',
       ['updateJsonFromConfig'],
     );
-    component.jsonEditor = editorSpy;
-    component.editedConfig = { sections: [{ id: 'x', rows: [] }] } as any;
+    comp.jsonEditor = editorSpy;
+    comp.editedConfig = { sections: [{ id: 'x', rows: [] }] } as any;
 
-    component.reset();
+    comp.reset();
 
-    expect(component.editedConfig).toEqual(createDefaultFormConfig());
-    expect(editorSpy.updateJsonFromConfig).toHaveBeenCalledWith(
-      component.editedConfig,
-    );
+    expect(comp.editedConfig).toEqual(injected);
+    expect(editorSpy.updateJsonFromConfig).toHaveBeenCalledWith(injected);
   });
 
   it('getSettingsValue returns current config', () => {

@@ -1,11 +1,12 @@
 import { OverlayRef } from '@angular/cdk/overlay';
 import { Subject } from 'rxjs';
+import { SettingsPanelCloseReason } from './settings-panel.types';
 
 export class SettingsPanelRef {
   private appliedSubject = new Subject<any>();
   private savedSubject = new Subject<any>();
   private resetSubject = new Subject<void>();
-  private closedSubject = new Subject<void>();
+  private closedSubject = new Subject<SettingsPanelCloseReason>();
 
   applied$ = this.appliedSubject.asObservable();
   saved$ = this.savedSubject.asObservable();
@@ -20,18 +21,18 @@ export class SettingsPanelRef {
 
   save(value: any): void {
     this.savedSubject.next(value);
-    this.close();
+    this.close('save');
   }
 
   reset(): void {
     this.resetSubject.next();
   }
 
-  close(): void {
+  close(reason: SettingsPanelCloseReason = 'cancel'): void {
     if (this.overlayRef.hasAttached()) {
       this.overlayRef.dispose();
     }
-    this.closedSubject.next();
+    this.closedSubject.next(reason);
     this.complete();
   }
 

@@ -11,3 +11,5 @@ export interface SettingsValueProvider {
   getSettingsValue(): any;
   reset?(): void;
 }
+
+export type SettingsPanelCloseReason = 'cancel' | 'save' | 'backdrop' | 'esc';

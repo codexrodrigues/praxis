@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
-import { FormConfig, createDefaultFormConfig } from '@praxis/core';
+import { FormConfig } from '@praxis/core';
 import {
   SETTINGS_PANEL_DATA,
   SettingsValueProvider,
@@ -101,17 +101,19 @@ export class PraxisDynamicFormConfigEditor implements SettingsValueProvider {
   @ViewChild(JsonConfigEditorComponent) jsonEditor?: JsonConfigEditorComponent;
 
   editedConfig: FormConfig;
+  private initialConfig: FormConfig;
 
   constructor(
     private configService: FormConfigService,
-    @Optional() @Inject(SETTINGS_PANEL_DATA) private injectedData?: FormConfig,
+    @Optional() @Inject(SETTINGS_PANEL_DATA) injectedData?: FormConfig,
   ) {
-    this.editedConfig = normalizeFormConfig(this.injectedData);
-    this.configService.loadConfig(structuredClone(this.editedConfig));
+    this.initialConfig = normalizeFormConfig(injectedData);
+    this.editedConfig = structuredClone(this.initialConfig);
+    this.configService.loadConfig(structuredClone(this.initialConfig));
   }
 
   reset(): void {
-    this.editedConfig = createDefaultFormConfig();
+    this.editedConfig = structuredClone(this.initialConfig);
     this.jsonEditor?.updateJsonFromConfig(this.editedConfig);
   }
 
