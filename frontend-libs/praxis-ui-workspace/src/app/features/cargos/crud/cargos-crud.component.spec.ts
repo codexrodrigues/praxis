@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CargosCrudComponent } from './cargos-crud.component';
 import { RouterTestingModule } from '@angular/router/testing';
 import { GenericCrudService } from '@praxis/core';
-import { DialogService } from 'praxis-crud';
+import { DialogService } from '@praxis/crud';
 
 describe('CargosCrudComponent', () => {
   let component: CargosCrudComponent;

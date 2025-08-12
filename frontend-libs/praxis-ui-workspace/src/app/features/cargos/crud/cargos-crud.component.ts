@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { PraxisCrudComponent, CrudMetadata } from 'praxis-crud';
+import { PraxisCrudComponent, CrudMetadata } from '@praxis/crud';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { GenericCrudService, ApiEndpoint } from '@praxis/core';
