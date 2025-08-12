@@ -37,4 +37,22 @@ describe('SettingsPanelService', () => {
     expect(await savedPromise).toBe('b');
     expect(await closedPromise).toBe('save');
   });
+
+  it('closes an existing panel when opening a new one', async () => {
+    const firstRef = service.open({
+      id: 'a',
+      title: 'First',
+      content: { component: DummyComponent },
+    });
+
+    const closedPromise = firstValueFrom(firstRef.closed$);
+
+    service.open({
+      id: 'b',
+      title: 'Second',
+      content: { component: DummyComponent },
+    });
+
+    expect(await closedPromise).toBe('cancel');
+  });
 });

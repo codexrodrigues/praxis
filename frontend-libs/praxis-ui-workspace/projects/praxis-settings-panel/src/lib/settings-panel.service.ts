@@ -3,7 +3,10 @@ import { Overlay, OverlayConfig } from '@angular/cdk/overlay';
 import { ComponentPortal } from '@angular/cdk/portal';
 import { SettingsPanelComponent } from './settings-panel.component';
 import { SettingsPanelRef } from './settings-panel.ref';
-import { SettingsPanelConfig } from './settings-panel.types';
+import {
+  SettingsPanelCloseReason,
+  SettingsPanelConfig,
+} from './settings-panel.types';
 import {
   SETTINGS_PANEL_DATA,
   SETTINGS_PANEL_REF,
@@ -18,9 +21,14 @@ export class SettingsPanelService {
     private injector: Injector,
   ) {}
 
+  /**
+   * Opens a new settings panel. If another panel is already open it will be
+   * closed before the new one is created. Future improvements may reuse the
+   * same overlay when the provided id matches.
+   */
   open(config: SettingsPanelConfig): SettingsPanelRef {
     if (this.currentRef) {
-      this.currentRef.close();
+      this.currentRef.close('cancel');
     }
 
     const overlayConfig: OverlayConfig = {
@@ -50,6 +58,11 @@ export class SettingsPanelService {
     panelRef.instance.attachContent(config.content.component, injector, ref);
 
     overlayRef.backdropClick().subscribe(() => ref.close('backdrop'));
+    overlayRef.keydownEvents().subscribe((event) => {
+      if (event.key === 'Escape') {
+        ref.close('esc');
+      }
+    });
     ref.closed$.subscribe(() => {
       if (this.currentRef === ref) {
         this.currentRef = undefined;
@@ -60,8 +73,8 @@ export class SettingsPanelService {
     return ref;
   }
 
-  close(): void {
-    this.currentRef?.close();
+  close(reason: SettingsPanelCloseReason = 'cancel'): void {
+    this.currentRef?.close(reason);
     this.currentRef = undefined;
   }
 }
