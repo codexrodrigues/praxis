@@ -247,6 +247,33 @@
           "options": { "tsConfig": "projects/praxis-dynamic-form/tsconfig.spec.json" }
         }
       }
+    },
+    "praxis-settings-panel": {
+      "projectType": "library",
+      "root": "projects/praxis-settings-panel",
+      "sourceRoot": "projects/praxis-settings-panel/src",
+      "prefix": "praxis",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:ng-packagr",
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/praxis-settings-panel/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/praxis-settings-panel/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular/build:karma",
+          "options": {
+            "tsConfig": "projects/praxis-settings-panel/tsconfig.spec.json",
+            "main": "projects/praxis-settings-panel/src/test.ts"
+          }
+        }
+      }
     }
   },
   "cli": {

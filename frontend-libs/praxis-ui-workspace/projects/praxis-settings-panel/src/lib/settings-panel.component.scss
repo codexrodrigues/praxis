@@ -1,0 +1,36 @@
+.settings-panel {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border-left: 1px solid var(--border-color);
+}
+
+.settings-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  height: 64px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.settings-panel-content {
+  flex: 1;
+  overflow: auto;
+}
+
+.settings-panel-footer {
+  display: flex;
+  align-items: center;
+  padding: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.spacer {
+  flex: 1;
+}
+
+:host ::ng-deep .praxis-settings-panel-backdrop {
+  background: var(--overlay-backdrop, rgba(0, 0, 0, 0.32));
+}

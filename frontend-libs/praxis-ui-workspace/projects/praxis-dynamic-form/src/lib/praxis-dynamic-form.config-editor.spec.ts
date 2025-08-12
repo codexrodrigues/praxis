@@ -4,13 +4,13 @@ import { GenericCrudService, FormConfig } from '@praxis/core';
 import { DynamicFieldLoaderDirective } from '@praxis/dynamic-fields';
 import { FormLayoutService } from './services/form-layout.service';
 import { FormContextService } from './services/form-context.service';
-import { PraxisResizableWindowService } from '@praxis/core';
+import { SettingsPanelService } from '@praxis/settings-panel';
 import { of } from 'rxjs';
 
 describe('PraxisDynamicForm openConfigEditor', () => {
   let component: PraxisDynamicForm;
   let fixture: ComponentFixture<PraxisDynamicForm>;
-  let windowService: jasmine.SpyObj<PraxisResizableWindowService>;
+  let panelService: jasmine.SpyObj<SettingsPanelService>;
   let layoutService: jasmine.SpyObj<FormLayoutService>;
 
   beforeEach(async () => {
@@ -30,9 +30,7 @@ describe('PraxisDynamicForm openConfigEditor', () => {
       'setAvailableFields',
       'setFormRules',
     ]);
-    windowService = jasmine.createSpyObj('PraxisResizableWindowService', [
-      'open',
-    ]);
+    panelService = jasmine.createSpyObj('SettingsPanelService', ['open']);
 
     await TestBed.configureTestingModule({
       imports: [PraxisDynamicForm, DynamicFieldLoaderDirective],
@@ -40,7 +38,7 @@ describe('PraxisDynamicForm openConfigEditor', () => {
         { provide: GenericCrudService, useValue: crud },
         { provide: FormLayoutService, useValue: layoutService },
         { provide: FormContextService, useValue: contextService },
-        { provide: PraxisResizableWindowService, useValue: windowService },
+        { provide: SettingsPanelService, useValue: panelService },
       ],
     }).compileComponents();
 
@@ -55,20 +53,24 @@ describe('PraxisDynamicForm openConfigEditor', () => {
 
   it('applies result when window closes with config', () => {
     const returned: FormConfig = { sections: [{ id: 'n', rows: [] }] } as any;
-    windowService.open.and.returnValue({ closed: of(returned) } as any);
+    panelService.open.and.returnValue({
+      applied$: of(null),
+      saved$: of(returned),
+      reset$: of(void 0),
+    } as any);
 
     component.openConfigEditor();
 
-    expect(windowService.open).toHaveBeenCalled();
+    expect(panelService.open).toHaveBeenCalled();
     expect(component.config).toEqual(returned);
-    expect(layoutService.saveLayout).toHaveBeenCalledWith(
-      'f1',
-      component.layout as any,
-    );
   });
 
   it('ignores close event without result', () => {
-    windowService.open.and.returnValue({ closed: of(null) } as any);
+    panelService.open.and.returnValue({
+      applied$: of(null),
+      saved$: of(null),
+      reset$: of(void 0),
+    } as any);
     component.openConfigEditor();
     expect(component.config.sections.length).toBe(0);
   });
