@@ -1,7 +1,7 @@
 import { Component, Inject, ViewChild, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialogModule } from '@angular/material/dialog';
+import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { PraxisDynamicForm } from '@praxis/dynamic-form';
 import { DialogService, DialogRef, DIALOG_DATA } from './dialog.service';
@@ -35,7 +35,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
             maximized ? texts.restoreLabel : texts.maximizeLabel
           "
         >
-          <mat-icon>{{ maximized ? 'close_fullscreen' : 'open_in_full' }}</mat-icon>
+          <mat-icon>{{
+            maximized ? 'close_fullscreen' : 'open_in_full'
+          }}</mat-icon>
         </button>
       }
       <button
@@ -119,6 +121,7 @@ export class DynamicFormDialogHostComponent implements OnInit {
   } as Record<string, string>;
 
   constructor(
+    @Inject(MatDialogRef)
     public dialogRef: DialogRef<DynamicFormDialogHostComponent>,
     @Inject(DIALOG_DATA) public data: any,
     private dialogService: DialogService,
@@ -152,7 +155,10 @@ export class DynamicFormDialogHostComponent implements OnInit {
     if (!this.modal.disableCloseOnEsc) {
       this.dialogRef
         .keydownEvents()
-        .pipe(filter((e) => e.key === 'Escape'), takeUntilDestroyed())
+        .pipe(
+          filter((e) => e.key === 'Escape'),
+          takeUntilDestroyed(),
+        )
         .subscribe(() => this.onCancel());
     }
 
@@ -197,7 +203,10 @@ export class DynamicFormDialogHostComponent implements OnInit {
       });
       ref
         .afterClosed()
-        .pipe(filter(Boolean), takeUntilDestroyed())
+        .pipe(
+          filter((confirmed) => !!confirmed),
+          takeUntilDestroyed(),
+        )
         .subscribe(() => this.dialogRef.close());
     } else {
       this.dialogRef.close();
