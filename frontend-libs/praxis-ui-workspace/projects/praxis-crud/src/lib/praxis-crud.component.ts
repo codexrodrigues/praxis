@@ -21,6 +21,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     @if (resolvedMetadata; as meta) {
       <praxis-table
         [config]="meta.table"
+        [resourcePath]="meta.resource?.path"
         (rowAction)="onAction($event.action, $event.row)"
         (toolbarAction)="onAction($event.action)"
       ></praxis-table>

@@ -2,11 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { PraxisCrudComponent } from './praxis-crud.component';
 import { CrudLauncherService } from './crud-launcher.service';
 import { Subject } from 'rxjs';
-import { PraxisTable } from '@praxis/table';
-
-class TableStub {
-  refetch = jasmine.createSpy('refetch');
-}
+import { By } from '@angular/platform-browser';
 
 describe('PraxisCrudComponent', () => {
   let component: PraxisCrudComponent;
@@ -23,10 +19,10 @@ describe('PraxisCrudComponent', () => {
     component = fixture.componentInstance;
     component.metadata = {
       component: 'praxis-crud',
+      resource: { path: 'cargos' },
       table: {} as any,
       actions: [],
     } as any;
-    component['table'] = new TableStub() as any;
     fixture.detectChanges();
   });
 
@@ -56,6 +52,10 @@ describe('PraxisCrudComponent', () => {
       mode: 'modal',
       ref: { afterClosed: () => close$.asObservable() } as any,
     });
+    const tableEl = fixture.debugElement.query(By.css('praxis-table'));
+    const tableInstance = tableEl.componentInstance as any;
+    spyOn(tableInstance, 'refetch');
+    (component as any).table = tableInstance;
     component.resolvedMetadata = {
       component: 'praxis-crud',
       table: {} as any,
@@ -66,7 +66,7 @@ describe('PraxisCrudComponent', () => {
     await component.onAction('edit', {});
     close$.next({ type: 'save', data: { id: 1 } });
     close$.next({ type: 'delete', data: { id: 1 } });
-    expect((component as any).table.refetch).toHaveBeenCalledTimes(2);
+    expect(tableInstance.refetch).toHaveBeenCalledTimes(2);
     close$.complete();
   });
 
@@ -78,5 +78,10 @@ describe('PraxisCrudComponent', () => {
       metadata: { currentValue: component.metadata } as any,
     });
     expect(spy).toHaveBeenCalled();
+  });
+
+  it('forwards resourcePath to table', () => {
+    const tableEl = fixture.debugElement.query(By.css('praxis-table'));
+    expect((tableEl.componentInstance as any).resourcePath).toBe('cargos');
   });
 });
