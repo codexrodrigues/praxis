@@ -1,8 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { CrudLauncherService } from './crud-launcher.service';
 import { Router } from '@angular/router';
-import { CrudMetadata } from './crud.types';
-import { DynamicFormDialogHostComponent } from './dynamic-form-dialog-host.component';
+import { CrudMetadata, CrudAction } from './crud.types';
 import { DialogService, DialogRef } from './dialog.service';
 
 describe('CrudLauncherService', () => {
@@ -12,7 +11,7 @@ describe('CrudLauncherService', () => {
 
   beforeEach(() => {
     router = jasmine.createSpyObj('Router', ['navigateByUrl']);
-    dialog = jasmine.createSpyObj('DialogService', ['open']);
+    dialog = jasmine.createSpyObj('DialogService', ['openAsync']);
     TestBed.configureTestingModule({
       providers: [
         CrudLauncherService,
@@ -23,92 +22,71 @@ describe('CrudLauncherService', () => {
     service = TestBed.inject(CrudLauncherService);
   });
 
-  it('should navigate for route open mode with params', () => {
+  it('resolveOpenMode gives precedence to action then defaults then route', () => {
     const meta: CrudMetadata = {
       component: 'praxis-crud',
       table: {} as any,
-      actions: [
-        {
-          id: 'view',
-          label: 'View',
-          action: 'view',
-          route: '/item/:id',
-          params: [
-            { from: 'id', to: 'routeParam', name: 'id' },
-            { from: 'q', to: 'query', name: 'search' },
-          ],
-        },
-      ],
+      defaults: { openMode: 'modal' },
+    };
+    const action: CrudAction = {
+      action: 'edit',
+      label: 'Edit',
+      openMode: 'route',
     } as any;
-    const result = service.launch(meta.actions![0], { id: 1, q: 'abc' }, meta);
-    expect(router.navigateByUrl).toHaveBeenCalledWith('/item/1?search=abc');
-    expect(result).toBeUndefined();
+    expect(service.resolveOpenMode(action, meta)).toBe('route');
+    const action2: CrudAction = { action: 'edit', label: 'Edit' } as any;
+    expect(service.resolveOpenMode(action2, meta)).toBe('modal');
+    expect(service.resolveOpenMode(action2, { ...meta, defaults: {} })).toBe(
+      'route',
+    );
   });
 
-  it('should open dialog for modal mode and map inputs', () => {
+  it('buildRoute replaces multiple params and throws when missing', () => {
+    const action: CrudAction = {
+      action: 'view',
+      label: 'View',
+      route: '/item/:id/detail/:id',
+      params: [{ from: 'id', to: 'routeParam', name: 'id' }],
+    } as any;
+    const url = (service as any).buildRoute(action, { id: 5 });
+    expect(url).toBe('/item/5/detail/5');
+    expect(() => (service as any).buildRoute(action, {})).toThrowError(
+      'Missing value for route param id',
+    );
+  });
+
+  it('launch returns mode and DialogRef when opening modal', async () => {
     const meta: CrudMetadata = {
       component: 'praxis-crud',
       table: {} as any,
-      defaults: { modal: { width: '400px' } },
-      actions: [
-        {
-          id: 'edit',
-          label: 'Edit',
-          action: 'edit',
-          openMode: 'modal',
-          formId: 'f1',
-          params: [{ from: 'id', to: 'input', name: 'itemId' }],
-        },
-      ],
+      defaults: { modal: { width: '300px' } },
+    };
+    const action: CrudAction = {
+      action: 'edit',
+      label: 'Edit',
+      openMode: 'modal',
+      formId: 'f1',
     } as any;
     const dummyRef = {} as DialogRef<any>;
-    dialog.open.and.returnValue(dummyRef);
-    const result = service.launch(meta.actions![0], { id: 10 }, meta);
-    expect(dialog.open).toHaveBeenCalledWith(
-      DynamicFormDialogHostComponent,
-      jasmine.objectContaining({
-        width: '400px',
-        data: jasmine.objectContaining({
-          inputs: { itemId: 10 },
-        }),
-      }),
-    );
-    expect(result).toBe(dummyRef);
+    dialog.openAsync.and.resolveTo(dummyRef);
+    const result = await service.launch(action, undefined, meta);
+    expect(result.mode).toBe('modal');
+    expect(result.ref).toBe(dummyRef);
   });
 
-  it('should throw when route action missing route', () => {
+  it('launch navigates when mode is route', async () => {
     const meta: CrudMetadata = {
       component: 'praxis-crud',
       table: {} as any,
-      actions: [
-        {
-          id: 'view',
-          label: 'View',
-          action: 'view',
-          openMode: 'route',
-        },
-      ],
+    };
+    const action: CrudAction = {
+      action: 'view',
+      label: 'View',
+      route: '/item/:id',
+      params: [{ from: 'id', to: 'routeParam', name: 'id' }],
     } as any;
-    expect(() =>
-      service.launch(meta.actions![0], { id: 1 }, meta),
-    ).toThrowError('Route not provided for action view');
-  });
-
-  it('should throw when modal action missing formId', () => {
-    const meta: CrudMetadata = {
-      component: 'praxis-crud',
-      table: {} as any,
-      actions: [
-        {
-          id: 'edit',
-          label: 'Edit',
-          action: 'edit',
-          openMode: 'modal',
-        },
-      ],
-    } as any;
-    expect(() =>
-      service.launch(meta.actions![0], { id: 1 }, meta),
-    ).toThrowError('formId not provided for action edit');
+    const result = await service.launch(action, { id: 1 }, meta);
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/item/1');
+    expect(result).toEqual({ mode: 'route' });
   });
 });

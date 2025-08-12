@@ -493,6 +493,10 @@ export class PraxisTable
       });
   }
 
+  refetch(): void {
+    this.fetchData();
+  }
+
   /**
    * Get the cell value for a given row and column
    * Handles the complete transformation pipeline:

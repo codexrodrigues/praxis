@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { PraxisTable } from '@praxis/table';
 import { CrudLauncherService } from './crud-launcher.service';
-import { CrudMetadata, FormOpenMode } from './crud.types';
+import { CrudMetadata, FormOpenMode, assertCrudMetadata } from './crud.types';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
@@ -21,7 +21,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     @if (resolvedMetadata as meta) {
       <praxis-table
         [config]="meta.table"
-        [resourcePath]="meta.resource?.path"
         (rowAction)="onAction($event.action, $event.row)"
         (toolbarAction)="onAction($event.action)"
       ></praxis-table>
@@ -46,7 +45,7 @@ export class PraxisCrudComponent implements OnChanges {
 
   resolvedMetadata!: CrudMetadata;
   private readonly launcher = inject(CrudLauncherService);
-  @ViewChild(PraxisTable) private table?: PraxisTable;
+  @ViewChild(PraxisTable) private table!: PraxisTable;
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['metadata']) {
@@ -55,13 +54,14 @@ export class PraxisCrudComponent implements OnChanges {
           typeof this.metadata === 'string'
             ? (JSON.parse(this.metadata) as CrudMetadata)
             : this.metadata;
+        assertCrudMetadata(this.resolvedMetadata);
       } catch (err) {
         this.error.emit(err);
       }
     }
   }
 
-  onAction(action: string, row?: Record<string, unknown>): void {
+  async onAction(action: string, row?: Record<string, unknown>): Promise<void> {
     try {
       const actionMeta = this.resolvedMetadata.actions?.find(
         (a) => a.action === action,
@@ -69,11 +69,11 @@ export class PraxisCrudComponent implements OnChanges {
       if (!actionMeta) {
         return;
       }
-      const mode: FormOpenMode =
-        actionMeta.openMode ??
-        this.resolvedMetadata.defaults?.openMode ??
-        'route';
-      const ref = this.launcher.launch(actionMeta, row, this.resolvedMetadata);
+      const { mode, ref } = await this.launcher.launch(
+        actionMeta,
+        row,
+        this.resolvedMetadata,
+      );
       this.afterOpen.emit({ mode, action: actionMeta.action });
       if (ref) {
         ref
@@ -99,6 +99,6 @@ export class PraxisCrudComponent implements OnChanges {
   }
 
   private refreshTable(): void {
-    (this.table as any)?.fetchData?.();
+    this.table.refetch();
   }
 }

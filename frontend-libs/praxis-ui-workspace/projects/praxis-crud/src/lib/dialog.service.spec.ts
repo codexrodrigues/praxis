@@ -27,4 +27,13 @@ describe('DialogService', () => {
     });
     expect(result).toBe(ref);
   });
+
+  it('supports openAsync with dynamic import', async () => {
+    const ref = {} as MatDialogRef<any>;
+    matDialog.open.and.returnValue(ref);
+    const result = await service.openAsync(() =>
+      Promise.resolve(DummyComponent),
+    );
+    expect(result).toBe(ref);
+  });
 });

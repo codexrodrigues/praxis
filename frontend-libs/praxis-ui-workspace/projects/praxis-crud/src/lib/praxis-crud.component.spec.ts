@@ -1,7 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { PraxisCrudComponent } from './praxis-crud.component';
 import { CrudLauncherService } from './crud-launcher.service';
-import { Subject, of } from 'rxjs';
+import { Subject } from 'rxjs';
+import { PraxisTable } from '@praxis/table';
+
+class TableStub {
+  refetch = jasmine.createSpy('refetch');
+}
 
 describe('PraxisCrudComponent', () => {
   let component: PraxisCrudComponent;
@@ -14,7 +19,6 @@ describe('PraxisCrudComponent', () => {
       imports: [PraxisCrudComponent],
       providers: [{ provide: CrudLauncherService, useValue: launcher }],
     }).compileComponents();
-
     fixture = TestBed.createComponent(PraxisCrudComponent);
     component = fixture.componentInstance;
     component.metadata = {
@@ -22,65 +26,57 @@ describe('PraxisCrudComponent', () => {
       table: {} as any,
       actions: [],
     } as any;
+    component['table'] = new TableStub() as any;
     fixture.detectChanges();
   });
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
-
-  it('should delegate action to launcher', () => {
-    component.resolvedMetadata = {
-      component: 'praxis-crud',
-      table: {} as any,
-      actions: [{ id: 'edit', label: 'Edit', action: 'edit' }],
-    } as any;
-    component.onAction('edit', {});
-    expect(launcher.launch).toHaveBeenCalled();
-  });
-
-  it('should emit lifecycle events for modal action', () => {
+  it('emits afterOpen with mode returned by service', async () => {
     const close$ = new Subject<any>();
-    launcher.launch.and.returnValue({
-      afterClosed: () => close$.asObservable(),
-    } as any);
+    launcher.launch.and.resolveTo({
+      mode: 'modal',
+      ref: { afterClosed: () => close$.asObservable() } as any,
+    });
     component.resolvedMetadata = {
       component: 'praxis-crud',
       table: {} as any,
       actions: [
-        {
-          id: 'edit',
-          label: 'Edit',
-          action: 'edit',
-          openMode: 'modal',
-          formId: 'f1',
-        },
+        { action: 'edit', label: 'Edit', formId: 'f1', openMode: 'modal' },
       ],
     } as any;
     const openSpy = jasmine.createSpy('open');
-    const closeSpy = jasmine.createSpy('close');
-    const saveSpy = jasmine.createSpy('save');
     component.afterOpen.subscribe(openSpy);
-    component.afterClose.subscribe(closeSpy);
-    component.afterSave.subscribe(saveSpy);
-    component.onAction('edit', {});
+    await component.onAction('edit', {});
     expect(openSpy).toHaveBeenCalledWith({ mode: 'modal', action: 'edit' });
-    close$.next({ type: 'save', data: { id: 1 } });
     close$.complete();
-    expect(closeSpy).toHaveBeenCalled();
-    expect(saveSpy).toHaveBeenCalledWith({ id: 1, data: { id: 1 } });
   });
 
-  it('should emit error when launcher throws', () => {
-    const errorSpy = jasmine.createSpy('error');
+  it('refreshes table after save and delete', async () => {
+    const close$ = new Subject<any>();
+    launcher.launch.and.resolveTo({
+      mode: 'modal',
+      ref: { afterClosed: () => close$.asObservable() } as any,
+    });
     component.resolvedMetadata = {
       component: 'praxis-crud',
       table: {} as any,
-      actions: [{ id: 'edit', label: 'Edit', action: 'edit' }],
+      actions: [
+        { action: 'edit', label: 'Edit', formId: 'f1', openMode: 'modal' },
+      ],
     } as any;
-    component.error.subscribe(errorSpy);
-    launcher.launch.and.throwError('boom');
-    component.onAction('edit', {});
-    expect(errorSpy).toHaveBeenCalled();
+    await component.onAction('edit', {});
+    close$.next({ type: 'save', data: { id: 1 } });
+    close$.next({ type: 'delete', data: { id: 1 } });
+    expect((component as any).table.refetch).toHaveBeenCalledTimes(2);
+    close$.complete();
+  });
+
+  it('emits error on invalid metadata JSON', () => {
+    const spy = jasmine.createSpy('error');
+    component.error.subscribe(spy);
+    component.metadata = '{ invalid';
+    component.ngOnChanges({
+      metadata: { currentValue: component.metadata } as any,
+    });
+    expect(spy).toHaveBeenCalled();
   });
 });

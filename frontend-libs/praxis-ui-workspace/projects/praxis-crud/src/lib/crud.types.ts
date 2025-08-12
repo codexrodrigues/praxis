@@ -40,3 +40,20 @@ export interface CrudMetadata {
   actions?: CrudAction[];
   i18n?: { crudDialog?: Record<string, string> };
 }
+
+export function assertCrudMetadata(meta: CrudMetadata): void {
+  meta.actions?.forEach((action) => {
+    const mode = action.openMode ?? meta.defaults?.openMode ?? 'route';
+    if (mode === 'route' && !action.route) {
+      throw new Error(`Route not provided for action ${action.action}`);
+    }
+    if (mode === 'modal' && !action.formId) {
+      throw new Error(`formId not provided for action ${action.action}`);
+    }
+    action.params?.forEach((p) => {
+      if (!['routeParam', 'query', 'input'].includes(p.to)) {
+        throw new Error(`Invalid param mapping target: ${p.to}`);
+      }
+    });
+  });
+}

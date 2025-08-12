@@ -1,5 +1,5 @@
 import { FormGroup } from '@angular/forms';
-import { of, EMPTY } from 'rxjs';
+import { of, EMPTY, Subject } from 'rxjs';
 import { DynamicFormDialogHostComponent } from './dynamic-form-dialog-host.component';
 import { DialogService, DialogRef } from './dialog.service';
 
@@ -8,11 +8,13 @@ function createComponent(
   modal: any = {},
   i18n: any = {},
 ) {
+  const esc$ = new Subject<KeyboardEvent>();
+  const backdrop$ = new Subject<void>();
   const dialogRef: DialogRef<any> = {
     close: jasmine.createSpy('close'),
     disableClose: false,
-    keydownEvents: () => EMPTY,
-    backdropClick: () => EMPTY,
+    keydownEvents: () => esc$.asObservable(),
+    backdropClick: () => backdrop$.asObservable(),
     updateSize: jasmine.createSpy('updateSize'),
     updatePosition: jasmine.createSpy('updatePosition'),
   } as any;
@@ -25,7 +27,7 @@ function createComponent(
     dialogService,
   );
   comp.formComp = { form: new FormGroup({}) } as any;
-  return { comp, dialogRef };
+  return { comp, dialogRef, esc$, backdrop$ };
 }
 
 describe('DynamicFormDialogHostComponent', () => {
@@ -59,7 +61,7 @@ describe('DynamicFormDialogHostComponent', () => {
     expect(dialogRef.close).not.toHaveBeenCalled();
   });
 
-  it('toggles maximization', () => {
+  it('toggles maximization and restores original size', () => {
     const { comp, dialogRef } = createComponent(dialogService, {
       width: '500px',
       height: '300px',
@@ -69,6 +71,20 @@ describe('DynamicFormDialogHostComponent', () => {
     expect(dialogRef.updateSize).toHaveBeenCalledWith('100vw', '100vh');
     comp.toggleMaximize();
     expect(dialogRef.updateSize).toHaveBeenCalledWith('500px', '300px');
+  });
+
+  it('backdrop and esc respect disable flags', () => {
+    const { comp, esc$, backdrop$, dialogRef } = createComponent(
+      dialogService,
+      {
+        disableCloseOnBackdrop: true,
+        disableCloseOnEsc: true,
+      },
+    );
+    comp.formComp!.form.markAsDirty();
+    esc$.next(new KeyboardEvent('keydown', { key: 'Escape' }));
+    backdrop$.next();
+    expect(dialogRef.close).not.toHaveBeenCalled();
   });
 
   it('honors provided i18n texts', () => {

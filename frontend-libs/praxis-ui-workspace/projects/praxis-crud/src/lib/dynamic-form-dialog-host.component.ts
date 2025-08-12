@@ -22,7 +22,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   host: { class: 'praxis-dialog' },
   template: `
     <div class="dialog-header">
-      <h2 class="dialog-title">
+      <h2 id="crudDialogTitle" class="dialog-title">
         {{ data.action?.label || texts.title }}
       </h2>
       <span class="spacer"></span>
@@ -49,7 +49,12 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
         <mat-icon>close</mat-icon>
       </button>
     </div>
-    <mat-dialog-content class="dialog-content">
+    <mat-dialog-content
+      class="dialog-content"
+      aria-labelledby="crudDialogTitle"
+      role="dialog"
+      aria-modal="true"
+    >
       <praxis-dynamic-form
         [formId]="data.action?.formId"
         [inputs]="data.inputs"
@@ -94,6 +99,7 @@ export class DynamicFormDialogHostComponent implements OnInit {
   @ViewChild(PraxisDynamicForm) formComp?: PraxisDynamicForm;
   modal: any = {};
   maximized = false;
+  private initialSize: { width?: string; height?: string } = {};
   texts = {
     title: 'Form',
     close: 'Close',
@@ -120,13 +126,15 @@ export class DynamicFormDialogHostComponent implements OnInit {
 
     this.modal = this.data.metadata?.defaults?.modal || {};
 
-    this.dialogRef
-      .keydownEvents()
-      .pipe(
-        filter((e) => e.key === 'Escape'),
-        takeUntilDestroyed(),
-      )
-      .subscribe(() => this.onCancel());
+    if (!this.modal.disableCloseOnEsc) {
+      this.dialogRef
+        .keydownEvents()
+        .pipe(
+          filter((e) => e.key === 'Escape'),
+          takeUntilDestroyed(),
+        )
+        .subscribe(() => this.onCancel());
+    }
 
     if (!this.modal.disableCloseOnBackdrop) {
       this.dialogRef
@@ -137,6 +145,10 @@ export class DynamicFormDialogHostComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.initialSize = {
+      width: this.modal.width,
+      height: this.modal.height,
+    };
     const shouldMax =
       this.modal.startMaximized ||
       (this.modal.fullscreenBreakpoint &&
@@ -177,7 +189,10 @@ export class DynamicFormDialogHostComponent implements OnInit {
       this.dialogRef.updateSize('100vw', '100vh');
       this.dialogRef.updatePosition({ top: '0', left: '0' });
     } else {
-      this.dialogRef.updateSize(this.modal.width, this.modal.height);
+      this.dialogRef.updateSize(
+        this.initialSize.width,
+        this.initialSize.height,
+      );
       this.dialogRef.updatePosition();
     }
   }
