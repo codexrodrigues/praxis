@@ -68,9 +68,17 @@ describe('DynamicFormDialogHostComponent', () => {
       canMaximize: true,
     });
     comp.toggleMaximize();
-    expect(dialogRef.updateSize).toHaveBeenCalledWith('100vw', '100vh');
+    expect(dialogRef.updateSize).toHaveBeenCalledWith(
+      'calc(100dvw - 16px)',
+      'calc(100dvh - 16px)',
+    );
+    expect(dialogRef.updatePosition).toHaveBeenCalledWith({
+      top: '8px',
+      left: '8px',
+    });
     comp.toggleMaximize();
     expect(dialogRef.updateSize).toHaveBeenCalledWith('500px', '300px');
+    expect(dialogRef.updatePosition).toHaveBeenCalledWith();
   });
 
   it('backdrop and esc respect disable flags', () => {
@@ -90,5 +98,12 @@ describe('DynamicFormDialogHostComponent', () => {
   it('honors provided i18n texts', () => {
     const { comp } = createComponent(dialogService, {}, { close: 'Fechar' });
     expect(comp.texts.close).toBe('Fechar');
+  });
+
+  it('stops loading when form ready', () => {
+    const { comp } = createComponent(dialogService);
+    expect(comp.loading).toBeTrue();
+    comp.onFormReady();
+    expect(comp.loading).toBeFalse();
   });
 });

@@ -31,13 +31,27 @@ export class CrudLauncherService {
       throw new Error(`formId not provided for action ${action.action}`);
     }
     const inputs = this.mapInputs(action, row);
+    const modalCfg = { ...(metadata.defaults?.modal || {}) } as any;
+    const panelClasses = ['praxis-dialog-panel'];
+    if (modalCfg.panelClass) {
+      panelClasses.push(modalCfg.panelClass);
+    }
+    const backdropClasses = ['praxis-dialog-backdrop'];
+    if (modalCfg.backdropClass) {
+      backdropClasses.push(modalCfg.backdropClass);
+    }
     const ref = await this.dialog.openAsync(
       () =>
         import('./dynamic-form-dialog-host.component').then(
           (m) => m.DynamicFormDialogHostComponent,
         ),
       {
-        ...(metadata.defaults?.modal || {}),
+        ...modalCfg,
+        panelClass: panelClasses,
+        backdropClass: backdropClasses,
+        autoFocus: true,
+        restoreFocus: true,
+        ariaLabelledBy: 'crudDialogTitle',
         data: { action, row, metadata, inputs },
       },
     );

@@ -59,7 +59,7 @@ describe('CrudLauncherService', () => {
     const meta: CrudMetadata = {
       component: 'praxis-crud',
       table: {} as any,
-      defaults: { modal: { width: '300px' } },
+      defaults: { modal: { width: '300px', panelClass: 'custom' } },
     };
     const action: CrudAction = {
       action: 'edit',
@@ -72,6 +72,15 @@ describe('CrudLauncherService', () => {
     const result = await service.launch(action, undefined, meta);
     expect(result.mode).toBe('modal');
     expect(result.ref).toBe(dummyRef);
+    expect(dialog.openAsync).toHaveBeenCalledWith(
+      jasmine.any(Function),
+      jasmine.objectContaining({
+        panelClass: ['praxis-dialog-panel', 'custom'],
+        backdropClass: ['praxis-dialog-backdrop'],
+        autoFocus: true,
+        restoreFocus: true,
+      }),
+    );
   });
 
   it('launch navigates when mode is route', async () => {

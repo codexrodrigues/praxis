@@ -64,6 +64,7 @@ export class PraxisCrudComponent implements OnChanges {
 
   async onAction(action: string, row?: Record<string, unknown>): Promise<void> {
     try {
+      (document.activeElement as HTMLElement | null)?.blur();
       const actionMeta = this.resolvedMetadata.actions?.find(
         (a) => a.action === action,
       );

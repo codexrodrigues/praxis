@@ -21,7 +21,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     PraxisDynamicForm,
   ],
   providers: [GenericCrudService],
-  host: { class: 'praxis-dialog' },
+  host: {
+    class: 'praxis-dialog',
+    '[attr.data-density]': 'modal.density || "default"',
+  },
   template: `
     <div class="dialog-header">
       <h2 id="crudDialogTitle" class="dialog-title">
@@ -47,23 +50,35 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
         type="button"
         (click)="onCancel()"
         [attr.aria-label]="texts.closeLabel"
+        cdkFocusInitial
       >
         <mat-icon>close</mat-icon>
       </button>
     </div>
+
     <mat-dialog-content
       class="dialog-content"
       aria-labelledby="crudDialogTitle"
     >
-      <praxis-dynamic-form
-        [formId]="data.action?.formId"
-        [resourcePath]="resourcePath"
-        [resourceId]="resourceId"
-        [mode]="mode"
-        (formSubmit)="onSave($event)"
-        (formCancel)="onCancel()"
-      ></praxis-dynamic-form>
+      @if (loading) {
+        <div class="skeleton">
+          <div class="line"></div>
+          <div class="line"></div>
+          <div class="line"></div>
+        </div>
+      } @else {
+        <praxis-dynamic-form
+          [formId]="data.action?.formId"
+          [resourcePath]="resourcePath"
+          [resourceId]="resourceId"
+          [mode]="mode"
+          (formSubmit)="onSave($event)"
+          (formCancel)="onCancel()"
+          (formReady)="onFormReady()"
+        ></praxis-dynamic-form>
+      }
     </mat-dialog-content>
+
     <mat-dialog-actions align="end" class="dialog-footer">
       <button mat-button type="button" (click)="onCancel()">
         {{ texts.close }}
@@ -72,10 +87,31 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   `,
   styles: [
     `
+      :host {
+        --dlg-header-h: 56px;
+        --dlg-footer-h: 56px;
+        --dlg-pad: 16px;
+        --dlg-gap: 16px;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
+      }
+      :host([data-density='compact']) {
+        --dlg-header-h: 44px;
+        --dlg-footer-h: 44px;
+        --dlg-pad: 12px;
+        --dlg-gap: 12px;
+      }
       .dialog-header {
+        position: sticky;
+        top: 0;
+        z-index: 1;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: var(--dlg-pad);
+        padding: 0 var(--dlg-pad);
+        height: var(--dlg-header-h);
       }
       .dialog-title {
         margin: 0;
@@ -85,14 +121,38 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
         flex: 1;
       }
       .dialog-content {
-        max-height: calc(100vh - 160px);
         overflow: auto;
+        padding: var(--dlg-pad);
+        max-height: calc(100dvh - var(--dlg-header-h) - var(--dlg-footer-h));
       }
       .dialog-footer {
         position: sticky;
         bottom: 0;
+        z-index: 1;
         background: inherit;
-        padding-top: 8px;
+        padding: var(--dlg-pad);
+      }
+      .skeleton {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .skeleton .line {
+        height: 16px;
+        border-radius: 4px;
+        background: rgba(0, 0, 0, 0.1);
+      }
+      :host ::ng-deep .praxis-dialog-backdrop {
+        backdrop-filter: blur(4px);
+      }
+      :host ::ng-deep .praxis-dialog-panel {
+        margin: var(--dlg-gap);
+        width: clamp(360px, 88vw, var(--praxis-dialog-max-width, 960px));
+        transition:
+          width 200ms ease,
+          height 200ms ease,
+          top 200ms ease,
+          left 200ms ease;
       }
     `,
   ],
@@ -102,6 +162,7 @@ export class DynamicFormDialogHostComponent implements OnInit {
   modal: any = {};
   maximized = false;
   private initialSize: { width?: string; height?: string } = {};
+  loading = true;
 
   resourcePath?: string;
   resourceId?: string | number;
@@ -190,6 +251,10 @@ export class DynamicFormDialogHostComponent implements OnInit {
     this.dialogRef.close({ type: 'save', data: result });
   }
 
+  onFormReady(): void {
+    this.loading = false;
+  }
+
   onCancel(): void {
     const dirty = this.formComp?.form.dirty;
     if (dirty) {
@@ -217,8 +282,12 @@ export class DynamicFormDialogHostComponent implements OnInit {
   toggleMaximize(initial = false): void {
     this.maximized = initial ? true : !this.maximized;
     if (this.maximized) {
-      this.dialogRef.updateSize('100vw', '100vh');
-      this.dialogRef.updatePosition({ top: '0', left: '0' });
+      const gap = this.modal.fullscreenGap ?? 8;
+      this.dialogRef.updateSize(
+        `calc(100dvw - ${gap * 2}px)`,
+        `calc(100dvh - ${gap * 2}px)`,
+      );
+      this.dialogRef.updatePosition({ top: `${gap}px`, left: `${gap}px` });
     } else {
       this.dialogRef.updateSize(
         this.initialSize.width,
