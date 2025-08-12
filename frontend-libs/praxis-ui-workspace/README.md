@@ -221,6 +221,25 @@ O ecossistema Praxis é projetado para uma integração transparente entre o fro
 
 O projeto `praxis-backend-libs-sample-app` no repositório serve como uma implementação de referência completa de um backend que utiliza o `praxis-metadata-core` e expõe as APIs necessárias para alimentar o `praxis-ui-workspace`. Ele é fundamental para testar a integração e entender o fluxo de ponta a ponta.
 
+## 🏢 Consumo via Metadados em Ambientes Corporativos
+
+O `praxis-ui-workspace` foi pensado para organizações que padronizam suas interfaces por meio de **metadados**. A seguir algumas recomendações para adoção em ambientes corporativos:
+
+1. **Centralize a configuração de APIs**
+   - Utilize `ApiUrlConfig` ou arquivos de `environment` para definir o `baseApiUrl`.
+   - Empregue variáveis de ambiente para separar staging, homologação e produção.
+
+2. **Versione e valide os schemas**
+   - Exponha endpoints versionados como `/schemas/v1` para garantir compatibilidade entre times.
+   - Automatize a validação dos schemas em pipelines de CI/CD antes de disponibilizá-los.
+
+3. **Segurança e governança**
+   - Restrinja o acesso aos endpoints de metadados conforme as políticas internas.
+   - Habilite logging estruturado para auditoria e troubleshooting.
+
+4. **Experiência do usuário consistente**
+   - Componentes como `PraxisDynamicForm` e `PraxisTable` aplicam automaticamente padrões de UX a partir dos metadados, garantindo consistência visual e comportamental entre aplicações.
+
 ## 🧪 Testes
 
 ### Executar todos os testes
