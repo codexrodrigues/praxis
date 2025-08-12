@@ -6,7 +6,9 @@ import { firstValueFrom } from 'rxjs';
 
 @Component({ standalone: true, template: '' })
 class DummyComponent implements SettingsValueProvider {
-  getSettingsValue() { return {}; }
+  getSettingsValue() {
+    return {};
+  }
 }
 
 describe('SettingsPanelService', () => {
@@ -21,18 +23,18 @@ describe('SettingsPanelService', () => {
     const ref = service.open({
       id: 't',
       title: 'Test',
-      content: { component: DummyComponent }
+      content: { component: DummyComponent },
     });
 
     const appliedPromise = firstValueFrom(ref.applied$);
     const savedPromise = firstValueFrom(ref.saved$);
+    const closedPromise = firstValueFrom(ref.closed$);
 
     ref.apply('a');
     ref.save('b');
 
     expect(await appliedPromise).toBe('a');
     expect(await savedPromise).toBe('b');
-
-    service.close();
+    expect(await closedPromise).toBe('save');
   });
 });

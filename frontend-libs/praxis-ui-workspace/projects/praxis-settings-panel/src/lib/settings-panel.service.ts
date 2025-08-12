@@ -49,7 +49,7 @@ export class SettingsPanelService {
     });
     panelRef.instance.attachContent(config.content.component, injector, ref);
 
-    overlayRef.backdropClick().subscribe(() => ref.close());
+    overlayRef.backdropClick().subscribe(() => ref.close('backdrop'));
     ref.closed$.subscribe(() => {
       if (this.currentRef === ref) {
         this.currentRef = undefined;
