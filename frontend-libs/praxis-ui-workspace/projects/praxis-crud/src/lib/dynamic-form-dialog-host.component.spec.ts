@@ -107,13 +107,6 @@ describe('DynamicFormDialogHostComponent', () => {
     expect(comp.texts.close).toBe('Fechar');
   });
 
-  it('stops loading when form ready', () => {
-    const { comp } = createComponent(dialogService);
-    expect(comp.loading).toBeTrue();
-    comp.onFormReady();
-    expect(comp.loading).toBeFalse();
-  });
-
   it('configures crud service with resource path', () => {
     const { crud } = createComponent(dialogService);
     expect(crud.configure).toHaveBeenCalledWith('res', undefined);

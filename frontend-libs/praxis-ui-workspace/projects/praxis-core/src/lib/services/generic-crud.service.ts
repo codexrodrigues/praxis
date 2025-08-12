@@ -338,7 +338,7 @@ export class GenericCrudService<T> {
       options?.parentPath,
       options?.endpointKey,
     );
-    // Armazena a URL para referência posterior this._schemaUrl = url;
+    // Armazena a URL para referência posterior
     this._schemaUrl = url;
     console.debug('[CRUD:Service] getSchema:url', { url });
     return this.http

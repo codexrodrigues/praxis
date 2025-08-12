@@ -120,8 +120,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 export class DynamicFormDialogHostComponent implements OnInit {
   @ViewChild(PraxisDynamicForm) formComp?: PraxisDynamicForm;
   modal: any = {};
-    maximized = false;
-    private initialSize: { width?: string; height?: string } = {};
+  maximized = false;
+  private initialSize: { width?: string; height?: string } = {};
 
   resourcePath?: string;
   resourceId?: string | number;
@@ -230,7 +230,6 @@ export class DynamicFormDialogHostComponent implements OnInit {
   onSave(result: unknown): void {
     this.dialogRef.close({ type: 'save', data: result });
   }
-
 
   onCancel(): void {
     const dirty = this.formComp?.form.dirty;
