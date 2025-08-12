@@ -78,12 +78,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
         ></praxis-dynamic-form>
       }
     </mat-dialog-content>
-
-    <mat-dialog-actions align="end" class="dialog-footer">
-      <button mat-button type="button" (click)="onCancel()">
-        {{ texts.close }}
-      </button>
-    </mat-dialog-actions>
   `,
   styles: [
     `
@@ -206,6 +200,14 @@ export class DynamicFormDialogHostComponent implements OnInit {
     const act = this.data.action?.action;
     this.mode = act === 'edit' ? 'edit' : act === 'view' ? 'view' : 'create';
 
+    console.debug('[CRUD:Host] constructed', {
+      action: this.data?.action,
+      resourcePath: this.resourcePath,
+      resourceId: this.resourceId,
+      mode: this.mode,
+      modal: this.modal,
+    });
+
     // Esc
     if (!this.modal.disableCloseOnEsc) {
       this.dialogRef
@@ -231,6 +233,11 @@ export class DynamicFormDialogHostComponent implements OnInit {
       width: this.modal.width,
       height: this.modal.height,
     };
+    console.debug('[CRUD:Host] ngOnInit', {
+      initialSize: this.initialSize,
+      startMaximized: this.modal.startMaximized,
+      fullscreenBreakpoint: this.modal.fullscreenBreakpoint,
+    });
     const shouldMax =
       this.modal.startMaximized ||
       (this.modal.fullscreenBreakpoint &&
