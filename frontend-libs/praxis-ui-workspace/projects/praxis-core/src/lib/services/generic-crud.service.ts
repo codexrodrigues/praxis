@@ -94,7 +94,7 @@ export interface CrudOperationOptions {
  * @template T Tipo da entidade manipulada pelo serviço.
  */
 @Injectable({
-  providedIn: 'root',
+  providedIn: null,
 })
 export class GenericCrudService<T> {
   private baseApiUrl!: string; // Root URL for the API
