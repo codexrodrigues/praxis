@@ -24,12 +24,14 @@
   <footer class="settings-panel-footer">
     <button mat-button type="button" (click)="onReset()">Redefinir</button>
     <span class="spacer"></span>
+    <button mat-stroked-button type="button" (click)="onCancel()">
+      Cancelar
+    </button>
     <button mat-stroked-button type="button" (click)="onApply()">
       Aplicar
     </button>
-    <button mat-raised-button color="primary" type="button" (click)="onSave()">
+    <button mat-flat-button color="primary" type="button" (click)="onSave()">
       Salvar &amp; Fechar
     </button>
-    <button mat-button type="button" (click)="onCancel()">Cancelar</button>
   </footer>
 </div>

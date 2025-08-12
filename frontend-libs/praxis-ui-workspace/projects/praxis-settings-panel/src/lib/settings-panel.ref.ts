@@ -29,9 +29,10 @@ export class SettingsPanelRef {
   }
 
   close(reason: SettingsPanelCloseReason = 'cancel'): void {
-    if (this.overlayRef.hasAttached()) {
-      this.overlayRef.dispose();
+    if (!this.overlayRef?.hasAttached()) {
+      return;
     }
+    this.overlayRef.dispose();
     this.closedSubject.next(reason);
     this.complete();
   }
