@@ -4,8 +4,6 @@ import {
   OnInit,
   ChangeDetectorRef,
   Optional,
-  TemplateRef,
-  ViewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -16,8 +14,6 @@ import {
   SETTINGS_PANEL_REF,
   SettingsPanelRef,
   SettingsValueProvider,
-  SettingsPanelSection,
-  SettingsSectionsProvider,
 } from '@praxis/settings-panel';
 import {
   JsonConfigEditorComponent,
@@ -55,64 +51,84 @@ import {
     MessagesLocalizationEditorComponent,
   ],
   template: `
-    <ng-template #overviewSection>
-      <behavior-config-editor
-        [config]="editedConfig"
-        (configChange)="onBehaviorConfigChange($event)"
-        (behaviorChange)="onBehaviorChange($event)"
-      ></behavior-config-editor>
-    </ng-template>
+    <div class="config-editor-container">
+      <nav class="sections-nav">
+        <button
+          type="button"
+          *ngFor="let section of sections; index as i"
+          (click)="activeSectionIndex = i"
+          [class.active]="i === activeSectionIndex"
+        >
+          <mat-icon *ngIf="section.icon">{{ section.icon }}</mat-icon>
+          <span>{{ section.label }}</span>
+        </button>
+      </nav>
+      <div class="sections-content">
+        <div *ngIf="activeSectionIndex === 0">
+          <behavior-config-editor
+            [config]="editedConfig"
+            (configChange)="onBehaviorConfigChange($event)"
+            (behaviorChange)="onBehaviorChange($event)"
+          ></behavior-config-editor>
+        </div>
 
-    <ng-template #columnsSection>
-      <columns-config-editor
-        [config]="editedConfig"
-        (configChange)="onColumnsConfigChange($event)"
-        (columnChange)="onColumnChange($event)"
-      ></columns-config-editor>
-    </ng-template>
+        <div *ngIf="activeSectionIndex === 1">
+          <columns-config-editor
+            [config]="editedConfig"
+            (configChange)="onColumnsConfigChange($event)"
+            (columnChange)="onColumnChange($event)"
+          ></columns-config-editor>
+        </div>
 
-    <ng-template #toolbarSection>
-      <toolbar-actions-editor
-        [config]="editedConfig"
-        (configChange)="onToolbarActionsConfigChange($event)"
-        (toolbarActionsChange)="onToolbarActionsChange($event)"
-      ></toolbar-actions-editor>
-    </ng-template>
+        <div *ngIf="activeSectionIndex === 2">
+          <toolbar-actions-editor
+            [config]="editedConfig"
+            (configChange)="onToolbarActionsConfigChange($event)"
+            (toolbarActionsChange)="onToolbarActionsChange($event)"
+          ></toolbar-actions-editor>
+        </div>
 
-    <ng-template #messagesSection>
-      <messages-localization-editor
-        [config]="editedConfig"
-        (configChange)="onMessagesLocalizationConfigChange($event)"
-        (messagesLocalizationChange)="onMessagesLocalizationChange($event)"
-      ></messages-localization-editor>
-    </ng-template>
+        <div *ngIf="activeSectionIndex === 3">
+          <messages-localization-editor
+            [config]="editedConfig"
+            (configChange)="onMessagesLocalizationConfigChange($event)"
+            (messagesLocalizationChange)="onMessagesLocalizationChange($event)"
+          ></messages-localization-editor>
+        </div>
 
-    <ng-template #jsonSection>
-      <json-config-editor
-        [config]="editedConfig"
-        (configChange)="onJsonConfigChange($event)"
-        (editorEvent)="onJsonEditorEvent($event)"
-      ></json-config-editor>
-    </ng-template>
+        <div *ngIf="activeSectionIndex === 4">
+          <json-config-editor
+            [config]="editedConfig"
+            (configChange)="onJsonConfigChange($event)"
+            (editorEvent)="onJsonEditorEvent($event)"
+          ></json-config-editor>
+        </div>
+      </div>
+    </div>
+    <div class="config-editor-status" *ngIf="statusMessage">
+      <span
+        class="status-text"
+        [class.error]="hasErrors"
+        [class.success]="hasSuccess"
+        >{{ statusMessage }}</span
+      >
+    </div>
   `,
   providers: [TableConfigService],
 })
-export class PraxisTableConfigEditor
-  implements OnInit, SettingsValueProvider, SettingsSectionsProvider
-{
-  @ViewChild('overviewSection', { static: true })
-  overviewSection!: TemplateRef<any>;
-  @ViewChild('columnsSection', { static: true })
-  columnsSection!: TemplateRef<any>;
-  @ViewChild('toolbarSection', { static: true })
-  toolbarSection!: TemplateRef<any>;
-  @ViewChild('messagesSection', { static: true })
-  messagesSection!: TemplateRef<any>;
-  @ViewChild('jsonSection', { static: true })
-  jsonSection!: TemplateRef<any>;
-
-  sections: SettingsPanelSection[] = [];
-  sections$ = new BehaviorSubject<SettingsPanelSection[]>([]);
+export class PraxisTableConfigEditor implements OnInit, SettingsValueProvider {
+  sections = [
+    {
+      id: 'overview',
+      label: 'Visão Geral & Comportamento',
+      icon: 'tune',
+    },
+    { id: 'columns', label: 'Colunas', icon: 'view_column' },
+    { id: 'toolbar', label: 'Barra de Ferramentas & Ações', icon: 'build' },
+    { id: 'messages', label: 'Mensagens & Localização', icon: 'chat' },
+    { id: 'json', label: 'JSON', icon: 'code' },
+  ];
+  activeSectionIndex = 0;
   // Configurações
   private originalConfig!: TableConfig;
   editedConfig!: TableConfig;
@@ -165,9 +181,6 @@ export class PraxisTableConfigEditor
       // Configurar estado inicial
       this.updateConfigurationVersion();
       this.updateCanSaveState();
-
-      // Emitir seções após inicialização para evitar condição de corrida
-      Promise.resolve().then(() => this.emitSections());
     } catch (error) {
       // TODO: Implement proper error logging service
       this.showError('Erro ao inicializar editor');
@@ -181,43 +194,6 @@ export class PraxisTableConfigEditor
     // Update state directly
     this.updateConfigurationVersion();
     this.updateCanSaveState();
-  }
-
-  private emitSections(): void {
-    this.sections = [
-      {
-        id: 'overview',
-        label: 'Visão Geral & Comportamento',
-        icon: 'tune',
-        template: this.overviewSection,
-      },
-      {
-        id: 'columns',
-        label: 'Colunas',
-        icon: 'view_column',
-        template: this.columnsSection,
-      },
-      {
-        id: 'toolbar',
-        label: 'Barra de Ferramentas & Ações',
-        icon: 'build',
-        template: this.toolbarSection,
-      },
-      {
-        id: 'messages',
-        label: 'Mensagens & Localização',
-        icon: 'chat',
-        template: this.messagesSection,
-      },
-      {
-        id: 'json',
-        label: 'JSON',
-        icon: 'code',
-        template: this.jsonSection,
-      },
-    ];
-    this.sections$.next(this.sections);
-    this.cdr.detectChanges();
   }
 
   onJsonValidationChange(result: JsonValidationResult): void {

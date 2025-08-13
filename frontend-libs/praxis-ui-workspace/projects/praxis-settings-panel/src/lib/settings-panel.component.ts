@@ -14,7 +14,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { CdkTrapFocus } from '@angular/cdk/a11y';
 import { SettingsPanelRef } from './settings-panel.ref';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { SettingsPanelSection } from './settings-panel.types';
 
 @Component({
   selector: 'praxis-settings-panel',
@@ -31,8 +30,6 @@ export class SettingsPanelComponent {
   private static nextId = 0;
   titleId = `praxis-settings-panel-title-${SettingsPanelComponent.nextId++}`;
   disableSaveButton = false;
-  sections: SettingsPanelSection[] = [];
-  activeSectionIndex = 0;
 
   @ViewChild('contentHost', { read: ViewContainerRef, static: true })
   private contentHost!: ViewContainerRef;
@@ -51,21 +48,10 @@ export class SettingsPanelComponent {
 
     const instance: any = this.contentRef.instance;
     if ('canSave$' in instance && instance.canSave$) {
-      instance.canSave$
-        .pipe(takeUntilDestroyed())
-        .subscribe((v: boolean) => (this.disableSaveButton = !v));
-    }
-
-    if ('sections$' in instance && instance.sections$) {
-      instance.sections$
-        .pipe(takeUntilDestroyed())
-        .subscribe((s: SettingsPanelSection[]) => {
-          this.sections = s;
-          this.cdr.detectChanges();
-        });
-    } else if ('sections' in instance && Array.isArray(instance.sections)) {
-      this.sections = instance.sections;
-      this.cdr.detectChanges();
+      instance.canSave$.pipe(takeUntilDestroyed()).subscribe((v: boolean) => {
+        this.disableSaveButton = !v;
+        this.cdr.detectChanges();
+      });
     }
   }
 

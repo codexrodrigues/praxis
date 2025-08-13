@@ -1,19 +1,9 @@
-import {
-  Component,
-  Injector,
-  TemplateRef,
-  ViewChild,
-  OnInit,
-} from '@angular/core';
+import { Component, Injector } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { BehaviorSubject } from 'rxjs';
 import { SettingsPanelComponent } from './settings-panel.component';
 import { SettingsPanelRef } from './settings-panel.ref';
-import {
-  SettingsPanelSection,
-  SettingsSectionsProvider,
-  SettingsValueProvider,
-} from './settings-panel.types';
+import { SettingsValueProvider } from './settings-panel.types';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 class MockSettingsPanelRef {
@@ -38,35 +28,6 @@ class DummyProvider implements SettingsValueProvider {
   }
 }
 
-@Component({
-  standalone: true,
-  template: `
-    <ng-template #first>First Section</ng-template>
-    <ng-template #second>Second Section</ng-template>
-  `,
-})
-class SectionProvider
-  implements SettingsValueProvider, SettingsSectionsProvider, OnInit
-{
-  @ViewChild('first', { static: true }) first!: TemplateRef<any>;
-  @ViewChild('second', { static: true }) second!: TemplateRef<any>;
-  sections: SettingsPanelSection[] = [];
-  sections$ = new BehaviorSubject<SettingsPanelSection[]>([]);
-  getSettingsValue() {
-    return null;
-  }
-  ngOnInit(): void {
-    Promise.resolve().then(() => {
-      const list = [
-        { id: 'first', label: 'First', template: this.first },
-        { id: 'second', label: 'Second', template: this.second },
-      ];
-      this.sections = list;
-      this.sections$.next(list);
-    });
-  }
-}
-
 describe('SettingsPanelComponent', () => {
   let component: SettingsPanelComponent;
   let fixture: ComponentFixture<SettingsPanelComponent>;
@@ -74,12 +35,7 @@ describe('SettingsPanelComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [
-        SettingsPanelComponent,
-        DummyProvider,
-        SectionProvider,
-        NoopAnimationsModule,
-      ],
+      imports: [SettingsPanelComponent, DummyProvider, NoopAnimationsModule],
     }).compileComponents();
 
     fixture = TestBed.createComponent(SettingsPanelComponent);
@@ -113,20 +69,5 @@ describe('SettingsPanelComponent', () => {
 
     expect(instance.onSave).toHaveBeenCalled();
     expect(ref.save).toHaveBeenCalledWith(instance.getSettingsValue());
-  });
-
-  it('should render sections provided by content component', () => {
-    component.attachContent(
-      SectionProvider,
-      TestBed.inject(Injector),
-      ref as unknown as SettingsPanelRef,
-    );
-    fixture.detectChanges();
-    fixture.detectChanges();
-    const buttons = fixture.nativeElement.querySelectorAll(
-      '.settings-panel-sections button',
-    );
-    expect(buttons.length).toBe(2);
-    expect(buttons[0].textContent).toContain('First');
   });
 });

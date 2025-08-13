@@ -19,22 +19,8 @@
     </button>
   </header>
   <div class="settings-panel-body">
-    <nav class="settings-panel-sections" *ngIf="sections.length > 0">
-      <button
-        type="button"
-        *ngFor="let section of sections; index as i"
-        (click)="activeSectionIndex = i"
-        [class.active]="i === activeSectionIndex"
-      >
-        <mat-icon *ngIf="section.icon">{{ section.icon }}</mat-icon>
-        <span>{{ section.label }}</span>
-      </button>
-    </nav>
     <section class="settings-panel-content">
       <ng-template #contentHost></ng-template>
-      <ng-container *ngIf="sections[activeSectionIndex] as activeSection">
-        <ng-container *ngTemplateOutlet="activeSection.template"></ng-container>
-      </ng-container>
     </section>
   </div>
   <footer class="settings-panel-footer">

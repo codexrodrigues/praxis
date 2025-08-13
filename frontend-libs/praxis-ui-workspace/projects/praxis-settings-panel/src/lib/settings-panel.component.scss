@@ -23,30 +23,7 @@
 
 .settings-panel-body {
   flex: 1;
-  display: flex;
   min-height: 0;
-}
-
-.settings-panel-sections {
-  width: 200px;
-  border-right: 1px solid var(--border-color);
-  display: flex;
-  flex-direction: column;
-
-  button {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 16px;
-    border: none;
-    background: none;
-    text-align: left;
-    cursor: pointer;
-
-    &.active {
-      background: var(--surface-hover);
-    }
-  }
 }
 
 .settings-panel-footer {
