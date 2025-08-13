@@ -459,6 +459,7 @@ describe('PraxisFilter', () => {
   });
 
   it('should open settings panel and apply configuration', () => {
+
     const applied$ = new Subject<FilterConfig>();
     const saved$ = new Subject<FilterConfig>();
     const ref = { applied$, saved$, close: jasmine.createSpy('close') } as any;
@@ -496,5 +497,6 @@ describe('PraxisFilter', () => {
       placeholder: undefined,
       showAdvanced: false,
     });
+
   });
 });

@@ -19,6 +19,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { FieldMetadata } from '@praxis/core';
 import { FilterConfig } from '../services/filter-config.service';
+import { Observable } from 'rxjs';
+import { map, startWith } from 'rxjs/operators';
 
 @Component({
   selector: 'filter-settings',
@@ -47,6 +49,11 @@ export class FilterSettingsComponent implements OnChanges {
     showAdvanced: FormControl<boolean>;
   }>;
 
+  /**
+   * Emits true when form has changes and is valid, enabling the save button
+   */
+  canSave$: Observable<boolean>;
+
   private initialSettings: FilterConfig = {};
 
   constructor(private fb: FormBuilder) {
@@ -56,6 +63,11 @@ export class FilterSettingsComponent implements OnChanges {
       placeholder: this.fb.control<string>(''),
       showAdvanced: this.fb.control<boolean>(false),
     });
+
+    this.canSave$ = this.form.valueChanges.pipe(
+      map(() => this.form.dirty && this.form.valid),
+      startWith(false),
+    );
   }
 
   ngOnChanges(changes: SimpleChanges): void {

@@ -1,5 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { Injector } from '@angular/core';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { FilterSettingsComponent } from './filter-settings.component';
+import { SettingsPanelComponent } from '@praxis/settings-panel';
+import { SettingsPanelRef } from '@praxis/settings-panel';
 import { FieldMetadata } from '@praxis/core';
 import { FilterConfig } from '../services/filter-config.service';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
@@ -29,6 +33,7 @@ class MockSettingsPanelRef {
   close = jasmine.createSpy('close');
 }
 
+
 @Component({
   selector: 'test-filter-settings',
   standalone: true,
@@ -54,10 +59,11 @@ class TestFilterSettingsComponent extends FilterSettingsComponent {
 }
 
 describe('FilterSettingsComponent', () => {
-  const metadata: FieldMetadata[] = [
-    { name: 'name', label: 'Name', controlType: 'input' } as FieldMetadata,
-    { name: 'status', label: 'Status', controlType: 'input' } as FieldMetadata,
-  ];
+  let fixture: ComponentFixture<SettingsPanelComponent>;
+  let panel: SettingsPanelComponent;
+  let ref: MockSettingsPanelRef;
+
+
 
   const settings: FilterConfig = {
     quickField: 'name',
@@ -72,10 +78,12 @@ describe('FilterSettingsComponent', () => {
         FilterSettingsComponent,
         TestFilterSettingsComponent,
         SettingsPanelComponent,
+
         NoopAnimationsModule,
       ],
     }).compileComponents();
   });
+
 
   it('should render all tabs', () => {
     const fixture = TestBed.createComponent(FilterSettingsComponent);
@@ -85,6 +93,7 @@ describe('FilterSettingsComponent', () => {
     component.ngOnChanges({
       settings: new SimpleChange(null, settings, true),
     });
+
     fixture.detectChanges();
     const text = fixture.nativeElement.textContent;
     expect(text).toContain('Quick Field');
@@ -133,6 +142,7 @@ describe('FilterSettingsComponent', () => {
     );
     expect(saveBtn.disabled).toBeTrue();
     content.canSave$.next(true);
+
     fixture.detectChanges();
     expect(saveBtn.disabled).toBeFalse();
   });
