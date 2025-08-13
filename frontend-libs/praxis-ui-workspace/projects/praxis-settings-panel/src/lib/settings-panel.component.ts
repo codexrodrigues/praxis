@@ -6,15 +6,11 @@ import {
   Type,
   ViewChild,
   ChangeDetectorRef,
+  ViewContainerRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import {
-  CdkPortalOutlet,
-  ComponentPortal,
-  PortalModule,
-} from '@angular/cdk/portal';
 import { CdkTrapFocus } from '@angular/cdk/a11y';
 import { SettingsPanelRef } from './settings-panel.ref';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -23,13 +19,7 @@ import { SettingsPanelSection } from './settings-panel.types';
 @Component({
   selector: 'praxis-settings-panel',
   standalone: true,
-  imports: [
-    CommonModule,
-    MatButtonModule,
-    MatIconModule,
-    PortalModule,
-    CdkTrapFocus,
-  ],
+  imports: [CommonModule, MatButtonModule, MatIconModule, CdkTrapFocus],
   templateUrl: './settings-panel.component.html',
   styleUrls: ['./settings-panel.component.scss'],
 })
@@ -44,7 +34,8 @@ export class SettingsPanelComponent {
   sections: SettingsPanelSection[] = [];
   activeSectionIndex = 0;
 
-  @ViewChild(CdkPortalOutlet, { static: true }) portalOutlet!: CdkPortalOutlet;
+  @ViewChild('contentHost', { read: ViewContainerRef, static: true })
+  private contentHost!: ViewContainerRef;
 
   constructor(private cdr: ChangeDetectorRef) {}
 
@@ -54,8 +45,9 @@ export class SettingsPanelComponent {
     ref: SettingsPanelRef,
   ): void {
     this.ref = ref;
-    const portal = new ComponentPortal(component, null, injector);
-    this.contentRef = this.portalOutlet.attachComponentPortal(portal);
+    this.contentRef = this.contentHost.createComponent(component, {
+      injector,
+    });
 
     const instance: any = this.contentRef.instance;
     if ('canSave$' in instance && instance.canSave$) {
@@ -69,11 +61,11 @@ export class SettingsPanelComponent {
         .pipe(takeUntilDestroyed())
         .subscribe((s: SettingsPanelSection[]) => {
           this.sections = s;
-          this.cdr.markForCheck();
+          this.cdr.detectChanges();
         });
     } else if ('sections' in instance && Array.isArray(instance.sections)) {
       this.sections = instance.sections;
-      this.cdr.markForCheck();
+      this.cdr.detectChanges();
     }
   }
 

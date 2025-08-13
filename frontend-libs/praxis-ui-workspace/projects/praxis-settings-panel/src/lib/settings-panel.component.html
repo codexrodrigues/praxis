@@ -31,11 +31,9 @@
       </button>
     </nav>
     <section class="settings-panel-content">
-      <ng-template cdkPortalOutlet></ng-template>
-      <ng-container *ngIf="sections.length > 0">
-        <ng-container
-          *ngTemplateOutlet="sections[activeSectionIndex].template"
-        ></ng-container>
+      <ng-template #contentHost></ng-template>
+      <ng-container *ngIf="sections[activeSectionIndex] as activeSection">
+        <ng-container *ngTemplateOutlet="activeSection.template"></ng-container>
       </ng-container>
     </section>
   </div>

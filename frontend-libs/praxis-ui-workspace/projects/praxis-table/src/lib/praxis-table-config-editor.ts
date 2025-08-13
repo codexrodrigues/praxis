@@ -4,7 +4,6 @@ import {
   OnInit,
   ChangeDetectorRef,
   Optional,
-  AfterViewInit,
   TemplateRef,
   ViewChild,
 } from '@angular/core';
@@ -99,11 +98,7 @@ import {
   providers: [TableConfigService],
 })
 export class PraxisTableConfigEditor
-  implements
-    OnInit,
-    SettingsValueProvider,
-    SettingsSectionsProvider,
-    AfterViewInit
+  implements OnInit, SettingsValueProvider, SettingsSectionsProvider
 {
   @ViewChild('overviewSection', { static: true })
   overviewSection!: TemplateRef<any>;
@@ -170,6 +165,9 @@ export class PraxisTableConfigEditor
       // Configurar estado inicial
       this.updateConfigurationVersion();
       this.updateCanSaveState();
+
+      // Emitir seções após inicialização para evitar condição de corrida
+      Promise.resolve().then(() => this.emitSections());
     } catch (error) {
       // TODO: Implement proper error logging service
       this.showError('Erro ao inicializar editor');
@@ -185,7 +183,7 @@ export class PraxisTableConfigEditor
     this.updateCanSaveState();
   }
 
-  ngAfterViewInit(): void {
+  private emitSections(): void {
     this.sections = [
       {
         id: 'overview',
@@ -219,7 +217,7 @@ export class PraxisTableConfigEditor
       },
     ];
     this.sections$.next(this.sections);
-    this.cdr.markForCheck();
+    this.cdr.detectChanges();
   }
 
   onJsonValidationChange(result: JsonValidationResult): void {

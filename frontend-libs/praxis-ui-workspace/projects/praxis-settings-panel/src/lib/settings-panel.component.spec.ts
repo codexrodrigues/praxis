@@ -1,9 +1,9 @@
 import {
-  AfterViewInit,
   Component,
   Injector,
   TemplateRef,
   ViewChild,
+  OnInit,
 } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { BehaviorSubject } from 'rxjs';
@@ -46,7 +46,7 @@ class DummyProvider implements SettingsValueProvider {
   `,
 })
 class SectionProvider
-  implements SettingsValueProvider, SettingsSectionsProvider, AfterViewInit
+  implements SettingsValueProvider, SettingsSectionsProvider, OnInit
 {
   @ViewChild('first', { static: true }) first!: TemplateRef<any>;
   @ViewChild('second', { static: true }) second!: TemplateRef<any>;
@@ -55,13 +55,15 @@ class SectionProvider
   getSettingsValue() {
     return null;
   }
-  ngAfterViewInit(): void {
-    const list = [
-      { id: 'first', label: 'First', template: this.first },
-      { id: 'second', label: 'Second', template: this.second },
-    ];
-    this.sections = list;
-    this.sections$.next(list);
+  ngOnInit(): void {
+    Promise.resolve().then(() => {
+      const list = [
+        { id: 'first', label: 'First', template: this.first },
+        { id: 'second', label: 'Second', template: this.second },
+      ];
+      this.sections = list;
+      this.sections$.next(list);
+    });
   }
 }
 
