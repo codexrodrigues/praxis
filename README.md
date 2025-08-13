@@ -29,3 +29,10 @@ cd backend-libs/praxis-metadata-core
 ```
 
 The generated Javadoc will be placed in `target/site/apidocs`.
+
+## Suporte Comercial, LTS e Serviços
+O Praxis é open source. Para **SLA, LTS estendido, treinamentos e modernização**, oferecemos planos **Silver/Gold/Platinum** e pacotes profissionais.
+
+👉 Detalhes: [`SUPPORT.md`](./SUPPORT.md), [`LTS_POLICY.md`](./LTS_POLICY.md), [`SERVICE_CATALOG.md`](./SERVICE_CATALOG.md), [`TRAINING_CATALOG.md`](./TRAINING_CATALOG.md)
+
+Contato: **contato@praxis.com** | Segurança: **security@praxis.com**
