@@ -18,6 +18,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import {
   GenericCrudService,
   FieldMetadata,
@@ -75,11 +76,13 @@ const DEFAULT_I18N: I18n = {
     MatChipsModule,
     MatIconModule,
     MatProgressBarModule,
+    MatSnackBarModule,
     DynamicFieldLoaderDirective,
     PraxisDynamicForm,
   ],
   template: `
     <ng-container *ngIf="modeState === 'filter'; else summaryCard">
+      <mat-progress-bar *ngIf="saving" mode="indeterminate"></mat-progress-bar>
       <div class="praxis-filter-bar">
         <div class="quick-field" *ngIf="quickFieldMeta; else fallbackQuick">
           <ng-container
@@ -336,6 +339,7 @@ export class PraxisFilter implements OnInit, OnChanges {
   private dto: Record<string, any> = {};
   modeState: 'filter' | 'card' = 'filter';
   advancedOpen = false;
+  saving = false;
   i18nLabels: I18n = DEFAULT_I18N;
   private placeholder?: string;
   private configKey!: string;
@@ -346,6 +350,7 @@ export class PraxisFilter implements OnInit, OnChanges {
     private destroyRef: DestroyRef,
     private filterConfig: FilterConfigService,
     private settingsPanel: SettingsPanelService,
+    private snackBar: MatSnackBar,
   ) {}
 
   ngOnInit(): void {
@@ -516,10 +521,7 @@ export class PraxisFilter implements OnInit, OnChanges {
         content: { component: FilterSettingsComponent, inputs: currentConfig },
       });
 
-      const applyChanges = (cfg: FilterConfig | undefined): void => {
-        if (!cfg) {
-          return;
-        }
+      const applyChanges = (cfg: FilterConfig): void => {
         this.quickField = cfg.quickField;
         this.alwaysVisibleFields = cfg.alwaysVisibleFields ?? [];
         this.placeholder = cfg.placeholder;
@@ -528,33 +530,54 @@ export class PraxisFilter implements OnInit, OnChanges {
         this.applySchemaMetas();
       };
 
-      const persistConfig = (): void => {
-        this.filterConfig.save(this.configKey, {
-          quickField: this.quickField,
-          alwaysVisibleFields: this.alwaysVisibleFields,
-          placeholder: this.placeholder,
-          showAdvanced: this.advancedOpen,
-        });
-        console.log('PFILTER:config:save', {
-          quickField: this.quickField,
-          alwaysVisibleFields: this.alwaysVisibleFields,
-          placeholder: this.placeholder,
-          showAdvanced: this.advancedOpen,
-        });
+      const persistConfig = (cfg: FilterConfig, message: string): void => {
+        this.saving = true;
+        try {
+          this.filterConfig.save(this.configKey, cfg);
+          this.snackBar.open(message, 'Fechar', { duration: 3000 });
+        } catch (err) {
+          console.error('PFILTER:config:save:error', err);
+          this.snackBar.open('Erro ao salvar configurações', 'Fechar', {
+            duration: 3000,
+          });
+        } finally {
+          this.saving = false;
+        }
       };
 
-      ref.applied$.subscribe((cfg: FilterConfig) => {
-        applyChanges(cfg);
-        persistConfig();
+      const validateConfig = (cfg: FilterConfig): FilterConfig => {
+        const names = new Set(this.schemaMetas?.map((m) => m.name));
+        const quickField =
+          cfg.quickField && names.has(cfg.quickField)
+            ? cfg.quickField
+            : undefined;
+        const alwaysVisibleFields = cfg.alwaysVisibleFields?.filter((f) =>
+          names.has(f),
+        );
+        return {
+          ...cfg,
+          quickField,
+          alwaysVisibleFields,
+        };
+      };
+
+      ref.applied$.pipe(take(1)).subscribe((cfg: FilterConfig) => {
+        const safe = validateConfig(cfg);
+        applyChanges(safe);
+        persistConfig(safe, 'Configurações aplicadas');
         ref.close('apply');
       });
 
-      ref.saved$.subscribe((cfg: FilterConfig) => {
-        applyChanges(cfg);
-        persistConfig();
+      ref.saved$.pipe(take(1)).subscribe((cfg: FilterConfig) => {
+        const safe = validateConfig(cfg);
+        applyChanges(safe);
+        persistConfig(safe, 'Configurações salvas');
       });
-    } catch {
-      // Intentionally ignore errors
+    } catch (err) {
+      console.error('PFILTER:openSettings:error', err);
+      this.snackBar.open('Erro ao abrir configurações', 'Fechar', {
+        duration: 3000,
+      });
     }
   }
 
