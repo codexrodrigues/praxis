@@ -3,12 +3,18 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve  --port 4003",
+    "start": "ng serve --port 4003",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "watch-all": "concurrently -n core,table,spec,dynamic,form -c blue,green,yellow,red,cyan \"ng build praxis-core --configuration development --poll=2000\" \"ng build praxis-table --configuration development --poll=2000\" \"ng build praxis-specification --watch --configuration development --poll=2000\" \"ng build praxis-dynamic-fields --configuration development --poll=2000\" \"ng build praxis-dynamic-form --configuration development --poll=2000\"",
+    "watch-all": "concurrently -n core,fields,spec,form,table,visual,crud,settings -c blue,green,yellow,red,cyan,magenta,white,gray \"ng build praxis-core --configuration development --poll=2000\" \"ng build praxis-dynamic-fields --configuration development --poll=2000\" \"ng build praxis-specification --configuration development --poll=2000\" \"ng build praxis-dynamic-form --configuration development --poll=2000\" \"ng build praxis-table --configuration development --poll=2000\" \"ng build praxis-visual-builder --configuration development --poll=2000\" \"ng build praxis-crud --configuration development --poll=2000\" \"ng build praxis-settings-panel --configuration development --poll=2000\"",
     "dev": "concurrently -n libs,app -c cyan,magenta \"npm run watch-all\" \"ng serve --configuration development --port 4003\"",
-    "test": "ng test"
+    "test": "ng test",
+    "build:libs": "ng build praxis-core && ng build praxis-dynamic-fields && ng build praxis-specification && ng build praxis-dynamic-form && ng build praxis-table && ng build praxis-visual-builder && ng build praxis-crud && ng build praxis-settings-panel",
+    "build:libs:prod": "ng build praxis-core --configuration production && ng build praxis-dynamic-fields --configuration production && ng build praxis-specification --configuration production && ng build praxis-dynamic-form --configuration production && ng build praxis-table --configuration production && ng build praxis-visual-builder --configuration production && ng build praxis-crud --configuration production && ng build praxis-settings-panel --configuration production",
+    "build:clean": "rm -rf dist/ && npm run build:libs",
+    "test:libs": "ng test praxis-core && ng test praxis-dynamic-fields && ng test praxis-specification && ng test praxis-dynamic-form && ng test praxis-table && ng test praxis-visual-builder && ng test praxis-crud && ng test praxis-settings-panel",
+    "lint": "ng lint",
+    "release": "./scripts/release-all.sh"
   },
   "private": true,
   "dependencies": {
