@@ -7,6 +7,7 @@ import {
   ViewChild,
   ChangeDetectorRef,
   ViewContainerRef,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -28,10 +29,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   ],
   templateUrl: './settings-panel.component.html',
   styleUrls: ['./settings-panel.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SettingsPanelComponent {
   title = '';
-  width = 720;
   expanded = false;
   ref!: SettingsPanelRef;
   contentRef?: ComponentRef<any>;

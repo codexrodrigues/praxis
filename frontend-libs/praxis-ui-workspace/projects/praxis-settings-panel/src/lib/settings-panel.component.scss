@@ -4,7 +4,13 @@
   height: 100%;
   background: var(--surface);
   border-left: 1px solid var(--border-color);
-  transition: width 300ms ease-in-out;
+  width: min(85vw, 720px);
+  transform: translateX(100%);
+  transition: transform 300ms ease;
+}
+
+.settings-panel.expanded {
+  transform: translateX(0);
 }
 
 .settings-panel-header {

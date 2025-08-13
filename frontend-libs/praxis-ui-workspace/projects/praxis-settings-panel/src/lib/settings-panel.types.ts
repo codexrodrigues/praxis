@@ -4,7 +4,6 @@ import { Observable } from 'rxjs';
 export interface SettingsPanelConfig {
   id: string;
   title: string;
-  width?: number; // default 720
   content: { component: Type<any>; inputs?: Record<string, any> };
 }
 

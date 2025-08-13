@@ -71,26 +71,31 @@ describe('SettingsPanelComponent', () => {
     expect(ref.save).toHaveBeenCalledWith(instance.getSettingsValue());
   });
 
-  it('should toggle expanded state and width', () => {
+  it('should toggle expanded state and class', () => {
     fixture.detectChanges();
     const panel: HTMLElement =
       fixture.nativeElement.querySelector('.settings-panel');
     const icon: HTMLElement = fixture.nativeElement.querySelector(
       'header button mat-icon',
     );
-    expect(panel.style.width).toBe('720px');
+    const toggleButton: HTMLButtonElement =
+      fixture.nativeElement.querySelector('header button');
+    expect(panel.classList.contains('expanded')).toBeFalse();
     expect(icon.textContent?.trim()).toBe('chevron_left');
+    expect(toggleButton.getAttribute('aria-expanded')).toBe('false');
 
     component.toggleExpand();
     fixture.detectChanges();
     expect(component.expanded).toBeTrue();
-    expect(panel.style.width).toBe('85vw');
+    expect(panel.classList.contains('expanded')).toBeTrue();
     expect(icon.textContent?.trim()).toBe('chevron_right');
+    expect(toggleButton.getAttribute('aria-expanded')).toBe('true');
 
     component.toggleExpand();
     fixture.detectChanges();
     expect(component.expanded).toBeFalse();
-    expect(panel.style.width).toBe('720px');
+    expect(panel.classList.contains('expanded')).toBeFalse();
     expect(icon.textContent?.trim()).toBe('chevron_left');
+    expect(toggleButton.getAttribute('aria-expanded')).toBe('false');
   });
 });

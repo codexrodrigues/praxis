@@ -47,7 +47,6 @@ export class SettingsPanelService {
     const panelPortal = new ComponentPortal(SettingsPanelComponent);
     const panelRef = overlayRef.attach(panelPortal);
     panelRef.instance.title = config.title;
-    panelRef.instance.width = config.width ?? 720;
 
     const injector = Injector.create({
       providers: [
