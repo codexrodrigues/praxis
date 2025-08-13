@@ -59,9 +59,9 @@ export class FilterSettingsComponent implements OnChanges {
   constructor(private fb: FormBuilder) {
     this.form = this.fb.group({
       quickField: this.fb.control<string | null>(null),
-      alwaysVisibleFields: this.fb.control<string[]>([]),
-      placeholder: this.fb.control<string>(''),
-      showAdvanced: this.fb.control<boolean>(false),
+      alwaysVisibleFields: this.fb.nonNullable.control<string[]>([]),
+      placeholder: this.fb.nonNullable.control(''),
+      showAdvanced: this.fb.nonNullable.control(false),
     });
 
     this.canSave$ = this.form.valueChanges.pipe(
@@ -84,10 +84,18 @@ export class FilterSettingsComponent implements OnChanges {
 
   getSettingsValue(): FilterConfig {
     const value = this.form.getRawValue();
+    const names = new Set(this.metadata.map((m) => m.name));
+    const quickField =
+      value.quickField && names.has(value.quickField)
+        ? value.quickField
+        : undefined;
+    const alwaysVisibleFields = value.alwaysVisibleFields.filter((f) =>
+      names.has(f),
+    );
     return {
-      quickField: value.quickField ?? undefined,
-      alwaysVisibleFields: value.alwaysVisibleFields?.length
-        ? value.alwaysVisibleFields
+      quickField,
+      alwaysVisibleFields: alwaysVisibleFields.length
+        ? alwaysVisibleFields
         : undefined,
       placeholder: value.placeholder || undefined,
       showAdvanced: value.showAdvanced ?? undefined,

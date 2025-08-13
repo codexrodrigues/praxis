@@ -6,6 +6,7 @@ import {
   FilterConfig,
 } from '../services/filter-config.service';
 import { GenericCrudService, ConfigStorage } from '@praxis/core';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 describe('PraxisFilter openSettings', () => {
   it('should apply changes and persist on apply and save', () => {
@@ -33,6 +34,7 @@ describe('PraxisFilter openSettings', () => {
       destroyRef,
       filterConfig,
       settingsPanel,
+      { open: () => {} } as MatSnackBar,
     );
     (filter as any).configKey = 'f1';
     (filter as any).schemaMetas = [
@@ -111,6 +113,7 @@ describe('PraxisFilter openSettings', () => {
       destroyRef,
       filterConfig,
       settingsPanel,
+      { open: () => {} } as MatSnackBar,
     );
     filter.resourcePath = '/test';
     filter.formId = 'f1';

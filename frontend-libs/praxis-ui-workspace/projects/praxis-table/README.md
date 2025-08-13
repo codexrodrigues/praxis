@@ -704,6 +704,11 @@ abrirConfiguracoes() {
 }
 ```
 
+Ao aplicar ou salvar, as escolhas são validadas contra os metadados
+disponíveis. O componente exibe uma barra de progresso durante o processo
+de persistência e mensagens de sucesso ou erro via _snack bar_, garantindo
+uma experiência consistente.
+
 ## 📊 Roadmap
 
 ### Próximas Versões

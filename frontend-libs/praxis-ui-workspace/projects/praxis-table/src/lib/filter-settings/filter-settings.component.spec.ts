@@ -1,30 +1,28 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Injector } from '@angular/core';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { FilterSettingsComponent } from './filter-settings.component';
-import { SettingsPanelComponent } from '@praxis/settings-panel';
-import { SettingsPanelRef } from '@praxis/settings-panel';
-import { FieldMetadata } from '@praxis/core';
-import { FilterConfig } from '../services/filter-config.service';
-import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { BehaviorSubject } from 'rxjs';
 import {
-  SettingsPanelComponent,
-  SettingsPanelRef,
-} from '@praxis/settings-panel';
-import {
-  Injector,
   Component,
   ChangeDetectionStrategy,
+  Injector,
   SimpleChange,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+
+import { BehaviorSubject } from 'rxjs';
+
+import { FilterSettingsComponent } from './filter-settings.component';
+import {
+  SettingsPanelComponent,
+  SettingsPanelRef,
+} from '@praxis/settings-panel';
+import { FieldMetadata, FieldControlType } from '@praxis/core';
+import { FilterConfig } from '../services/filter-config.service';
 
 class MockSettingsPanelRef {
   apply = jasmine.createSpy('apply');
@@ -32,7 +30,6 @@ class MockSettingsPanelRef {
   reset = jasmine.createSpy('reset');
   close = jasmine.createSpy('close');
 }
-
 
 @Component({
   selector: 'test-filter-settings',
@@ -59,11 +56,18 @@ class TestFilterSettingsComponent extends FilterSettingsComponent {
 }
 
 describe('FilterSettingsComponent', () => {
-  let fixture: ComponentFixture<SettingsPanelComponent>;
-  let panel: SettingsPanelComponent;
-  let ref: MockSettingsPanelRef;
-
-
+  const metadata: FieldMetadata[] = [
+    {
+      name: 'name',
+      label: 'Name',
+      controlType: FieldControlType.INPUT,
+    },
+    {
+      name: 'status',
+      label: 'Status',
+      controlType: FieldControlType.INPUT,
+    },
+  ];
 
   const settings: FilterConfig = {
     quickField: 'name',
@@ -83,7 +87,6 @@ describe('FilterSettingsComponent', () => {
       ],
     }).compileComponents();
   });
-
 
   it('should render all tabs', () => {
     const fixture = TestBed.createComponent(FilterSettingsComponent);
@@ -145,5 +148,24 @@ describe('FilterSettingsComponent', () => {
 
     fixture.detectChanges();
     expect(saveBtn.disabled).toBeFalse();
+  });
+
+  it('should validate fields against metadata before saving', () => {
+    const fixture = TestBed.createComponent(FilterSettingsComponent);
+    const component = fixture.componentInstance;
+    component.metadata = metadata;
+    component.settings = {};
+    component.ngOnChanges({
+      settings: new SimpleChange(null, {}, true),
+    });
+
+    component.form.patchValue({
+      quickField: 'invalid',
+      alwaysVisibleFields: ['status', 'other'],
+    });
+
+    const result = component.getSettingsValue();
+    expect(result.quickField).toBeUndefined();
+    expect(result.alwaysVisibleFields).toEqual(['status']);
   });
 });
