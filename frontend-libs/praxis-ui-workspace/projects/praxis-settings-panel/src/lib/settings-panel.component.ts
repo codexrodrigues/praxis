@@ -82,8 +82,6 @@ export class SettingsPanelComponent {
 
   toggleExpand(): void {
     this.expanded = !this.expanded;
-    const newWidth = this.expanded ? '85vw' : `${this.width}px`;
-    this.ref.updateSize(newWidth);
     this.cdr.markForCheck();
   }
 

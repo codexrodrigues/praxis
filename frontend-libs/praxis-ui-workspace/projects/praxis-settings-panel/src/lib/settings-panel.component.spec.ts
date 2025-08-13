@@ -11,7 +11,6 @@ class MockSettingsPanelRef {
   save = jasmine.createSpy('save');
   reset = jasmine.createSpy('reset');
   close = jasmine.createSpy('close');
-  updateSize = jasmine.createSpy('updateSize');
 }
 
 @Component({
@@ -76,18 +75,22 @@ describe('SettingsPanelComponent', () => {
     fixture.detectChanges();
     const panel: HTMLElement =
       fixture.nativeElement.querySelector('.settings-panel');
+    const icon: HTMLElement = fixture.nativeElement.querySelector(
+      'header button mat-icon',
+    );
     expect(panel.style.width).toBe('720px');
+    expect(icon.textContent?.trim()).toBe('chevron_left');
 
     component.toggleExpand();
     fixture.detectChanges();
     expect(component.expanded).toBeTrue();
     expect(panel.style.width).toBe('85vw');
-    expect(ref.updateSize).toHaveBeenCalledWith('85vw');
+    expect(icon.textContent?.trim()).toBe('chevron_right');
 
     component.toggleExpand();
     fixture.detectChanges();
     expect(component.expanded).toBeFalse();
     expect(panel.style.width).toBe('720px');
-    expect(ref.updateSize).toHaveBeenCalledWith('720px');
+    expect(icon.textContent?.trim()).toBe('chevron_left');
   });
 });

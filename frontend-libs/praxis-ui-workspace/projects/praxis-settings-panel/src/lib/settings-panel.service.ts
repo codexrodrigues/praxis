@@ -36,12 +36,12 @@ export class SettingsPanelService {
       backdropClass: 'praxis-settings-panel-backdrop',
       positionStrategy: this.overlay.position().global().top('0').right('0'),
       height: '100vh',
+      width: '85vw',
       scrollStrategy: this.overlay.scrollStrategies.block(),
     };
 
     const overlayRef = this.overlay.create(overlayConfig);
     const ref = new SettingsPanelRef(overlayRef);
-    ref.updateSize(config.width ?? 720);
 
     const panelPortal = new ComponentPortal(SettingsPanelComponent);
     const panelRef = overlayRef.attach(panelPortal);

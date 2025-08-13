@@ -30,7 +30,6 @@ export class SettingsPanelRef {
 
   updateSize(width: string | number): void {
     this.overlayRef.updateSize({ width });
-    this.overlayRef.updatePosition();
   }
 
   close(reason: SettingsPanelCloseReason = 'cancel'): void {
