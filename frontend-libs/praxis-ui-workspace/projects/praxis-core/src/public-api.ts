@@ -40,7 +40,3 @@ export * from './lib/metadata/validation-pattern.constants';
 // Helpers
 export * from './lib/helpers/field-definition-mapper';
 export * from './lib/helpers/version.helper';
-
-// Components
-export * from './lib/components/resizable-window/praxis-resizable-window.component';
-export * from './lib/components/resizable-window/services/praxis-resizable-window.service';

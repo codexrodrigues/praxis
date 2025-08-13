@@ -5,17 +5,16 @@ import {
   Injector,
   Type,
   ViewChild,
+  ChangeDetectorRef,
+  ViewContainerRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import {
-  CdkPortalOutlet,
-  ComponentPortal,
-  PortalModule,
-} from '@angular/cdk/portal';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { CdkTrapFocus } from '@angular/cdk/a11y';
 import { SettingsPanelRef } from './settings-panel.ref';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'praxis-settings-panel',
@@ -24,7 +23,7 @@ import { SettingsPanelRef } from './settings-panel.ref';
     CommonModule,
     MatButtonModule,
     MatIconModule,
-    PortalModule,
+    MatTooltipModule,
     CdkTrapFocus,
   ],
   templateUrl: './settings-panel.component.html',
@@ -33,12 +32,17 @@ import { SettingsPanelRef } from './settings-panel.ref';
 export class SettingsPanelComponent {
   title = '';
   width = 720;
+  expanded = false;
   ref!: SettingsPanelRef;
   contentRef?: ComponentRef<any>;
   private static nextId = 0;
   titleId = `praxis-settings-panel-title-${SettingsPanelComponent.nextId++}`;
+  disableSaveButton = false;
 
-  @ViewChild(CdkPortalOutlet, { static: true }) portalOutlet!: CdkPortalOutlet;
+  @ViewChild('contentHost', { read: ViewContainerRef, static: true })
+  private contentHost!: ViewContainerRef;
+
+  constructor(private cdr: ChangeDetectorRef) {}
 
   attachContent(
     component: Type<any>,
@@ -46,8 +50,17 @@ export class SettingsPanelComponent {
     ref: SettingsPanelRef,
   ): void {
     this.ref = ref;
-    const portal = new ComponentPortal(component, null, injector);
-    this.contentRef = this.portalOutlet.attachComponentPortal(portal);
+    this.contentRef = this.contentHost.createComponent(component, {
+      injector,
+    });
+
+    const instance: any = this.contentRef.instance;
+    if ('canSave$' in instance && instance.canSave$) {
+      instance.canSave$.pipe(takeUntilDestroyed()).subscribe((v: boolean) => {
+        this.disableSaveButton = !v;
+        this.cdr.detectChanges();
+      });
+    }
   }
 
   onReset(): void {
@@ -61,8 +74,15 @@ export class SettingsPanelComponent {
   }
 
   onSave(): void {
-    const value = this.contentRef?.instance?.getSettingsValue?.();
+    const instance: any = this.contentRef?.instance;
+    instance?.onSave?.();
+    const value = instance?.getSettingsValue?.();
     this.ref.save(value);
+  }
+
+  toggleExpand(): void {
+    this.expanded = !this.expanded;
+    this.cdr.markForCheck();
   }
 
   onCancel(): void {

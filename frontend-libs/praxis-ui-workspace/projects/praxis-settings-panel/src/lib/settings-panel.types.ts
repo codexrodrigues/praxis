@@ -1,4 +1,5 @@
 import { Type } from '@angular/core';
+import { Observable } from 'rxjs';
 
 export interface SettingsPanelConfig {
   id: string;
@@ -10,6 +11,7 @@ export interface SettingsPanelConfig {
 export interface SettingsValueProvider {
   getSettingsValue(): any;
   reset?(): void;
+  canSave$?: Observable<boolean>;
 }
 
 export type SettingsPanelCloseReason = 'cancel' | 'save' | 'backdrop' | 'esc';

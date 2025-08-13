@@ -1,6 +1,6 @@
 <div
   class="settings-panel"
-  [style.width.px]="width"
+  [style.width]="expanded ? '85vw' : width + 'px'"
   role="dialog"
   aria-modal="true"
   [attr.aria-labelledby]="titleId"
@@ -9,18 +9,31 @@
 >
   <header class="settings-panel-header">
     <h2 class="settings-panel-title" [id]="titleId">{{ title }}</h2>
+    <span class="spacer"></span>
+    <button
+      mat-icon-button
+      type="button"
+      [attr.aria-label]="expanded ? 'Reduzir painel' : 'Expandir painel'"
+      [matTooltip]="expanded ? 'Reduzir painel' : 'Expandir painel'"
+      (click)="toggleExpand()"
+    >
+      <mat-icon>{{ expanded ? "chevron_right" : "chevron_left" }}</mat-icon>
+    </button>
     <button
       mat-icon-button
       type="button"
       aria-label="Fechar"
+      matTooltip="Fechar"
       (click)="onCancel()"
     >
       <mat-icon>close</mat-icon>
     </button>
   </header>
-  <section class="settings-panel-content">
-    <ng-template cdkPortalOutlet></ng-template>
-  </section>
+  <div class="settings-panel-body">
+    <section class="settings-panel-content">
+      <ng-template #contentHost></ng-template>
+    </section>
+  </div>
   <footer class="settings-panel-footer">
     <button mat-button type="button" (click)="onReset()">Redefinir</button>
     <span class="spacer"></span>
@@ -30,7 +43,13 @@
     <button mat-stroked-button type="button" (click)="onApply()">
       Aplicar
     </button>
-    <button mat-flat-button color="primary" type="button" (click)="onSave()">
+    <button
+      mat-flat-button
+      color="primary"
+      type="button"
+      (click)="onSave()"
+      [disabled]="disableSaveButton"
+    >
       Salvar &amp; Fechar
     </button>
   </footer>
