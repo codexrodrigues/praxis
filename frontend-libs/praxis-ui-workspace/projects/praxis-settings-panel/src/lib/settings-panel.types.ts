@@ -17,6 +17,11 @@ export interface SettingsPanelSection {
 
 export interface SettingsSectionsProvider {
   sections: SettingsPanelSection[];
+  /**
+   * Emits whenever the section list changes after initialization.
+   * Used when sections are populated asynchronously.
+   */
+  sections$?: Observable<SettingsPanelSection[]>;
 }
 
 export interface SettingsValueProvider {

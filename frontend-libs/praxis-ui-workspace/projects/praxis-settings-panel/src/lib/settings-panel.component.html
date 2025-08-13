@@ -31,14 +31,12 @@
       </button>
     </nav>
     <section class="settings-panel-content">
-      <ng-container *ngIf="sections.length > 0; else defaultContent">
+      <ng-template cdkPortalOutlet></ng-template>
+      <ng-container *ngIf="sections.length > 0">
         <ng-container
           *ngTemplateOutlet="sections[activeSectionIndex].template"
         ></ng-container>
       </ng-container>
-      <ng-template #defaultContent>
-        <ng-template cdkPortalOutlet></ng-template>
-      </ng-template>
     </section>
   </div>
   <footer class="settings-panel-footer">

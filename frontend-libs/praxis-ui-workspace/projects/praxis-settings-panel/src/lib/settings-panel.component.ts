@@ -5,6 +5,7 @@ import {
   Injector,
   Type,
   ViewChild,
+  ChangeDetectorRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -45,6 +46,8 @@ export class SettingsPanelComponent {
 
   @ViewChild(CdkPortalOutlet, { static: true }) portalOutlet!: CdkPortalOutlet;
 
+  constructor(private cdr: ChangeDetectorRef) {}
+
   attachContent(
     component: Type<any>,
     injector: Injector,
@@ -61,8 +64,16 @@ export class SettingsPanelComponent {
         .subscribe((v: boolean) => (this.disableSaveButton = !v));
     }
 
-    if ('sections' in instance && Array.isArray(instance.sections)) {
+    if ('sections$' in instance && instance.sections$) {
+      instance.sections$
+        .pipe(takeUntilDestroyed())
+        .subscribe((s: SettingsPanelSection[]) => {
+          this.sections = s;
+          this.cdr.markForCheck();
+        });
+    } else if ('sections' in instance && Array.isArray(instance.sections)) {
       this.sections = instance.sections;
+      this.cdr.markForCheck();
     }
   }
 

@@ -117,6 +117,7 @@ export class PraxisTableConfigEditor
   jsonSection!: TemplateRef<any>;
 
   sections: SettingsPanelSection[] = [];
+  sections$ = new BehaviorSubject<SettingsPanelSection[]>([]);
   // Configurações
   private originalConfig!: TableConfig;
   editedConfig!: TableConfig;
@@ -217,6 +218,7 @@ export class PraxisTableConfigEditor
         template: this.jsonSection,
       },
     ];
+    this.sections$.next(this.sections);
     this.cdr.markForCheck();
   }
 

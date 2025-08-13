@@ -51,14 +51,17 @@ class SectionProvider
   @ViewChild('first', { static: true }) first!: TemplateRef<any>;
   @ViewChild('second', { static: true }) second!: TemplateRef<any>;
   sections: SettingsPanelSection[] = [];
+  sections$ = new BehaviorSubject<SettingsPanelSection[]>([]);
   getSettingsValue() {
     return null;
   }
   ngAfterViewInit(): void {
-    this.sections = [
+    const list = [
       { id: 'first', label: 'First', template: this.first },
       { id: 'second', label: 'Second', template: this.second },
     ];
+    this.sections = list;
+    this.sections$.next(list);
   }
 }
 
@@ -116,6 +119,7 @@ describe('SettingsPanelComponent', () => {
       TestBed.inject(Injector),
       ref as unknown as SettingsPanelRef,
     );
+    fixture.detectChanges();
     fixture.detectChanges();
     const buttons = fixture.nativeElement.querySelectorAll(
       '.settings-panel-sections button',
