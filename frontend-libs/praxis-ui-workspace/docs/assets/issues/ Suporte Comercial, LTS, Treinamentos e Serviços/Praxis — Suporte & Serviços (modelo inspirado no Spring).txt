@@ -1,0 +1,211 @@
+# Praxis — Suporte & Serviços (modelo inspirado no Spring)
+
+Abaixo está um **pacote pronto** para colocar no repositório e/ou site do Praxis. O modelo espelha a abordagem do Spring/Tanzu: **SLA**, **LTS estendido**, **treinamentos oficiais** e **pacotes de modernização**.
+
+---
+
+## 1) `SUPPORT.md`
+
+```md
+# Suporte Comercial — Praxis
+
+O Praxis é open source e mantido publicamente. Para empresas que precisam de **SLA, LTS estendido, correções priorizadas e orientação direta**, oferecemos planos comerciais.
+
+## Canais
+- **Community (gratuito)**: GitHub Issues/Discussões, sem SLA.
+- **Clientes**: e-mail dedicado (<support@seu-dominio>) e, a partir do plano **Gold**, canal Slack compartilhado.
+
+## Janela de atendimento (BRT)
+- **Silver/Gold**: seg–sex, 9h–18h (fuso: América/São_Paulo).
+- **Platinum**: S1 24×7; S2–S4 em horário comercial.
+
+## Severidade e SLA
+| Severidade | Definição | 1ª resposta | Próx. atualizações | Meta de mitigação |
+|---|---|---:|---:|---:|
+| **S1** | indisponibilidade total, perda de dados, bloqueio de produção | Silver: 2h • Gold: 1h • Platinum: 30min | Silver: 4h • Gold: 2h • Platinum: 1h | Workaround ≤ 8h (Silver) • 4h (Gold) • 2h (Platinum) |
+| **S2** | degradação severa sem workaround estável | Silver: 8h • Gold: 4h • Platinum: 2h | Silver: 1×/dia • Gold: 2×/dia • Platinum: 2×/dia | Workaround ≤ 2 dias (Silver) • 1 dia (Gold/Platinum) |
+| **S3** | bug não crítico, performance, dúvidas técnicas | Silver: 2 dias • Gold: 1 dia • Platinum: 4h | Atualizações semanais | Conforme backlog; priorização para Gold/Platinum |
+| **S4** | melhoria, consulta de uso, pedidos de feature | Silver: 3 dias • Gold: 2 dias • Platinum: 1 dia | Quinzenais | Roadmap público; clientes Gold+ podem influenciar |
+
+> *Metas indicativas; contratos podem ajustar prazos conforme escopo/ambiente.*
+
+## Planos
+
+### Community (gratuito)
+- GitHub Issues/Discussões • Sem SLA • Documentação • Releases públicos.
+
+### Silver (B.H. Brasil)
+- Até **3 incidentes S1/S2** por mês (uso justo) • **SLA** conforme tabela.
+- **2h/mês de Office Hours** (arquitetura/dúvidas).
+- Acesso a **hotfixes** de gravidade alta.
+- Sem LTS estendido.
+
+### Gold (B.H. + LTS)
+- Canal **Slack** compartilhado • **SLA** melhorado (tabela).
+- **8 incidentes S1/S2** por mês (uso justo).
+- **6h/mês de Office Hours** • **2 code reviews/mês** (≤ 500 LOC).
+- **LTS estendido:** até **18 meses** após EOSS do OSS para a mesma *minor*.
+- **Security advisories** antecipados (embargo).
+
+### Platinum (Enterprise 24×7 para S1)
+- **S1 24×7**, resposta 30 minutos • **TAM** (Technical Account Manager).
+- **Incidentes S1/S2 ilimitados** (uso justo; até 4 P1/mês).
+- **12h/mês de Office Hours** • **4 code reviews/mês** (≤ 800 LOC).
+- **LTS estendido:** até **24 meses** após EOSS do OSS para a mesma *minor*.
+- **Briefings trimestrais** de roadmap e workshops executivos.
+
+## Como abrir chamado (clientes)
+Envie para **support@seu-dominio** (ou Slack nos planos Gold+), incluindo:
+- Versão do Praxis e módulos afetados
+- Passos para reproduzir, logs e impacto no negócio
+- Ambiente (prod/homol/dev) e janelas de mudança
+
+## Exclusões gerais
+- Suporte a bibliotecas de terceiros fora da matriz de compatibilidade
+- Desenvolvimento de features sob medida (ver **Serviços Profissionais**)
+- Ambientes sem logs/telemetria mínimos ou sem reproduções plausíveis
+
+```
+
+---
+
+## 2) `LTS_POLICY.md`
+
+```md
+# Política de LTS — Praxis
+
+## SemVer e versões
+- Adoção de **SemVer**: `MAJOR.MINOR.PATCH`.
+- O branch `main` acompanha o próximo **MINOR** em desenvolvimento.
+
+## Janela de suporte OSS
+- Cada **MINOR** recebe **12 meses** de correções de bugs e **security patches** publicados publicamente.
+
+## LTS Comercial
+- **Gold**: até **+18 meses** de **backports de segurança e correções críticas** após o fim do suporte OSS (EOSS) para a mesma **MINOR**.
+- **Platinum**: até **+24 meses**.
+
+## Critérios de backport
+- Elegíveis: **falhas de segurança**, **corrupção/perda de dados**, **S1/S2** reproduzíveis.
+- Não elegíveis: features, refactors amplos, mudanças incompatíveis.
+
+## Processo de EOSS
+1. Anúncio de EOSS com 90 dias de antecedência.
+2. Último patch público.
+3. Transição para **LTS Comercial** (clientes Gold/Platinum).
+
+## Matriz de compatibilidade (exemplo)
+- Angular **20.x**: Praxis **>= 1.4**
+- Angular **19.x**: Praxis **1.2–1.3**
+- Node **>= 20**, NPM **>= 10** (recomendado)
+```
+
+---
+
+## 3) `SERVICE_CATALOG.md`
+
+```md
+# Catálogo de Serviços — Praxis
+
+## Pacotes de Modernização (inspirados em "Spring modernization")
+
+### 1) Praxis Setup Sprint (2–3 semanas)
+**Entregáveis**: arquitetura de referência, monorepo, CI/CD básico, theming M3, guidelines de componentes e demo funcional.
+
+### 2) Migration & Upgrade Pack
+**Escopo**: atualização para Angular 19/20+, migração de temas, ajuste de breaking changes, matriz de compatibilidade, testes.
+
+### 3) Security Hardening
+**Escopo**: RBAC, SSO (Keycloak), revisão de endpoints, dependabot/auditoria, política de segredos, threat model inicial.
+
+### 4) Performance & Observability
+**Escopo**: tracing/logs/métricas, otimização de data-binding e grids, lazy e caching, baseline de APM e dashboards.
+
+### 5) UX/Theming Accelerator
+**Escopo**: dark theme harmonizado, tokens, design tokens documentados, componentes inteligentes (CRUD, filtros, tabelas dinâmicas).
+
+### 6) Custom Dev & Integrations
+**Escopo**: campos/tiles dinâmicos, rule builder, conectores (WSO2, Keycloak, ERPs), automações e extensões corporativas.
+
+## Retainers (Banco de Horas)
+- **10/20/40 h/mês** para melhorias contínuas, pair-programming, code reviews e quick fixes.
+```
+
+---
+
+## 4) `TRAINING_CATALOG.md`
+
+```md
+# Treinamentos Oficiais — Praxis
+
+## 1) Foundations (8h)
+- Arquitetura do Praxis, metadados, componentes dinâmicos, melhores práticas.
+- **Hands-on**: montar um CRUD dinâmico completo.
+
+## 2) Advanced & Metadata (16h)
+- Schema-driven UI, masks/formatters, validações, regras condicionais, grid dinâmica.
+- **Hands-on**: construir um módulo complexo com filtros avançados e dashboards.
+
+## 3) Enterprise Integration (8–12h)
+- Integrações com Keycloak, WSO2, audit trail, build e deploy corporativos.
+- **Hands-on**: pipeline CI/CD e hardening básico.
+
+> Modalidades: remoto ao vivo, presencial e sob demanda (gravações + Q&A).
+```
+
+---
+
+## 5) `SECURITY.md`
+
+```md
+# Política de Segurança — Praxis
+
+Relatos de vulnerabilidade: **security@seu-dominio**.
+- Agradecemos POCs e passos de reprodução.
+- Período de embargo típico: **14 dias** antes da divulgação pública.
+- CVEs: atribuídos quando aplicável.
+```
+
+---
+
+## 6) Bloco para o `README.md`
+
+```md
+## Suporte Comercial, LTS e Serviços
+O Praxis é open source. Para **SLA, LTS estendido, treinamentos e modernização**, oferecemos planos **Silver/Gold/Platinum** e pacotes profissionais.
+
+👉 Detalhes: [`SUPPORT.md`](./SUPPORT.md), [`LTS_POLICY.md`](./LTS_POLICY.md), [`SERVICE_CATALOG.md`](./SERVICE_CATALOG.md), [`TRAINING_CATALOG.md`](./TRAINING_CATALOG.md)
+
+Contato: **contato@seu-dominio** | Segurança: **security@seu-dominio**
+```
+
+---
+
+## 7) Precificação (sugestão inicial)
+
+* **Planos** (BRL/mês): Silver **R\$ 2–4k**, Gold **R\$ 6–10k**, Platinum **R\$ 18–35k**. Desconto anual 15–20%.
+* **Pacotes**: precificação por **SOW** e escopo (ex.: Setup Sprint 2–3 semanas; Migration Pack por aplicação/módulo).
+* **Treinamentos**: tabela por turma/participante, com preços diferentes para remoto/presencial.
+
+> Ajuste por criticidade, tamanho do time e janelas de mudança. Contratos podem fixar SLAs e limites diferentes.
+
+---
+
+## 8) Operacional recomendado
+
+* Helpdesk (Freshdesk/Zendesk/HelpScout), automação de **SLA timers**.
+* **Slack Connect** para Gold+; reuniões mensais para Platinum.
+* Runbooks e checklists de reprodução; template de **SOW** e **MSA**.
+* **Roadmap público** (GitHub Projects) e **Advisory Board** trimestral para clientes Platinum.
+
+---
+
+### Como usar
+
+1. Copie os arquivos sugeridos para a raiz do repositório.
+2. Atualize os e-mails/domínios e faixas de preço.
+3. Anuncie no `README`, GitHub Releases e redes.
+4. Feche 1–2 **design partners** para validar SLAs, LTS e pacotes.
+
+```
+```
