@@ -20,6 +20,7 @@ export * from './lib/messages-localization-editor/messages-localization-editor.c
 export * from './lib/toolbar-actions-editor/toolbar-actions-editor.component';
 export * from './lib/value-mapping-editor/value-mapping-editor.component';
 export * from './lib/json-config-editor/json-config-editor.component';
+export * from './lib/filter-settings/filter-settings.component';
 
 // Integration and utilities
 export * from './lib/visual-formula-builder/visual-formula-builder.component';
