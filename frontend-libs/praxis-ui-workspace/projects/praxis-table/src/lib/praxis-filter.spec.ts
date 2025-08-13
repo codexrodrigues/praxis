@@ -5,14 +5,17 @@ import {
   tick,
 } from '@angular/core/testing';
 import { Component, SimpleChange, ViewChild } from '@angular/core';
-import { of, throwError } from 'rxjs';
+import { of, throwError, Subject } from 'rxjs';
 import {
   GenericCrudService,
   ConfigStorage,
   CONFIG_STORAGE,
 } from '@praxis/core';
 import { PraxisFilter, I18n, FilterTag } from './praxis-filter';
-import { FilterConfigService } from './services/filter-config.service';
+import {
+  FilterConfigService,
+  FilterConfig,
+} from './services/filter-config.service';
 import { SettingsPanelService } from '@praxis/settings-panel';
 
 describe('PraxisFilter', () => {
@@ -453,5 +456,29 @@ describe('PraxisFilter', () => {
     component.clear.subscribe(clearSpy);
     card.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     expect(clearSpy).toHaveBeenCalled();
+  });
+
+  it('should open settings panel and apply configuration', () => {
+    createComponent();
+
+    const applied$ = new Subject<FilterConfig>();
+    const ref = { applied$, close: jasmine.createSpy('close') } as any;
+    settingsPanel.open.and.returnValue(ref);
+
+    component.openSettings();
+
+    expect(settingsPanel.open).toHaveBeenCalled();
+
+    applied$.next({
+      quickField: 'name',
+      alwaysVisibleFields: ['status'],
+      placeholder: 'Buscar',
+      showAdvanced: true,
+    });
+
+    expect(component.quickField).toBe('name');
+    expect(component.alwaysVisibleFields).toEqual(['status']);
+    expect(component.advancedOpen).toBeTrue();
+    expect(ref.close).toHaveBeenCalled();
   });
 });

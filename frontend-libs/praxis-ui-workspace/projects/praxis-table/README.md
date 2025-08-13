@@ -33,6 +33,23 @@ A biblioteca `@praxis/table` fornece um componente de tabela robusto e altamente
 - **Toolbar Editor**: Personalização de ações
 - **Messages Editor**: Textos e localização
 
+### ⚙️ Painel de Configurações
+
+Para abrir o painel de configurações, habilite o modo de edição na tabela:
+
+```html
+<praxis-table [editModeEnabled]="true"></praxis-table>
+```
+
+Um botão de engrenagem será exibido no canto superior direito. Ao clicar nele, o `SettingsPanel` é aberto permitindo ajustar:
+
+- **Comportamento**: paginação, ordenação, filtros e recursos avançados.
+- **Colunas**: visibilidade, ordem, largura e estilo.
+- **Toolbar**: ações e botões da barra de ferramentas.
+- **Mensagens**: textos e rótulos exibidos na interface.
+
+As alterações podem ser aplicadas temporariamente com **Aplicar** ou salvas de forma persistente com **Salvar & Fechar**.
+
 ## 🚀 Instalação
 
 ```bash
