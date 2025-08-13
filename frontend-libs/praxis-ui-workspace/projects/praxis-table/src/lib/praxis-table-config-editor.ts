@@ -7,6 +7,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTabsModule } from '@angular/material/tabs';
 import { BehaviorSubject } from 'rxjs';
 import { TableConfig, isTableConfigV2, TableConfigService } from '@praxis/core';
 import {
@@ -44,6 +45,7 @@ import {
   imports: [
     CommonModule,
     MatIconModule,
+    MatTabsModule,
     JsonConfigEditorComponent,
     ColumnsConfigEditorComponent,
     BehaviorConfigEditorComponent,
@@ -52,58 +54,54 @@ import {
   ],
   template: `
     <div class="config-editor-container">
-      <nav class="sections-nav">
-        <button
-          type="button"
-          *ngFor="let section of sections; index as i"
-          (click)="activeSectionIndex = i"
-          [class.active]="i === activeSectionIndex"
-        >
-          <mat-icon *ngIf="section.icon">{{ section.icon }}</mat-icon>
-          <span>{{ section.label }}</span>
-        </button>
-      </nav>
-      <div class="sections-content">
-        <div *ngIf="activeSectionIndex === 0">
-          <behavior-config-editor
-            [config]="editedConfig"
-            (configChange)="onBehaviorConfigChange($event)"
-            (behaviorChange)="onBehaviorChange($event)"
-          ></behavior-config-editor>
-        </div>
+      <mat-tab-group class="config-tabs" [(selectedIndex)]="activeSectionIndex">
+        <mat-tab *ngFor="let section of sections">
+          <ng-template mat-tab-label>
+            <mat-icon *ngIf="section.icon">{{ section.icon }}</mat-icon>
+            <span>{{ section.label }}</span>
+          </ng-template>
+          <div class="tab-content">
+            <ng-container [ngSwitch]="section.id">
+              <behavior-config-editor
+                *ngSwitchCase="'overview'"
+                [config]="editedConfig"
+                (configChange)="onBehaviorConfigChange($event)"
+                (behaviorChange)="onBehaviorChange($event)"
+              ></behavior-config-editor>
 
-        <div *ngIf="activeSectionIndex === 1">
-          <columns-config-editor
-            [config]="editedConfig"
-            (configChange)="onColumnsConfigChange($event)"
-            (columnChange)="onColumnChange($event)"
-          ></columns-config-editor>
-        </div>
+              <columns-config-editor
+                *ngSwitchCase="'columns'"
+                [config]="editedConfig"
+                (configChange)="onColumnsConfigChange($event)"
+                (columnChange)="onColumnChange($event)"
+              ></columns-config-editor>
 
-        <div *ngIf="activeSectionIndex === 2">
-          <toolbar-actions-editor
-            [config]="editedConfig"
-            (configChange)="onToolbarActionsConfigChange($event)"
-            (toolbarActionsChange)="onToolbarActionsChange($event)"
-          ></toolbar-actions-editor>
-        </div>
+              <toolbar-actions-editor
+                *ngSwitchCase="'toolbar'"
+                [config]="editedConfig"
+                (configChange)="onToolbarActionsConfigChange($event)"
+                (toolbarActionsChange)="onToolbarActionsChange($event)"
+              ></toolbar-actions-editor>
 
-        <div *ngIf="activeSectionIndex === 3">
-          <messages-localization-editor
-            [config]="editedConfig"
-            (configChange)="onMessagesLocalizationConfigChange($event)"
-            (messagesLocalizationChange)="onMessagesLocalizationChange($event)"
-          ></messages-localization-editor>
-        </div>
+              <messages-localization-editor
+                *ngSwitchCase="'messages'"
+                [config]="editedConfig"
+                (configChange)="onMessagesLocalizationConfigChange($event)"
+                (messagesLocalizationChange)="
+                  onMessagesLocalizationChange($event)
+                "
+              ></messages-localization-editor>
 
-        <div *ngIf="activeSectionIndex === 4">
-          <json-config-editor
-            [config]="editedConfig"
-            (configChange)="onJsonConfigChange($event)"
-            (editorEvent)="onJsonEditorEvent($event)"
-          ></json-config-editor>
-        </div>
-      </div>
+              <json-config-editor
+                *ngSwitchCase="'json'"
+                [config]="editedConfig"
+                (configChange)="onJsonConfigChange($event)"
+                (editorEvent)="onJsonEditorEvent($event)"
+              ></json-config-editor>
+            </ng-container>
+          </div>
+        </mat-tab>
+      </mat-tab-group>
     </div>
     <div class="config-editor-status" *ngIf="statusMessage">
       <span
