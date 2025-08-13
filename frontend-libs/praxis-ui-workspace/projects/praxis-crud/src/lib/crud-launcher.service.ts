@@ -17,6 +17,7 @@ export class CrudLauncherService {
     ref?: DialogRef<any>;
   }> {
     const mode = this.resolveOpenMode(action, metadata);
+    console.debug('[CRUD:Launcher] mode=', mode, 'action=', action);
 
     if (mode === 'route') {
       if (!action.route) {
@@ -32,6 +33,15 @@ export class CrudLauncherService {
     }
     const inputs = this.mapInputs(action, row);
     const modalCfg = { ...(metadata.defaults?.modal || {}) } as any;
+
+    console.debug('[CRUD:Launcher] opening dialog with:', {
+      action: action.action,
+      formId: action.formId,
+      inputs,
+      modalCfg,
+      resourcePath:
+        metadata.resource?.path ?? (metadata.table as any)?.resourcePath,
+    });
     const panelClasses = ['pfx-dialog-pane', 'pfx-dialog-frosted'];
     if (modalCfg.panelClass) {
       panelClasses.push(modalCfg.panelClass);

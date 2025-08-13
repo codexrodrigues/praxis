@@ -46,6 +46,378 @@ O Praxis UI Workspace é um monorepo Angular que contém uma coleção de biblio
 - ✅ **Boolean Composition**: Lógica booleana complexa
 - ✅ **Metadata Management**: Gerenciamento de metadados
 
+### 🔄 Praxis CRUD (`@praxis/crud`)
+
+**Operações CRUD unificadas com integração tabela-formulário**
+
+- ✅ **CRUD Completo**: Create, Read, Update, Delete automatizado
+- ✅ **Integração Seamless**: Tabela + Formulário em um componente
+- ✅ **Modal/Route**: Suporte a diferentes modos de abertura
+- ✅ **Metadata-driven**: Configuração via JSON
+
+### 📦 Praxis Dynamic Fields (`@praxis/dynamic-fields`)
+
+**Componentes de input reutilizáveis com Material Design**
+
+- ✅ **30+ Componentes**: Inputs, selects, datepickers, etc.
+- ✅ **Lazy Loading**: Carregamento sob demanda
+- ✅ **Type-safe**: Totalmente tipado
+- ✅ **Extensível**: Fácil adicionar novos componentes
+
+### 📋 Praxis Dynamic Form (`@praxis/dynamic-form`)
+
+**Sistema de formulários dinâmicos com layout configurável**
+
+- ✅ **Layout Visual**: Editor drag-and-drop
+- ✅ **Regras Condicionais**: Visibilidade e validação dinâmica
+- ✅ **Integração Backend**: Via GenericCrudService
+- ✅ **Persistência**: Salvamento de layouts personalizados
+
+### ⚙️ Praxis Settings Panel (`@praxis/settings-panel`)
+
+**Painéis de configuração e preferências**
+
+- ✅ **Drawer Panel**: Interface lateral deslizante
+- ✅ **Configurações Dinâmicas**: Baseadas em metadados
+- ✅ **Persistência**: Local e remota
+- ✅ **Temas e Preferências**: Gestão centralizada
+
+## 📚 Arquitetura das Bibliotecas
+
+### 🎯 Guia de Decisão Rápido
+
+```
+Preciso de...
+├─ 🔤 Um campo de input individual? → @praxis/dynamic-fields
+├─ 📝 Um formulário completo? → @praxis/dynamic-form  
+├─ 📊 Uma tabela de dados? → @praxis/table
+├─ 🔄 CRUD completo (tabela + form)? → @praxis/crud
+├─ ✅ Validação e regras complexas? → @praxis/specification
+├─ 🎨 Editor visual de regras? → @praxis/visual-builder
+├─ ⚙️ Painel de configurações? → @praxis/settings-panel
+└─ 🏗️ Interface/modelo/serviço base? → @praxis/core
+```
+
+### 📦 @praxis/core - Fundação do Ecossistema
+
+**🎯 Objetivo Principal**  
+Fornecer a infraestrutura base compartilhada por todas as outras bibliotecas: interfaces, modelos, serviços fundamentais e utilitários.
+
+**✅ Quando Usar**
+- Precisa de interfaces TypeScript (TableConfig, FormConfig, FieldDefinition)
+- Implementar serviços de CRUD genéricos
+- Acessar tokens de injeção (API_URL, OVERLAY_DECISION_MATRIX)
+- Usar o OverlayDeciderService para escolher modal/drawer/page
+- Normalizar schemas do backend
+
+**📋 Responsabilidades**
+- Definições de tipos e interfaces base
+- GenericCrudService para operações REST
+- SchemaNormalizerService para metadados
+- OverlayDeciderService para decisões de UI
+- Tokens de configuração global
+- Modelos de paginação e resposta API
+
+**❌ NÃO Pertence Aqui**
+- Componentes visuais (vão para outras libs)
+- Lógica de negócio específica
+- Implementações concretas de UI
+
+**🔗 Dependências**: Nenhuma (é a base)
+
+**💡 Exemplo de Uso**
+```typescript
+import { TableConfig, GenericCrudService, API_URL } from '@praxis/core';
+
+// Usar interface para configurar tabela
+const config: TableConfig = { /* ... */ };
+
+// Injetar serviço CRUD
+constructor(private crud: GenericCrudService<Usuario>) {
+  crud.configure('usuarios');
+}
+```
+
+### 🔤 @praxis/dynamic-fields - Componentes de Input
+
+**🎯 Objetivo Principal**  
+Fornecer componentes de input individuais e reutilizáveis com Material Design, com sistema de registro dinâmico e lazy loading.
+
+**✅ Quando Usar**
+- Precisa de um campo de input específico (text, select, date, etc.)
+- Quer lazy loading de componentes
+- Necessita de componentes Material Design padronizados
+- Implementar novos tipos de input customizados
+
+**📋 Responsabilidades**
+- Componentes individuais de input (30+ tipos)
+- Sistema de registro dinâmico (ComponentRegistry)
+- Lazy loading e cache de componentes
+- Validadores e error matchers
+- Componentes especializados (ColorPicker, TimePicker, FileUpload)
+
+**❌ NÃO Pertence Aqui**
+- Layout de formulários (vai para dynamic-form)
+- Lógica de CRUD
+- Configuração de tabelas
+- Regras de negócio complexas
+
+**🔗 Dependências**: @praxis/core
+
+**💡 Exemplo de Uso**
+```typescript
+import { ComponentRegistryService, FieldControlType } from '@praxis/dynamic-fields';
+
+// Registrar e usar componente dinamicamente
+const component = await registry.getComponent(FieldControlType.DATE_PICKER);
+```
+
+### 📝 @praxis/dynamic-form - Formulários Dinâmicos
+
+**🎯 Objetivo Principal**  
+Construir formulários completos e dinâmicos com layout configurável, regras condicionais e integração com backend.
+
+**✅ Quando Usar**
+- Precisa de um formulário completo (não apenas campos)
+- Quer layout configurável (fieldsets, rows, columns)
+- Necessita de regras condicionais entre campos
+- Precisa de editor visual de layout
+- Integração com backend para save/load
+
+**📋 Responsabilidades**
+- PraxisDynamicForm component
+- Sistema de layout (fieldsets, rows, fields)
+- Editor visual de layout (drag-and-drop)
+- Regras condicionais e visibilidade
+- Integração com GenericCrudService
+- Persistência de configurações
+
+**❌ NÃO Pertence Aqui**
+- Componentes de input individuais (vêm do dynamic-fields)
+- Tabelas de dados
+- Validações complexas de negócio (usar specification)
+
+**🔗 Dependências**: @praxis/core, @praxis/dynamic-fields
+
+**💡 Exemplo de Uso**
+```typescript
+<praxis-dynamic-form
+  [formId]="'user-form'"
+  [resourcePath]="'usuarios'"
+  [resourceId]="userId"
+  [mode]="'edit'"
+  (formSubmit)="onSave($event)">
+</praxis-dynamic-form>
+```
+
+### 📊 @praxis/table - Tabelas Avançadas
+
+**🎯 Objetivo Principal**  
+Fornecer componente de tabela empresarial com recursos avançados como paginação, ordenação, filtros e editores visuais.
+
+**✅ Quando Usar**
+- Exibir dados em formato tabular
+- Necessita paginação, ordenação ou filtros
+- Quer configuração visual da tabela
+- Precisa de exportação (CSV, Excel, PDF)
+- Seleção e ações em lote
+
+**📋 Responsabilidades**
+- PraxisTable component
+- Paginação client/server-side
+- Ordenação múltipla
+- Filtros globais e por coluna
+- Editores de configuração visual
+- Virtualização para grandes volumes
+- Exportação de dados
+
+**❌ NÃO Pertence Aqui**
+- Formulários de edição (usar dynamic-form)
+- Lógica de CRUD (usar crud lib)
+- Componentes de input
+
+**🔗 Dependências**: @praxis/core, @praxis/dynamic-fields
+
+**💡 Exemplo de Uso**
+```typescript
+<praxis-table
+  [config]="tableConfig"
+  [resourcePath]="'funcionarios'"
+  (rowClick)="onRowClick($event)"
+  (rowAction)="onAction($event)">
+</praxis-table>
+```
+
+### ✅ @praxis/specification - Validações e Regras
+
+**🎯 Objetivo Principal**  
+Sistema de especificações para validações complexas, regras de negócio e composição booleana avançada.
+
+**✅ Quando Usar**
+- Validações além das básicas (required, min, max)
+- Regras de negócio complexas
+- Validações condicionais entre campos
+- Composição booleana (AND, OR, XOR, IMPLIES)
+- DSL para expressões de validação
+
+**📋 Responsabilidades**
+- Motor de especificações
+- Validadores condicionais
+- Composição booleana
+- Parser e tokenizer DSL
+- Context providers
+- Metadata de especificações
+
+**❌ NÃO Pertence Aqui**
+- Componentes visuais
+- Lógica de UI
+- Operações CRUD
+- Layout de formulários
+
+**🔗 Dependências**: @praxis/core
+
+**💡 Exemplo de Uso**
+```typescript
+import { FieldSpecification, AndSpecification } from '@praxis/specification';
+
+const spec = new AndSpecification([
+  new FieldSpecification('age', '>=', 18),
+  new FieldSpecification('hasLicense', '==', true)
+]);
+
+const isValid = spec.isSatisfiedBy(context);
+```
+
+### 🎨 @praxis/visual-builder - Editores Visuais
+
+**🎯 Objetivo Principal**  
+Ferramentas visuais para construção de regras, expressões DSL e templates com interface gráfica intuitiva.
+
+**✅ Quando Usar**
+- Editor visual de regras de negócio
+- Construtor de expressões DSL
+- Templates de regras reutilizáveis
+- Conversão visual ↔ textual (round-trip)
+- Validação em tempo real de expressões
+
+**📋 Responsabilidades**
+- Visual Rule Builder
+- Expression Editor com autocomplete
+- Context Variable Manager
+- Template System
+- DSL Parser/Validator
+- Round-trip conversion
+- Export/Import de regras
+
+**❌ NÃO Pertence Aqui**
+- Execução de regras (usar specification)
+- Componentes de formulário
+- Tabelas de dados
+- Operações CRUD
+
+**🔗 Dependências**: @praxis/core, @praxis/specification
+
+**💡 Exemplo de Uso**
+```typescript
+<praxis-visual-rule-builder
+  [fieldSchemas]="fields"
+  [contextVariables]="variables"
+  [(rule)]="currentRule"
+  (export)="onExport($event)">
+</praxis-visual-rule-builder>
+```
+
+### 🔄 @praxis/crud - Operações CRUD Unificadas
+
+**🎯 Objetivo Principal**  
+Unificar tabela e formulário em um componente CRUD completo com suporte a diferentes modos de abertura (modal/rota).
+
+**✅ Quando Usar**
+- CRUD completo sem configuração manual
+- Integração automática tabela + formulário
+- Alternar entre modal e navegação por rota
+- Configuração via metadata JSON
+- Ações padronizadas (criar, editar, excluir)
+
+**📋 Responsabilidades**
+- PraxisCrudComponent
+- CrudLauncherService
+- Gestão de modais e rotas
+- Mapeamento de parâmetros
+- Integração com PraxisTable e PraxisDynamicForm
+- Dialog host para formulários
+
+**❌ NÃO Pertence Aqui**
+- Componentes de input básicos
+- Validações de negócio
+- Editores visuais
+- Configurações globais
+
+**🔗 Dependências**: @praxis/core, @praxis/dynamic-form, @praxis/table
+
+**💡 Exemplo de Uso**
+```typescript
+<praxis-crud
+  [metadata]="crudMetadata"
+  (afterSave)="onSave($event)"
+  (afterDelete)="onDelete($event)">
+</praxis-crud>
+```
+
+### ⚙️ @praxis/settings-panel - Painéis de Configuração
+
+**🎯 Objetivo Principal**  
+Fornecer painéis deslizantes (drawers) para configurações, preferências e opções avançadas da aplicação.
+
+**✅ Quando Usar**
+- Painéis de configuração da aplicação
+- Preferências do usuário
+- Configurações avançadas
+- Drawers laterais para opções
+- Persistência de preferências
+
+**📋 Responsabilidades**
+- SettingsPanelComponent
+- SettingsPanelService
+- Gestão de estado do painel
+- Persistência local/remota
+- Animações de abertura/fechamento
+- Integração com temas
+
+**❌ NÃO Pertence Aqui**
+- Formulários de dados (usar dynamic-form)
+- Tabelas (usar table)
+- Validações complexas
+- Lógica de CRUD
+
+**🔗 Dependências**: @praxis/core
+
+**💡 Exemplo de Uso**
+```typescript
+constructor(private settingsPanel: SettingsPanelService) {}
+
+openSettings() {
+  this.settingsPanel.open({
+    title: 'Configurações',
+    component: MySettingsComponent,
+    width: '400px'
+  });
+}
+```
+
+## 🔗 Matriz de Responsabilidades
+
+| Biblioteca | Input | Form | Table | CRUD | Rules | Visual | Config |
+|------------|-------|------|-------|------|-------|--------|--------|
+| core | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ Interfaces |
+| dynamic-fields | ✅ Individual | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| dynamic-form | ❌ | ✅ Completo | ❌ | ❌ | ✅ Simples | ❌ | ✅ Layout |
+| table | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ Columns |
+| specification | ❌ | ❌ | ❌ | ❌ | ✅ Complexas | ❌ | ❌ |
+| visual-builder | ❌ | ❌ | ❌ | ❌ | ✅ Editor | ✅ | ❌ |
+| crud | ❌ | ✅ Via form | ✅ Via table | ✅ | ❌ | ❌ | ✅ Metadata |
+| settings-panel | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ App |
+
 ## 🚀 Novidades da Arquitetura Unificada
 
 ### ⚡ Principais Melhorias
@@ -90,11 +462,31 @@ cd praxis-ui-workspace
 npm install
 
 # Build de todas as bibliotecas
-npm run build
+npm run build:libs
 
 # Executar aplicação de desenvolvimento
-ng serve
+npm start
 ```
+
+## 📚 Guia de Navegação
+
+### 🏗️ Build e Desenvolvimento
+- [🏗️ Arquitetura de Build](#%EF%B8%8F-arquitetura-de-build) - Por que monorepo e como funciona
+- [⚙️ Comandos de Build Detalhados](#%EF%B8%8F-comandos-de-build-detalhados) - Watch, produção e debug
+- [📦 Processo de Publicação](#-processo-de-publicação) - Versionamento e NPM publish
+- [🏗️ Build e Deploy Avançado](#%EF%B8%8F-build-e-deploy-avançado) - CI/CD, Docker e otimizações
+- [🔧 Desenvolvimento](#-desenvolvimento) - Setup, debug e fluxo de trabalho
+
+### 🎯 Uso e Integração  
+- [📚 Arquitetura das Bibliotecas](#-arquitetura-das-bibliotecas) - Objetivos e responsabilidades de cada lib
+- [📝 Uso Básico](#-uso-básico) - Exemplos práticos
+- [🔗 Integração com Backend](#-integração-com-backend-praxis-metadata-core) - Metadados e APIs
+- [🧭 Matriz de Decisão de Overlays](#-matriz-de-decisão-de-overlays) - Seleção automática de UI patterns
+
+### 📖 Documentação e Referências
+- [📚 Documentação](#-documentação) - Guias detalhados e API reference
+- [🧪 Testes](#-testes) - Como executar e configurar testes
+- [🤝 Contribuição](#-contribuição) - Guidelines para contribuir
 
 ## 🧭 Matriz de Decisão de Overlays
 
@@ -221,6 +613,25 @@ O ecossistema Praxis é projetado para uma integração transparente entre o fro
 
 O projeto `praxis-backend-libs-sample-app` no repositório serve como uma implementação de referência completa de um backend que utiliza o `praxis-metadata-core` e expõe as APIs necessárias para alimentar o `praxis-ui-workspace`. Ele é fundamental para testar a integração e entender o fluxo de ponta a ponta.
 
+## 🏢 Consumo via Metadados em Ambientes Corporativos
+
+O `praxis-ui-workspace` foi pensado para organizações que padronizam suas interfaces por meio de **metadados**. A seguir algumas recomendações para adoção em ambientes corporativos:
+
+1. **Centralize a configuração de APIs**
+   - Utilize `ApiUrlConfig` ou arquivos de `environment` para definir o `baseApiUrl`.
+   - Empregue variáveis de ambiente para separar staging, homologação e produção.
+
+2. **Versione e valide os schemas**
+   - Exponha endpoints versionados como `/schemas/v1` para garantir compatibilidade entre times.
+   - Automatize a validação dos schemas em pipelines de CI/CD antes de disponibilizá-los.
+
+3. **Segurança e governança**
+   - Restrinja o acesso aos endpoints de metadados conforme as políticas internas.
+   - Habilite logging estruturado para auditoria e troubleshooting.
+
+4. **Experiência do usuário consistente**
+   - Componentes como `PraxisDynamicForm` e `PraxisTable` aplicam automaticamente padrões de UX a partir dos metadados, garantindo consistência visual e comportamental entre aplicações.
+
 ## 🧪 Testes
 
 ### Executar todos os testes
@@ -251,44 +662,513 @@ ng test praxis-specification
 npm run test:coverage
 ```
 
-## 🏗️ Build e Deploy
+## 🏗️ Arquitetura de Build
 
-### Build de produção
+### Por que um Monorepo?
+
+O Praxis UI Workspace utiliza uma arquitetura de **monorepo** que oferece vantagens significativas:
+
+- 🔗 **Versionamento Unificado**: Todas as bibliotecas evoluem de forma sincronizada
+- 🚀 **Desenvolvimento Integrado**: Mudanças em uma lib são imediatamente refletidas em outras
+- 🎯 **Reutilização de Código**: Componentes e utilitários compartilhados entre projetos
+- 🛠️ **Tooling Consistente**: Mesmas configurações de build, lint e test para todas as libs
+
+### Diferença entre Aplicação e Bibliotecas
 
 ```bash
-# Build de todas as bibliotecas
-npm run build
+# 📱 APLICAÇÃO PRINCIPAL (praxis-ui-workspace)
+# - Consome as bibliotecas
+# - Usado para desenvolvimento e testes
+# - Build gera arquivos para browser (JS, CSS, HTML)
+ng build                                    # Build da aplicação
+ng serve                                    # Servidor de desenvolvimento
 
-# Build da aplicação principal
-ng build --configuration=production
+# 📦 BIBLIOTECAS (praxis-core, praxis-table, etc.)
+# - Código reutilizável
+# - Podem ser publicadas no NPM
+# - Build gera arquivos para distribuição (.d.ts, .mjs, .umd.js)
+ng build praxis-core                        # Build de biblioteca específica
+ng build praxis-table                       # Build de biblioteca específica
 ```
 
-### Publicação (NPM)
+### Dependências entre Bibliotecas
+
+As bibliotecas possuem uma hierarquia de dependências bem definida:
+
+```
+📊 Hierarquia de Dependências:
+┌─ praxis-core (base - sem dependências internas)
+├─ praxis-dynamic-fields (depende: core)
+├─ praxis-specification (depende: core)
+├─ praxis-dynamic-form (depende: core, dynamic-fields)
+├─ praxis-table (depende: core, dynamic-fields)
+├─ praxis-visual-builder (depende: core, specification)
+├─ praxis-crud (depende: core, dynamic-form)
+└─ praxis-settings-panel (depende: core)
+```
+
+**⚠️ Ordem de Build Importante**: As bibliotecas base devem ser compiladas antes das que dependem delas.
+
+## ⚙️ Comandos de Build Detalhados
+
+### 🔄 Desenvolvimento (Watch Mode)
 
 ```bash
-# Build e publish de uma biblioteca específica
-cd dist/praxis-core
-npm publish
+# 🎯 Recomendado: Build automático de todas as libs + serve da aplicação
+npm run dev
+# Executa: watch-all + ng serve em paralelo
+# Resultado: Mudanças em qualquer lib são refletidas automaticamente na app
 
-cd ../praxis-table
-npm publish
+# 📚 Apenas build automático das libs (sem servidor)
+npm run watch-all
+# Rebuilda automaticamente: core, table, specification, dynamic-fields, dynamic-form
+# Útil quando você quer apenas compilar libs sem rodar a aplicação
 
-cd ../praxis-visual-builder
-npm publish
+# 🔧 Build individual com watch
+ng build praxis-core --watch               # Rebuild automático apenas do core
+ng build praxis-table --watch --configuration development
+```
 
-cd ../praxis-specification
-npm publish
+### 🏭 Produção
+
+```bash
+# 🎯 Build completo otimizado
+npm run build
+# Compila aplicação principal em modo de produção
+
+# 📦 Build de todas as bibliotecas para distribuição (desenvolvimento)
+npm run build:libs
+
+# 📦 Build de todas as bibliotecas para distribuição (produção)
+npm run build:libs:prod
+
+# 📦 Build manual individual (caso necessário)
+ng build praxis-core && \
+ng build praxis-dynamic-fields && \
+ng build praxis-specification && \
+ng build praxis-dynamic-form && \
+ng build praxis-table && \
+ng build praxis-visual-builder && \
+ng build praxis-crud && \
+ng build praxis-settings-panel
+
+# 🎯 Build individual otimizado
+ng build praxis-core --configuration production
+```
+
+### 🔍 Build com Verificações
+
+```bash
+# ✅ Build + testes
+npm run build && npm test
+
+# 🔎 Build + análise de bundle size
+ng build --stats-json
+npx webpack-bundle-analyzer dist/praxis-ui-workspace/stats.json
+
+# 🛡️ Build com strict mode (mais verificações)
+ng build --configuration production --aot --build-optimizer
+```
+
+### 🧹 Limpeza e Rebuild
+
+```bash
+# 🗑️ Limpar builds anteriores
+rm -rf dist/
+rm -rf node_modules/.angular/
+
+# 🔄 Rebuild completo limpo
+npm run build:clean
+```
+
+## 📦 Processo de Publicação
+
+### 🎯 Versionamento Semântico
+
+O projeto segue [Semantic Versioning](https://semver.org/):
+
+```bash
+# 🐛 Bug fix (1.0.0 → 1.0.1)
+npm run release patch
+
+# ✨ Nova funcionalidade (1.0.1 → 1.1.0)  
+npm run release minor
+
+# 💥 Breaking change (1.1.0 → 2.0.0)
+npm run release major
+
+# 🎯 Versão específica
+npm run release 2.1.3
+
+# 📝 Ou usar diretamente o script
+./scripts/release-all.sh patch
+```
+
+### 🚀 Publicação no NPM
+
+```bash
+# 1️⃣ Build de produção de todas as libs
+npm run build:libs:prod
+
+# 2️⃣ Publicação individual (em ordem de dependência)
+cd dist/praxis-core && npm publish
+cd ../praxis-dynamic-fields && npm publish  
+cd ../praxis-specification && npm publish
+cd ../praxis-dynamic-form && npm publish
+cd ../praxis-table && npm publish
+cd ../praxis-visual-builder && npm publish
+cd ../praxis-crud && npm publish
+cd ../praxis-settings-panel && npm publish
+
+# 🔙 Voltar para raiz
+cd ../../
+```
+
+### 🔐 Configuração NPM (primeira vez)
+
+```bash
+# Login no NPM
+npm login
+
+# Verificar configuração
+npm whoami
+npm config list
+
+# Configurar scope (se necessário)
+npm config set @praxis:registry https://registry.npmjs.org/
+```
+
+### 🏷️ Tags e Releases
+
+```bash
+# Criar tag de versão
+git tag v$(node -p "require('./projects/praxis-core/package.json').version")
+
+# Push com tags
+git push origin main --tags
+
+# Criar release no GitHub (manual ou via GitHub CLI)
+gh release create v2.1.0 --title "Release v2.1.0" --notes "Changelog..."
+```
+
+## 🏗️ Build e Deploy Avançado
+
+### 📊 Análise de Performance
+
+```bash
+# Bundle analyzer para aplicação principal
+ng build --stats-json
+npx webpack-bundle-analyzer dist/praxis-ui-workspace/stats.json
+
+# Análise de dependências
+npm ls --depth=0
+npm outdated
+
+# Size tracking
+npm install -g bundlesize
+bundlesize
+```
+
+### 🐳 Docker Build
+
+```dockerfile
+# Dockerfile (exemplo)
+FROM node:18-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+
+COPY . .
+RUN npm run build
+
+FROM nginx:alpine
+COPY --from=builder /app/dist/praxis-ui-workspace /usr/share/nginx/html
+```
+
+### ☁️ CI/CD Pipeline
+
+```yaml
+# .github/workflows/build.yml (exemplo)
+name: Build and Test
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - run: npm ci
+      - run: npm run build
+      - run: npm test
+      
+      # Build all libraries
+      - run: |
+          ng build praxis-core
+          ng build praxis-dynamic-fields  
+          ng build praxis-table
+          # ... outras libs
+```
+
+### 🔧 Troubleshooting de Build
+
+#### ❌ Problemas Comuns
+
+**1. Erro de Dependência Circular:**
+```bash
+# ❌ ERROR: Circular dependency detected
+# ✅ Solução: Revisar imports e extrair interfaces comuns
+```
+
+**2. Memory Issues:**
+```bash
+# ❌ JavaScript heap out of memory
+# ✅ Solução: Aumentar memória do Node.js
+export NODE_OPTIONS="--max-old-space-size=8192"
+npm run build
+```
+
+**3. TypeScript Errors:**
+```bash
+# ❌ TS errors in libs
+# ✅ Verificar tsconfig.json e dependências
+ng build praxis-core --verbose
+```
+
+**4. ng-packagr Issues:**
+```bash
+# ❌ ng-packagr build failed
+# ✅ Limpar cache e rebuildar
+rm -rf node_modules/.ng_pkg_build/
+ng build praxis-core
+```
+
+#### 🔍 Debug de Build
+
+```bash
+# Build verbose para mais detalhes
+ng build --verbose
+
+# Check de configuração
+ng config
+
+# Análise de dependências
+npm ls @angular/core
+npm ls typescript
+
+# Verificar compatibilidade
+ng update --dry-run
+```
+
+### 📈 Otimizações de Performance
+
+```bash
+# Build com otimizações máximas
+ng build --optimization --aot --build-optimizer --extract-licenses
+
+# Parallel builds (experimental)
+npm install -g @angular/build-angular
+ng build --parallel
+
+# Cache de build (para CIs)
+ng build --cache-path=.angular-cache
 ```
 
 ## 🔧 Desenvolvimento
 
-### Adicionando uma nova funcionalidade
+### 🚀 Setup de Desenvolvimento
 
-1. Escolha a biblioteca apropriada
-2. Crie componente/serviço na pasta correspondente
-3. Adicione testes
-4. Atualize exports no `public-api.ts`
-5. Documente as mudanças
+#### Primeiro Setup
+
+```bash
+# 1️⃣ Clone e instalação
+git clone <repository-url>
+cd praxis-ui-workspace
+npm install
+
+# 2️⃣ Build inicial das libs (necessário na primeira vez)
+npm run build:libs
+
+# 3️⃣ Iniciar desenvolvimento
+npm run dev
+# Resultado: Servidor em http://localhost:4003 + watch automático das libs
+```
+
+#### 🔄 Desenvolvimento Diário
+
+```bash
+# Comando único para desenvolvimento
+npm run dev
+
+# Ou comandos separados
+npm run watch-all    # Terminal 1: Watch das libs
+npm start           # Terminal 2: Servidor da aplicação
+```
+
+### 🧩 Adicionando Nova Funcionalidade
+
+#### 1️⃣ Escolher Biblioteca Apropriada
+
+```bash
+# 🎯 Core: Interfaces, modelos, serviços base
+# 📦 Dynamic Fields: Componentes de input reutilizáveis  
+# 📋 Dynamic Form: Formulários dinâmicos e layout
+# 🗃️ Table: Componentes de tabela avançados
+# 🎨 Visual Builder: Ferramentas visuais e rule builders
+# 📋 Specification: Sistema de validação e especificações
+# 🔄 CRUD: Operações CRUD unificadas
+# ⚙️ Settings Panel: Painéis de configuração
+```
+
+#### 2️⃣ Fluxo de Desenvolvimento
+
+```bash
+# 1. Criar o componente/serviço
+ng generate component nova-funcionalidade --project=praxis-table
+
+# 2. Implementar funcionalidade
+# - Editar o código do componente
+# - Adicionar ao public-api.ts da biblioteca
+
+# 3. Testar localmente  
+ng test praxis-table
+
+# 4. Build para verificar se não quebrou nada
+ng build praxis-table
+
+# 5. Testar na aplicação principal
+npm run dev
+```
+
+#### 3️⃣ Estrutura de Arquivos
+
+```
+projects/praxis-[lib]/src/lib/
+├── components/          # Componentes UI
+├── services/           # Serviços e lógica de negócio  
+├── models/             # Interfaces e tipos
+├── utils/              # Utilitários
+├── directives/         # Diretivas customizadas
+└── public-api.ts       # ⚠️ SEMPRE atualizar com exports
+```
+
+### 🐛 Debug e Troubleshooting
+
+#### 🔍 Debug de Desenvolvimento
+
+```bash
+# Logs detalhados de build
+ng build praxis-core --verbose
+
+# Debug no browser
+# 1. Abrir DevTools
+# 2. Sources → webpack:// → libs/praxis-[lib]
+# 3. Breakpoints funcionam normalmente
+
+# Verificar linking das libs
+npm ls @praxis/core
+npm ls @praxis/table
+
+# Hot reload não funciona?
+# Verificar se watch-all está rodando
+ps aux | grep "ng build"
+```
+
+#### 🚨 Problemas Comuns
+
+**1. Lib não atualiza na aplicação:**
+```bash
+# ✅ Verificar se watch está ativo
+npm run watch-all
+
+# ✅ Forçar rebuild
+ng build praxis-core --watch
+```
+
+**2. Erros de TypeScript:**
+```bash
+# ✅ Verificar public-api.ts atualizado
+cat projects/praxis-core/src/public-api.ts
+
+# ✅ Verificar tsconfig.json
+npx tsc --noEmit --project projects/praxis-core/tsconfig.lib.json
+```
+
+**3. Hot reload quebrado:**
+```bash
+# ✅ Restart completo
+pkill -f "ng serve"
+pkill -f "ng build"
+npm run dev
+```
+
+**4. Dependências quebradas:**
+```bash
+# ✅ Limpar node_modules
+rm -rf node_modules package-lock.json
+npm install
+
+# ✅ Verificar compatibilidade Angular
+ng update --dry-run
+```
+
+### 🧪 Desenvolvimento com Testes
+
+```bash
+# Teste durante desenvolvimento
+ng test praxis-core --watch
+
+# Teste de toda a suite (aplicação principal)
+npm test
+
+# Teste de todas as bibliotecas
+npm run test:libs
+
+# Coverage específico
+ng test praxis-table --code-coverage
+
+# E2E (se configurado)
+ng e2e
+```
+
+### 🔗 Linking Local para Projetos Externos
+
+```bash
+# 1️⃣ Build da lib
+ng build praxis-core
+
+# 2️⃣ Link global
+cd dist/praxis-core
+npm link
+
+# 3️⃣ No projeto externo
+cd /path/to/external-project
+npm link @praxis/core
+
+# 4️⃣ Para desfazer
+npm unlink @praxis/core  # no projeto externo
+npm unlink               # no dist/praxis-core
+```
+
+### 📊 Performance de Desenvolvimento
+
+```bash
+# Build mais rápido (skip otimizações)
+ng build praxis-core --configuration development
+
+# Parallel watch (experimental)
+npm run watch-all --parallel
+
+# Cache agressivo (cuidado com mudanças)
+ng build --cache-path=.angular-cache
+
+# Memory profiling
+node --inspect-brk node_modules/@angular/cli/bin/ng build praxis-core
+```
 
 ### Estrutura do Projeto
 

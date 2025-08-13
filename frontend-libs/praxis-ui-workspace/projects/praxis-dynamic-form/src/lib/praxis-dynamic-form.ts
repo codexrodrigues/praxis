@@ -25,7 +25,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
-import { Subject } from 'rxjs';
+import { Subject, firstValueFrom } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import {
   GenericCrudService,
@@ -342,7 +342,7 @@ import { normalizeFormConfig } from './utils/normalize-form-config';
       .form-section {
         border: 1px solid var(--md-sys-color-outline-variant);
         border-radius: 8px;
-        padding: 1.0rem;
+        padding: 1rem;
         background-color: var(--md-sys-color-surface-container-lowest);
         transition: all 0.2s ease;
         position: relative;
@@ -530,6 +530,7 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   form!: FormGroup;
   private pendingEntityId: string | number | null = null;
   private loadedEntityId: string | number | null = null;
+  private loadedEntityData: Record<string, any> | null = null;
   private schemaCache: any = null;
   private destroy$ = new Subject<void>();
 
@@ -543,6 +544,11 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
     @Inject(CONFIG_STORAGE) private configStorage: ConfigStorage,
   ) {
     this.form = this.fb.group({});
+    console.debug('[PDF] ctor inputs', {
+      formId: this.formId,
+      resourcePath: this.resourcePath,
+      mode: this.mode,
+    });
   }
 
   // Getter para o estado efetivo de CUSTOMIZAÇÃO DE LAYOUT
@@ -563,6 +569,10 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   }
 
   ngOnInit(): void {
+    console.debug('[PDF] ngOnInit gating', {
+      formId: this.formId,
+      resourcePath: this.resourcePath,
+    });
     // Carregar estado persistido de CUSTOMIZAÇÃO DE LAYOUT (não confundir com dados)
     if (this.formId) {
       const customizationModeKey = `praxis-layout-customization-${this.formId}`;
@@ -595,15 +605,20 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['resourcePath'] && this.resourcePath) {
+      console.debug(
+        '[PDF] ngOnChanges resourcePath=',
+        this.resourcePath,
+        ' -> configure()',
+      );
       this.crud.configure(this.resourcePath);
-
-      // Only initialize if not already initialized or if resourcePath actually changed
+      // this.loadSchema(); // se houver
       if (!this.isInitialized && !this.isLoading && this.formId) {
         this.initializeForm();
       }
     }
 
     if (changes['resourceId']) {
+      console.debug('[PDF] ngOnChanges resourceId=', this.resourceId);
       this.pendingEntityId = this.resourceId ?? null;
       if (this.config.fieldMetadata?.length && this.pendingEntityId != null) {
         this.loadEntity();
@@ -612,6 +627,10 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   }
 
   private async initializeForm(): Promise<void> {
+    console.debug('[PDF] initializeForm:start', {
+      isInitialized: this.isInitialized,
+      isLoading: this.isLoading,
+    });
     // Prevent duplicate initialization
     if (this.isInitialized || this.isLoading) {
       this.debugLog('⚠️ Skipping duplicate initialization', {
@@ -641,6 +660,10 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
       // Step 1: Check for local saved config
       const configKey = `praxis-form-config-${this.formId}`;
       const localConfig = this.configStorage.loadConfig<FormConfig>(configKey);
+      console.debug(
+        '[PDF] initializeForm:flow',
+        localConfig ? 'LOCAL_CONFIG_SYNC' : 'SERVER_DEFAULT',
+      );
 
       if (localConfig) {
         // Flow 1: Has local config - load it and sync with server
@@ -653,6 +676,7 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
         await this.createDefaultConfig();
       }
 
+      console.debug('[PDF] initializeForm:buildForm');
       // Build the form
       this.buildFormFromConfig();
 
@@ -661,10 +685,12 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
         this.loadEntity();
       }
 
+      console.debug('[PDF] initializeForm:success');
       this.initializationStatus = 'success';
       this.isInitialized = true;
       this.cdr.detectChanges();
     } catch (error) {
+      console.error('[PDF] initializeForm:error', error);
       this.handleInitializationError('form-build', error as Error, {
         formId: this.formId,
         resourcePath: this.resourcePath,
@@ -782,19 +808,24 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   }
 
   private loadEntity(): void {
+    console.debug('[PDF] loadEntity:start', { id: this.pendingEntityId });
     if (this.pendingEntityId == null) {
       return;
     }
 
-    // Avoid duplicate entity loading
+    // Avoid duplicate network requests but allow re-patching after form build
     if (this.loadedEntityId === this.pendingEntityId) {
-      this.debugLog('⚠️ Skipping duplicate entity load', {
-        entityId: this.pendingEntityId,
-      });
+      if (this.loadedEntityData && Object.keys(this.form.controls).length) {
+        this.form.patchValue(this.loadedEntityData);
+        console.debug('[PDF] loadEntity:repatch', { id: this.pendingEntityId });
+      } else {
+        console.debug('[PDF] loadEntity:duplicate', {
+          id: this.pendingEntityId,
+        });
+      }
       return;
     }
 
-    this.debugLog('📥 Loading entity', { entityId: this.pendingEntityId });
     this.loadedEntityId = this.pendingEntityId;
 
     this.crud
@@ -802,9 +833,12 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe((data: Record<string, any>) => {
         if (data && typeof data === 'object') {
-          this.form.patchValue(data);
-          this.debugLog('✅ Entity loaded successfully', {
-            entityId: this.pendingEntityId,
+          this.loadedEntityData = data;
+          if (Object.keys(this.form.controls).length) {
+            this.form.patchValue(data);
+          }
+          console.debug('[PDF] loadEntity:success', {
+            id: this.pendingEntityId,
           });
         } else {
           console.warn('Invalid entity data received:', data);
@@ -815,142 +849,148 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   private buildFormFromConfig(): void {
     const controls: any = {};
     const fieldMetadata = this.config.fieldMetadata || [];
+    let field: FieldMetadata | undefined;
 
-    for (const field of fieldMetadata) {
-      const validators: Array<
-        (control: AbstractControl) => ValidationErrors | null
-      > = [];
-      let defaultValue: any = field.defaultValue ?? null;
+    try {
+      for (field of fieldMetadata) {
+        const validators: Array<
+          (control: AbstractControl) => ValidationErrors | null
+        > = [];
+        let defaultValue: any = field.defaultValue ?? null;
 
-      if (field.controlType === FieldControlType.DATE_PICKER) {
-        const md = field as MaterialDatepickerMetadata;
-        if (typeof defaultValue === 'string') {
-          defaultValue = new Date(defaultValue);
-        }
-        const min = md.minDate
-          ? typeof md.minDate === 'string'
-            ? new Date(md.minDate)
-            : md.minDate
-          : null;
-        if (min) {
-          validators.push((control) => {
-            const val = control.value ? new Date(control.value) : null;
-            return !val || val >= min ? null : { minDate: true };
-          });
-        }
-        const max = md.maxDate
-          ? typeof md.maxDate === 'string'
-            ? new Date(md.maxDate)
-            : md.maxDate
-          : null;
-        if (max) {
-          validators.push((control) => {
-            const val = control.value ? new Date(control.value) : null;
-            return !val || val <= max ? null : { maxDate: true };
-          });
-        }
-      } else if (field.controlType === FieldControlType.DATE_RANGE) {
-        const md = field as MaterialDateRangeMetadata;
-        const parse = (d: Date | string | null | undefined): Date | null =>
-          typeof d === 'string' ? new Date(d) : (d ?? null);
-        const dv = defaultValue as DateRangeValue | null;
-        defaultValue = {
-          startDate: dv?.startDate ? parse(dv.startDate) : null,
-          endDate: dv?.endDate ? parse(dv.endDate) : null,
-        } as DateRangeValue;
-        const min = parse(md.minDate);
-        const max = parse(md.maxDate);
-        validators.push((control) => {
-          const val = control.value as DateRangeValue | null;
-          if (!val) {
-            return null;
+        if (field.controlType === FieldControlType.DATE_PICKER) {
+          const md = field as MaterialDatepickerMetadata;
+          if (typeof defaultValue === 'string') {
+            defaultValue = new Date(defaultValue);
           }
-          const start = val.startDate ? new Date(val.startDate) : null;
-          const end = val.endDate ? new Date(val.endDate) : null;
-          if (start && end && start > end) {
-            return { rangeOrder: true };
+          const min = md.minDate
+            ? typeof md.minDate === 'string'
+              ? new Date(md.minDate)
+              : md.minDate
+            : null;
+          if (min) {
+            validators.push((control) => {
+              const val = control.value ? new Date(control.value) : null;
+              return !val || val >= min ? null : { minDate: true };
+            });
           }
-          if (min && ((start && start < min) || (end && end < min))) {
-            return { minDate: true };
+          const max = md.maxDate
+            ? typeof md.maxDate === 'string'
+              ? new Date(md.maxDate)
+              : md.maxDate
+            : null;
+          if (max) {
+            validators.push((control) => {
+              const val = control.value ? new Date(control.value) : null;
+              return !val || val <= max ? null : { maxDate: true };
+            });
           }
-          if (max && ((start && start > max) || (end && end > max))) {
-            return { maxDate: true };
-          }
-          return null;
-        });
-      } else if (field.controlType === FieldControlType.RANGE_SLIDER) {
-        const md = field as MaterialPriceRangeMetadata;
-        const dv = defaultValue as PriceRangeValue | null;
-        defaultValue = {
-          minPrice: dv?.minPrice ?? null,
-          maxPrice: dv?.maxPrice ?? null,
-        } as PriceRangeValue;
-        const min = md.min ?? null;
-        const max = md.max ?? null;
-        validators.push((control) => {
-          const val = control.value as PriceRangeValue | null;
-          if (!val) {
-            return null;
-          }
-          const start = val.minPrice;
-          const end = val.maxPrice;
-          if (start != null && end != null && start > end) {
-            return { rangeOrder: true };
-          }
-          if (
-            min != null &&
-            ((start != null && start < min) || (end != null && end < min))
-          ) {
-            return { minValue: true };
-          }
-          if (
-            max != null &&
-            ((start != null && start > max) || (end != null && end > max))
-          ) {
-            return { maxValue: true };
-          }
-          return null;
-        });
-      }
-
-      if (field.required) {
-        if (field.controlType === FieldControlType.DATE_RANGE) {
+        } else if (field.controlType === FieldControlType.DATE_RANGE) {
+          const md = field as MaterialDateRangeMetadata;
+          const parse = (d: Date | string | null | undefined): Date | null =>
+            typeof d === 'string' ? new Date(d) : (d ?? null);
+          const dv = defaultValue as DateRangeValue | null;
+          defaultValue = {
+            startDate: dv?.startDate ? parse(dv.startDate) : null,
+            endDate: dv?.endDate ? parse(dv.endDate) : null,
+          } as DateRangeValue;
+          const min = parse(md.minDate);
+          const max = parse(md.maxDate);
           validators.push((control) => {
             const val = control.value as DateRangeValue | null;
-            return val?.startDate && val?.endDate ? null : { required: true };
+            if (!val) {
+              return null;
+            }
+            const start = val.startDate ? new Date(val.startDate) : null;
+            const end = val.endDate ? new Date(val.endDate) : null;
+            if (start && end && start > end) {
+              return { rangeOrder: true };
+            }
+            if (min && ((start && start < min) || (end && end < min))) {
+              return { minDate: true };
+            }
+            if (max && ((start && start > max) || (end && end > max))) {
+              return { maxDate: true };
+            }
+            return null;
           });
         } else if (field.controlType === FieldControlType.RANGE_SLIDER) {
+          const md = field as MaterialPriceRangeMetadata;
+          const dv = defaultValue as PriceRangeValue | null;
+          defaultValue = {
+            minPrice: dv?.minPrice ?? null,
+            maxPrice: dv?.maxPrice ?? null,
+          } as PriceRangeValue;
+          const min = md.min ?? null;
+          const max = md.max ?? null;
           validators.push((control) => {
             const val = control.value as PriceRangeValue | null;
-            return val?.minPrice != null && val?.maxPrice != null
-              ? null
-              : { required: true };
+            if (!val) {
+              return null;
+            }
+            const start = val.minPrice;
+            const end = val.maxPrice;
+            if (start != null && end != null && start > end) {
+              return { rangeOrder: true };
+            }
+            if (
+              min != null &&
+              ((start != null && start < min) || (end != null && end < min))
+            ) {
+              return { minValue: true };
+            }
+            if (
+              max != null &&
+              ((start != null && start > max) || (end != null && end > max))
+            ) {
+              return { maxValue: true };
+            }
+            return null;
           });
-        } else {
-          validators.push(Validators.required);
         }
-      }
-      if (field.validators?.minLength) {
-        validators.push(Validators.minLength(field.validators.minLength));
-      }
-      if (field.validators?.maxLength) {
-        validators.push(Validators.maxLength(field.validators.maxLength));
-      }
-      if (field.validators?.pattern) {
-        validators.push(Validators.pattern(field.validators.pattern));
-      }
 
-      const isMultiple =
-        field.controlType === FieldControlType.CHECKBOX ||
-        field.controlType === FieldControlType.MULTI_SELECT ||
-        (field as any).multiple;
+        if (field.required) {
+          if (field.controlType === FieldControlType.DATE_RANGE) {
+            validators.push((control) => {
+              const val = control.value as DateRangeValue | null;
+              return val?.startDate && val?.endDate ? null : { required: true };
+            });
+          } else if (field.controlType === FieldControlType.RANGE_SLIDER) {
+            validators.push((control) => {
+              const val = control.value as PriceRangeValue | null;
+              return val?.minPrice != null && val?.maxPrice != null
+                ? null
+                : { required: true };
+            });
+          } else {
+            validators.push(Validators.required);
+          }
+        }
+        if (field.validators?.minLength) {
+          validators.push(Validators.minLength(field.validators.minLength));
+        }
+        if (field.validators?.maxLength) {
+          validators.push(Validators.maxLength(field.validators.maxLength));
+        }
+        if (field.validators?.pattern) {
+          validators.push(Validators.pattern(field.validators.pattern));
+        }
 
-      // Use the already processed defaultValue, or set array for multiple selection
-      if (defaultValue == null && isMultiple) {
-        defaultValue = [];
+        const isMultiple =
+          field.controlType === FieldControlType.CHECKBOX ||
+          field.controlType === FieldControlType.MULTI_SELECT ||
+          (field as any).multiple;
+
+        // Use the already processed defaultValue, or set array for multiple selection
+        if (defaultValue == null && isMultiple) {
+          defaultValue = [];
+        }
+
+        controls[field.name] = [defaultValue, validators];
       }
-
-      controls[field.name] = [defaultValue, validators];
+    } catch (e) {
+      console.error('[PDF] buildForm:errorAtField', { field }, e);
+      throw e;
     }
     this.form = this.fb.group(controls);
 
@@ -977,6 +1017,9 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
       layout: this.layout,
       hasEntity: this.resourceId != null,
       entityId: this.resourceId ?? undefined,
+    });
+    console.debug('[PDF] buildForm:done', {
+      fields: this.config.fieldMetadata?.length,
     });
   }
 
@@ -1248,19 +1291,25 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
 
   private async getSchemaWithCache(): Promise<any> {
     if (this.schemaCache) {
-      this.debugLog('📋 Using cached schema');
+      console.debug('[PDF] schema:fromCache');
       return this.schemaCache;
     }
 
-    this.debugLog('🌐 Fetching schema from server');
-    const schema = await this.crud.getSchema().toPromise();
+    try {
+      const url = this.crud.schemaUrl?.();
+      console.debug('[PDF] schema:fetching', { url });
+    } catch {}
+
+    const schema = await firstValueFrom(this.crud.getSchema());
+    console.debug('[PDF] schema:fetched', {
+      size: Array.isArray(schema) ? schema.length : 'n/a',
+    });
 
     if (!schema) {
       throw new Error('No server schema received');
     }
 
     this.schemaCache = schema;
-    this.debugLog('✅ Schema cached successfully');
     return schema;
   }
 

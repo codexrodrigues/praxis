@@ -60,30 +60,15 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
       class="dialog-content"
       aria-labelledby="crudDialogTitle"
     >
-      @if (loading) {
-        <div class="skeleton">
-          <div class="line"></div>
-          <div class="line"></div>
-          <div class="line"></div>
-        </div>
-      } @else {
-        <praxis-dynamic-form
-          [formId]="data.action?.formId"
-          [resourcePath]="resourcePath"
-          [resourceId]="resourceId"
-          [mode]="mode"
-          (formSubmit)="onSave($event)"
-          (formCancel)="onCancel()"
-          (formReady)="onFormReady()"
-        ></praxis-dynamic-form>
-      }
+      <praxis-dynamic-form
+        [formId]="data.action?.formId"
+        [resourcePath]="resourcePath"
+        [resourceId]="resourceId"
+        [mode]="mode"
+        (formSubmit)="onSave($event)"
+        (formCancel)="onCancel()"
+      ></praxis-dynamic-form>
     </mat-dialog-content>
-
-    <mat-dialog-actions align="end" class="dialog-footer">
-      <button mat-button type="button" (click)="onCancel()">
-        {{ texts.close }}
-      </button>
-    </mat-dialog-actions>
   `,
   styles: [
     `
@@ -129,16 +114,6 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
         z-index: 1;
         padding: var(--dlg-pad);
       }
-      .skeleton {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-      }
-      .skeleton .line {
-        height: 16px;
-        border-radius: 4px;
-        background: rgba(0, 0, 0, 0.1);
-      }
     `,
   ],
 })
@@ -147,7 +122,6 @@ export class DynamicFormDialogHostComponent implements OnInit {
   modal: any = {};
   maximized = false;
   private initialSize: { width?: string; height?: string } = {};
-  loading = true;
 
   resourcePath?: string;
   resourceId?: string | number;
@@ -206,6 +180,14 @@ export class DynamicFormDialogHostComponent implements OnInit {
     const act = this.data.action?.action;
     this.mode = act === 'edit' ? 'edit' : act === 'view' ? 'view' : 'create';
 
+    console.debug('[CRUD:Host] constructed', {
+      action: this.data?.action,
+      resourcePath: this.resourcePath,
+      resourceId: this.resourceId,
+      mode: this.mode,
+      modal: this.modal,
+    });
+
     // Esc
     if (!this.modal.disableCloseOnEsc) {
       this.dialogRef
@@ -231,6 +213,11 @@ export class DynamicFormDialogHostComponent implements OnInit {
       width: this.modal.width,
       height: this.modal.height,
     };
+    console.debug('[CRUD:Host] ngOnInit', {
+      initialSize: this.initialSize,
+      startMaximized: this.modal.startMaximized,
+      fullscreenBreakpoint: this.modal.fullscreenBreakpoint,
+    });
     const shouldMax =
       this.modal.startMaximized ||
       (this.modal.fullscreenBreakpoint &&
@@ -242,10 +229,6 @@ export class DynamicFormDialogHostComponent implements OnInit {
 
   onSave(result: unknown): void {
     this.dialogRef.close({ type: 'save', data: result });
-  }
-
-  onFormReady(): void {
-    this.loading = false;
   }
 
   onCancel(): void {

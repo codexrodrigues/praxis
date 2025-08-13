@@ -173,6 +173,10 @@ export class GenericCrudService<T> {
     this.resourcePath = resource;
     this.apiUrl = `${base}/${resource}`.replace(/\/+$/, '');
     this.configured = true;
+    console.debug('[CRUD:Service] configure', {
+      resourcePath,
+      baseApiUrl: this.baseApiUrl,
+    });
   }
 
   /**
@@ -334,8 +338,9 @@ export class GenericCrudService<T> {
       options?.parentPath,
       options?.endpointKey,
     );
-    // Armazena a URL para referência posterior this._schemaUrl = url;
+    // Armazena a URL para referência posterior
     this._schemaUrl = url;
+    console.debug('[CRUD:Service] getSchema:url', { url });
     return this.http
       .get<any>(url, { headers: composeHeadersWithVersion(entry) })
       .pipe(
@@ -504,6 +509,7 @@ export class GenericCrudService<T> {
       options?.parentPath,
       options?.endpointKey,
     );
+    console.debug('[CRUD:Service] getById:url', { url });
     return this.http
       .get<
         RestApiResponse<T>
@@ -700,6 +706,7 @@ export class GenericCrudService<T> {
       options?.parentPath,
       options?.endpointKey,
     );
+    console.debug('[CRUD:Service] filter:url', { url });
     return this.http
       .post<
         RestApiResponse<Page<T>>
