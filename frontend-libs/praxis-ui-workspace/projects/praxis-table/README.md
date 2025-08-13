@@ -9,12 +9,14 @@ A biblioteca `@praxis/table` fornece um componente de tabela robusto e altamente
 ## ✨ Características Principais
 
 ### 🏗️ Arquitetura Unificada
+
 - **Interface única**: `TableConfig` consolidada
 - **Type Safety**: Tipagem forte em toda a API
 - **Performance otimizada**: Eliminação de overhead de adaptação
 - **API simplificada**: Menos confusão, mais produtividade
 
 ### 📊 Recursos Avançados
+
 - **Paginação inteligente**: Client-side e server-side
 - **Ordenação múltipla**: Suporte a multi-sort
 - **Filtros dinâmicos**: Global e por coluna
@@ -25,6 +27,7 @@ A biblioteca `@praxis/table` fornece um componente de tabela robusto e altamente
 - **Acessibilidade**: WCAG 2.1 AA compliant
 
 ### 🎨 Editores Visuais
+
 - **Behavior Editor**: Configuração de comportamentos
 - **Columns Editor**: Gestão avançada de colunas
 - **Toolbar Editor**: Personalização de ações
@@ -43,18 +46,17 @@ npm install @praxis/core @praxis/table
 A forma mais poderosa de usar a `<praxis-table>` é conectá-la diretamente a um endpoint de API compatível com o ecossistema Praxis. Isso é feito através do input `resourcePath`.
 
 Quando `resourcePath` é fornecido, a tabela se torna "inteligente":
+
 1.  **Busca automática de dados**: A tabela gerencia a paginação, ordenação e filtros, fazendo as requisições necessárias ao backend.
 2.  **Geração dinâmica de colunas**: A tabela busca os metadados (schema) do backend para gerar as colunas automaticamente, respeitando as configurações definidas no `praxis-metadata-core` (via anotação `@UISchema`).
 
 ```html
 <!-- Exemplo no template do seu componente -->
-<praxis-table
-  resourcePath="human-resources/departamentos"
-  [editModeEnabled]="true">
-</praxis-table>
+<praxis-table resourcePath="human-resources/departamentos" [editModeEnabled]="true"> </praxis-table>
 ```
 
 Neste exemplo:
+
 - `resourcePath="human-resources/departamentos"` instrui a tabela a se comunicar com o endpoint `/api/human-resources/departamentos`.
 - A tabela fará requisições como `POST /api/human-resources/departamentos/filter` para obter os dados e `GET /api/human-resources/departamentos/schemas` para obter a configuração das colunas.
 - `[editModeEnabled]="true"` permite a edição visual da configuração da tabela em tempo real.
@@ -139,38 +141,33 @@ sequenceDiagram
 Se você precisar fornecer os dados manualmente (por exemplo, de uma fonte que não é uma API Praxis), pode usar o input `[data]` e omitir o `resourcePath`. Neste modo, todas as operações (paginação, ordenação, filtro) são realizadas no lado do cliente.
 
 ```typescript
-import { PraxisTable } from '@praxis/table';
-import { TableConfig } from '@praxis/core';
+import { PraxisTable } from "@praxis/table";
+import { TableConfig } from "@praxis/core";
 
 @Component({
-  selector: 'app-example',
+  selector: "app-example",
   standalone: true,
   imports: [PraxisTable],
-  template: `
-    <praxis-table 
-      [config]="tableConfig"
-      [data]="employees">
-    </praxis-table>
-  `
+  template: ` <praxis-table [config]="tableConfig" [data]="employees"> </praxis-table> `,
 })
 export class ExampleComponent {
   // Configuração de colunas e comportamento é obrigatória neste modo
   tableConfig: TableConfig = {
     columns: [
-      { field: 'id', header: 'ID', type: 'number' },
-      { field: 'name', header: 'Nome', type: 'string' },
-      { field: 'email', header: 'Email', type: 'string' },
+      { field: "id", header: "ID", type: "number" },
+      { field: "name", header: "Nome", type: "string" },
+      { field: "email", header: "Email", type: "string" },
     ],
     behavior: {
       pagination: { enabled: true, pageSize: 10 },
       sorting: { enabled: true },
-      filtering: { enabled: true, globalFilter: { enabled: true } }
-    }
+      filtering: { enabled: true, globalFilter: { enabled: true } },
+    },
   };
 
   employees = [
-    { id: 1, name: 'João Silva', email: 'joao@empresa.com' },
-    { id: 2, name: 'Maria Santos', email: 'maria@empresa.com' },
+    { id: 1, name: "João Silva", email: "joao@empresa.com" },
+    { id: 2, name: "Maria Santos", email: "maria@empresa.com" },
     // ... mais dados
   ];
 }
@@ -256,30 +253,40 @@ A `<praxis-table>` vem com um poderoso editor de configuração visual que permi
 A seguir, veja os principais recursos que você pode configurar visualmente:
 
 ### 1. Gerenciamento de Colunas
+
 Controle total sobre as colunas da sua tabela. Dentro do editor, você pode:
+
 - **Reordenar com Arrastar e Soltar:** Simplesmente clique e arraste uma coluna para a posição desejada.
 - **Alterar Visibilidade:** Use a caixa de seleção ao lado de cada coluna para mostrá-la ou ocultá-la instantaneamente.
 - **Editar Títulos e Largura:** Clique em uma coluna para abrir suas propriedades e altere o texto do cabeçalho, defina uma largura fixa (ex: `150px`) ou deixe-a automática.
 
 ### 2. Transformação de Dados Sem Código
+
 Converta dados brutos em informações claras e formatadas para o usuário.
+
 - **Formatação Automática:** Selecione uma coluna e escolha seu "Tipo de Dado". Se escolher `Moeda`, os valores serão formatados como `R$ 1.234,56`. Se escolher `Data`, você pode selecionar formatos como `dd/MM/yyyy` ou `25 de janeiro de 2025`.
 - **Mapeamento de Valores:** Transforme códigos e valores brutos em texto legível. Na seção "Mapeamento de Valores", você pode definir visualmente que o valor `true` deve ser exibido como "Ativo" e `false` como "Inativo", ou que o código `1` significa "Pendente" e `2` significa "Aprovado".
 
 ### 3. Colunas Calculadas com Fórmulas Visuais
+
 Crie novas colunas dinamicamente a partir de dados existentes, sem precisar programar.
+
 - **Concatenar Texto:** Crie uma "Coluna Calculada", escolha a fórmula "Concatenar" e selecione os campos `nome` e `sobrenome` para criar uma coluna "Nome Completo".
 - **Realizar Operações Matemáticas:** Use a fórmula "Operação Matemática" para criar uma coluna que calcula `preço * quantidade`.
 - **Criar Valores Condicionais (IF/ELSE):** Com a fórmula "Condicional", você pode criar uma coluna "Nível de Risco" que exibe "Alto" se o `valor` for maior que 1000, e "Baixo" caso contrário.
 
 ### 4. Formatação Condicional (Regras de Estilo)
+
 Destaque informações importantes aplicando estilos que mudam com base nos dados da linha.
+
 - **Crie Regras Visuais:** Na seção de "Formatação Condicional", crie uma nova regra.
 - **Defina a Condição:** Estabeleça a condição, por exemplo: "Quando a coluna `status` tiver o valor igual a 'Urgente'".
 - **Aplique o Estilo:** Use seletores de cor para definir que, quando a condição for verdadeira, a cor de fundo da célula ou da linha inteira deve se tornar vermelha e o texto, branco.
 
 ### 5. Comportamentos da Tabela
+
 Habilite e configure as funcionalidades centrais da tabela com um clique. Na aba "Comportamento", você pode:
+
 - **Ativar/Desativar Paginação:** Com um único interruptor, ative a paginação para tabelas com muitos dados e defina quantos itens exibir por página.
 - **Controlar Ordenação e Filtros:** Habilite a capacidade dos usuários de ordenar colunas e filtrar os dados com simples caixas de seleção.
 - **Gerenciar Seleção de Linhas:** Permita que os usuários selecionem uma ou várias linhas para realizar ações em lote.
@@ -287,6 +294,7 @@ Habilite e configure as funcionalidades centrais da tabela com um clique. Na aba
 ### Editores Especializados
 
 #### Behavior Editor
+
 ```typescript
 import { BehaviorConfigEditorComponent } from '@praxis/table';
 
@@ -298,6 +306,7 @@ import { BehaviorConfigEditorComponent } from '@praxis/table';
 ```
 
 #### Columns Editor
+
 ```typescript
 import { ColumnsConfigEditorComponent } from '@praxis/table';
 
@@ -311,6 +320,7 @@ import { ColumnsConfigEditorComponent } from '@praxis/table';
 ## 🔧 Configuração Avançada
 
 ### Performance com Virtualização
+
 ```typescript
 const highVolumeConfig: TableConfig = {
   columns: [...],
@@ -332,6 +342,7 @@ const highVolumeConfig: TableConfig = {
 ```
 
 ### Acessibilidade Personalizada
+
 ```typescript
 const accessibleConfig: TableConfig = {
   columns: [...],
@@ -357,6 +368,7 @@ const accessibleConfig: TableConfig = {
 ```
 
 ### Aparência Customizada
+
 ```typescript
 const styledConfig: TableConfig = {
   columns: [...],
@@ -391,6 +403,7 @@ const styledConfig: TableConfig = {
 ## 🎯 Event Handling
 
 ### Eventos da Tabela
+
 ```typescript
 <praxis-table
   [config]="tableConfig"
@@ -406,19 +419,20 @@ const styledConfig: TableConfig = {
 ```
 
 ### Implementação dos Handlers
+
 ```typescript
 export class MyComponent {
-  onRowClick(event: { row: any, index: number }) {
-    console.log('Row clicked:', event.row);
+  onRowClick(event: { row: any; index: number }) {
+    console.log("Row clicked:", event.row);
   }
 
-  onRowSelect(event: { selectedRows: any[], isSelectAll: boolean }) {
-    console.log('Selection changed:', event.selectedRows);
+  onRowSelect(event: { selectedRows: any[]; isSelectAll: boolean }) {
+    console.log("Selection changed:", event.selectedRows);
   }
 
-  onBulkAction(event: { action: string, selectedRows: any[] }) {
+  onBulkAction(event: { action: string; selectedRows: any[] }) {
     switch (event.action) {
-      case 'deleteSelected':
+      case "deleteSelected":
         this.deleteMultiple(event.selectedRows);
         break;
       // Handle other bulk actions
@@ -434,13 +448,9 @@ export class MyComponent {
 ## 🛠️ Utilitários e Helpers
 
 ### Helper Functions
+
 ```typescript
-import { 
-  createDefaultTableConfig,
-  isValidTableConfig,
-  cloneTableConfig,
-  mergeTableConfigs
-} from '@praxis/core';
+import { createDefaultTableConfig, isValidTableConfig, cloneTableConfig, mergeTableConfigs } from "@praxis/core";
 
 // Criar configuração padrão
 const defaultConfig = createDefaultTableConfig();
@@ -458,6 +468,7 @@ const mergedConfig = mergeTableConfigs(baseConfig, overrides);
 ```
 
 ### Service Integration
+
 ```typescript
 import { TableConfigService } from '@praxis/core';
 
@@ -468,7 +479,7 @@ export class MyComponent {
   ngOnInit() {
     // Usar serviço para gerenciar configuração
     this.configService.setConfig(this.tableConfig);
-    
+
     // Verificar recursos disponíveis
     const hasMultiSort = this.configService.isFeatureEnabled('multiSort');
     const hasBulkActions = this.configService.isFeatureEnabled('bulkActions');
@@ -479,36 +490,37 @@ export class MyComponent {
 ## 🧪 Testes
 
 ### Unit Tests
-```typescript
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { PraxisTable } from '@praxis/table';
-import { TableConfig } from '@praxis/core';
 
-describe('PraxisTable', () => {
+```typescript
+import { ComponentFixture, TestBed } from "@angular/core/testing";
+import { PraxisTable } from "@praxis/table";
+import { TableConfig } from "@praxis/core";
+
+describe("PraxisTable", () => {
   let component: PraxisTable;
   let fixture: ComponentFixture<PraxisTable>;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      imports: [PraxisTable]
+      imports: [PraxisTable],
     });
-    
+
     fixture = TestBed.createComponent(PraxisTable);
     component = fixture.componentInstance;
   });
 
-  it('should create', () => {
+  it("should create", () => {
     expect(component).toBeTruthy();
   });
 
-  it('should handle configuration changes', () => {
+  it("should handle configuration changes", () => {
     const config: TableConfig = {
-      columns: [{ field: 'test', header: 'Test' }]
+      columns: [{ field: "test", header: "Test" }],
     };
-    
+
     component.config = config;
     fixture.detectChanges();
-    
+
     expect(component.config).toEqual(config);
   });
 });
@@ -521,24 +533,27 @@ describe('PraxisTable', () => {
 Se você estava usando as versões anteriores com dual architecture, aqui estão as principais mudanças:
 
 #### Imports Atualizados
+
 ```typescript
 // Antes
-import { TableConfigV1, TableConfigV2, TableConfigUnified } from '@praxis/core';
+import { TableConfigV1, TableConfigV2, TableConfigUnified } from "@praxis/core";
 
-// Depois  
-import { TableConfig } from '@praxis/core';
+// Depois
+import { TableConfig } from "@praxis/core";
 ```
 
 #### Serviços Removidos
+
 ```typescript
 // Antes
-import { TableConfigAdapterService } from '@praxis/table';
+import { TableConfigAdapterService } from "@praxis/table";
 
 // Depois - Não mais necessário
 // Uso direto da configuração
 ```
 
 #### Tipos Simplificados
+
 ```typescript
 // Antes
 config: TableConfigUnified;
@@ -558,16 +573,18 @@ config: TableConfig;
 ### Problemas Comuns
 
 #### Configuração não está funcionando
+
 ```typescript
 // Verificar se a configuração é válida
-import { isValidTableConfig } from '@praxis/core';
+import { isValidTableConfig } from "@praxis/core";
 
 if (!isValidTableConfig(myConfig)) {
-  console.error('Configuração inválida:', myConfig);
+  console.error("Configuração inválida:", myConfig);
 }
 ```
 
 #### Performance Issues
+
 ```typescript
 // Habilitar virtualização para grandes datasets
 const config: TableConfig = {
@@ -576,21 +593,22 @@ const config: TableConfig = {
     virtualization: {
       enabled: true,
       itemHeight: 48,
-      bufferSize: 20
-    }
-  }
+      bufferSize: 20,
+    },
+  },
 };
 ```
 
 #### Acessibilidade
+
 ```typescript
 // Garantir que acessibilidade está habilitada
 const config: TableConfig = {
   // ...
   accessibility: {
     enabled: true,
-    announcements: { dataChanges: true, userActions: true, loadingStates: true, liveRegion: 'polite' }
-  }
+    announcements: { dataChanges: true, userActions: true, loadingStates: true, liveRegion: "polite" },
+  },
 };
 ```
 
@@ -599,15 +617,19 @@ const config: TableConfig = {
 ### Interfaces Principais
 
 #### TableConfig
+
 Interface principal para configuração da tabela.
 
 #### ColumnDefinition
+
 Define configuração individual de colunas.
 
 #### TableBehaviorConfig
+
 Configurações de comportamento (paginação, ordenação, etc.).
 
 #### TableAppearanceConfig
+
 Configurações de aparência visual.
 
 Para documentação completa da API, consulte a [documentação da @praxis/core](../praxis-core/README.md).
@@ -615,6 +637,7 @@ Para documentação completa da API, consulte a [documentação da @praxis/core]
 ## 🤝 Contribuição
 
 ### Como Contribuir
+
 1. Fork o projeto
 2. Crie branch para feature (`git checkout -b feature/nova-funcionalidade`)
 3. Commit mudanças (`git commit -m 'Add: nova funcionalidade'`)
@@ -622,14 +645,33 @@ Para documentação completa da API, consulte a [documentação da @praxis/core]
 5. Abra Pull Request
 
 ### Guidelines
+
 - Seguir Angular Style Guide
 - Adicionar testes para novas features
 - Manter documentação atualizada
 - Usar TypeScript strict mode
 
+## 🔍 Exemplo de Integração com PraxisFilter
+
+O `PraxisFilter` pode ser acoplado à barra de ferramentas da tabela. O exemplo abaixo mostra a busca de pessoas por CPF e status.
+
+```html
+<praxis-filter [resourcePath]="'pessoas'" [formId]="'pessoas-filter'" [persistenceKey]="'pessoas-filter-v1'" [quickField]="'cpf'" [alwaysVisibleFields]="['status']" (submit)="onFilter($event)"></praxis-filter> <praxis-table [data]="tableData"></praxis-table>
+```
+
+```ts
+onFilter(dto: any) {
+  this.crud.configure('pessoas', ApiEndpoint.HumanResources);
+  this.crud.filter(dto, this.pageable).subscribe(page => {
+    this.tableData = page.content;
+  });
+}
+```
+
 ## 📊 Roadmap
 
 ### Próximas Versões
+
 - ✅ Arquitetura unificada (v2.0.0)
 - 🔄 Enhanced mobile support (v2.1.0)
 - 📋 Advanced export options (v2.2.0)
@@ -641,6 +683,6 @@ MIT License - consulte [LICENSE](../../LICENSE) para detalhes.
 
 ---
 
-**Parte do Praxis UI Workspace**  
-**Versão**: 2.0.0 (Unified Architecture)  
+**Parte do Praxis UI Workspace**
+**Versão**: 2.0.0 (Unified Architecture)
 **Compatibilidade**: Angular 18+
