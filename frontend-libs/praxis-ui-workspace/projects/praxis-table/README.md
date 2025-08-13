@@ -685,6 +685,25 @@ onFilter(dto: any) {
 }
 ```
 
+### ⚙️ Painel de Configurações do Filtro
+
+O `PraxisFilter` possui um painel de configurações acessível pelo ícone de
+engrenagem na barra do filtro ou programaticamente através do método
+`openSettings()`. Nesse painel é possível ajustar:
+
+- **quickField** – campo utilizado para a busca rápida
+- **alwaysVisibleFields** – campos que permanecem sempre visíveis
+- **placeholder** – texto exibido no campo de busca
+- **showAdvanced** – define se a seção avançada inicia aberta
+
+```ts
+@ViewChild(PraxisFilter) filter!: PraxisFilter;
+
+abrirConfiguracoes() {
+  this.filter.openSettings();
+}
+```
+
 ## 📊 Roadmap
 
 ### Próximas Versões

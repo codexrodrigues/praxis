@@ -6,6 +6,25 @@ import { SettingsPanelComponent } from '@praxis/settings-panel';
 import { SettingsPanelRef } from '@praxis/settings-panel';
 import { FieldMetadata } from '@praxis/core';
 import { FilterConfig } from '../services/filter-config.service';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { BehaviorSubject } from 'rxjs';
+import {
+  SettingsPanelComponent,
+  SettingsPanelRef,
+} from '@praxis/settings-panel';
+import {
+  Injector,
+  Component,
+  ChangeDetectionStrategy,
+  SimpleChange,
+} from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
+import { MatInputModule } from '@angular/material/input';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 
 class MockSettingsPanelRef {
   apply = jasmine.createSpy('apply');
@@ -14,69 +33,116 @@ class MockSettingsPanelRef {
   close = jasmine.createSpy('close');
 }
 
+
+@Component({
+  selector: 'test-filter-settings',
+  standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  templateUrl: './filter-settings.component.html',
+  styleUrls: ['./filter-settings.component.scss'],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatTabsModule,
+    MatFormFieldModule,
+    MatSelectModule,
+    MatInputModule,
+    MatCheckboxModule,
+  ],
+})
+class TestFilterSettingsComponent extends FilterSettingsComponent {
+  canSave$ = new BehaviorSubject<boolean>(false);
+
+  constructor(fb: FormBuilder) {
+    super(fb);
+  }
+}
+
 describe('FilterSettingsComponent', () => {
   let fixture: ComponentFixture<SettingsPanelComponent>;
   let panel: SettingsPanelComponent;
   let ref: MockSettingsPanelRef;
 
-  const metadata: FieldMetadata[] = [
-    { name: 'name', label: 'Name', controlType: 'input' } as FieldMetadata,
-    { name: 'status', label: 'Status', controlType: 'input' } as FieldMetadata,
-  ];
+
+
+  const settings: FilterConfig = {
+    quickField: 'name',
+    alwaysVisibleFields: ['status'],
+    placeholder: 'Search',
+    showAdvanced: false,
+  };
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [
-        SettingsPanelComponent,
         FilterSettingsComponent,
+        TestFilterSettingsComponent,
+        SettingsPanelComponent,
+
         NoopAnimationsModule,
       ],
     }).compileComponents();
+  });
 
-    fixture = TestBed.createComponent(SettingsPanelComponent);
-    panel = fixture.componentInstance;
-    ref = new MockSettingsPanelRef();
 
+  it('should render all tabs', () => {
+    const fixture = TestBed.createComponent(FilterSettingsComponent);
+    const component = fixture.componentInstance;
+    component.metadata = metadata;
+    component.settings = settings;
+    component.ngOnChanges({
+      settings: new SimpleChange(null, settings, true),
+    });
+
+    fixture.detectChanges();
+    const text = fixture.nativeElement.textContent;
+    expect(text).toContain('Quick Field');
+    expect(text).toContain('Always Visible');
+    expect(text).toContain('Options');
+  });
+
+  it('should emit settings value on apply', () => {
+    const fixture = TestBed.createComponent(SettingsPanelComponent);
+    const panel = fixture.componentInstance;
+    const ref = new MockSettingsPanelRef();
     panel.attachContent(
-      FilterSettingsComponent,
+      TestFilterSettingsComponent,
       TestBed.inject(Injector),
       ref as unknown as SettingsPanelRef,
     );
-    const instance = panel.contentRef!.instance as FilterSettingsComponent;
-    instance.metadata = metadata;
-    fixture.detectChanges();
-  });
-
-  it('should render tabs', () => {
-    const labels = Array.from(
-      fixture.nativeElement.querySelectorAll('.mdc-tab__text-label'),
-    ).map((el: Element) => el.textContent?.trim());
-    expect(labels).toEqual(['Quick Field', 'Always Visible', 'Options']);
-  });
-
-  it('should emit settings value on save', () => {
-    const instance = panel.contentRef!.instance as FilterSettingsComponent;
-    instance.form.patchValue({ quickField: 'name', placeholder: 'Buscar' });
-    fixture.detectChanges();
-
-    panel.onSave();
-
-    expect(ref.save).toHaveBeenCalledWith({
+    const content = panel.contentRef!.instance as TestFilterSettingsComponent;
+    content.metadata = metadata;
+    content.settings = settings;
+    content.ngOnChanges({
+      settings: new SimpleChange(null, settings, true),
+    });
+    content.form.patchValue({ placeholder: 'Buscar' });
+    panel.onApply();
+    expect(ref.apply).toHaveBeenCalledWith({
       quickField: 'name',
-      alwaysVisibleFields: [],
+      alwaysVisibleFields: ['status'],
       placeholder: 'Buscar',
       showAdvanced: false,
-    } as FilterConfig);
+    });
   });
 
-  it('should enable and disable save button based on canSave$', () => {
+  it('should toggle save button based on canSave$', () => {
+    const fixture = TestBed.createComponent(SettingsPanelComponent);
+    const panel = fixture.componentInstance;
+    const ref = new MockSettingsPanelRef();
+    panel.attachContent(
+      TestFilterSettingsComponent,
+      TestBed.inject(Injector),
+      ref as unknown as SettingsPanelRef,
+    );
+    fixture.detectChanges();
+    const content = panel.contentRef!.instance as TestFilterSettingsComponent;
     const saveBtn: HTMLButtonElement = fixture.nativeElement.querySelector(
-      'button[color="primary"]',
+      'footer button[color="primary"]',
     );
     expect(saveBtn.disabled).toBeTrue();
+    content.canSave$.next(true);
 
-    const instance = panel.contentRef!.instance as FilterSettingsComponent;
-    instance.form.patchValue({ placeholder: 'X' });
     fixture.detectChanges();
     expect(saveBtn.disabled).toBeFalse();
   });

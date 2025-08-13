@@ -459,26 +459,44 @@ describe('PraxisFilter', () => {
   });
 
   it('should open settings panel and apply configuration', () => {
-    createComponent();
 
     const applied$ = new Subject<FilterConfig>();
-    const ref = { applied$, close: jasmine.createSpy('close') } as any;
+    const saved$ = new Subject<FilterConfig>();
+    const ref = { applied$, saved$, close: jasmine.createSpy('close') } as any;
     settingsPanel.open.and.returnValue(ref);
+    spyOn(configService, 'save');
+
+    createComponent('cpf', ['age']);
+    (component as any).schemaMetas = [
+      { name: 'cpf' } as any,
+      { name: 'age' } as any,
+      { name: 'name' } as any,
+    ];
 
     component.openSettings();
 
-    expect(settingsPanel.open).toHaveBeenCalled();
-
-    applied$.next({
+    const newConfig: FilterConfig = {
       quickField: 'name',
-      alwaysVisibleFields: ['status'],
+      alwaysVisibleFields: ['cpf'],
       placeholder: 'Buscar',
       showAdvanced: true,
-    });
+    };
+    applied$.next(newConfig);
 
     expect(component.quickField).toBe('name');
-    expect(component.alwaysVisibleFields).toEqual(['status']);
+    expect(component.alwaysVisibleFields).toEqual(['cpf']);
+    expect(component.placeholder).toBe('Buscar');
     expect(component.advancedOpen).toBeTrue();
     expect(ref.close).toHaveBeenCalled();
+
+    const savedConfig: FilterConfig = { quickField: 'id' };
+    saved$.next(savedConfig);
+    expect(configService.save).toHaveBeenCalledWith('f1', {
+      quickField: 'id',
+      alwaysVisibleFields: [],
+      placeholder: undefined,
+      showAdvanced: false,
+    });
+
   });
 });
