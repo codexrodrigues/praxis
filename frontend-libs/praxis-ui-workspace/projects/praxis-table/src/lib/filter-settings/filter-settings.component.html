@@ -1,0 +1,31 @@
+<mat-tab-group>
+  <mat-tab label="Quick Field">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Quick Field</mat-label>
+      <mat-select formControlName="quickField">
+        <mat-option [value]="meta.name" *ngFor="let meta of metadata">
+          {{ meta.label || meta.name }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </mat-tab>
+  <mat-tab label="Always Visible">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Always Visible Fields</mat-label>
+      <mat-select formControlName="alwaysVisibleFields" multiple>
+        <mat-option [value]="meta.name" *ngFor="let meta of metadata">
+          {{ meta.label || meta.name }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </mat-tab>
+  <mat-tab label="Options">
+    <div class="options">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Placeholder</mat-label>
+        <input matInput formControlName="placeholder" />
+      </mat-form-field>
+      <mat-checkbox formControlName="showAdvanced">Show Advanced</mat-checkbox>
+    </div>
+  </mat-tab>
+</mat-tab-group>
