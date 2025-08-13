@@ -5,7 +5,6 @@
   background: var(--surface);
   border-left: 1px solid var(--border-color);
   transition: width 300ms ease-in-out;
-  margin-left: auto;
 }
 
 .settings-panel-header {
@@ -48,4 +47,9 @@
 
 :host ::ng-deep .praxis-settings-panel-backdrop {
   background: rgba(0, 0, 0, 0.4);
+}
+
+:host ::ng-deep .praxis-settings-panel-pane {
+  display: flex;
+  justify-content: flex-end;
 }

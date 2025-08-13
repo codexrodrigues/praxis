@@ -34,9 +34,10 @@ export class SettingsPanelService {
     const overlayConfig: OverlayConfig = {
       hasBackdrop: true,
       backdropClass: 'praxis-settings-panel-backdrop',
+      panelClass: 'praxis-settings-panel-pane',
       positionStrategy: this.overlay.position().global().top('0').right('0'),
       height: '100vh',
-      width: '85vw',
+      width: '100vw',
       scrollStrategy: this.overlay.scrollStrategies.block(),
     };
 
