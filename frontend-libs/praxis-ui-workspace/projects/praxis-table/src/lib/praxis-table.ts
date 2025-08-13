@@ -42,6 +42,7 @@ import { PraxisTableConfigEditor } from './praxis-table-config-editor';
 import { DataFormattingService } from './data-formatter/data-formatting.service';
 import { ColumnDataType } from './data-formatter/data-formatter-types';
 import { TableDefaultsProvider } from './services/table-defaults.provider';
+import { PraxisFilter } from './praxis-filter';
 
 @Component({
   selector: 'praxis-table',
@@ -55,15 +56,28 @@ import { TableDefaultsProvider } from './services/table-defaults.provider';
     MatIconModule,
     MatMenuModule,
     PraxisTableToolbar,
+    PraxisFilter,
   ],
   template: `
     <praxis-table-toolbar
       *ngIf="showToolbar"
       [config]="config"
-      [showFilter]="showFilter"
+      [showFilter]="toolbarSearchEnabled"
       [filterValue]="filterValue"
       (toolbarAction)="onToolbarAction($event)"
     >
+      <praxis-filter
+        *ngIf="
+          resourcePath &&
+          config.behavior?.filtering?.advancedFilters?.enabled &&
+          !projectedFilter
+        "
+        advancedFilter
+        [resourcePath]="resourcePath"
+        [formId]="tableId + '-filter'"
+        (submit)="onAdvancedFilterSubmit($event)"
+        (clear)="onAdvancedFilterClear()"
+      ></praxis-filter>
       <ng-content select="[advancedFilter]" />
       <ng-content select="[toolbar]" />
     </praxis-table-toolbar>
@@ -163,9 +177,6 @@ export class PraxisTable
   /** Controls toolbar visibility */
   @Input() showToolbar = false;
 
-  /** Show simple filter input in toolbar */
-  @Input() showFilter = false;
-
   /** Enable edit mode */
   @Input() editModeEnabled = false;
 
@@ -179,7 +190,7 @@ export class PraxisTable
   @ViewChild(MatPaginator) paginator?: MatPaginator;
   @ViewChild(MatSort) sort?: MatSort;
 
-  @ContentChild('advancedFilter') advancedFilterComponent?: any;
+  @ContentChild(PraxisFilter) projectedFilter?: PraxisFilter;
 
   dataSource = new MatTableDataSource<any>();
   displayedColumns: string[] = [];
@@ -202,6 +213,10 @@ export class PraxisTable
     this.subscriptions.push(
       this.dataSubject.subscribe((data) => (this.dataSource.data = data)),
     );
+  }
+
+  get toolbarSearchEnabled(): boolean {
+    return !!this.config?.toolbar?.search?.enabled;
   }
 
   ngAfterContentInit(): void {
@@ -267,6 +282,20 @@ export class PraxisTable
     this.toolbarAction.emit(event);
   }
 
+  onAdvancedFilterSubmit(criteria: Record<string, any>): void {
+    this.filterCriteria = criteria || {};
+    if (this.resourcePath) {
+      this.fetchData();
+    }
+  }
+
+  onAdvancedFilterClear(): void {
+    this.filterCriteria = {};
+    if (this.resourcePath) {
+      this.fetchData();
+    }
+  }
+
   openTableSettings(): void {
     try {
       const configCopy = JSON.parse(JSON.stringify(this.config)) as TableConfig;
@@ -274,7 +303,6 @@ export class PraxisTable
       const ref = this.settingsPanel.open({
         id: `table.${this.tableId}`,
         title: 'Configurações da Tabela',
-        width: 720,
         content: { component: PraxisTableConfigEditor, inputs: configCopy },
       });
 
