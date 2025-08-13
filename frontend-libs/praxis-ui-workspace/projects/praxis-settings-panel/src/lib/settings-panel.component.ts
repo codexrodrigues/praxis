@@ -25,6 +25,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 export class SettingsPanelComponent {
   title = '';
   width = 720;
+  expanded = false;
   ref!: SettingsPanelRef;
   contentRef?: ComponentRef<any>;
   private static nextId = 0;
@@ -70,6 +71,11 @@ export class SettingsPanelComponent {
     instance?.onSave?.();
     const value = instance?.getSettingsValue?.();
     this.ref.save(value);
+  }
+
+  toggleExpand(): void {
+    this.expanded = !this.expanded;
+    this.cdr.markForCheck();
   }
 
   onCancel(): void {

@@ -70,4 +70,21 @@ describe('SettingsPanelComponent', () => {
     expect(instance.onSave).toHaveBeenCalled();
     expect(ref.save).toHaveBeenCalledWith(instance.getSettingsValue());
   });
+
+  it('should toggle expanded state and width', () => {
+    fixture.detectChanges();
+    const panel: HTMLElement =
+      fixture.nativeElement.querySelector('.settings-panel');
+    expect(panel.style.width).toBe('720px');
+
+    component.toggleExpand();
+    fixture.detectChanges();
+    expect(component.expanded).toBeTrue();
+    expect(panel.style.width).toBe('85vw');
+
+    component.toggleExpand();
+    fixture.detectChanges();
+    expect(component.expanded).toBeFalse();
+    expect(panel.style.width).toBe('720px');
+  });
 });

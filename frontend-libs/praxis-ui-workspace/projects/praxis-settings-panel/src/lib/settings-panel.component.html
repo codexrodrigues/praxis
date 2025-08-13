@@ -1,6 +1,6 @@
 <div
   class="settings-panel"
-  [style.width.px]="width"
+  [style.width]="expanded ? '85vw' : width + 'px'"
   role="dialog"
   aria-modal="true"
   [attr.aria-labelledby]="titleId"
@@ -9,6 +9,14 @@
 >
   <header class="settings-panel-header">
     <h2 class="settings-panel-title" [id]="titleId">{{ title }}</h2>
+    <button
+      mat-icon-button
+      type="button"
+      [attr.aria-label]="expanded ? 'Reduzir painel' : 'Expandir painel'"
+      (click)="toggleExpand()"
+    >
+      <mat-icon>{{ expanded ? "close_fullscreen" : "open_in_full" }}</mat-icon>
+    </button>
     <button
       mat-icon-button
       type="button"
