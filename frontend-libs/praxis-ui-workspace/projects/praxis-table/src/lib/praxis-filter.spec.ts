@@ -5,14 +5,17 @@ import {
   tick,
 } from '@angular/core/testing';
 import { Component, SimpleChange, ViewChild } from '@angular/core';
-import { of, throwError } from 'rxjs';
+import { of, throwError, Subject } from 'rxjs';
 import {
   GenericCrudService,
   ConfigStorage,
   CONFIG_STORAGE,
 } from '@praxis/core';
 import { PraxisFilter, I18n, FilterTag } from './praxis-filter';
-import { FilterConfigService } from './services/filter-config.service';
+import {
+  FilterConfigService,
+  FilterConfig,
+} from './services/filter-config.service';
 import { SettingsPanelService } from '@praxis/settings-panel';
 
 describe('PraxisFilter', () => {
@@ -453,5 +456,45 @@ describe('PraxisFilter', () => {
     component.clear.subscribe(clearSpy);
     card.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     expect(clearSpy).toHaveBeenCalled();
+  });
+
+  it('should open settings panel and apply configuration', () => {
+    const applied$ = new Subject<FilterConfig>();
+    const saved$ = new Subject<FilterConfig>();
+    const ref = { applied$, saved$, close: jasmine.createSpy('close') } as any;
+    settingsPanel.open.and.returnValue(ref);
+    spyOn(configService, 'save');
+
+    createComponent('cpf', ['age']);
+    (component as any).schemaMetas = [
+      { name: 'cpf' } as any,
+      { name: 'age' } as any,
+      { name: 'name' } as any,
+    ];
+
+    component.openSettings();
+
+    const newConfig: FilterConfig = {
+      quickField: 'name',
+      alwaysVisibleFields: ['cpf'],
+      placeholder: 'Buscar',
+      showAdvanced: true,
+    };
+    applied$.next(newConfig);
+
+    expect(component.quickField).toBe('name');
+    expect(component.alwaysVisibleFields).toEqual(['cpf']);
+    expect(component.placeholder).toBe('Buscar');
+    expect(component.advancedOpen).toBeTrue();
+    expect(ref.close).toHaveBeenCalled();
+
+    const savedConfig: FilterConfig = { quickField: 'id' };
+    saved$.next(savedConfig);
+    expect(configService.save).toHaveBeenCalledWith('f1', {
+      quickField: 'id',
+      alwaysVisibleFields: [],
+      placeholder: undefined,
+      showAdvanced: false,
+    });
   });
 });
