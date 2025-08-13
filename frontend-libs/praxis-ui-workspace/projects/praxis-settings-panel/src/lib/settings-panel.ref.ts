@@ -28,6 +28,11 @@ export class SettingsPanelRef {
     this.resetSubject.next();
   }
 
+  updateSize(width: string | number): void {
+    this.overlayRef.updateSize({ width });
+    this.overlayRef.updatePosition();
+  }
+
   close(reason: SettingsPanelCloseReason = 'cancel'): void {
     if (!this.overlayRef?.hasAttached()) {
       return;

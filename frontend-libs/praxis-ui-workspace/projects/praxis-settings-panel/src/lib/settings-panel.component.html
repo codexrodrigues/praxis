@@ -9,10 +9,12 @@
 >
   <header class="settings-panel-header">
     <h2 class="settings-panel-title" [id]="titleId">{{ title }}</h2>
+    <span class="spacer"></span>
     <button
       mat-icon-button
       type="button"
       [attr.aria-label]="expanded ? 'Reduzir painel' : 'Expandir painel'"
+      [matTooltip]="expanded ? 'Reduzir painel' : 'Expandir painel'"
       (click)="toggleExpand()"
     >
       <mat-icon>{{ expanded ? "close_fullscreen" : "open_in_full" }}</mat-icon>
@@ -21,6 +23,7 @@
       mat-icon-button
       type="button"
       aria-label="Fechar"
+      matTooltip="Fechar"
       (click)="onCancel()"
     >
       <mat-icon>close</mat-icon>

@@ -11,6 +11,7 @@ class MockSettingsPanelRef {
   save = jasmine.createSpy('save');
   reset = jasmine.createSpy('reset');
   close = jasmine.createSpy('close');
+  updateSize = jasmine.createSpy('updateSize');
 }
 
 @Component({
@@ -81,10 +82,12 @@ describe('SettingsPanelComponent', () => {
     fixture.detectChanges();
     expect(component.expanded).toBeTrue();
     expect(panel.style.width).toBe('85vw');
+    expect(ref.updateSize).toHaveBeenCalledWith('85vw');
 
     component.toggleExpand();
     fixture.detectChanges();
     expect(component.expanded).toBeFalse();
     expect(panel.style.width).toBe('720px');
+    expect(ref.updateSize).toHaveBeenCalledWith('720px');
   });
 });

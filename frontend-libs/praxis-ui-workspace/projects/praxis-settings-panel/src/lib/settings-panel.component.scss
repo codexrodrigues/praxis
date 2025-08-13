@@ -10,10 +10,14 @@
 .settings-panel-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 8px;
   padding: 0 16px;
   height: 64px;
   border-bottom: 1px solid var(--border-color);
+}
+
+.settings-panel-header .spacer {
+  flex: 1;
 }
 
 .settings-panel-content {

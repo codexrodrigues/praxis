@@ -11,6 +11,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { CdkTrapFocus } from '@angular/cdk/a11y';
 import { SettingsPanelRef } from './settings-panel.ref';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -18,7 +19,13 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 @Component({
   selector: 'praxis-settings-panel',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatIconModule, CdkTrapFocus],
+  imports: [
+    CommonModule,
+    MatButtonModule,
+    MatIconModule,
+    MatTooltipModule,
+    CdkTrapFocus,
+  ],
   templateUrl: './settings-panel.component.html',
   styleUrls: ['./settings-panel.component.scss'],
 })
@@ -75,6 +82,8 @@ export class SettingsPanelComponent {
 
   toggleExpand(): void {
     this.expanded = !this.expanded;
+    const newWidth = this.expanded ? '85vw' : `${this.width}px`;
+    this.ref.updateSize(newWidth);
     this.cdr.markForCheck();
   }
 
