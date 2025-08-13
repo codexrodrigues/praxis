@@ -5,6 +5,7 @@ import {
   Component,
   ContentChild,
   EventEmitter,
+  Inject,
   Input,
   OnChanges,
   OnDestroy,
@@ -23,7 +24,8 @@ import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
-import { PraxisResizableWindowService } from '@praxis/core';
+import { BehaviorSubject, take, Subscription } from 'rxjs';
+import { SettingsPanelService } from '@praxis/settings-panel';
 import {
   ColumnDefinition,
   FieldDefinition,
@@ -32,12 +34,14 @@ import {
   Pageable,
   TableConfig,
   createDefaultTableConfig,
+  CONFIG_STORAGE,
+  ConfigStorage,
 } from '@praxis/core';
-import { BehaviorSubject, take, Subscription } from 'rxjs';
 import { PraxisTableToolbar } from './praxis-table-toolbar';
 import { PraxisTableConfigEditor } from './praxis-table-config-editor';
 import { DataFormattingService } from './data-formatter/data-formatting.service';
 import { ColumnDataType } from './data-formatter/data-formatter-types';
+import { TableDefaultsProvider } from './services/table-defaults.provider';
 
 @Component({
   selector: 'praxis-table',
@@ -66,7 +70,7 @@ import { ColumnDataType } from './data-formatter/data-formatter-types';
     <button
       mat-icon-button
       *ngIf="editModeEnabled"
-      (click)="openConfigEditor()"
+      (click)="openTableSettings()"
       style="float:right;"
     >
       <mat-icon>settings</mat-icon>
@@ -165,6 +169,9 @@ export class PraxisTable
   /** Enable edit mode */
   @Input() editModeEnabled = false;
 
+  /** Identifier used for settings storage */
+  @Input() tableId = 'default';
+
   @Output() rowClick = new EventEmitter<{ row: any; index: number }>();
   @Output() rowAction = new EventEmitter<{ action: string; row: any }>();
   @Output() toolbarAction = new EventEmitter<{ action: string }>();
@@ -187,8 +194,10 @@ export class PraxisTable
   constructor(
     private crudService: GenericCrudService<any>,
     private cdr: ChangeDetectorRef,
-    private windowService: PraxisResizableWindowService,
+    private settingsPanel: SettingsPanelService,
     private formattingService: DataFormattingService,
+    @Inject(CONFIG_STORAGE) private configStorage: ConfigStorage,
+    private tableDefaultsProvider: TableDefaultsProvider,
   ) {
     this.subscriptions.push(
       this.dataSubject.subscribe((data) => (this.dataSource.data = data)),
@@ -258,48 +267,45 @@ export class PraxisTable
     this.toolbarAction.emit(event);
   }
 
-  openConfigEditor(): void {
+  openTableSettings(): void {
     try {
-      // Criar cópia profunda da configuração para evitar alterações acidentais
       const configCopy = JSON.parse(JSON.stringify(this.config)) as TableConfig;
 
-      const ref = this.windowService.open({
-        title: 'Configurações da Tabela Dinâmica',
-        contentComponent: PraxisTableConfigEditor,
-        data: configCopy,
-        initialWidth: '90vw',
-        initialHeight: '90vh',
-        minWidth: '320px',
-        minHeight: '600px',
-        disableResize: false,
-        disableMaximize: false,
-        enableTouch: true,
-        minDragDistance: 5,
-        enableInertia: true,
-        inertiaFriction: 0.95,
-        inertiaMultiplier: 10,
-        bounceFactor: 0.5,
-        autoCenterAfterResize: false,
+      const ref = this.settingsPanel.open({
+        id: `table.${this.tableId}`,
+        title: 'Configurações da Tabela',
+        width: 720,
+        content: { component: PraxisTableConfigEditor, inputs: configCopy },
       });
 
       this.subscriptions.push(
-        ref.closed.subscribe((result) => {
-          if (result) {
-            // Aplicar as configurações retornadas
-            this.config = { ...result };
-            this.setupColumns();
-            this.applyDataSourceSettings();
-            if (this.resourcePath) {
-              this.fetchData();
-            }
-            // Forçar detecção de mudanças
-            this.cdr.detectChanges();
-          }
+        ref.applied$.subscribe((cfg: TableConfig) => {
+          if (!cfg) return;
+          this.applyTableConfig(cfg);
+        }),
+        ref.saved$.subscribe((cfg: TableConfig) => {
+          if (!cfg) return;
+          this.configStorage.saveConfig(`table-config:${this.tableId}`, cfg);
+          this.applyTableConfig(cfg);
+        }),
+        ref.reset$.subscribe(() => {
+          const defaults = this.tableDefaultsProvider.getDefaults(this.tableId);
+          this.applyTableConfig(defaults);
         }),
       );
     } catch (error) {
       // TODO: Implement proper error logging service
     }
+  }
+
+  private applyTableConfig(cfg: TableConfig): void {
+    this.config = { ...cfg };
+    this.setupColumns();
+    this.applyDataSourceSettings();
+    if (this.resourcePath) {
+      this.fetchData();
+    }
+    this.cdr.detectChanges();
   }
 
   private applyDataSourceSettings(): void {

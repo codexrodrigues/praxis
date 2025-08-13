@@ -9,6 +9,7 @@ export * from './lib/praxis-table-config-editor';
 export * from './lib/data-formatter/data-formatter-types';
 export * from './lib/data-formatter/data-formatting.service';
 export * from './lib/data-formatter/data-formatter.component';
+export * from './lib/services/table-defaults.provider';
 
 // Editor components
 export * from './lib/behavior-config-editor/behavior-config-editor.component';

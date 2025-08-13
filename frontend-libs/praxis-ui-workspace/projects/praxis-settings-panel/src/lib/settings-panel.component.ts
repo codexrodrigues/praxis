@@ -16,6 +16,8 @@ import {
 } from '@angular/cdk/portal';
 import { CdkTrapFocus } from '@angular/cdk/a11y';
 import { SettingsPanelRef } from './settings-panel.ref';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { SettingsPanelSection } from './settings-panel.types';
 
 @Component({
   selector: 'praxis-settings-panel',
@@ -37,6 +39,9 @@ export class SettingsPanelComponent {
   contentRef?: ComponentRef<any>;
   private static nextId = 0;
   titleId = `praxis-settings-panel-title-${SettingsPanelComponent.nextId++}`;
+  disableSaveButton = false;
+  sections: SettingsPanelSection[] = [];
+  activeSectionIndex = 0;
 
   @ViewChild(CdkPortalOutlet, { static: true }) portalOutlet!: CdkPortalOutlet;
 
@@ -48,6 +53,17 @@ export class SettingsPanelComponent {
     this.ref = ref;
     const portal = new ComponentPortal(component, null, injector);
     this.contentRef = this.portalOutlet.attachComponentPortal(portal);
+
+    const instance: any = this.contentRef.instance;
+    if ('canSave$' in instance && instance.canSave$) {
+      instance.canSave$
+        .pipe(takeUntilDestroyed())
+        .subscribe((v: boolean) => (this.disableSaveButton = !v));
+    }
+
+    if ('sections' in instance && Array.isArray(instance.sections)) {
+      this.sections = instance.sections;
+    }
   }
 
   onReset(): void {
@@ -61,7 +77,9 @@ export class SettingsPanelComponent {
   }
 
   onSave(): void {
-    const value = this.contentRef?.instance?.getSettingsValue?.();
+    const instance: any = this.contentRef?.instance;
+    instance?.onSave?.();
+    const value = instance?.getSettingsValue?.();
     this.ref.save(value);
   }
 

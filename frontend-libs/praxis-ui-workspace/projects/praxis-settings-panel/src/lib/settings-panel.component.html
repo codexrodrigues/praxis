@@ -18,9 +18,29 @@
       <mat-icon>close</mat-icon>
     </button>
   </header>
-  <section class="settings-panel-content">
-    <ng-template cdkPortalOutlet></ng-template>
-  </section>
+  <div class="settings-panel-body">
+    <nav class="settings-panel-sections" *ngIf="sections.length > 0">
+      <button
+        type="button"
+        *ngFor="let section of sections; index as i"
+        (click)="activeSectionIndex = i"
+        [class.active]="i === activeSectionIndex"
+      >
+        <mat-icon *ngIf="section.icon">{{ section.icon }}</mat-icon>
+        <span>{{ section.label }}</span>
+      </button>
+    </nav>
+    <section class="settings-panel-content">
+      <ng-container *ngIf="sections.length > 0; else defaultContent">
+        <ng-container
+          *ngTemplateOutlet="sections[activeSectionIndex].template"
+        ></ng-container>
+      </ng-container>
+      <ng-template #defaultContent>
+        <ng-template cdkPortalOutlet></ng-template>
+      </ng-template>
+    </section>
+  </div>
   <footer class="settings-panel-footer">
     <button mat-button type="button" (click)="onReset()">Redefinir</button>
     <span class="spacer"></span>
@@ -30,7 +50,13 @@
     <button mat-stroked-button type="button" (click)="onApply()">
       Aplicar
     </button>
-    <button mat-flat-button color="primary" type="button" (click)="onSave()">
+    <button
+      mat-flat-button
+      color="primary"
+      type="button"
+      (click)="onSave()"
+      [disabled]="disableSaveButton"
+    >
       Salvar &amp; Fechar
     </button>
   </footer>

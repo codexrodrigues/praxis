@@ -6,12 +6,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import {
   TableConfig,
   TableConfigService,
   ColumnDefinition,
 } from '@praxis/core';
+import { SETTINGS_PANEL_DATA } from '@praxis/settings-panel';
 import { GenericCrudService } from '@praxis/core';
 
 import { PraxisTable } from '../praxis-table';
@@ -80,17 +80,7 @@ describe('End-to-End Workflow Tests', () => {
       providers: [
         TableConfigService,
         { provide: GenericCrudService, useValue: { configure: () => {} } },
-        {
-          provide: MatDialogRef,
-          useValue: {
-            close: jasmine.createSpy('close'),
-            afterClosed: () => ({ subscribe: () => {} }),
-          },
-        },
-        {
-          provide: MAT_DIALOG_DATA,
-          useValue: { config: null },
-        },
+        { provide: SETTINGS_PANEL_DATA, useValue: { columns: [] } },
       ],
     }).compileComponents();
 
@@ -171,7 +161,7 @@ describe('End-to-End Workflow Tests', () => {
       expect(tableComponent.getPaginationPageSize()).toBe(10);
 
       // STEP 3: User opens config editor to customize table
-      editorComponent.data = { config: initialConfig };
+      (editorComponent as any).panelData = initialConfig;
       editorComponent.ngOnInit();
       editorFixture.detectChanges();
 
