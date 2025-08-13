@@ -528,14 +528,30 @@ export class PraxisFilter implements OnInit, OnChanges {
         this.applySchemaMetas();
       };
 
+      const persistConfig = (): void => {
+        this.filterConfig.save(this.configKey, {
+          quickField: this.quickField,
+          alwaysVisibleFields: this.alwaysVisibleFields,
+          placeholder: this.placeholder,
+          showAdvanced: this.advancedOpen,
+        });
+        console.log('PFILTER:config:save', {
+          quickField: this.quickField,
+          alwaysVisibleFields: this.alwaysVisibleFields,
+          placeholder: this.placeholder,
+          showAdvanced: this.advancedOpen,
+        });
+      };
+
       ref.applied$.subscribe((cfg: FilterConfig) => {
         applyChanges(cfg);
+        persistConfig();
         ref.close('apply');
       });
 
       ref.saved$.subscribe((cfg: FilterConfig) => {
         applyChanges(cfg);
-        this.saveConfig();
+        persistConfig();
       });
     } catch {
       // Intentionally ignore errors
