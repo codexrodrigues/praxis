@@ -13,6 +13,7 @@ import {
 } from '@praxis/core';
 import { PraxisFilter, I18n, FilterTag } from './praxis-filter';
 import { FilterConfigService } from './services/filter-config.service';
+import { SettingsPanelService } from '@praxis/settings-panel';
 
 describe('PraxisFilter', () => {
   let component: PraxisFilter;
@@ -20,6 +21,7 @@ describe('PraxisFilter', () => {
   let crud: jasmine.SpyObj<GenericCrudService<any>>;
   let storage: jasmine.SpyObj<ConfigStorage>;
   let configService: FilterConfigService;
+  let settingsPanel: jasmine.SpyObj<SettingsPanelService>;
 
   beforeEach(async () => {
     crud = jasmine.createSpyObj('GenericCrudService', [
@@ -36,12 +38,15 @@ describe('PraxisFilter', () => {
       'clearConfig',
     ]);
 
+    settingsPanel = jasmine.createSpyObj('SettingsPanelService', ['open']);
+
     await TestBed.configureTestingModule({
       imports: [PraxisFilter],
       providers: [
         { provide: GenericCrudService, useValue: crud },
         { provide: CONFIG_STORAGE, useValue: storage },
         FilterConfigService,
+        { provide: SettingsPanelService, useValue: settingsPanel },
       ],
     }).compileComponents();
     configService = TestBed.inject(FilterConfigService);

@@ -30,6 +30,8 @@ import {
   FilterConfigService,
   FilterConfig,
 } from './services/filter-config.service';
+import { FilterSettingsComponent } from './filter-settings/filter-settings.component';
+import { SettingsPanelService } from '@praxis/settings-panel';
 import { DynamicFieldLoaderDirective } from '@praxis/dynamic-fields';
 import { PraxisDynamicForm } from '@praxis/dynamic-form';
 import { Subject, of } from 'rxjs';
@@ -116,6 +118,14 @@ const DEFAULT_I18N: I18n = {
         </button>
         <button mat-button type="button" (click)="onClear()">
           {{ i18nLabels.clear }}
+        </button>
+        <button
+          mat-icon-button
+          type="button"
+          aria-label="Configurações do filtro"
+          (click)="openSettings()"
+        >
+          <mat-icon>settings</mat-icon>
         </button>
         <button
           mat-button
@@ -335,6 +345,7 @@ export class PraxisFilter implements OnInit, OnChanges {
     @Inject(CONFIG_STORAGE) private configStorage: ConfigStorage,
     private destroyRef: DestroyRef,
     private filterConfig: FilterConfigService,
+    private settingsPanel: SettingsPanelService,
   ) {}
 
   ngOnInit(): void {
@@ -485,6 +496,50 @@ export class PraxisFilter implements OnInit, OnChanges {
       this.advancedOpen ? 'PFILTER:advanced:open' : 'PFILTER:advanced:close',
     );
     this.saveConfig();
+  }
+
+  openSettings(): void {
+    try {
+      const currentConfig = {
+        metadata: this.schemaMetas ?? [],
+        settings: {
+          quickField: this.quickField,
+          alwaysVisibleFields: this.alwaysVisibleFields,
+          placeholder: this.placeholder,
+          showAdvanced: this.advancedOpen,
+        },
+      };
+
+      const ref = this.settingsPanel.open({
+        id: `filter.${this.configKey}`,
+        title: 'Configurações do Filtro',
+        content: { component: FilterSettingsComponent, inputs: currentConfig },
+      });
+
+      const applyChanges = (cfg: FilterConfig | undefined): void => {
+        if (!cfg) {
+          return;
+        }
+        this.quickField = cfg.quickField;
+        this.alwaysVisibleFields = cfg.alwaysVisibleFields ?? [];
+        this.placeholder = cfg.placeholder;
+        this.advancedOpen = cfg.showAdvanced ?? false;
+        this.mergeI18n();
+        this.applySchemaMetas();
+      };
+
+      ref.applied$.subscribe((cfg: FilterConfig) => {
+        applyChanges(cfg);
+        ref.close('apply');
+      });
+
+      ref.saved$.subscribe((cfg: FilterConfig) => {
+        applyChanges(cfg);
+        this.saveConfig();
+      });
+    } catch {
+      // Intentionally ignore errors
+    }
   }
 
   switchToFilter(): void {
