@@ -76,15 +76,15 @@ import {
       <toolbar-actions-editor
         [config]="editedConfig"
         (configChange)="onToolbarActionsConfigChange($event)"
-        (toolbarChange)="onToolbarActionsChange($event)"
+        (toolbarActionsChange)="onToolbarActionsChange($event)"
       ></toolbar-actions-editor>
     </ng-template>
 
     <ng-template #messagesSection>
       <messages-localization-editor
         [config]="editedConfig"
-        (configChange)="onMessagesConfigChange($event)"
-        (messagesChange)="onMessagesChange($event)"
+        (configChange)="onMessagesLocalizationConfigChange($event)"
+        (messagesLocalizationChange)="onMessagesLocalizationChange($event)"
       ></messages-localization-editor>
     </ng-template>
 
