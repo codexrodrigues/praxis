@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { SpecificationBridgeService, DslParsingConfig, ContextualConfig } from '../services/specification-bridge.service';
 import { ContextVariable } from '../components/expression-editor.component';
-import { FunctionRegistry, ContextProvider } from 'praxis-specification';
+import { FunctionRegistry, ContextProvider } from '@praxis/specification';
 
 describe('Expression Round-Trip Tests', () => {
   let service: SpecificationBridgeService;

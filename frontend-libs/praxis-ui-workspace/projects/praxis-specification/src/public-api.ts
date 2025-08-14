@@ -1,5 +1,5 @@
 /*
- * Public API Surface of praxis-specification
+ * Public API Surface of @praxis/specification
  */
 
 export * from './lib/praxis-specification';

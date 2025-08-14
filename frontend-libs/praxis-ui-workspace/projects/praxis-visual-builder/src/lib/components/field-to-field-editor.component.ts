@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChange
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
+import { MatSelectModule, MatSelectChange } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -10,7 +10,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatExpansionModule } from '@angular/material/expansion';
-import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatCheckboxModule, MatCheckboxChange } from '@angular/material/checkbox';
 
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
@@ -50,8 +50,8 @@ import { FieldSchema, FieldType, FIELD_TYPE_OPERATORS, OPERATOR_LABELS } from '.
           <div class="field-section left-field">
             <mat-form-field appearance="outline" class="field-select">
               <mat-label>Left Field</mat-label>
-              <mat-select formControlName="leftField" 
-                         (selectionChange)="onLeftFieldChanged($event.value)">
+              <mat-select formControlName="leftField"
+                         (selectionChange)="onLeftFieldChanged($event)">
                 <mat-optgroup *ngFor="let category of fieldCategories" [label]="category.name">
                   <mat-option *ngFor="let field of category.fields" 
                              [value]="field.name">
@@ -86,7 +86,7 @@ import { FieldSchema, FieldType, FIELD_TYPE_OPERATORS, OPERATOR_LABELS } from '.
                     <div *ngFor="let transform of getAvailableTransforms(leftFieldSchema)" 
                          class="transform-option">
                       <mat-checkbox [checked]="isTransformSelected('left', transform.name)"
-                                   (change)="onTransformToggle('left', transform.name, $event.checked)">
+                                   (change)="onTransformToggle('left', transform.name, $event)">
                         {{ transform.label }}
                       </mat-checkbox>
                       <div class="transform-description">{{ transform.description }}</div>
@@ -102,7 +102,7 @@ import { FieldSchema, FieldType, FIELD_TYPE_OPERATORS, OPERATOR_LABELS } from '.
             <mat-form-field appearance="outline" class="operator-select">
               <mat-label>Operator</mat-label>
               <mat-select formControlName="operator"
-                         (selectionChange)="onOperatorChanged($event.value)">
+                         (selectionChange)="onOperatorChanged($event)">
                 <mat-option *ngFor="let op of availableOperators" [value]="op">
                   {{ getOperatorLabel(op) }}
                 </mat-option>
@@ -118,8 +118,8 @@ import { FieldSchema, FieldType, FIELD_TYPE_OPERATORS, OPERATOR_LABELS } from '.
           <div class="field-section right-field">
             <mat-form-field appearance="outline" class="field-select">
               <mat-label>Right Field</mat-label>
-              <mat-select formControlName="rightField" 
-                         (selectionChange)="onRightFieldChanged($event.value)">
+              <mat-select formControlName="rightField"
+                         (selectionChange)="onRightFieldChanged($event)">
                 <mat-optgroup *ngFor="let category of fieldCategories" [label]="category.name">
                   <mat-option *ngFor="let field of getCompatibleRightFields()" 
                              [value]="field.name">
@@ -154,7 +154,7 @@ import { FieldSchema, FieldType, FIELD_TYPE_OPERATORS, OPERATOR_LABELS } from '.
                     <div *ngFor="let transform of getAvailableTransforms(rightFieldSchema)" 
                          class="transform-option">
                       <mat-checkbox [checked]="isTransformSelected('right', transform.name)"
-                                   (change)="onTransformToggle('right', transform.name, $event.checked)">
+                                   (change)="onTransformToggle('right', transform.name, $event)">
                         {{ transform.label }}
                       </mat-checkbox>
                       <div class="transform-description">{{ transform.description }}</div>
@@ -990,7 +990,8 @@ export class FieldToFieldEditorComponent implements OnInit, OnChanges {
   }
 
   // Event handlers
-  onLeftFieldChanged(fieldName: string): void {
+  onLeftFieldChanged(event: string | MatSelectChange): void {
+    const fieldName = typeof event === 'string' ? event : event.value;
     this.leftFieldSchema = this.fieldSchemas[fieldName] || null;
     this.updateAvailableOperators();
     
@@ -1004,18 +1005,21 @@ export class FieldToFieldEditorComponent implements OnInit, OnChanges {
     }
   }
 
-  onRightFieldChanged(fieldName: string): void {
+  onRightFieldChanged(event: string | MatSelectChange): void {
+    const fieldName = typeof event === 'string' ? event : event.value;
     this.rightFieldSchema = this.fieldSchemas[fieldName] || null;
     this.updateAvailableOperators();
   }
 
-  onOperatorChanged(operator: string): void {
+  onOperatorChanged(event: string | MatSelectChange): void {
+    const operator = typeof event === 'string' ? event : event.value;
     this.selectedOperator = operator;
   }
 
-  onTransformToggle(side: 'left' | 'right', transformName: string, checked: boolean): void {
+  onTransformToggle(side: 'left' | 'right', transformName: string, change: boolean | MatCheckboxChange): void {
+    const checked = typeof change === 'boolean' ? change : change.checked;
     const transforms = side === 'left' ? this.leftTransforms : this.rightTransforms;
-    
+
     if (checked) {
       if (!transforms.includes(transformName)) {
         transforms.push(transformName);
@@ -1026,7 +1030,7 @@ export class FieldToFieldEditorComponent implements OnInit, OnChanges {
         transforms.splice(index, 1);
       }
     }
-    
+
     // Update the form to trigger change detection
     this.emitConfigChange();
   }

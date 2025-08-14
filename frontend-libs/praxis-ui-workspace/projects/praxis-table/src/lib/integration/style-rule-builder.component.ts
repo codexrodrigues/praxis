@@ -7,7 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatListModule } from '@angular/material/list';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatSlideToggleModule, MatSlideToggleChange } from '@angular/material/slide-toggle';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -172,9 +172,9 @@ import {
                 <div class="rule-description">
                   <span>{{ rule.description || 'Sem descrição' }}</span>
                   <div class="rule-actions" (click)="$event.stopPropagation()">
-                    <mat-slide-toggle 
+                    <mat-slide-toggle
                       [checked]="rule.enabled"
-                      (change)="toggleRule(rule, $event.checked)"
+                      (change)="toggleRule(rule, $event)"
                       matTooltip="Ativar/Desativar regra">
                     </mat-slide-toggle>
                   </div>
@@ -798,8 +798,8 @@ export class StyleRuleBuilderComponent implements OnInit, OnDestroy {
     }
   }
 
-  toggleRule(rule: ConditionalStyle, enabled: boolean): void {
-    rule.enabled = enabled;
+  toggleRule(rule: ConditionalStyle, change: MatSlideToggleChange): void {
+    rule.enabled = change.checked;
     rule.modifiedAt = new Date();
     
     this.emitStylesChanged();

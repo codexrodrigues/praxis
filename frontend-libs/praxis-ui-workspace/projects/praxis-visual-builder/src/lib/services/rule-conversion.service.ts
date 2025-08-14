@@ -1,10 +1,25 @@
 import { Injectable } from '@angular/core';
-import { Specification, DslExporter, ExportOptions } from 'praxis-specification';
+import {
+  Specification,
+  DslExporter,
+  ExportOptions,
+} from '@praxis/specification';
 import { RuleNode } from '../models/rule-builder.model';
 import { ConverterFactoryService } from './converters/converter-factory.service';
-import { DslParsingService, DslParsingConfig, DslParsingResult } from './dsl/dsl-parsing.service';
-import { ContextManagementService, ContextualConfig } from './context/context-management.service';
-import { ConversionError, createError, globalErrorHandler } from '../errors/visual-builder-errors';
+import {
+  DslParsingService,
+  DslParsingConfig,
+  DslParsingResult,
+} from './dsl/dsl-parsing.service';
+import {
+  ContextManagementService,
+  ContextualConfig,
+} from './context/context-management.service';
+import {
+  ConversionError,
+  createError,
+  globalErrorHandler,
+} from '../errors/visual-builder-errors';
 
 /**
  * Simplified service for core rule conversion operations
@@ -12,7 +27,7 @@ import { ConversionError, createError, globalErrorHandler } from '../errors/visu
  * Focuses only on conversion between RuleNodes and Specifications
  */
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class RuleConversionService {
   private dslExporter: DslExporter;
@@ -20,7 +35,7 @@ export class RuleConversionService {
   constructor(
     private converterFactory: ConverterFactoryService,
     private dslParsingService: DslParsingService,
-    private contextManagementService: ContextManagementService
+    private contextManagementService: ContextManagementService,
   ) {
     this.dslExporter = new DslExporter({
       prettyPrint: true,
@@ -28,7 +43,7 @@ export class RuleConversionService {
       maxLineLength: 80,
       useParentheses: 'auto',
       includeMetadata: true,
-      metadataPosition: 'before'
+      metadataPosition: 'before',
     });
   }
 
@@ -36,18 +51,23 @@ export class RuleConversionService {
    * Convert a RuleNode tree to a Specification instance
    * Core conversion functionality with clean error handling
    */
-  convertRuleToSpecification<T extends object = any>(node: RuleNode): Specification<T> {
+  convertRuleToSpecification<T extends object = any>(
+    node: RuleNode,
+  ): Specification<T> {
     if (!node) {
-      const error = createError.conversion('INVALID_INPUT', 'Node cannot be null or undefined');
+      const error = createError.conversion(
+        'INVALID_INPUT',
+        'Node cannot be null or undefined',
+      );
       globalErrorHandler.handle(error);
       throw error;
     }
 
     if (!node.config?.type) {
       const error = createError.conversion(
-        'MISSING_CONFIGURATION', 
+        'MISSING_CONFIGURATION',
         `Node ${node.id} is missing configuration or type`,
-        node.id
+        node.id,
       );
       globalErrorHandler.handle(error);
       throw error;
@@ -59,7 +79,7 @@ export class RuleConversionService {
       const conversionError = createError.conversion(
         'CONVERSION_FAILED',
         `Failed to convert node ${node.id}`,
-        node.id
+        node.id,
       );
       globalErrorHandler.handle(conversionError);
       throw conversionError;
@@ -70,9 +90,14 @@ export class RuleConversionService {
    * Convert a Specification back to a RuleNode tree
    * Simplified reverse conversion
    */
-  convertSpecificationToRule<T extends object = any>(spec: Specification<T>): RuleNode {
+  convertSpecificationToRule<T extends object = any>(
+    spec: Specification<T>,
+  ): RuleNode {
     if (!spec) {
-      throw new ConversionError('INVALID_INPUT', 'Specification cannot be null or undefined');
+      throw new ConversionError(
+        'INVALID_INPUT',
+        'Specification cannot be null or undefined',
+      );
     }
 
     try {
@@ -82,7 +107,9 @@ export class RuleConversionService {
       throw new ConversionError(
         'REVERSE_CONVERSION_FAILED',
         'Failed to convert specification to rule node',
-        error instanceof Error ? error : undefined
+        undefined,
+        {},
+        error instanceof Error ? error : undefined,
       );
     }
   }
@@ -91,8 +118,8 @@ export class RuleConversionService {
    * Export a RuleNode tree to DSL format
    */
   exportRuleToDsl<T extends object = any>(
-    node: RuleNode, 
-    options?: Partial<ExportOptions>
+    node: RuleNode,
+    options?: Partial<ExportOptions>,
   ): string {
     try {
       const specification = this.convertRuleToSpecification<T>(node);
@@ -101,7 +128,9 @@ export class RuleConversionService {
       throw new ConversionError(
         'DSL_EXPORT_FAILED',
         `Failed to export rule to DSL`,
-        error instanceof Error ? error : undefined
+        undefined,
+        {},
+        error instanceof Error ? error : undefined,
       );
     }
   }
@@ -111,10 +140,13 @@ export class RuleConversionService {
    */
   importRuleFromDsl<T extends object = any>(
     dslExpression: string,
-    config?: DslParsingConfig
+    config?: DslParsingConfig,
   ): DslParsingResult<T> {
     if (!dslExpression || dslExpression.trim().length === 0) {
-      throw new ConversionError('INVALID_INPUT', 'DSL expression cannot be empty');
+      throw new ConversionError(
+        'INVALID_INPUT',
+        'DSL expression cannot be empty',
+      );
     }
 
     try {
@@ -123,7 +155,9 @@ export class RuleConversionService {
       throw new ConversionError(
         'DSL_IMPORT_FAILED',
         'Failed to import rule from DSL',
-        error instanceof Error ? error : undefined
+        undefined,
+        {},
+        error instanceof Error ? error : undefined,
       );
     }
   }
@@ -133,19 +167,21 @@ export class RuleConversionService {
    */
   createContextualSpecification<T extends object = any>(
     node: RuleNode,
-    contextConfig: ContextualConfig
+    contextConfig: ContextualConfig,
   ): Specification<T> {
     try {
-      const contextProvider = contextConfig.contextProvider || 
-        (contextConfig.contextVariables ? 
-          this.contextManagementService.createContextProvider(contextConfig.contextVariables) : 
-          undefined
-        );
+      const contextProvider =
+        contextConfig.contextProvider ||
+        (contextConfig.contextVariables
+          ? this.contextManagementService.createContextProvider(
+              contextConfig.contextVariables,
+            )
+          : undefined);
 
       if (!contextProvider) {
         throw new ConversionError(
           'MISSING_CONTEXT',
-          'Context provider or context variables are required for contextual specification'
+          'Context provider or context variables are required for contextual specification',
         );
       }
 
@@ -153,14 +189,15 @@ export class RuleConversionService {
       const baseSpecification = this.convertRuleToSpecification<T>(node);
 
       // TODO: Wrap in contextual specification
-      // This would require ContextualSpecification from praxis-specification
+      // This would require ContextualSpecification from @praxis/specification
       return baseSpecification;
-      
     } catch (error) {
       throw new ConversionError(
         'CONTEXTUAL_CONVERSION_FAILED',
         'Failed to create contextual specification',
-        error instanceof Error ? error : undefined
+        undefined,
+        {},
+        error instanceof Error ? error : undefined,
       );
     }
   }
@@ -199,13 +236,15 @@ export class RuleConversionService {
 
     // Warnings for potential issues
     if (node.children && node.children.length > 20) {
-      warnings.push(`Node ${node.id} has many children (${node.children.length}) which may impact performance`);
+      warnings.push(
+        `Node ${node.id} has many children (${node.children.length}) which may impact performance`,
+      );
     }
 
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
@@ -214,31 +253,46 @@ export class RuleConversionService {
    */
   getConversionStatistics(): ConversionStatistics {
     const factoryStats = this.converterFactory.getStatistics();
-    
+
     return {
       supportedNodeTypes: factoryStats.supportedTypes.length,
       registeredConverters: factoryStats.converterCount,
       availableNodeTypes: factoryStats.supportedTypes,
-      converterNames: factoryStats.converterNames
+      converterNames: factoryStats.converterNames,
     };
   }
 
   private jsonToRuleNode(json: any): RuleNode {
     // Simplified JSON to RuleNode conversion
     // This would need to be implemented based on the actual JSON structure
-    // from praxis-specification
-    
+    // from @praxis/specification
+
+    const children: string[] | undefined = Array.isArray(json.children)
+      ? json.children.map((child: any) => String(child))
+      : undefined;
+
+    const config: Record<string, unknown> = {
+      type: json.config?.type || json.type || 'fieldCondition',
+    };
+
+    if (json.config?.fieldName || json.config?.field) {
+      config['fieldName'] = json.config.fieldName || json.config.field;
+    }
+    if (json.config?.operator !== undefined) {
+      config['operator'] = json.config.operator;
+    }
+    if (json.config?.value !== undefined) {
+      config['value'] = json.config.value;
+    }
+
     return {
-      id: json.id || `node-${Date.now()}`,
-      type: json.type || 'fieldCondition',
-      config: {
-        type: json.type || 'fieldCondition',
-        ...json.config
-      }
+      id: String(json.id || `node-${Date.now()}`),
+      type: (config['type'] as string) || 'fieldCondition',
+      config: config as any,
+      children,
     };
   }
 }
-
 
 /**
  * Result of conversion validation

@@ -425,7 +425,7 @@ getContextProvider(): ContextProvider | undefined
 ### Custom Function Registry
 
 ```typescript
-import { FunctionRegistry } from 'praxis-specification';
+import { FunctionRegistry } from '@praxis/specification';
 
 // Create custom function registry
 const customRegistry = new FunctionRegistry();
@@ -457,7 +457,7 @@ customRegistry.register('dateAdd', {
 ### Custom Context Provider
 
 ```typescript
-import { ContextProvider } from 'praxis-specification';
+import { ContextProvider } from '@praxis/specification';
 
 class DatabaseContextProvider implements ContextProvider {
   private cache = new Map<string, any>();

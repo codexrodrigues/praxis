@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { ContextProvider } from 'praxis-specification';
+import { ContextProvider } from '@praxis/specification';
 import { ContextVariable } from '../../components/expression-editor.component';
 
 /**

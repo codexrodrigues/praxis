@@ -1,4 +1,12 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  OnInit,
+  OnDestroy,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -11,7 +19,7 @@ import { MatListModule } from '@angular/material/list';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
-import { MatButtonToggleModule } from '@angular/material/button-toggle';
+import { MatButtonToggleModule, MatButtonToggleChange } from '@angular/material/button-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
@@ -27,14 +35,14 @@ import { JsonViewerComponent } from './json-viewer.component';
 import { RoundTripTesterComponent } from './round-trip-tester.component';
 import { ExportDialogComponent } from './export-dialog.component';
 import { DslLinterComponent } from './dsl-linter.component';
-import { 
-  RuleBuilderState, 
-  RuleNode, 
-  RuleNodeType, 
+import {
+  RuleBuilderState,
+  RuleNode,
+  RuleNodeType,
   ValidationError,
   ExportOptions,
   ImportOptions,
-  RuleBuilderConfig
+  RuleBuilderConfig,
 } from '../models/rule-builder.model';
 import { FieldSchema } from '../models/field-schema.model';
 
@@ -64,7 +72,7 @@ import { FieldSchema } from '../models/field-schema.model';
     JsonViewerComponent,
     RoundTripTesterComponent,
     ExportDialogComponent,
-    DslLinterComponent
+    DslLinterComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -76,11 +84,14 @@ import { FieldSchema } from '../models/field-schema.model';
             <mat-icon>rule</mat-icon>
             Visual Rule Builder
           </span>
-          
+
           <span class="toolbar-spacer"></span>
-          
+
           <!-- Mode Selector -->
-          <mat-button-toggle-group [value]="currentState?.mode" (change)="onModeChange($event)">
+          <mat-button-toggle-group
+            [value]="currentState?.mode"
+            (change)="onModeChange($event)"
+          >
             <mat-button-toggle value="visual">
               <mat-icon>view_module</mat-icon>
               Visual
@@ -94,38 +105,40 @@ import { FieldSchema } from '../models/field-schema.model';
               JSON
             </mat-button-toggle>
           </mat-button-toggle-group>
-          
+
           <!-- Action Buttons -->
-          <button mat-icon-button 
-                  [disabled]="!canUndo" 
-                  (click)="undo()"
-                  matTooltip="Undo">
+          <button
+            mat-icon-button
+            [disabled]="!canUndo"
+            (click)="undo()"
+            matTooltip="Undo"
+          >
             <mat-icon>undo</mat-icon>
           </button>
-          
-          <button mat-icon-button 
-                  [disabled]="!canRedo" 
-                  (click)="redo()"
-                  matTooltip="Redo">
+
+          <button
+            mat-icon-button
+            [disabled]="!canRedo"
+            (click)="redo()"
+            matTooltip="Redo"
+          >
             <mat-icon>redo</mat-icon>
           </button>
-          
-          <button mat-icon-button 
-                  (click)="clearRules()"
-                  matTooltip="Clear All Rules">
+
+          <button
+            mat-icon-button
+            (click)="clearRules()"
+            matTooltip="Clear All Rules"
+          >
             <mat-icon>clear_all</mat-icon>
           </button>
-          
-          <button mat-button 
-                  (click)="openExportDialog()"
-                  color="primary">
+
+          <button mat-button (click)="openExportDialog()" color="primary">
             <mat-icon>download</mat-icon>
             Export
           </button>
-          
-          <button mat-button 
-                  (click)="importRules()"
-                  color="accent">
+
+          <button mat-button (click)="importRules()" color="accent">
             <mat-icon>upload</mat-icon>
             Import
           </button>
@@ -136,66 +149,81 @@ import { FieldSchema } from '../models/field-schema.model';
       <div class="rule-editor-content">
         <!-- Sidebar -->
         <mat-sidenav-container class="sidenav-container">
-          <mat-sidenav 
-            mode="side" 
-            opened="true" 
-            class="rule-editor-sidebar">
-            
+          <mat-sidenav mode="side" opened="true" class="rule-editor-sidebar">
             <!-- Rules List -->
             <div class="sidebar-section">
               <h3 class="sidebar-title">
                 <mat-icon>list</mat-icon>
                 Rules
               </h3>
-              
-              <div class="rules-list" 
-                   cdkDropList 
-                   (cdkDropListDropped)="onRuleDrop($event)">
-                <div *ngFor="let nodeId of currentState?.rootNodes; trackBy: trackByNodeId"
-                     class="rule-item"
-                     [class.selected]="isNodeSelected(nodeId)"
-                     cdkDrag
-                     (click)="selectNode(nodeId)">
-                  
+
+              <div
+                class="rules-list"
+                cdkDropList
+                (cdkDropListDropped)="onRuleDrop($event)"
+              >
+                <div
+                  *ngFor="
+                    let nodeId of currentState?.rootNodes;
+                    trackBy: trackByNodeId
+                  "
+                  class="rule-item"
+                  [class.selected]="isNodeSelected(nodeId)"
+                  cdkDrag
+                  (click)="selectNode(nodeId)"
+                >
                   <div class="rule-item-content">
-                    <mat-icon class="rule-type-icon">{{ getNodeIcon(getNode(nodeId)) }}</mat-icon>
+                    <mat-icon class="rule-type-icon">{{
+                      getNodeIcon(getNode(nodeId))
+                    }}</mat-icon>
                     <span class="rule-label">{{ getNodeLabel(nodeId) }}</span>
-                    
+
                     <div class="rule-actions">
-                      <button mat-icon-button 
-                              size="small"
-                              (click)="editNode(nodeId); $event.stopPropagation()">
+                      <button
+                        mat-icon-button
+                        size="small"
+                        (click)="editNode(nodeId); $event.stopPropagation()"
+                      >
                         <mat-icon>edit</mat-icon>
                       </button>
-                      
-                      <button mat-icon-button 
-                              size="small"
-                              color="warn"
-                              (click)="removeNode(nodeId); $event.stopPropagation()">
+
+                      <button
+                        mat-icon-button
+                        size="small"
+                        color="warn"
+                        (click)="removeNode(nodeId); $event.stopPropagation()"
+                      >
                         <mat-icon>delete</mat-icon>
                       </button>
                     </div>
                   </div>
-                  
+
                   <!-- Nested Rules -->
                   <div *ngIf="hasChildren(nodeId)" class="nested-rules">
-                    <div *ngFor="let childId of getChildren(nodeId)"
-                         class="nested-rule-item"
-                         [class.selected]="isNodeSelected(childId)"
-                         (click)="selectNode(childId); $event.stopPropagation()">
-                      
-                      <mat-icon class="rule-type-icon">{{ getNodeIcon(getNode(childId)) }}</mat-icon>
-                      <span class="rule-label">{{ getNodeLabel(childId) }}</span>
+                    <div
+                      *ngFor="let childId of getChildren(nodeId)"
+                      class="nested-rule-item"
+                      [class.selected]="isNodeSelected(childId)"
+                      (click)="selectNode(childId); $event.stopPropagation()"
+                    >
+                      <mat-icon class="rule-type-icon">{{
+                        getNodeIcon(getNode(childId))
+                      }}</mat-icon>
+                      <span class="rule-label">{{
+                        getNodeLabel(childId)
+                      }}</span>
                     </div>
                   </div>
                 </div>
               </div>
-              
+
               <!-- Add Rule Button -->
-              <button mat-fab 
-                      color="primary" 
-                      class="add-rule-fab"
-                      (click)="showAddRuleDialog()">
+              <button
+                mat-fab
+                color="primary"
+                class="add-rule-fab"
+                (click)="showAddRuleDialog()"
+              >
                 <mat-icon>add</mat-icon>
               </button>
             </div>
@@ -208,17 +236,23 @@ import { FieldSchema } from '../models/field-schema.model';
                 <mat-icon>view_list</mat-icon>
                 Fields
               </h3>
-              
+
               <div class="field-palette">
-                <div *ngFor="let category of fieldCategories" class="field-category">
+                <div
+                  *ngFor="let category of fieldCategories"
+                  class="field-category"
+                >
                   <h4 class="category-title">{{ category.name }}</h4>
-                  
-                  <div *ngFor="let field of category.fields" 
-                       class="field-item"
-                       draggable="true"
-                       (dragstart)="onFieldDragStart(field, $event)">
-                    
-                    <mat-icon class="field-icon">{{ getFieldIcon(field.type) }}</mat-icon>
+
+                  <div
+                    *ngFor="let field of category.fields"
+                    class="field-item"
+                    draggable="true"
+                    (dragstart)="onFieldDragStart(field, $event)"
+                  >
+                    <mat-icon class="field-icon">{{
+                      getFieldIcon(field.type)
+                    }}</mat-icon>
                     <span class="field-label">{{ field.label }}</span>
                     <span class="field-type">{{ field.type }}</span>
                   </div>
@@ -234,13 +268,14 @@ import { FieldSchema } from '../models/field-schema.model';
                 <!-- Visual Builder Tab -->
                 <mat-tab label="Visual Builder">
                   <div class="visual-builder">
-                    <praxis-rule-canvas 
+                    <praxis-rule-canvas
                       [state]="currentState"
                       [fieldSchemas]="fieldSchemas"
                       (nodeSelected)="selectNode($event)"
                       (nodeAdded)="onNodeAdded($event)"
                       (nodeUpdated)="onNodeUpdated($event)"
-                      (nodeRemoved)="removeNode($event)">
+                      (nodeRemoved)="removeNode($event)"
+                    >
                     </praxis-rule-canvas>
                   </div>
                 </mat-tab>
@@ -248,9 +283,10 @@ import { FieldSchema } from '../models/field-schema.model';
                 <!-- Metadata Editor Tab -->
                 <mat-tab label="Metadata">
                   <div class="metadata-editor">
-                    <praxis-metadata-editor 
+                    <praxis-metadata-editor
                       [selectedNode]="selectedNode"
-                      (metadataUpdated)="onMetadataUpdated($event)">
+                      (metadataUpdated)="onMetadataUpdated($event)"
+                    >
                     </praxis-metadata-editor>
                   </div>
                 </mat-tab>
@@ -258,10 +294,11 @@ import { FieldSchema } from '../models/field-schema.model';
                 <!-- DSL Viewer Tab -->
                 <mat-tab label="DSL Preview">
                   <div class="dsl-viewer">
-                    <praxis-dsl-viewer 
+                    <praxis-dsl-viewer
                       [dsl]="currentState?.currentDSL"
                       [editable]="currentState?.mode === 'dsl'"
-                      (dslChanged)="onDslChanged($event)">
+                      (dslChanged)="onDslChanged($event)"
+                    >
                     </praxis-dsl-viewer>
                   </div>
                 </mat-tab>
@@ -269,10 +306,11 @@ import { FieldSchema } from '../models/field-schema.model';
                 <!-- JSON Viewer Tab -->
                 <mat-tab label="JSON Preview">
                   <div class="json-viewer">
-                    <praxis-json-viewer 
+                    <praxis-json-viewer
                       [json]="currentState?.currentJSON"
                       [editable]="currentState?.mode === 'json'"
-                      (jsonChanged)="onJsonChanged($event)">
+                      (jsonChanged)="onJsonChanged($event)"
+                    >
                     </praxis-json-viewer>
                   </div>
                 </mat-tab>
@@ -287,12 +325,13 @@ import { FieldSchema } from '../models/field-schema.model';
                 <!-- DSL Linter Tab -->
                 <mat-tab label="DSL Linter">
                   <div class="dsl-linter">
-                    <praxis-dsl-linter 
+                    <praxis-dsl-linter
                       [dsl]="currentState?.currentDSL || ''"
                       [autoLint]="true"
                       (errorSelected)="onLinterErrorSelected($event)"
                       (quickFixApplied)="onQuickFixApplied($event)"
-                      (ruleToggled)="onLinterRuleToggled($event)">
+                      (ruleToggled)="onLinterRuleToggled($event)"
+                    >
                     </praxis-dsl-linter>
                   </div>
                 </mat-tab>
@@ -308,37 +347,49 @@ import { FieldSchema } from '../models/field-schema.model';
           <span class="node-count">{{ getRuleCount() }} rules</span>
           <span *ngIf="currentState?.isDirty" class="dirty-indicator">•</span>
         </div>
-        
+
         <div class="status-center">
-          <div *ngIf="validationErrors?.length > 0" class="validation-status error">
+          <div
+            *ngIf="validationErrors?.length > 0"
+            class="validation-status error"
+          >
             <mat-icon>error</mat-icon>
             {{ validationErrors.length }} error(s)
           </div>
-          <div *ngIf="validationErrors?.length === 0" class="validation-status success">
+          <div
+            *ngIf="validationErrors?.length === 0"
+            class="validation-status success"
+          >
             <mat-icon>check_circle</mat-icon>
             Valid
           </div>
         </div>
-        
+
         <div class="status-right">
-          <span class="mode-indicator">{{ currentState?.mode?.toUpperCase() }}</span>
+          <span class="mode-indicator">{{
+            currentState?.mode?.toUpperCase()
+          }}</span>
         </div>
       </div>
 
       <!-- Validation Errors Panel -->
-      <div *ngIf="showValidationErrors && validationErrors?.length > 0" 
-           class="validation-panel">
+      <div
+        *ngIf="showValidationErrors && validationErrors?.length > 0"
+        class="validation-panel"
+      >
         <div class="validation-header">
           <h3>Validation Errors</h3>
           <button mat-icon-button (click)="hideValidationErrors()">
             <mat-icon>close</mat-icon>
           </button>
         </div>
-        
+
         <div class="validation-list">
-          <div *ngFor="let error of validationErrors" 
-               class="validation-error"
-               [class]="error.severity">
+          <div
+            *ngFor="let error of validationErrors"
+            class="validation-error"
+            [class]="error.severity"
+          >
             <mat-icon>{{ getErrorIcon(error.severity) }}</mat-icon>
             <div class="error-content">
               <div class="error-message">{{ error.message }}</div>
@@ -346,9 +397,11 @@ import { FieldSchema } from '../models/field-schema.model';
                 Suggestion: {{ error.suggestion }}
               </div>
             </div>
-            <button *ngIf="error.nodeId" 
-                    mat-icon-button 
-                    (click)="selectNode(error.nodeId)">
+            <button
+              *ngIf="error.nodeId"
+              mat-icon-button
+              (click)="selectNode(error.nodeId)"
+            >
               <mat-icon>my_location</mat-icon>
             </button>
           </div>
@@ -356,372 +409,375 @@ import { FieldSchema } from '../models/field-schema.model';
       </div>
     </div>
   `,
-  styles: [`
-    .rule-editor-container {
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      overflow: hidden;
-    }
+  styles: [
+    `
+      .rule-editor-container {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        overflow: hidden;
+      }
 
-    .rule-editor-toolbar {
-      background: var(--mdc-theme-primary);
-      color: white;
-      flex-shrink: 0;
-    }
+      .rule-editor-toolbar {
+        background: var(--mdc-theme-primary);
+        color: white;
+        flex-shrink: 0;
+      }
 
-    .toolbar-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-weight: 500;
-    }
+      .toolbar-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+      }
 
-    .toolbar-spacer {
-      flex: 1;
-    }
+      .toolbar-spacer {
+        flex: 1;
+      }
 
-    .rule-editor-content {
-      flex: 1;
-      overflow: hidden;
-    }
+      .rule-editor-content {
+        flex: 1;
+        overflow: hidden;
+      }
 
-    .sidenav-container {
-      height: 100%;
-    }
+      .sidenav-container {
+        height: 100%;
+      }
 
-    .rule-editor-sidebar {
-      width: 300px;
-      padding: 16px;
-      background: var(--mdc-theme-surface);
-      border-right: 1px solid var(--mdc-theme-outline);
-    }
+      .rule-editor-sidebar {
+        width: 300px;
+        padding: 16px;
+        background: var(--mdc-theme-surface);
+        border-right: 1px solid var(--mdc-theme-outline);
+      }
 
-    .sidebar-section {
-      margin-bottom: 24px;
-    }
+      .sidebar-section {
+        margin-bottom: 24px;
+      }
 
-    .sidebar-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin: 0 0 16px 0;
-      font-size: 14px;
-      font-weight: 500;
-      color: var(--mdc-theme-on-surface-variant);
-    }
+      .sidebar-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0 0 16px 0;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--mdc-theme-on-surface-variant);
+      }
 
-    .rules-list {
-      min-height: 200px;
-    }
+      .rules-list {
+        min-height: 200px;
+      }
 
-    .rule-item {
-      margin-bottom: 8px;
-      padding: 12px;
-      border: 1px solid var(--mdc-theme-outline);
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
+      .rule-item {
+        margin-bottom: 8px;
+        padding: 12px;
+        border: 1px solid var(--mdc-theme-outline);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
 
-    .rule-item:hover {
-      border-color: var(--mdc-theme-primary);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
+      .rule-item:hover {
+        border-color: var(--mdc-theme-primary);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
 
-    .rule-item.selected {
-      border-color: var(--mdc-theme-primary);
-      background: var(--mdc-theme-primary-container);
-    }
+      .rule-item.selected {
+        border-color: var(--mdc-theme-primary);
+        background: var(--mdc-theme-primary-container);
+      }
 
-    .rule-item-content {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+      .rule-item-content {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
 
-    .rule-type-icon {
-      font-size: 16px;
-      width: 16px;
-      height: 16px;
-      color: var(--mdc-theme-primary);
-    }
+      .rule-type-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+        color: var(--mdc-theme-primary);
+      }
 
-    .rule-label {
-      flex: 1;
-      font-size: 14px;
-      font-weight: 500;
-    }
+      .rule-label {
+        flex: 1;
+        font-size: 14px;
+        font-weight: 500;
+      }
 
-    .rule-actions {
-      display: flex;
-      gap: 4px;
-      opacity: 0;
-      transition: opacity 0.2s ease;
-    }
+      .rule-actions {
+        display: flex;
+        gap: 4px;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
 
-    .rule-item:hover .rule-actions {
-      opacity: 1;
-    }
+      .rule-item:hover .rule-actions {
+        opacity: 1;
+      }
 
-    .nested-rules {
-      margin-top: 8px;
-      margin-left: 24px;
-      border-left: 2px solid var(--mdc-theme-outline);
-      padding-left: 12px;
-    }
+      .nested-rules {
+        margin-top: 8px;
+        margin-left: 24px;
+        border-left: 2px solid var(--mdc-theme-outline);
+        padding-left: 12px;
+      }
 
-    .nested-rule-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 13px;
-    }
+      .nested-rule-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 13px;
+      }
 
-    .nested-rule-item:hover {
-      background: var(--mdc-theme-surface-variant);
-    }
+      .nested-rule-item:hover {
+        background: var(--mdc-theme-surface-variant);
+      }
 
-    .nested-rule-item.selected {
-      background: var(--mdc-theme-primary-container);
-    }
+      .nested-rule-item.selected {
+        background: var(--mdc-theme-primary-container);
+      }
 
-    .add-rule-fab {
-      position: absolute;
-      bottom: 16px;
-      right: 16px;
-      scale: 0.8;
-    }
+      .add-rule-fab {
+        position: absolute;
+        bottom: 16px;
+        right: 16px;
+        scale: 0.8;
+      }
 
-    .field-palette {
-      max-height: 300px;
-      overflow-y: auto;
-    }
+      .field-palette {
+        max-height: 300px;
+        overflow-y: auto;
+      }
 
-    .field-category {
-      margin-bottom: 16px;
-    }
+      .field-category {
+        margin-bottom: 16px;
+      }
 
-    .category-title {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--mdc-theme-primary);
-      margin: 0 0 8px 0;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
+      .category-title {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--mdc-theme-primary);
+        margin: 0 0 8px 0;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
 
-    .field-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px;
-      border-radius: 4px;
-      cursor: grab;
-      font-size: 13px;
-      transition: background 0.2s ease;
-    }
+      .field-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px;
+        border-radius: 4px;
+        cursor: grab;
+        font-size: 13px;
+        transition: background 0.2s ease;
+      }
 
-    .field-item:hover {
-      background: var(--mdc-theme-surface-variant);
-    }
+      .field-item:hover {
+        background: var(--mdc-theme-surface-variant);
+      }
 
-    .field-item:active {
-      cursor: grabbing;
-    }
+      .field-item:active {
+        cursor: grabbing;
+      }
 
-    .field-icon {
-      font-size: 14px;
-      width: 14px;
-      height: 14px;
-      color: var(--mdc-theme-secondary);
-    }
+      .field-icon {
+        font-size: 14px;
+        width: 14px;
+        height: 14px;
+        color: var(--mdc-theme-secondary);
+      }
 
-    .field-label {
-      flex: 1;
-      font-weight: 500;
-    }
+      .field-label {
+        flex: 1;
+        font-weight: 500;
+      }
 
-    .field-type {
-      font-size: 11px;
-      color: var(--mdc-theme-on-surface-variant);
-      background: var(--mdc-theme-surface-variant);
-      padding: 2px 6px;
-      border-radius: 4px;
-    }
+      .field-type {
+        font-size: 11px;
+        color: var(--mdc-theme-on-surface-variant);
+        background: var(--mdc-theme-surface-variant);
+        padding: 2px 6px;
+        border-radius: 4px;
+      }
 
-    .editor-content {
-      background: var(--mdc-theme-background);
-    }
+      .editor-content {
+        background: var(--mdc-theme-background);
+      }
 
-    .editor-tabs {
-      height: 100%;
-    }
+      .editor-tabs {
+        height: 100%;
+      }
 
-    .visual-builder,
-    .metadata-editor,
-    .dsl-viewer,
-    .json-viewer,
-    .round-trip-tester,
-    .dsl-linter {
-      height: calc(100vh - 200px);
-      padding: 16px;
-    }
+      .visual-builder,
+      .metadata-editor,
+      .dsl-viewer,
+      .json-viewer,
+      .round-trip-tester,
+      .dsl-linter {
+        height: calc(100vh - 200px);
+        padding: 16px;
+      }
 
-    .round-trip-tester,
-    .dsl-linter {
-      padding: 0; /* Let the component handle its own padding */
-    }
+      .round-trip-tester,
+      .dsl-linter {
+        padding: 0; /* Let the component handle its own padding */
+      }
 
-    .status-bar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 16px;
-      background: var(--mdc-theme-surface-variant);
-      border-top: 1px solid var(--mdc-theme-outline);
-      font-size: 12px;
-      color: var(--mdc-theme-on-surface-variant);
-    }
+      .status-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 16px;
+        background: var(--mdc-theme-surface-variant);
+        border-top: 1px solid var(--mdc-theme-outline);
+        font-size: 12px;
+        color: var(--mdc-theme-on-surface-variant);
+      }
 
-    .status-left,
-    .status-center,
-    .status-right {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
+      .status-left,
+      .status-center,
+      .status-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
 
-    .dirty-indicator {
-      color: var(--mdc-theme-primary);
-      font-weight: bold;
-    }
+      .dirty-indicator {
+        color: var(--mdc-theme-primary);
+        font-weight: bold;
+      }
 
-    .validation-status {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-weight: 500;
-    }
+      .validation-status {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-weight: 500;
+      }
 
-    .validation-status.error {
-      color: var(--mdc-theme-error);
-    }
+      .validation-status.error {
+        color: var(--mdc-theme-error);
+      }
 
-    .validation-status.success {
-      color: var(--mdc-theme-tertiary);
-    }
+      .validation-status.success {
+        color: var(--mdc-theme-tertiary);
+      }
 
-    .validation-status mat-icon {
-      font-size: 16px;
-      width: 16px;
-      height: 16px;
-    }
+      .validation-status mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+      }
 
-    .mode-indicator {
-      font-weight: 600;
-      color: var(--mdc-theme-primary);
-    }
+      .mode-indicator {
+        font-weight: 600;
+        color: var(--mdc-theme-primary);
+      }
 
-    .validation-panel {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      max-height: 200px;
-      background: var(--mdc-theme-surface);
-      border-top: 1px solid var(--mdc-theme-outline);
-      box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
-      z-index: 1000;
-    }
+      .validation-panel {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        max-height: 200px;
+        background: var(--mdc-theme-surface);
+        border-top: 1px solid var(--mdc-theme-outline);
+        box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+      }
 
-    .validation-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--mdc-theme-outline);
-    }
+      .validation-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--mdc-theme-outline);
+      }
 
-    .validation-header h3 {
-      margin: 0;
-      font-size: 14px;
-      font-weight: 500;
-    }
+      .validation-header h3 {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 500;
+      }
 
-    .validation-list {
-      max-height: 150px;
-      overflow-y: auto;
-      padding: 8px;
-    }
+      .validation-list {
+        max-height: 150px;
+        overflow-y: auto;
+        padding: 8px;
+      }
 
-    .validation-error {
-      display: flex;
-      align-items: flex-start;
-      gap: 8px;
-      padding: 8px;
-      border-radius: 4px;
-      margin-bottom: 4px;
-    }
+      .validation-error {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 8px;
+        border-radius: 4px;
+        margin-bottom: 4px;
+      }
 
-    .validation-error.error {
-      background: var(--mdc-theme-error-container);
-      color: var(--mdc-theme-on-error-container);
-    }
+      .validation-error.error {
+        background: var(--mdc-theme-error-container);
+        color: var(--mdc-theme-on-error-container);
+      }
 
-    .validation-error.warning {
-      background: var(--mdc-theme-warning-container);
-      color: var(--mdc-theme-on-warning-container);
-    }
+      .validation-error.warning {
+        background: var(--mdc-theme-warning-container);
+        color: var(--mdc-theme-on-warning-container);
+      }
 
-    .validation-error.info {
-      background: var(--mdc-theme-info-container);
-      color: var(--mdc-theme-on-info-container);
-    }
+      .validation-error.info {
+        background: var(--mdc-theme-info-container);
+        color: var(--mdc-theme-on-info-container);
+      }
 
-    .error-content {
-      flex: 1;
-    }
+      .error-content {
+        flex: 1;
+      }
 
-    .error-message {
-      font-weight: 500;
-      margin-bottom: 2px;
-    }
+      .error-message {
+        font-weight: 500;
+        margin-bottom: 2px;
+      }
 
-    .error-suggestion {
-      font-size: 12px;
-      opacity: 0.8;
-    }
+      .error-suggestion {
+        font-size: 12px;
+        opacity: 0.8;
+      }
 
-    /* Drag and drop styles */
-    .cdk-drag-preview {
-      box-sizing: border-box;
-      border-radius: 4px;
-      box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2),
-                  0 8px 10px 1px rgba(0, 0, 0, 0.14),
-                  0 3px 14px 2px rgba(0, 0, 0, 0.12);
-    }
+      /* Drag and drop styles */
+      .cdk-drag-preview {
+        box-sizing: border-box;
+        border-radius: 4px;
+        box-shadow:
+          0 5px 5px -3px rgba(0, 0, 0, 0.2),
+          0 8px 10px 1px rgba(0, 0, 0, 0.14),
+          0 3px 14px 2px rgba(0, 0, 0, 0.12);
+      }
 
-    .cdk-drag-placeholder {
-      opacity: 0;
-    }
+      .cdk-drag-placeholder {
+        opacity: 0;
+      }
 
-    .cdk-drag-animating {
-      transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
-    }
+      .cdk-drag-animating {
+        transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+      }
 
-    .cdk-drop-list-dragging .rule-item:not(.cdk-drag-placeholder) {
-      transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
-    }
-  `]
+      .cdk-drop-list-dragging .rule-item:not(.cdk-drag-placeholder) {
+        transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+      }
+    `,
+  ],
 })
 export class RuleEditorComponent implements OnInit, OnDestroy {
   @Input() config: RuleBuilderConfig | null = null;
   @Input() initialRules: any = null;
-  
+
   @Output() rulesChanged = new EventEmitter<any>();
   @Output() exportRequested = new EventEmitter<ExportOptions>();
   @Output() importRequested = new EventEmitter<ImportOptions>();
@@ -734,17 +790,20 @@ export class RuleEditorComponent implements OnInit, OnDestroy {
   selectedNode: RuleNode | null = null;
   fieldSchemas: Record<string, FieldSchema> = {};
   fieldCategories: any[] = [];
-  
+
   activeTabIndex = 0;
   showValidationErrors = false;
-  
+
   // Computed properties
   get canUndo(): boolean {
     return (this.currentState?.historyPosition || 0) > 0;
   }
-  
+
   get canRedo(): boolean {
-    return (this.currentState?.historyPosition || 0) < (this.currentState?.history.length || 0) - 1;
+    return (
+      (this.currentState?.historyPosition || 0) <
+      (this.currentState?.history.length || 0) - 1
+    );
   }
 
   constructor(
@@ -752,7 +811,7 @@ export class RuleEditorComponent implements OnInit, OnDestroy {
     private fieldSchemaService: FieldSchemaService,
     private snackBar: MatSnackBar,
     private fb: FormBuilder,
-    private dialog: MatDialog
+    private dialog: MatDialog,
   ) {}
 
   ngOnInit(): void {
@@ -769,7 +828,7 @@ export class RuleEditorComponent implements OnInit, OnDestroy {
     // Subscribe to rule builder state changes
     this.ruleBuilderService.state$
       .pipe(takeUntil(this.destroy$))
-      .subscribe(state => {
+      .subscribe((state) => {
         this.currentState = state;
         this.updateSelectedNode();
         this.rulesChanged.emit(state);
@@ -778,7 +837,7 @@ export class RuleEditorComponent implements OnInit, OnDestroy {
     // Subscribe to validation errors
     this.ruleBuilderService.validationErrors$
       .pipe(takeUntil(this.destroy$))
-      .subscribe(errors => {
+      .subscribe((errors) => {
         this.validationErrors = errors;
         this.showValidationErrors = errors.length > 0;
       });
@@ -786,22 +845,24 @@ export class RuleEditorComponent implements OnInit, OnDestroy {
     // Subscribe to node selection
     this.ruleBuilderService.nodeSelected$
       .pipe(takeUntil(this.destroy$))
-      .subscribe(nodeId => {
+      .subscribe((nodeId) => {
         this.updateSelectedNode();
       });
 
     // Subscribe to field schemas
     combineLatest([
       this.fieldSchemaService.fieldSchemas$,
-      this.fieldSchemaService.getFieldSchemasByCategory()
+      this.fieldSchemaService.getFieldSchemasByCategory(),
     ])
       .pipe(takeUntil(this.destroy$))
       .subscribe(([schemas, categories]) => {
         this.fieldSchemas = schemas;
-        this.fieldCategories = Object.entries(categories).map(([name, fields]) => ({
-          name,
-          fields
-        }));
+        this.fieldCategories = Object.entries(categories).map(
+          ([name, fields]) => ({
+            name,
+            fields,
+          }),
+        );
       });
   }
 
@@ -809,11 +870,11 @@ export class RuleEditorComponent implements OnInit, OnDestroy {
     if (this.config) {
       this.ruleBuilderService.initialize(this.config);
       this.fieldSchemaService.setFieldSchemas(this.config.fieldSchemas);
-      
+
       if (this.config.contextVariables) {
         this.fieldSchemaService.setContext({
           contextVariables: this.config.contextVariables,
-          customFunctions: this.config.customFunctions
+          customFunctions: this.config.customFunctions,
         });
       }
     }
@@ -826,18 +887,23 @@ export class RuleEditorComponent implements OnInit, OnDestroy {
   private importInitialRules(): void {
     try {
       this.ruleBuilderService.import(
-        typeof this.initialRules === 'string' ? this.initialRules : JSON.stringify(this.initialRules),
-        { format: 'json' }
+        typeof this.initialRules === 'string'
+          ? this.initialRules
+          : JSON.stringify(this.initialRules),
+        { format: 'json' },
       );
     } catch (error) {
       console.error('Failed to import initial rules:', error);
-      this.snackBar.open('Failed to import initial rules', 'Close', { duration: 3000 });
+      this.snackBar.open('Failed to import initial rules', 'Close', {
+        duration: 3000,
+      });
     }
   }
 
   private updateSelectedNode(): void {
     if (this.currentState?.selectedNodeId) {
-      this.selectedNode = this.currentState.nodes[this.currentState.selectedNodeId] || null;
+      this.selectedNode =
+        this.currentState.nodes[this.currentState.selectedNodeId] || null;
     } else {
       this.selectedNode = null;
     }
@@ -859,7 +925,7 @@ export class RuleEditorComponent implements OnInit, OnDestroy {
 
   getNodeIcon(node: RuleNode | null): string {
     if (!node) return 'help';
-    
+
     const icons: Record<RuleNodeType, string> = {
       [RuleNodeType.FIELD_CONDITION]: 'compare_arrows',
       [RuleNodeType.AND_GROUP]: 'join_inner',
@@ -885,31 +951,33 @@ export class RuleEditorComponent implements OnInit, OnDestroy {
       [RuleNodeType.CONTEXTUAL]: 'dynamic_form',
       [RuleNodeType.AT_LEAST]: 'filter_list',
       [RuleNodeType.EXACTLY]: 'looks_one',
-      [RuleNodeType.CUSTOM]: 'extension'
+      [RuleNodeType.EXPRESSION]: 'code',
+      [RuleNodeType.CONTEXTUAL_TEMPLATE]: 'view_module',
+      [RuleNodeType.CUSTOM]: 'extension',
     };
-    
+
     return icons[node.type] || 'help';
   }
 
   getFieldIcon(type: string): string {
     const icons: Record<string, string> = {
-      'string': 'text_fields',
-      'number': 'pin',
-      'integer': 'pin',
-      'boolean': 'toggle_on',
-      'date': 'event',
-      'datetime': 'schedule',
-      'time': 'access_time',
-      'email': 'email',
-      'url': 'link',
-      'phone': 'phone',
-      'array': 'list',
-      'object': 'data_object',
-      'enum': 'list',
-      'uuid': 'fingerprint',
-      'json': 'data_object'
+      string: 'text_fields',
+      number: 'pin',
+      integer: 'pin',
+      boolean: 'toggle_on',
+      date: 'event',
+      datetime: 'schedule',
+      time: 'access_time',
+      email: 'email',
+      url: 'link',
+      phone: 'phone',
+      array: 'list',
+      object: 'data_object',
+      enum: 'list',
+      uuid: 'fingerprint',
+      json: 'data_object',
     };
-    
+
     return icons[type] || 'text_fields';
   }
 
@@ -933,16 +1001,17 @@ export class RuleEditorComponent implements OnInit, OnDestroy {
 
   getErrorIcon(severity: string): string {
     const icons: Record<string, string> = {
-      'error': 'error',
-      'warning': 'warning',
-      'info': 'info'
+      error: 'error',
+      warning: 'warning',
+      info: 'info',
     };
-    
+
     return icons[severity] || 'info';
   }
 
   // Event handlers
-  onModeChange(mode: string): void {
+  onModeChange(event: MatButtonToggleChange): void {
+    const mode = event.value as any;
     // Handle mode change
   }
 
@@ -958,7 +1027,8 @@ export class RuleEditorComponent implements OnInit, OnDestroy {
 
   removeNode(nodeId: string): void {
     this.ruleBuilderService.removeNode(nodeId);
-    this.snackBar.open('Rule removed', 'Undo', { duration: 3000 })
+    this.snackBar
+      .open('Rule removed', 'Undo', { duration: 3000 })
       .onAction()
       .subscribe(() => {
         this.undo();
@@ -992,7 +1062,7 @@ export class RuleEditorComponent implements OnInit, OnDestroy {
   onMetadataUpdated(event: any): void {
     if (this.selectedNode) {
       this.ruleBuilderService.updateNode(this.selectedNode.id, {
-        metadata: event
+        metadata: event,
       });
     }
   }
@@ -1000,21 +1070,32 @@ export class RuleEditorComponent implements OnInit, OnDestroy {
   onDslChanged(dsl: string): void {
     try {
       this.ruleBuilderService.import(dsl, { format: 'dsl', merge: false });
-      this.snackBar.open('DSL imported successfully', 'Close', { duration: 2000 });
+      this.snackBar.open('DSL imported successfully', 'Close', {
+        duration: 2000,
+      });
     } catch (error) {
       console.error('Failed to import DSL:', error);
-      this.snackBar.open('Failed to import DSL: Invalid syntax', 'Close', { duration: 3000 });
+      this.snackBar.open('Failed to import DSL: Invalid syntax', 'Close', {
+        duration: 3000,
+      });
     }
   }
 
   onJsonChanged(json: any): void {
     try {
       const jsonString = typeof json === 'string' ? json : JSON.stringify(json);
-      this.ruleBuilderService.import(jsonString, { format: 'json', merge: false });
-      this.snackBar.open('JSON imported successfully', 'Close', { duration: 2000 });
+      this.ruleBuilderService.import(jsonString, {
+        format: 'json',
+        merge: false,
+      });
+      this.snackBar.open('JSON imported successfully', 'Close', {
+        duration: 2000,
+      });
     } catch (error) {
       console.error('Failed to import JSON:', error);
-      this.snackBar.open('Failed to import JSON: Invalid format', 'Close', { duration: 3000 });
+      this.snackBar.open('Failed to import JSON: Invalid format', 'Close', {
+        duration: 3000,
+      });
     }
   }
 
@@ -1040,11 +1121,11 @@ export class RuleEditorComponent implements OnInit, OnDestroy {
         allowMultipleFormats: true,
         preselectedFormat: this.currentState?.mode === 'dsl' ? 'dsl' : 'json',
         showIntegrationTab: true,
-        showSharingTab: true
-      }
+        showSharingTab: true,
+      },
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result) => {
       if (result) {
         // Handle any post-export actions if needed
         this.snackBar.open('Export completed', 'Close', { duration: 2000 });
@@ -1058,28 +1139,37 @@ export class RuleEditorComponent implements OnInit, OnDestroy {
     input.type = 'file';
     input.accept = '.json,.dsl,.txt';
     input.multiple = false;
-    
+
     input.onchange = (event: any) => {
       const file = event.target.files[0];
       if (!file) return;
-      
+
       const reader = new FileReader();
       reader.onload = (e) => {
         try {
           const content = e.target?.result as string;
-          const format = file.name.endsWith('.dsl') || file.name.endsWith('.txt') ? 'dsl' : 'json';
-          
+          const format =
+            file.name.endsWith('.dsl') || file.name.endsWith('.txt')
+              ? 'dsl'
+              : 'json';
+
           this.ruleBuilderService.import(content, { format, merge: false });
-          this.snackBar.open(`Rules imported from ${file.name}`, 'Close', { duration: 2000 });
+          this.snackBar.open(`Rules imported from ${file.name}`, 'Close', {
+            duration: 2000,
+          });
         } catch (error) {
           console.error('Import failed:', error);
-          this.snackBar.open('Failed to import rules: Invalid format', 'Close', { duration: 3000 });
+          this.snackBar.open(
+            'Failed to import rules: Invalid format',
+            'Close',
+            { duration: 3000 },
+          );
         }
       };
-      
+
       reader.readAsText(file);
     };
-    
+
     input.click();
   }
 
@@ -1097,51 +1187,62 @@ export class RuleEditorComponent implements OnInit, OnDestroy {
   onQuickFixApplied(event: any): void {
     // Apply the quick fix to the DSL
     const { error, fix } = event;
-    
+
     try {
       // Get current DSL
       let currentDsl = this.currentState?.currentDSL || '';
-      
+
       // Apply edits from the quick fix
       if (fix.edits && fix.edits.length > 0) {
         const lines = currentDsl.split('\n');
-        
+
         // Apply edits in reverse order to maintain line/column positions
-        fix.edits.sort((a: any, b: any) => b.range.startLine - a.range.startLine).forEach((edit: any) => {
-          const lineIndex = edit.range.startLine - 1;
-          if (lineIndex >= 0 && lineIndex < lines.length) {
-            const line = lines[lineIndex];
-            const before = line.substring(0, edit.range.startColumn - 1);
-            const after = line.substring(edit.range.endColumn - 1);
-            lines[lineIndex] = before + edit.newText + after;
-          }
-        });
-        
+        fix.edits
+          .sort((a: any, b: any) => b.range.startLine - a.range.startLine)
+          .forEach((edit: any) => {
+            const lineIndex = edit.range.startLine - 1;
+            if (lineIndex >= 0 && lineIndex < lines.length) {
+              const line = lines[lineIndex];
+              const before = line.substring(0, edit.range.startColumn - 1);
+              const after = line.substring(edit.range.endColumn - 1);
+              lines[lineIndex] = before + edit.newText + after;
+            }
+          });
+
         const fixedDsl = lines.join('\n');
-        
+
         // Import the fixed DSL
-        this.ruleBuilderService.import(fixedDsl, { format: 'dsl', merge: false });
-        this.snackBar.open(`Quick fix applied: ${fix.title}`, 'Close', { duration: 3000 });
+        this.ruleBuilderService.import(fixedDsl, {
+          format: 'dsl',
+          merge: false,
+        });
+        this.snackBar.open(`Quick fix applied: ${fix.title}`, 'Close', {
+          duration: 3000,
+        });
       }
     } catch (error) {
       console.error('Failed to apply quick fix:', error);
-      this.snackBar.open('Failed to apply quick fix', 'Close', { duration: 3000 });
+      this.snackBar.open('Failed to apply quick fix', 'Close', {
+        duration: 3000,
+      });
     }
   }
 
   onLinterRuleToggled(event: any): void {
     const { rule, enabled } = event;
     console.log(`Linter rule ${rule.id} ${enabled ? 'enabled' : 'disabled'}`);
-    
+
     // Save linter rule preferences (could be stored in local storage or user preferences)
-    const preferences = JSON.parse(localStorage.getItem('dsl-linter-rules') || '{}');
+    const preferences = JSON.parse(
+      localStorage.getItem('dsl-linter-rules') || '{}',
+    );
     preferences[rule.id] = enabled;
     localStorage.setItem('dsl-linter-rules', JSON.stringify(preferences));
-    
+
     this.snackBar.open(
-      `Rule "${rule.name}" ${enabled ? 'enabled' : 'disabled'}`, 
-      'Close', 
-      { duration: 2000 }
+      `Rule "${rule.name}" ${enabled ? 'enabled' : 'disabled'}`,
+      'Close',
+      { duration: 2000 },
     );
   }
 }

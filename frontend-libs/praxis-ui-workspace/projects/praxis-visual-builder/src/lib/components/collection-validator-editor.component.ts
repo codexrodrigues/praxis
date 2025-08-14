@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChange
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
+import { MatSelectModule, MatSelectChange } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -46,8 +46,8 @@ import { FieldConditionEditorComponent } from './field-condition-editor.componen
       <div class="form-row">
         <mat-form-field appearance="outline" class="validator-type-select">
           <mat-label>Collection Validator Type</mat-label>
-          <mat-select formControlName="validatorType" 
-                     (selectionChange)="onValidatorTypeChanged($event.value)">
+          <mat-select formControlName="validatorType"
+                     (selectionChange)="onValidatorTypeChanged($event)">
             <mat-option value="forEach">
               <div class="validator-option">
                 <mat-icon>repeat</mat-icon>
@@ -84,8 +84,8 @@ import { FieldConditionEditorComponent } from './field-condition-editor.componen
       <div class="form-row" *ngIf="validatorType">
         <mat-form-field appearance="outline" class="target-collection-select">
           <mat-label>Target Collection</mat-label>
-          <mat-select formControlName="targetCollection" 
-                     (selectionChange)="onTargetCollectionChanged($event.value)">
+          <mat-select formControlName="targetCollection"
+                     (selectionChange)="onTargetCollectionChanged($event)">
             <mat-optgroup *ngFor="let category of collectionFieldCategories" [label]="category.name">
               <mat-option *ngFor="let field of category.fields" 
                          [value]="field.name">
@@ -1035,7 +1035,8 @@ export class CollectionValidatorEditorComponent implements OnInit, OnChanges {
   }
 
   // Event handlers
-  onValidatorTypeChanged(type: string): void {
+  onValidatorTypeChanged(event: MatSelectChange): void {
+    const type = event.value as 'forEach' | 'uniqueBy' | 'minLength' | 'maxLength';
     this.validatorType = type;
     
     // Initialize arrays based on type
@@ -1046,8 +1047,8 @@ export class CollectionValidatorEditorComponent implements OnInit, OnChanges {
     }
   }
 
-  onTargetCollectionChanged(collection: string): void {
-    this.targetCollection = collection;
+  onTargetCollectionChanged(event: MatSelectChange): void {
+    this.targetCollection = event.value;
   }
 
   onMinItemsChange(value: number): void {

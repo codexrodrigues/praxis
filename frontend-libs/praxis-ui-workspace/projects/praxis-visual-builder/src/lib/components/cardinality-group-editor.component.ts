@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChange
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
+import { MatSelectModule, MatSelectChange } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -53,8 +53,8 @@ import { CardinalityConfig } from '../models/rule-builder.model';
         <div class="cardinality-type-selection">
           <mat-form-field appearance="outline" class="type-select">
             <mat-label>Cardinality Rule</mat-label>
-            <mat-select formControlName="cardinalityType" 
-                       (selectionChange)="onCardinalityTypeChanged($event.value)">
+            <mat-select formControlName="cardinalityType"
+                       (selectionChange)="onCardinalityTypeChanged($event)">
               <mat-option value="atLeast">
                 <div class="cardinality-option">
                   <mat-icon>filter_list</mat-icon>
@@ -1005,16 +1005,16 @@ export class CardinalityGroupEditorComponent implements OnInit, OnChanges {
   }
 
   // Event handlers
-  onCardinalityTypeChanged(type: string): void {
-    this.selectedCardinalityType = type;
+  onCardinalityTypeChanged(event: MatSelectChange): void {
+    this.selectedCardinalityType = event.value as 'atLeast' | 'exactly';
     
     // Reset count to 1 when type changes
     this.cardinalityForm.patchValue({ count: 1 });
     this.currentCount = 1;
   }
 
-  onCountChanged(event: any): void {
-    const value = parseInt(event.target.value) || 1;
+  onCountChanged(event: Event): void {
+    const value = parseInt((event.target as HTMLInputElement).value) || 1;
     this.currentCount = Math.max(1, Math.min(value, this.getMaxCount()));
     
     // Update the form control if the value was clamped

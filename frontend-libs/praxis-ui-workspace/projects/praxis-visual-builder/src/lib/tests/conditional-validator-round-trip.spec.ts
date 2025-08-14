@@ -7,7 +7,7 @@ import {
   RuleNodeType 
 } from '../models/rule-builder.model';
 
-// TODO: Re-enable these tests when praxis-specification adds native support for conditional validators
+// TODO: Re-enable these tests when @praxis/specification adds native support for conditional validators
 describe.skip('ConditionalValidatorRoundTripTests', () => {
   let bridgeService: SpecificationBridgeService;
 

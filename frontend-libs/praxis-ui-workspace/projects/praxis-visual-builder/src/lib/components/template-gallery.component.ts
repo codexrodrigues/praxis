@@ -1,6 +1,20 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  OnInit,
+  OnDestroy,
+  ChangeDetectionStrategy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, FormControl, FormsModule } from '@angular/forms';
+import {
+  ReactiveFormsModule,
+  FormBuilder,
+  FormGroup,
+  FormControl,
+  FormsModule,
+} from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -19,11 +33,30 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 
 import { Subject, Observable, BehaviorSubject, combineLatest } from 'rxjs';
-import { takeUntil, debounceTime, distinctUntilChanged, startWith, map } from 'rxjs/operators';
+import {
+  takeUntil,
+  debounceTime,
+  distinctUntilChanged,
+  startWith,
+  map,
+} from 'rxjs/operators';
 
-import { RuleTemplate, TemplateMetadata, RuleNode } from '../models/rule-builder.model';
-import { RuleTemplateService, TemplateCategory, TemplateSearchCriteria, TemplateStats } from '../services/rule-template.service';
-import { TemplateEditorDialogComponent, TemplateEditorDialogData, TemplateEditorResult } from './template-editor-dialog.component';
+import {
+  RuleTemplate,
+  TemplateMetadata,
+  RuleNode,
+} from '../models/rule-builder.model';
+import {
+  RuleTemplateService,
+  TemplateCategory,
+  TemplateSearchCriteria,
+  TemplateStats,
+} from '../services/rule-template.service';
+import {
+  TemplateEditorDialogComponent,
+  TemplateEditorDialogData,
+  TemplateEditorResult,
+} from './template-editor-dialog.component';
 import { TemplatePreviewDialogComponent } from './template-preview-dialog.component';
 
 /**
@@ -62,7 +95,7 @@ export interface TemplateSortOption {
     MatProgressSpinnerModule,
     MatExpansionModule,
     MatDividerModule,
-    MatSlideToggleModule
+    MatSlideToggleModule,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -75,31 +108,39 @@ export interface TemplateSortOption {
               <mat-icon>widgets</mat-icon>
               Rule Templates
             </h2>
-            <p class="gallery-subtitle">Reusable rule patterns for faster development</p>
+            <p class="gallery-subtitle">
+              Reusable rule patterns for faster development
+            </p>
           </div>
-          
+
           <div class="header-actions">
-            <button mat-stroked-button 
-                    color="primary"
-                    (click)="showCreateTemplateDialog()"
-                    matTooltip="Create new template">
+            <button
+              mat-stroked-button
+              color="primary"
+              (click)="showCreateTemplateDialog()"
+              matTooltip="Create new template"
+            >
               <mat-icon>add</mat-icon>
               Create Template
             </button>
-            
-            <button mat-stroked-button 
-                    (click)="importTemplate()"
-                    matTooltip="Import template from file">
+
+            <button
+              mat-stroked-button
+              (click)="importTemplate()"
+              matTooltip="Import template from file"
+            >
               <mat-icon>upload</mat-icon>
               Import
             </button>
-            
-            <button mat-icon-button 
-                    [matMenuTriggerFor]="viewMenu"
-                    matTooltip="View options">
+
+            <button
+              mat-icon-button
+              [matMenuTriggerFor]="viewMenu"
+              matTooltip="View options"
+            >
               <mat-icon>view_module</mat-icon>
             </button>
-            
+
             <mat-menu #viewMenu="matMenu">
               <button mat-menu-item (click)="setDisplayMode('grid')">
                 <mat-icon>view_module</mat-icon>
@@ -140,9 +181,11 @@ export interface TemplateSortOption {
           <div class="search-row">
             <mat-form-field appearance="outline" class="search-input">
               <mat-label>Search templates...</mat-label>
-              <input matInput 
-                     formControlName="query"
-                     placeholder="Name, description, or tags">
+              <input
+                matInput
+                formControlName="query"
+                placeholder="Name, description, or tags"
+              />
               <mat-icon matSuffix>search</mat-icon>
             </mat-form-field>
 
@@ -150,14 +193,18 @@ export interface TemplateSortOption {
               <mat-label>Category</mat-label>
               <mat-select formControlName="category">
                 <mat-option value="">All Categories</mat-option>
-                <mat-option *ngFor="let category of categories$ | async" 
-                           [value]="category.id">
+                <mat-option
+                  *ngFor="let category of categories$ | async"
+                  [value]="category.id"
+                >
                   <div class="category-option">
                     <mat-icon>{{ category.icon }}</mat-icon>
                     <span>{{ category.name }}</span>
-                    <mat-badge [content]="category.templates.length" 
-                              color="primary" 
-                              size="small"></mat-badge>
+                    <span
+                      [matBadge]="category.templates?.length || 0"
+                      matBadgeColor="primary"
+                      matBadgeSize="small"
+                    ></span>
                   </div>
                 </mat-option>
               </mat-select>
@@ -189,9 +236,11 @@ export interface TemplateSortOption {
           <div class="tags-section" *ngIf="popularTags.length > 0">
             <span class="tags-label">Popular tags:</span>
             <mat-chip-listbox class="tags-list">
-              <mat-chip-option *ngFor="let tag of popularTags" 
-                       [selected]="selectedTags.has(tag)"
-                       (click)="toggleTag(tag)">
+              <mat-chip-option
+                *ngFor="let tag of popularTags"
+                [selected]="selectedTags.has(tag)"
+                (click)="toggleTag(tag)"
+              >
                 {{ tag }}
               </mat-chip-option>
             </mat-chip-listbox>
@@ -201,26 +250,35 @@ export interface TemplateSortOption {
           <div class="active-filters" *ngIf="hasActiveFilters()">
             <span class="filters-label">Active filters:</span>
             <mat-chip-set class="filter-chips">
-              <mat-chip *ngIf="searchForm.get('category')?.value" 
-                       (removed)="clearFilter('category')">
-                Category: {{ getCategoryName(searchForm.get('category')?.value || '') }}
+              <mat-chip
+                *ngIf="searchForm.get('category')?.value"
+                (removed)="clearFilter('category')"
+              >
+                Category:
+                {{ getCategoryName(searchForm.get('category')?.value || '') }}
                 <mat-icon matChipRemove>cancel</mat-icon>
               </mat-chip>
-              <mat-chip *ngIf="searchForm.get('complexity')?.value" 
-                       (removed)="clearFilter('complexity')">
+              <mat-chip
+                *ngIf="searchForm.get('complexity')?.value"
+                (removed)="clearFilter('complexity')"
+              >
                 Complexity: {{ searchForm.get('complexity')?.value || '' }}
                 <mat-icon matChipRemove>cancel</mat-icon>
               </mat-chip>
-              <mat-chip *ngFor="let tag of Array.from(selectedTags)" 
-                       (removed)="toggleTag(tag)">
+              <mat-chip
+                *ngFor="let tag of Array.from(selectedTags)"
+                (removed)="toggleTag(tag)"
+              >
                 {{ tag }}
                 <mat-icon matChipRemove>cancel</mat-icon>
               </mat-chip>
             </mat-chip-set>
-            <button mat-button 
-                    color="warn" 
-                    class="clear-all-button"
-                    (click)="clearAllFilters()">
+            <button
+              mat-button
+              color="warn"
+              class="clear-all-button"
+              (click)="clearAllFilters()"
+            >
               Clear All
             </button>
           </div>
@@ -228,19 +286,26 @@ export interface TemplateSortOption {
       </div>
 
       <!-- Recently Used Section -->
-      <div class="recently-used-section" *ngIf="recentlyUsed$ | async as recentTemplates">
+      <div
+        class="recently-used-section"
+        *ngIf="recentlyUsed$ | async as recentTemplates"
+      >
         <div *ngIf="recentTemplates.length > 0">
           <h3 class="section-title">
             <mat-icon>history</mat-icon>
             Recently Used
           </h3>
           <div class="recent-templates">
-            <div *ngFor="let template of recentTemplates.slice(0, 5)" 
-                 class="recent-template-item">
-              <button mat-stroked-button 
-                      class="recent-template-button"
-                      (click)="applyTemplate(template)"
-                      [matTooltip]="template.description">
+            <div
+              *ngFor="let template of recentTemplates.slice(0, 5)"
+              class="recent-template-item"
+            >
+              <button
+                mat-stroked-button
+                class="recent-template-button"
+                (click)="applyTemplate(template)"
+                [matTooltip]="template.description"
+              >
                 <mat-icon>{{ template.icon || 'rule' }}</mat-icon>
                 <span>{{ template.name }}</span>
               </button>
@@ -255,9 +320,11 @@ export interface TemplateSortOption {
           <h3 class="section-title">
             <mat-icon>library_books</mat-icon>
             Templates
-            <span class="template-count">({{ (filteredTemplates$ | async)?.length || 0 }})</span>
+            <span class="template-count"
+              >({{ (filteredTemplates$ | async)?.length || 0 }})</span
+            >
           </h3>
-          
+
           <div class="view-toggle">
             <mat-slide-toggle [(ngModel)]="showPreview">
               Show Preview
@@ -265,14 +332,19 @@ export interface TemplateSortOption {
           </div>
         </div>
 
-        <div class="templates-container" 
-             [class.grid-view]="displayMode === 'grid'"
-             [class.list-view]="displayMode === 'list'"
-             [class.compact-view]="displayMode === 'compact'">
-          
-          <div *ngFor="let template of filteredTemplates$ | async; trackBy: trackByTemplateId" 
-               class="template-card">
-            
+        <div
+          class="templates-container"
+          [class.grid-view]="displayMode === 'grid'"
+          [class.list-view]="displayMode === 'list'"
+          [class.compact-view]="displayMode === 'compact'"
+        >
+          <div
+            *ngFor="
+              let template of filteredTemplates$ | async;
+              trackBy: trackByTemplateId
+            "
+            class="template-card"
+          >
             <!-- Grid View Template Card -->
             <mat-card *ngIf="displayMode === 'grid'" class="template-grid-card">
               <mat-card-header>
@@ -281,14 +353,16 @@ export interface TemplateSortOption {
                 </div>
                 <mat-card-title>{{ template.name }}</mat-card-title>
                 <mat-card-subtitle>{{ template.category }}</mat-card-subtitle>
-                
+
                 <div class="card-actions">
-                  <button mat-icon-button 
-                          [matMenuTriggerFor]="templateMenu"
-                          (click)="$event.stopPropagation()">
+                  <button
+                    mat-icon-button
+                    [matMenuTriggerFor]="templateMenu"
+                    (click)="$event.stopPropagation()"
+                  >
                     <mat-icon>more_vert</mat-icon>
                   </button>
-                  
+
                   <mat-menu #templateMenu="matMenu">
                     <button mat-menu-item (click)="applyTemplate(template)">
                       <mat-icon>play_arrow</mat-icon>
@@ -311,9 +385,11 @@ export interface TemplateSortOption {
                       Export
                     </button>
                     <mat-divider></mat-divider>
-                    <button mat-menu-item 
-                            color="warn"
-                            (click)="deleteTemplate(template)">
+                    <button
+                      mat-menu-item
+                      color="warn"
+                      (click)="deleteTemplate(template)"
+                    >
                       <mat-icon>delete</mat-icon>
                       Delete
                     </button>
@@ -323,15 +399,19 @@ export interface TemplateSortOption {
 
               <mat-card-content>
                 <p class="template-description">{{ template.description }}</p>
-                
+
                 <div class="template-tags">
                   <mat-chip-set>
-                    <mat-chip *ngFor="let tag of template.tags.slice(0, 3)" 
-                             class="template-tag">
+                    <mat-chip
+                      *ngFor="let tag of template.tags.slice(0, 3)"
+                      class="template-tag"
+                    >
                       {{ tag }}
                     </mat-chip>
-                    <mat-chip *ngIf="template.tags.length > 3" 
-                             class="more-tags">
+                    <mat-chip
+                      *ngIf="template.tags.length > 3"
+                      class="more-tags"
+                    >
                       +{{ template.tags.length - 3 }}
                     </mat-chip>
                   </mat-chip-set>
@@ -340,15 +420,22 @@ export interface TemplateSortOption {
                 <div class="template-metadata">
                   <div class="metadata-item">
                     <mat-icon>complexity</mat-icon>
-                    <span>{{ template.metadata?.complexity || 'unknown' }}</span>
+                    <span>{{
+                      template.metadata?.complexity || 'unknown'
+                    }}</span>
                   </div>
-                  <div class="metadata-item" *ngIf="template.metadata?.usageCount">
+                  <div
+                    class="metadata-item"
+                    *ngIf="template.metadata?.usageCount"
+                  >
                     <mat-icon>trending_up</mat-icon>
-                    <span>{{ template.metadata.usageCount }} uses</span>
+                    <span>{{ template.metadata?.usageCount }} uses</span>
                   </div>
                   <div class="metadata-item">
                     <mat-icon>schedule</mat-icon>
-                    <span>{{ getRelativeDate(template.metadata?.updatedAt) }}</span>
+                    <span>{{
+                      getRelativeDate(template.metadata?.updatedAt)
+                    }}</span>
                   </div>
                 </div>
 
@@ -360,8 +447,10 @@ export interface TemplateSortOption {
                   </div>
                   <div class="preview-content">
                     <div class="node-tree">
-                      <div *ngFor="let nodeId of template.rootNodes" 
-                           class="root-node">
+                      <div
+                        *ngFor="let nodeId of template.rootNodes"
+                        class="root-node"
+                      >
                         {{ getNodeLabel(template, nodeId) }}
                       </div>
                     </div>
@@ -370,9 +459,11 @@ export interface TemplateSortOption {
               </mat-card-content>
 
               <mat-card-actions align="end">
-                <button mat-button 
-                        color="primary"
-                        (click)="applyTemplate(template)">
+                <button
+                  mat-button
+                  color="primary"
+                  (click)="applyTemplate(template)"
+                >
                   <mat-icon>play_arrow</mat-icon>
                   Apply
                 </button>
@@ -388,38 +479,58 @@ export interface TemplateSortOption {
               <div class="list-card-content">
                 <div class="template-info">
                   <div class="template-header">
-                    <mat-icon class="template-icon">{{ template.icon || 'rule' }}</mat-icon>
+                    <mat-icon class="template-icon">{{
+                      template.icon || 'rule'
+                    }}</mat-icon>
                     <div class="template-details">
                       <h4 class="template-name">{{ template.name }}</h4>
-                      <p class="template-description">{{ template.description }}</p>
+                      <p class="template-description">
+                        {{ template.description }}
+                      </p>
                     </div>
                   </div>
-                  
+
                   <div class="template-meta">
                     <span class="category-badge">{{ template.category }}</span>
-                    <span class="complexity-badge" 
-                          [class]="'complexity-' + (template.metadata?.complexity || 'unknown')">
+                    <span
+                      class="complexity-badge"
+                      [class]="
+                        'complexity-' +
+                        (template.metadata?.complexity || 'unknown')
+                      "
+                    >
                       {{ template.metadata?.complexity || 'unknown' }}
                     </span>
-                    <span class="usage-count" *ngIf="template.metadata?.usageCount">
-                      {{ template.metadata.usageCount }} uses
+                    <span
+                      class="usage-count"
+                      *ngIf="template.metadata?.usageCount"
+                    >
+                      {{ template.metadata?.usageCount }} uses
                     </span>
                   </div>
                 </div>
 
                 <div class="template-actions">
-                  <button mat-flat-button 
-                          color="primary"
-                          (click)="applyTemplate(template)">
+                  <button
+                    mat-flat-button
+                    color="primary"
+                    (click)="applyTemplate(template)"
+                  >
                     Apply
                   </button>
-                  <button mat-stroked-button (click)="previewTemplate(template)">
+                  <button
+                    mat-stroked-button
+                    (click)="previewTemplate(template)"
+                  >
                     Preview
                   </button>
-                  <button mat-icon-button [matMenuTriggerFor]="listTemplateMenu">
+                  <button
+                    mat-icon-button
+                    [matMenuTriggerFor]="listTemplateMenu"
+                  >
                     <mat-icon>more_vert</mat-icon>
                   </button>
-                  
+
                   <mat-menu #listTemplateMenu="matMenu">
                     <button mat-menu-item (click)="editTemplate(template)">
                       <mat-icon>edit</mat-icon>
@@ -443,22 +554,31 @@ export interface TemplateSortOption {
             </mat-card>
 
             <!-- Compact View Template Card -->
-            <div *ngIf="displayMode === 'compact'" class="template-compact-card">
+            <div
+              *ngIf="displayMode === 'compact'"
+              class="template-compact-card"
+            >
               <div class="compact-content">
-                <mat-icon class="compact-icon">{{ template.icon || 'rule' }}</mat-icon>
+                <mat-icon class="compact-icon">{{
+                  template.icon || 'rule'
+                }}</mat-icon>
                 <div class="compact-info">
                   <span class="compact-name">{{ template.name }}</span>
                   <span class="compact-category">{{ template.category }}</span>
                 </div>
                 <div class="compact-actions">
-                  <button mat-icon-button 
-                          (click)="applyTemplate(template)"
-                          matTooltip="Apply template">
+                  <button
+                    mat-icon-button
+                    (click)="applyTemplate(template)"
+                    matTooltip="Apply template"
+                  >
                     <mat-icon>play_arrow</mat-icon>
                   </button>
-                  <button mat-icon-button 
-                          (click)="previewTemplate(template)"
-                          matTooltip="Preview template">
+                  <button
+                    mat-icon-button
+                    (click)="previewTemplate(template)"
+                    matTooltip="Preview template"
+                  >
                     <mat-icon>preview</mat-icon>
                   </button>
                 </div>
@@ -467,13 +587,14 @@ export interface TemplateSortOption {
           </div>
 
           <!-- Empty State -->
-          <div *ngIf="(filteredTemplates$ | async)?.length === 0" class="empty-state">
+          <div
+            *ngIf="(filteredTemplates$ | async)?.length === 0"
+            class="empty-state"
+          >
             <mat-icon class="empty-icon">widgets</mat-icon>
             <h3>No templates found</h3>
             <p>Try adjusting your search criteria or create a new template.</p>
-            <button mat-flat-button 
-                    color="primary"
-                    (click)="clearAllFilters()">
+            <button mat-flat-button color="primary" (click)="clearAllFilters()">
               Clear Filters
             </button>
           </div>
@@ -481,511 +602,515 @@ export interface TemplateSortOption {
       </div>
     </div>
   `,
-  styles: [`
-    .template-gallery {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      background: var(--mdc-theme-background);
-    }
-
-    .gallery-header {
-      background: var(--mdc-theme-surface);
-      border-bottom: 1px solid var(--mdc-theme-outline);
-      padding: 16px 24px;
-    }
-
-    .header-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-
-    .title-section {
-      flex: 1;
-    }
-
-    .gallery-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin: 0;
-      font-size: 24px;
-      font-weight: 500;
-      color: var(--mdc-theme-on-surface);
-    }
-
-    .gallery-subtitle {
-      margin: 4px 0 0 32px;
-      color: var(--mdc-theme-on-surface-variant);
-      font-size: 14px;
-    }
-
-    .header-actions {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .stats-bar {
-      display: flex;
-      gap: 24px;
-      padding: 12px 0;
-      border-top: 1px solid var(--mdc-theme-outline);
-    }
-
-    .stat-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 13px;
-      color: var(--mdc-theme-on-surface-variant);
-    }
-
-    .stat-item mat-icon {
-      font-size: 16px;
-      width: 16px;
-      height: 16px;
-    }
-
-    .search-section {
-      padding: 16px 24px;
-      background: var(--mdc-theme-surface-variant);
-      border-bottom: 1px solid var(--mdc-theme-outline);
-    }
-
-    .search-form {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    .search-row {
-      display: flex;
-      gap: 16px;
-      align-items: flex-start;
-    }
-
-    .search-input {
-      flex: 2;
-      min-width: 300px;
-    }
-
-    .category-select,
-    .complexity-select,
-    .sort-select {
-      flex: 1;
-      min-width: 150px;
-    }
-
-    .category-option {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      width: 100%;
-    }
-
-    .tags-section {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .tags-label {
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--mdc-theme-on-surface-variant);
-    }
-
-    .tags-list {
-      flex: 1;
-    }
-
-    .active-filters {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-      padding: 8px 0;
-      border-top: 1px solid var(--mdc-theme-outline);
-    }
-
-    .filters-label {
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--mdc-theme-on-surface-variant);
-    }
-
-    .filter-chips {
-      flex: 1;
-    }
-
-    .clear-all-button {
-      font-size: 12px;
-    }
-
-    .recently-used-section {
-      padding: 16px 24px;
-    }
-
-    .section-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin: 0 0 16px 0;
-      font-size: 16px;
-      font-weight: 500;
-      color: var(--mdc-theme-on-surface);
-    }
-
-    .template-count {
-      font-size: 14px;
-      font-weight: 400;
-      color: var(--mdc-theme-on-surface-variant);
-    }
-
-    .recent-templates {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .recent-template-button {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 16px;
-    }
-
-    .templates-section {
-      flex: 1;
-      padding: 0 24px 24px;
-      overflow: auto;
-    }
-
-    .templates-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-    }
-
-    .view-toggle {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .templates-container {
-      min-height: 200px;
-    }
-
-    /* Grid View */
-    .templates-container.grid-view {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-      gap: 16px;
-    }
-
-    .template-grid-card {
-      height: fit-content;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .template-grid-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-
-    .template-icon {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: var(--mdc-theme-primary-container);
-      color: var(--mdc-theme-on-primary-container);
-    }
-
-    .card-actions {
-      margin-left: auto;
-    }
-
-    .template-description {
-      font-size: 14px;
-      line-height: 1.4;
-      margin: 0 0 12px 0;
-      color: var(--mdc-theme-on-surface-variant);
-    }
-
-    .template-tags {
-      margin-bottom: 12px;
-    }
-
-    .template-tag {
-      font-size: 11px;
-      height: 20px;
-      line-height: 20px;
-    }
-
-    .more-tags {
-      background: var(--mdc-theme-surface-variant);
-      color: var(--mdc-theme-on-surface-variant);
-    }
-
-    .template-metadata {
-      display: flex;
-      gap: 16px;
-      flex-wrap: wrap;
-      margin-bottom: 12px;
-    }
-
-    .metadata-item {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 12px;
-      color: var(--mdc-theme-on-surface-variant);
-    }
-
-    .metadata-item mat-icon {
-      font-size: 14px;
-      width: 14px;
-      height: 14px;
-    }
-
-    .template-preview {
-      margin-top: 12px;
-      padding: 8px;
-      background: var(--mdc-theme-surface-variant);
-      border-radius: 4px;
-    }
-
-    .preview-header {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 12px;
-      font-weight: 500;
-      margin-bottom: 8px;
-      color: var(--mdc-theme-on-surface-variant);
-    }
-
-    .preview-header mat-icon {
-      font-size: 14px;
-      width: 14px;
-      height: 14px;
-    }
-
-    .node-tree {
-      font-size: 11px;
-      font-family: monospace;
-    }
-
-    .root-node {
-      padding: 2px 0;
-      color: var(--mdc-theme-on-surface);
-    }
-
-    /* List View */
-    .templates-container.list-view {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .template-list-card {
-      padding: 12px 16px;
-    }
-
-    .list-card-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 16px;
-    }
-
-    .template-info {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .template-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .template-details {
-      flex: 1;
-    }
-
-    .template-name {
-      margin: 0;
-      font-size: 16px;
-      font-weight: 500;
-    }
-
-    .template-meta {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    .category-badge,
-    .complexity-badge {
-      font-size: 11px;
-      padding: 2px 6px;
-      border-radius: 12px;
-      background: var(--mdc-theme-surface-variant);
-      color: var(--mdc-theme-on-surface-variant);
-    }
-
-    .complexity-simple {
-      background: var(--mdc-theme-tertiary-container);
-      color: var(--mdc-theme-on-tertiary-container);
-    }
-
-    .complexity-medium {
-      background: var(--mdc-theme-secondary-container);
-      color: var(--mdc-theme-on-secondary-container);
-    }
-
-    .complexity-complex {
-      background: var(--mdc-theme-error-container);
-      color: var(--mdc-theme-on-error-container);
-    }
-
-    .usage-count {
-      font-size: 11px;
-      color: var(--mdc-theme-on-surface-variant);
-    }
-
-    .template-actions {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
-
-    /* Compact View */
-    .templates-container.compact-view {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .template-compact-card {
-      padding: 8px 12px;
-      border: 1px solid var(--mdc-theme-outline);
-      border-radius: 4px;
-      background: var(--mdc-theme-surface);
-    }
-
-    .compact-content {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .compact-icon {
-      color: var(--mdc-theme-primary);
-    }
-
-    .compact-info {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .compact-name {
-      font-size: 14px;
-      font-weight: 500;
-    }
-
-    .compact-category {
-      font-size: 12px;
-      color: var(--mdc-theme-on-surface-variant);
-    }
-
-    .compact-actions {
-      display: flex;
-      gap: 4px;
-    }
-
-    /* Empty State */
-    .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 48px 24px;
-      text-align: center;
-      color: var(--mdc-theme-on-surface-variant);
-    }
-
-    .empty-icon {
-      font-size: 64px;
-      width: 64px;
-      height: 64px;
-      margin-bottom: 16px;
-      color: var(--mdc-theme-outline);
-    }
-
-    .empty-state h3 {
-      margin: 0 0 8px 0;
-      color: var(--mdc-theme-on-surface);
-    }
-
-    .empty-state p {
-      margin: 0 0 16px 0;
-      max-width: 400px;
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 1024px) {
-      .templates-container.grid-view {
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      }
-      
-      .search-row {
-        flex-wrap: wrap;
-      }
-      
-      .search-input {
-        flex: 1 1 100%;
-      }
-    }
-
-    @media (max-width: 768px) {
-      .header-content {
+  styles: [
+    `
+      .template-gallery {
+        display: flex;
         flex-direction: column;
+        height: 100%;
+        background: var(--mdc-theme-background);
+      }
+
+      .gallery-header {
+        background: var(--mdc-theme-surface);
+        border-bottom: 1px solid var(--mdc-theme-outline);
+        padding: 16px 24px;
+      }
+
+      .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+
+      .title-section {
+        flex: 1;
+      }
+
+      .gallery-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        font-size: 24px;
+        font-weight: 500;
+        color: var(--mdc-theme-on-surface);
+      }
+
+      .gallery-subtitle {
+        margin: 4px 0 0 32px;
+        color: var(--mdc-theme-on-surface-variant);
+        font-size: 14px;
+      }
+
+      .header-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .stats-bar {
+        display: flex;
+        gap: 24px;
+        padding: 12px 0;
+        border-top: 1px solid var(--mdc-theme-outline);
+      }
+
+      .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: var(--mdc-theme-on-surface-variant);
+      }
+
+      .stat-item mat-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+      }
+
+      .search-section {
+        padding: 16px 24px;
+        background: var(--mdc-theme-surface-variant);
+        border-bottom: 1px solid var(--mdc-theme-outline);
+      }
+
+      .search-form {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .search-row {
+        display: flex;
         gap: 16px;
         align-items: flex-start;
       }
-      
-      .templates-container.grid-view {
-        grid-template-columns: 1fr;
+
+      .search-input {
+        flex: 2;
+        min-width: 300px;
       }
-      
-      .stats-bar {
+
+      .category-select,
+      .complexity-select,
+      .sort-select {
+        flex: 1;
+        min-width: 150px;
+      }
+
+      .category-option {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+      }
+
+      .tags-section {
+        display: flex;
+        align-items: center;
+        gap: 12px;
         flex-wrap: wrap;
+      }
+
+      .tags-label {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--mdc-theme-on-surface-variant);
+      }
+
+      .tags-list {
+        flex: 1;
+      }
+
+      .active-filters {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        padding: 8px 0;
+        border-top: 1px solid var(--mdc-theme-outline);
+      }
+
+      .filters-label {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--mdc-theme-on-surface-variant);
+      }
+
+      .filter-chips {
+        flex: 1;
+      }
+
+      .clear-all-button {
+        font-size: 12px;
+      }
+
+      .recently-used-section {
+        padding: 16px 24px;
+      }
+
+      .section-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0 0 16px 0;
+        font-size: 16px;
+        font-weight: 500;
+        color: var(--mdc-theme-on-surface);
+      }
+
+      .template-count {
+        font-size: 14px;
+        font-weight: 400;
+        color: var(--mdc-theme-on-surface-variant);
+      }
+
+      .recent-templates {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .recent-template-button {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+      }
+
+      .templates-section {
+        flex: 1;
+        padding: 0 24px 24px;
+        overflow: auto;
+      }
+
+      .templates-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+
+      .view-toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .templates-container {
+        min-height: 200px;
+      }
+
+      /* Grid View */
+      .templates-container.grid-view {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 16px;
+      }
+
+      .template-grid-card {
+        height: fit-content;
+        transition:
+          transform 0.2s ease,
+          box-shadow 0.2s ease;
+      }
+
+      .template-grid-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      .template-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--mdc-theme-primary-container);
+        color: var(--mdc-theme-on-primary-container);
+      }
+
+      .card-actions {
+        margin-left: auto;
+      }
+
+      .template-description {
+        font-size: 14px;
+        line-height: 1.4;
+        margin: 0 0 12px 0;
+        color: var(--mdc-theme-on-surface-variant);
+      }
+
+      .template-tags {
+        margin-bottom: 12px;
+      }
+
+      .template-tag {
+        font-size: 11px;
+        height: 20px;
+        line-height: 20px;
+      }
+
+      .more-tags {
+        background: var(--mdc-theme-surface-variant);
+        color: var(--mdc-theme-on-surface-variant);
+      }
+
+      .template-metadata {
+        display: flex;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
+
+      .metadata-item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 12px;
+        color: var(--mdc-theme-on-surface-variant);
+      }
+
+      .metadata-item mat-icon {
+        font-size: 14px;
+        width: 14px;
+        height: 14px;
+      }
+
+      .template-preview {
+        margin-top: 12px;
+        padding: 8px;
+        background: var(--mdc-theme-surface-variant);
+        border-radius: 4px;
+      }
+
+      .preview-header {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 12px;
+        font-weight: 500;
+        margin-bottom: 8px;
+        color: var(--mdc-theme-on-surface-variant);
+      }
+
+      .preview-header mat-icon {
+        font-size: 14px;
+        width: 14px;
+        height: 14px;
+      }
+
+      .node-tree {
+        font-size: 11px;
+        font-family: monospace;
+      }
+
+      .root-node {
+        padding: 2px 0;
+        color: var(--mdc-theme-on-surface);
+      }
+
+      /* List View */
+      .templates-container.list-view {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .template-list-card {
+        padding: 12px 16px;
+      }
+
+      .list-card-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .template-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .template-header {
+        display: flex;
+        align-items: center;
         gap: 12px;
       }
-      
-      .gallery-subtitle {
-        margin-left: 0;
+
+      .template-details {
+        flex: 1;
       }
-    }
-  `]
+
+      .template-name {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 500;
+      }
+
+      .template-meta {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .category-badge,
+      .complexity-badge {
+        font-size: 11px;
+        padding: 2px 6px;
+        border-radius: 12px;
+        background: var(--mdc-theme-surface-variant);
+        color: var(--mdc-theme-on-surface-variant);
+      }
+
+      .complexity-simple {
+        background: var(--mdc-theme-tertiary-container);
+        color: var(--mdc-theme-on-tertiary-container);
+      }
+
+      .complexity-medium {
+        background: var(--mdc-theme-secondary-container);
+        color: var(--mdc-theme-on-secondary-container);
+      }
+
+      .complexity-complex {
+        background: var(--mdc-theme-error-container);
+        color: var(--mdc-theme-on-error-container);
+      }
+
+      .usage-count {
+        font-size: 11px;
+        color: var(--mdc-theme-on-surface-variant);
+      }
+
+      .template-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      /* Compact View */
+      .templates-container.compact-view {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .template-compact-card {
+        padding: 8px 12px;
+        border: 1px solid var(--mdc-theme-outline);
+        border-radius: 4px;
+        background: var(--mdc-theme-surface);
+      }
+
+      .compact-content {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .compact-icon {
+        color: var(--mdc-theme-primary);
+      }
+
+      .compact-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .compact-name {
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      .compact-category {
+        font-size: 12px;
+        color: var(--mdc-theme-on-surface-variant);
+      }
+
+      .compact-actions {
+        display: flex;
+        gap: 4px;
+      }
+
+      /* Empty State */
+      .empty-state {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 48px 24px;
+        text-align: center;
+        color: var(--mdc-theme-on-surface-variant);
+      }
+
+      .empty-icon {
+        font-size: 64px;
+        width: 64px;
+        height: 64px;
+        margin-bottom: 16px;
+        color: var(--mdc-theme-outline);
+      }
+
+      .empty-state h3 {
+        margin: 0 0 8px 0;
+        color: var(--mdc-theme-on-surface);
+      }
+
+      .empty-state p {
+        margin: 0 0 16px 0;
+        max-width: 400px;
+      }
+
+      /* Responsive adjustments */
+      @media (max-width: 1024px) {
+        .templates-container.grid-view {
+          grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        }
+
+        .search-row {
+          flex-wrap: wrap;
+        }
+
+        .search-input {
+          flex: 1 1 100%;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .header-content {
+          flex-direction: column;
+          gap: 16px;
+          align-items: flex-start;
+        }
+
+        .templates-container.grid-view {
+          grid-template-columns: 1fr;
+        }
+
+        .stats-bar {
+          flex-wrap: wrap;
+          gap: 12px;
+        }
+
+        .gallery-subtitle {
+          margin-left: 0;
+        }
+      }
+    `,
+  ],
 })
 export class TemplateGalleryComponent implements OnInit, OnDestroy {
   @Input() availableFields: string[] = [];
-  
+
   @Output() templateApplied = new EventEmitter<RuleTemplate>();
   @Output() templateCreated = new EventEmitter<RuleTemplate>();
   @Output() templateDeleted = new EventEmitter<string>();
@@ -1011,7 +1136,7 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
     private templateService: RuleTemplateService,
     private fb: FormBuilder,
     private dialog: MatDialog,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
   ) {
     this.searchForm = this.createSearchForm();
     this.templates$ = this.templateService.getTemplates();
@@ -1036,7 +1161,7 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
       query: [''],
       category: [''],
       complexity: [''],
-      sortBy: ['name']
+      sortBy: ['name'],
     });
   }
 
@@ -1046,15 +1171,18 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
       this.searchForm.valueChanges.pipe(
         startWith(this.searchForm.value),
         debounceTime(300),
-        distinctUntilChanged()
-      )
+        distinctUntilChanged(),
+      ),
     ]).pipe(
       map(([templates, filters]) => {
         const criteria: TemplateSearchCriteria = {
           query: filters.query || undefined,
           category: filters.category || undefined,
           complexity: filters.complexity || undefined,
-          tags: this.selectedTags.size > 0 ? Array.from(this.selectedTags) : undefined
+          tags:
+            this.selectedTags.size > 0
+              ? Array.from(this.selectedTags)
+              : undefined,
         };
 
         // Apply filters
@@ -1064,7 +1192,7 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
         filtered = this.sortTemplates(filtered, filters.sortBy);
 
         return filtered;
-      })
+      }),
     );
   }
 
@@ -1073,41 +1201,50 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
   }
 
   private loadPopularTags(): void {
-    this.stats$.pipe(takeUntil(this.destroy$)).subscribe(stats => {
+    this.stats$.pipe(takeUntil(this.destroy$)).subscribe((stats) => {
       this.popularTags = stats.popularTags.slice(0, 10);
     });
   }
 
-  private filterTemplates(templates: RuleTemplate[], criteria: TemplateSearchCriteria): RuleTemplate[] {
+  private filterTemplates(
+    templates: RuleTemplate[],
+    criteria: TemplateSearchCriteria,
+  ): RuleTemplate[] {
     let filtered = templates;
 
     if (criteria.query) {
       const query = criteria.query.toLowerCase();
-      filtered = filtered.filter(t => 
-        t.name.toLowerCase().includes(query) ||
-        t.description.toLowerCase().includes(query) ||
-        t.tags.some(tag => tag.toLowerCase().includes(query))
+      filtered = filtered.filter(
+        (t) =>
+          t.name.toLowerCase().includes(query) ||
+          t.description.toLowerCase().includes(query) ||
+          t.tags.some((tag) => tag.toLowerCase().includes(query)),
       );
     }
 
     if (criteria.category) {
-      filtered = filtered.filter(t => t.category === criteria.category);
+      filtered = filtered.filter((t) => t.category === criteria.category);
     }
 
     if (criteria.complexity) {
-      filtered = filtered.filter(t => t.metadata?.complexity === criteria.complexity);
+      filtered = filtered.filter(
+        (t) => t.metadata?.complexity === criteria.complexity,
+      );
     }
 
     if (criteria.tags && criteria.tags.length > 0) {
-      filtered = filtered.filter(t => 
-        criteria.tags!.some(tag => t.tags.includes(tag))
+      filtered = filtered.filter((t) =>
+        criteria.tags!.some((tag) => t.tags.includes(tag)),
       );
     }
 
     return filtered;
   }
 
-  private sortTemplates(templates: RuleTemplate[], sortBy: string): RuleTemplate[] {
+  private sortTemplates(
+    templates: RuleTemplate[],
+    sortBy: string,
+  ): RuleTemplate[] {
     return [...templates].sort((a, b) => {
       switch (sortBy) {
         case 'name':
@@ -1124,8 +1261,10 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
           return bUpdated.getTime() - aUpdated.getTime();
         case 'complexity':
           const complexityOrder = { simple: 0, medium: 1, complex: 2 };
-          const aComplexity = complexityOrder[a.metadata?.complexity || 'simple'];
-          const bComplexity = complexityOrder[b.metadata?.complexity || 'simple'];
+          const aComplexity =
+            complexityOrder[a.metadata?.complexity || 'simple'];
+          const bComplexity =
+            complexityOrder[b.metadata?.complexity || 'simple'];
           return aComplexity - bComplexity;
         default:
           return 0;
@@ -1154,7 +1293,11 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
 
   hasActiveFilters(): boolean {
     const values = this.searchForm.value;
-    return !!(values?.category || values?.complexity || this.selectedTags.size > 0);
+    return !!(
+      values?.category ||
+      values?.complexity ||
+      this.selectedTags.size > 0
+    );
   }
 
   clearFilter(field: string): void {
@@ -1168,24 +1311,30 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
 
   getCategoryName(categoryId: string): string {
     const categoryNames: Record<string, string> = {
-      'validation': 'Field Validation',
-      'business': 'Business Rules',
-      'collection': 'Collection Validation',
-      'conditional': 'Conditional Logic',
-      'workflow': 'Workflow Rules',
-      'security': 'Security Validation',
-      'custom': 'Custom Templates'
+      validation: 'Field Validation',
+      business: 'Business Rules',
+      collection: 'Collection Validation',
+      conditional: 'Conditional Logic',
+      workflow: 'Workflow Rules',
+      security: 'Security Validation',
+      custom: 'Custom Templates',
     };
-    return categoryNames[categoryId] || categoryId.charAt(0).toUpperCase() + categoryId.slice(1);
+    return (
+      categoryNames[categoryId] ||
+      categoryId.charAt(0).toUpperCase() + categoryId.slice(1)
+    );
   }
 
-  getRelativeDate(date?: Date): string {
-    if (!date) return 'Unknown';
-    
+  getRelativeDate(date?: Date | string): string {
+    if (!date) {
+      return 'Unknown';
+    }
+
+    const target = new Date(date);
     const now = new Date();
-    const diff = now.getTime() - date.getTime();
+    const diff = now.getTime() - target.getTime();
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    
+
     if (days === 0) return 'Today';
     if (days === 1) return 'Yesterday';
     if (days < 7) return `${days} days ago`;
@@ -1195,7 +1344,7 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
   }
 
   getNodeLabel(template: RuleTemplate, nodeId: string): string {
-    const node = template.nodes.find(n => n.id === nodeId);
+    const node = template.nodes.find((n) => n.id === nodeId);
     return node?.label || node?.type || 'Unknown';
   }
 
@@ -1206,13 +1355,13 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
       selectedNodes: selectedNodes || [],
       availableCategories: [
         'validation',
-        'business', 
+        'business',
         'collection',
         'conditional',
         'workflow',
         'security',
-        'custom'
-      ]
+        'custom',
+      ],
     };
 
     const dialogRef = this.dialog.open(TemplateEditorDialogComponent, {
@@ -1220,17 +1369,23 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
       maxWidth: '90vw',
       maxHeight: '90vh',
       data: dialogData,
-      disableClose: true
+      disableClose: true,
     });
 
-    dialogRef.afterClosed().subscribe((result: TemplateEditorResult | undefined) => {
-      if (result?.action === 'save' && result.template) {
-        this.templateCreated.emit(result.template);
-        this.snackBar.open(`Template "${result.template.name}" created successfully`, 'Close', {
-          duration: 3000
-        });
-      }
-    });
+    dialogRef
+      .afterClosed()
+      .subscribe((result: TemplateEditorResult | undefined) => {
+        if (result?.action === 'save' && result.template) {
+          this.templateCreated.emit(result.template);
+          this.snackBar.open(
+            `Template "${result.template.name}" created successfully`,
+            'Close',
+            {
+              duration: 3000,
+            },
+          );
+        }
+      });
   }
 
   importTemplate(): void {
@@ -1251,19 +1406,27 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
           this.templateService.importTemplate(content).subscribe({
             next: (template) => {
               this.templateCreated.emit(template);
-              this.snackBar.open(`Template "${template.name}" imported successfully`, 'Close', {
-                duration: 3000
-              });
+              this.snackBar.open(
+                `Template "${template.name}" imported successfully`,
+                'Close',
+                {
+                  duration: 3000,
+                },
+              );
             },
             error: (error) => {
-              this.snackBar.open(`Failed to import template: ${error.message}`, 'Close', {
-                duration: 5000
-              });
-            }
+              this.snackBar.open(
+                `Failed to import template: ${error.message}`,
+                'Close',
+                {
+                  duration: 5000,
+                },
+              );
+            },
           });
         } catch (error) {
           this.snackBar.open('Invalid template file format', 'Close', {
-            duration: 5000
+            duration: 5000,
           });
         }
       };
@@ -1278,20 +1441,32 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
       next: (result) => {
         if (result.success) {
           this.templateApplied.emit(template);
-          this.snackBar.open(`Template "${template.name}" applied successfully`, 'Close', {
-            duration: 3000
-          });
+          this.snackBar.open(
+            `Template "${template.name}" applied successfully`,
+            'Close',
+            {
+              duration: 3000,
+            },
+          );
         } else {
-          this.snackBar.open(`Failed to apply template: ${result.errors.join(', ')}`, 'Close', {
-            duration: 5000
-          });
+          this.snackBar.open(
+            `Failed to apply template: ${result.errors.join(', ')}`,
+            'Close',
+            {
+              duration: 5000,
+            },
+          );
         }
       },
       error: (error) => {
-        this.snackBar.open(`Error applying template: ${error.message}`, 'Close', {
-          duration: 5000
-        });
-      }
+        this.snackBar.open(
+          `Error applying template: ${error.message}`,
+          'Close',
+          {
+            duration: 5000,
+          },
+        );
+      },
     });
   }
 
@@ -1301,7 +1476,7 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
       width: '600px',
       maxWidth: '90vw',
       data: { template },
-      panelClass: 'template-preview-dialog'
+      panelClass: 'template-preview-dialog',
     });
 
     // Handle actions from preview
@@ -1320,13 +1495,13 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
       template: template,
       availableCategories: [
         'validation',
-        'business', 
+        'business',
         'collection',
         'conditional',
         'workflow',
         'security',
-        'custom'
-      ]
+        'custom',
+      ],
     };
 
     const dialogRef = this.dialog.open(TemplateEditorDialogComponent, {
@@ -1334,68 +1509,104 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
       maxWidth: '90vw',
       maxHeight: '90vh',
       data: dialogData,
-      disableClose: true
+      disableClose: true,
     });
 
-    dialogRef.afterClosed().subscribe((result: TemplateEditorResult | undefined) => {
-      if (result?.action === 'save' && result.template) {
-        this.snackBar.open(`Template "${result.template.name}" updated successfully`, 'Close', {
-          duration: 3000
-        });
-      }
-    });
+    dialogRef
+      .afterClosed()
+      .subscribe((result: TemplateEditorResult | undefined) => {
+        if (result?.action === 'save' && result.template) {
+          this.snackBar.open(
+            `Template "${result.template.name}" updated successfully`,
+            'Close',
+            {
+              duration: 3000,
+            },
+          );
+        }
+      });
   }
 
   duplicateTemplate(template: RuleTemplate): void {
     this.templateService.duplicateTemplate(template.id).subscribe({
       next: (duplicated) => {
-        this.snackBar.open(`Template duplicated as "${duplicated.name}"`, 'Close', {
-          duration: 3000
-        });
+        this.snackBar.open(
+          `Template duplicated as "${duplicated.name}"`,
+          'Close',
+          {
+            duration: 3000,
+          },
+        );
       },
       error: (error) => {
-        this.snackBar.open(`Failed to duplicate template: ${error.message}`, 'Close', {
-          duration: 5000
-        });
-      }
+        this.snackBar.open(
+          `Failed to duplicate template: ${error.message}`,
+          'Close',
+          {
+            duration: 5000,
+          },
+        );
+      },
     });
   }
 
   exportTemplate(template: RuleTemplate): void {
-    this.templateService.exportTemplate(template.id, { format: 'json', prettyPrint: true }).subscribe({
-      next: (jsonData) => {
-        this.downloadFile(jsonData, `${template.name}.template.json`, 'application/json');
-        this.snackBar.open('Template exported successfully', 'Close', {
-          duration: 3000
-        });
-      },
-      error: (error) => {
-        this.snackBar.open(`Failed to export template: ${error.message}`, 'Close', {
-          duration: 5000
-        });
-      }
-    });
+    this.templateService
+      .exportTemplate(template.id, { format: 'json', prettyPrint: true })
+      .subscribe({
+        next: (jsonData) => {
+          this.downloadFile(
+            jsonData,
+            `${template.name}.template.json`,
+            'application/json',
+          );
+          this.snackBar.open('Template exported successfully', 'Close', {
+            duration: 3000,
+          });
+        },
+        error: (error) => {
+          this.snackBar.open(
+            `Failed to export template: ${error.message}`,
+            'Close',
+            {
+              duration: 5000,
+            },
+          );
+        },
+      });
   }
 
   deleteTemplate(template: RuleTemplate): void {
-    if (confirm(`Are you sure you want to delete the template "${template.name}"?`)) {
+    if (
+      confirm(
+        `Are you sure you want to delete the template "${template.name}"?`,
+      )
+    ) {
       this.templateService.deleteTemplate(template.id).subscribe({
         next: () => {
           this.templateDeleted.emit(template.id);
           this.snackBar.open('Template deleted successfully', 'Close', {
-            duration: 3000
+            duration: 3000,
           });
         },
         error: (error) => {
-          this.snackBar.open(`Failed to delete template: ${error.message}`, 'Close', {
-            duration: 5000
-          });
-        }
+          this.snackBar.open(
+            `Failed to delete template: ${error.message}`,
+            'Close',
+            {
+              duration: 5000,
+            },
+          );
+        },
       });
     }
   }
 
-  private downloadFile(content: string, filename: string, contentType: string): void {
+  private downloadFile(
+    content: string,
+    filename: string,
+    contentType: string,
+  ): void {
     const blob = new Blob([content], { type: contentType });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');

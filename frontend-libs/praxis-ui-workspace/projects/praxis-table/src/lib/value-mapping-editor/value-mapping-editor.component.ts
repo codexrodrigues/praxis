@@ -16,7 +16,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
-import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatCheckboxModule, MatCheckboxChange } from '@angular/material/checkbox';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
@@ -106,7 +106,7 @@ export interface ValueMappingPair {
                 <div class="boolean-key-container">
                   <mat-checkbox
                     [checked]="isKeyTruthy(pair)"
-                    (change)="onBooleanKeyChange(i, $event.checked)">
+                    (change)="onBooleanKeyChange(i, $event)">
                     {{ pair.key === true || pair.keyInput === 'true' ? 'Verdadeiro' : 'Falso' }}
                   </mat-checkbox>
                 </div>
@@ -529,10 +529,10 @@ export class ValueMappingEditorComponent implements OnInit, OnChanges {
     }
   }
 
-  onBooleanKeyChange(index: number, checked: boolean): void {
+  onBooleanKeyChange(index: number, change: MatCheckboxChange): void {
     if (index >= 0 && index < this.mappingPairs.length) {
-      this.mappingPairs[index].key = checked;
-      this.mappingPairs[index].keyInput = String(checked);
+      this.mappingPairs[index].key = change.checked;
+      this.mappingPairs[index].keyInput = String(change.checked);
       this.validateAndEmitMapping();
     }
   }

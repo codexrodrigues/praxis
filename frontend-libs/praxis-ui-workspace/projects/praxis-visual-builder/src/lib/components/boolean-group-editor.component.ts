@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChange
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
+import { MatSelectModule, MatSelectChange } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -10,7 +10,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSliderModule } from '@angular/material/slider';
-import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatCheckboxModule, MatCheckboxChange } from '@angular/material/checkbox';
 
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { Subject } from 'rxjs';
@@ -47,8 +47,8 @@ import { BooleanGroupConfig } from '../models/rule-builder.model';
         <div class="operator-selection">
           <mat-form-field appearance="outline" class="operator-select">
             <mat-label>Logic Operator</mat-label>
-            <mat-select formControlName="operator" 
-                       (selectionChange)="onOperatorChanged($event.value)">
+            <mat-select formControlName="operator"
+                       (selectionChange)="onOperatorChanged($event)">
               <mat-option value="and">
                 <div class="operator-option">
                   <mat-icon>join_inner</mat-icon>
@@ -114,7 +114,7 @@ import { BooleanGroupConfig } from '../models/rule-builder.model';
         <!-- Minimum Required -->
         <div class="cardinality-option" *ngIf="selectedOperator === 'and' || selectedOperator === 'or'">
           <mat-checkbox formControlName="useMinimumRequired"
-                        (change)="onUseMinimumRequiredChanged($event.checked)">
+                        (change)="onUseMinimumRequiredChanged($event)">
             Set minimum required conditions
           </mat-checkbox>
           
@@ -134,7 +134,7 @@ import { BooleanGroupConfig } from '../models/rule-builder.model';
         <!-- Exact Required -->
         <div class="cardinality-option" *ngIf="selectedOperator === 'or' || selectedOperator === 'xor'">
           <mat-checkbox formControlName="useExactRequired"
-                        (change)="onUseExactRequiredChanged($event.checked)">
+                        (change)="onUseExactRequiredChanged($event)">
             Set exact number of conditions
           </mat-checkbox>
           
@@ -686,7 +686,8 @@ export class BooleanGroupEditorComponent implements OnInit, OnChanges {
   }
 
   // Event handlers
-  onOperatorChanged(operator: string): void {
+  onOperatorChanged(event: MatSelectChange): void {
+    const operator = event.value;
     this.selectedOperator = operator;
     
     // Reset cardinality settings when operator changes
@@ -702,20 +703,22 @@ export class BooleanGroupEditorComponent implements OnInit, OnChanges {
     this.updateCardinalityControls();
   }
 
-  onUseMinimumRequiredChanged(checked: boolean): void {
+  onUseMinimumRequiredChanged(event: MatCheckboxChange): void {
+    const checked = event.checked;
     this.useMinimumRequired = checked;
     this.updateCardinalityControls();
-    
+
     if (checked && this.useExactRequired) {
       this.groupForm.patchValue({ useExactRequired: false });
       this.useExactRequired = false;
     }
   }
 
-  onUseExactRequiredChanged(checked: boolean): void {
+  onUseExactRequiredChanged(event: MatCheckboxChange): void {
+    const checked = event.checked;
     this.useExactRequired = checked;
     this.updateCardinalityControls();
-    
+
     if (checked && this.useMinimumRequired) {
       this.groupForm.patchValue({ useMinimumRequired: false });
       this.useMinimumRequired = false;

@@ -13,7 +13,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatSlideToggleModule, MatSlideToggleChange } from '@angular/material/slide-toggle';
 
 import { CellStyles, BorderStyle, IconConfig } from './table-rule-engine.service';
 
@@ -215,8 +215,8 @@ import { CellStyles, BorderStyle, IconConfig } from './table-rule-engine.service
         <mat-tab label="Bordas">
           <div class="tab-content">
             <form [formGroup]="borderForm" class="style-form">
-              <mat-slide-toggle formControlName="enabled" 
-                                (change)="onBorderToggle($event.checked)">
+              <mat-slide-toggle formControlName="enabled"
+                                (change)="onBorderToggle($event)">
                 Ativar Bordas
               </mat-slide-toggle>
 
@@ -368,8 +368,8 @@ import { CellStyles, BorderStyle, IconConfig } from './table-rule-engine.service
         <mat-tab label="Ícones">
           <div class="tab-content">
             <form [formGroup]="iconForm" class="style-form">
-              <mat-slide-toggle formControlName="enabled" 
-                                (change)="onIconToggle($event.checked)">
+              <mat-slide-toggle formControlName="enabled"
+                                (change)="onIconToggle($event)">
                 Adicionar Ícone
               </mat-slide-toggle>
 
@@ -984,8 +984,8 @@ export class StyleDesignerComponent implements OnInit, OnChanges {
     this.emitStyles();
   }
 
-  onBorderToggle(enabled: boolean): void {
-    if (!enabled) {
+  onBorderToggle(change: MatSlideToggleChange): void {
+    if (!change.checked) {
       this.borderForm.patchValue({
         width: '1px',
         style: 'solid',
@@ -1004,8 +1004,8 @@ export class StyleDesignerComponent implements OnInit, OnChanges {
     this.emitStyles();
   }
 
-  onIconToggle(enabled: boolean): void {
-    if (!enabled) {
+  onIconToggle(change: MatSlideToggleChange): void {
+    if (!change.checked) {
       this.currentIcon = null;
       this.iconForm.patchValue({
         name: '',

@@ -1,16 +1,24 @@
 import { Injectable } from '@angular/core';
-import { Specification, SpecificationMetadata, ComparisonOperator } from 'praxis-specification';
-import { SpecificationFactory } from 'praxis-specification';
-import { DslExporter, ExportOptions } from 'praxis-specification';
-import { DslParser, DslValidator, ValidationIssue } from 'praxis-specification';
-import { ContextualSpecification } from 'praxis-specification';
-import { ContextProvider } from 'praxis-specification';
-import { FunctionRegistry } from 'praxis-specification';
-import { 
-  RuleNode, 
-  RuleNodeType, 
-  ValueType, 
-  CardinalityConfig, 
+import {
+  Specification,
+  SpecificationMetadata,
+  ComparisonOperator,
+} from '@praxis/specification';
+import { SpecificationFactory } from '@praxis/specification';
+import { DslExporter, ExportOptions } from '@praxis/specification';
+import {
+  DslParser,
+  DslValidator,
+  ValidationIssue,
+} from '@praxis/specification';
+import { ContextualSpecification } from '@praxis/specification';
+import { ContextProvider } from '@praxis/specification';
+import { FunctionRegistry } from '@praxis/specification';
+import {
+  RuleNode,
+  RuleNodeType,
+  ValueType,
+  CardinalityConfig,
   FunctionParameter,
   ConditionalValidatorConfig,
   CollectionValidatorConfig,
@@ -18,7 +26,7 @@ import {
   BooleanGroupConfig,
   FunctionCallConfig,
   FieldToFieldConfig,
-  ContextualConfig
+  ContextualConfig,
 } from '../models/rule-builder.model';
 import { ContextVariable } from '../components/expression-editor.component';
 import { RuleNodeRegistryService } from './rule-node-registry.service';
@@ -70,7 +78,7 @@ export interface SpecificationContextualConfig {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class SpecificationBridgeService {
   private dslExporter: DslExporter;
@@ -80,7 +88,7 @@ export class SpecificationBridgeService {
 
   constructor(
     private nodeRegistry: RuleNodeRegistryService,
-    private converterFactory: ConverterFactoryService
+    private converterFactory: ConverterFactoryService,
   ) {
     this.dslExporter = new DslExporter({
       prettyPrint: true,
@@ -88,9 +96,9 @@ export class SpecificationBridgeService {
       maxLineLength: 80,
       useParentheses: 'auto',
       includeMetadata: true,
-      metadataPosition: 'before'
+      metadataPosition: 'before',
     });
-    
+
     this.dslParser = new DslParser();
     this.dslValidator = new DslValidator();
   }
@@ -98,45 +106,47 @@ export class SpecificationBridgeService {
   /**
    * Converts a RuleNode tree to a Specification instance
    */
-  ruleNodeToSpecification<T extends object = any>(node: RuleNode): Specification<T> {
+  ruleNodeToSpecification<T extends object = any>(
+    node: RuleNode,
+  ): Specification<T> {
     try {
       // Use the config type for converter lookup (more reliable than node.type)
       const nodeType = node.config?.type || node.type;
-      
+
       // Check if we have a converter for this node type
       if (this.converterFactory.isSupported(nodeType)) {
         return this.converterFactory.convert<T>(node);
       }
-      
+
       // Fall back to legacy methods for unsupported types
       switch (nodeType) {
         case 'functionCall':
           return this.createFunctionSpecification<T>(node);
-        
+
         case 'fieldToField':
           return this.createFieldToFieldSpecification<T>(node);
-        
+
         // Phase 1: Conditional Validators
         case 'requiredIf':
         case 'visibleIf':
         case 'disabledIf':
         case 'readonlyIf':
           return this.createConditionalValidatorSpecification<T>(node);
-        
+
         // Phase 2: Collection Validators
         case 'forEach':
         case 'uniqueBy':
         case 'minLength':
         case 'maxLength':
           return this.createCollectionValidatorSpecification<T>(node);
-        
+
         // Phase 4: Expression and Contextual Support
         case 'expression':
           return this.createExpressionSpecification<T>(node);
-        
+
         case 'contextual':
           return this.createContextualSpecificationFromNode<T>(node);
-        
+
         default:
           throw new Error(`Unsupported rule node type: ${nodeType}`);
       }
@@ -148,7 +158,9 @@ export class SpecificationBridgeService {
   /**
    * Converts a Specification instance to a RuleNode tree
    */
-  specificationToRuleNode<T extends object = any>(spec: Specification<T>): RuleNode {
+  specificationToRuleNode<T extends object = any>(
+    spec: Specification<T>,
+  ): RuleNode {
     const specJson = spec.toJSON();
     return this.jsonToRuleNode(specJson);
   }
@@ -156,11 +168,14 @@ export class SpecificationBridgeService {
   /**
    * Exports a RuleNode tree to DSL format
    */
-  exportToDsl<T extends object = any>(node: RuleNode, options?: Partial<ExportOptions>): string {
+  exportToDsl<T extends object = any>(
+    node: RuleNode,
+    options?: Partial<ExportOptions>,
+  ): string {
     if (options) {
       this.dslExporter = new DslExporter(options);
     }
-    
+
     const specification = this.ruleNodeToSpecification<T>(node);
     return this.dslExporter.export(specification);
   }
@@ -176,7 +191,9 @@ export class SpecificationBridgeService {
   /**
    * Validates that a RuleNode can be successfully round-tripped
    */
-  validateRoundTrip<T extends object = any>(node: RuleNode): {
+  validateRoundTrip<T extends object = any>(
+    node: RuleNode,
+  ): {
     success: boolean;
     errors: string[];
     warnings: string[];
@@ -187,18 +204,21 @@ export class SpecificationBridgeService {
     try {
       // Convert to specification
       const specification = this.ruleNodeToSpecification<T>(node);
-      
+
       // Export to DSL and re-parse
       const dsl = this.exportToDsl<T>(node);
-      
+
       // Convert back to rule node via specification
       const reconstructedNode = this.specificationToRuleNode(specification);
-      
+
       // Deep validation
-      const deepValidation = this.deepValidateRoundTrip(node, reconstructedNode);
+      const deepValidation = this.deepValidateRoundTrip(
+        node,
+        reconstructedNode,
+      );
       errors.push(...deepValidation.errors);
       warnings.push(...deepValidation.warnings);
-      
+
       // DSL round-trip validation
       try {
         const dslValidation = this.validateDslRoundTrip(dsl, node);
@@ -210,14 +230,14 @@ export class SpecificationBridgeService {
       return {
         success: errors.length === 0,
         errors,
-        warnings
+        warnings,
       };
     } catch (error) {
       errors.push(`Round-trip validation failed: ${error}`);
       return {
         success: false,
         errors,
-        warnings
+        warnings,
       };
     }
   }
@@ -225,7 +245,10 @@ export class SpecificationBridgeService {
   /**
    * Performs deep validation between original and reconstructed nodes
    */
-  private deepValidateRoundTrip(original: RuleNode, reconstructed: RuleNode): {
+  private deepValidateRoundTrip(
+    original: RuleNode,
+    reconstructed: RuleNode,
+  ): {
     errors: string[];
     warnings: string[];
   } {
@@ -234,17 +257,24 @@ export class SpecificationBridgeService {
 
     // Type validation
     if (original.type !== reconstructed.type) {
-      errors.push(`Node type mismatch: ${original.type} vs ${reconstructed.type}`);
+      errors.push(
+        `Node type mismatch: ${original.type} vs ${reconstructed.type}`,
+      );
     }
 
     // Label validation
     if (original.label !== reconstructed.label) {
-      warnings.push(`Label changed: "${original.label}" vs "${reconstructed.label}"`);
+      warnings.push(
+        `Label changed: "${original.label}" vs "${reconstructed.label}"`,
+      );
     }
 
     // Config validation
     if (original.config && reconstructed.config) {
-      const configComparison = this.compareConfigs(original.config, reconstructed.config);
+      const configComparison = this.compareConfigs(
+        original.config,
+        reconstructed.config,
+      );
       errors.push(...configComparison.errors);
       warnings.push(...configComparison.warnings);
     } else if (original.config !== reconstructed.config) {
@@ -259,7 +289,9 @@ export class SpecificationBridgeService {
       if (original.metadata.message !== reconstructed.metadata.message) {
         warnings.push('Metadata message changed during round-trip');
       }
-      if (original.metadata['severity'] !== reconstructed.metadata['severity']) {
+      if (
+        original.metadata['severity'] !== reconstructed.metadata['severity']
+      ) {
         warnings.push('Metadata severity changed during round-trip');
       }
     } else if (!!original.metadata !== !!reconstructed.metadata) {
@@ -269,22 +301,29 @@ export class SpecificationBridgeService {
     // Children validation
     const originalChildCount = original.children?.length || 0;
     const reconstructedChildCount = reconstructed.children?.length || 0;
-    
+
     if (originalChildCount !== reconstructedChildCount) {
-      errors.push(`Child count mismatch: ${originalChildCount} vs ${reconstructedChildCount}`);
+      errors.push(
+        `Child count mismatch: ${originalChildCount} vs ${reconstructedChildCount}`,
+      );
     } else if (original.children && reconstructed.children) {
       // Recursively validate children
       for (let i = 0; i < original.children.length; i++) {
         const originalChild = original.children[i];
         const reconstructedChild = reconstructed.children[i];
-        
-        if (typeof originalChild === 'object' && typeof reconstructedChild === 'object') {
+
+        if (
+          typeof originalChild === 'object' &&
+          typeof reconstructedChild === 'object'
+        ) {
           const childValidation = this.deepValidateRoundTrip(
-            originalChild as RuleNode, 
-            reconstructedChild as RuleNode
+            originalChild as RuleNode,
+            reconstructedChild as RuleNode,
           );
-          errors.push(...childValidation.errors.map(e => `Child ${i}: ${e}`));
-          warnings.push(...childValidation.warnings.map(w => `Child ${i}: ${w}`));
+          errors.push(...childValidation.errors.map((e) => `Child ${i}: ${e}`));
+          warnings.push(
+            ...childValidation.warnings.map((w) => `Child ${i}: ${w}`),
+          );
         }
       }
     }
@@ -295,7 +334,10 @@ export class SpecificationBridgeService {
   /**
    * Compares two configuration objects
    */
-  private compareConfigs(config1: any, config2: any): {
+  private compareConfigs(
+    config1: any,
+    config2: any,
+  ): {
     errors: string[];
     warnings: string[];
   } {
@@ -305,7 +347,7 @@ export class SpecificationBridgeService {
     try {
       const config1Json = JSON.stringify(config1, Object.keys(config1).sort());
       const config2Json = JSON.stringify(config2, Object.keys(config2).sort());
-      
+
       if (config1Json !== config2Json) {
         warnings.push('Configuration values changed during round-trip');
       }
@@ -319,7 +361,10 @@ export class SpecificationBridgeService {
   /**
    * Validates DSL round-trip conversion
    */
-  private validateDslRoundTrip(dsl: string, originalNode: RuleNode): {
+  private validateDslRoundTrip(
+    dsl: string,
+    originalNode: RuleNode,
+  ): {
     warnings: string[];
   } {
     const warnings: string[] = [];
@@ -347,24 +392,28 @@ export class SpecificationBridgeService {
    * Parses a DSL expression string into a Specification
    */
   parseDslExpression<T extends object = any>(
-    expression: string, 
-    config?: DslParsingConfig
+    expression: string,
+    config?: DslParsingConfig,
   ): DslParsingResult<T> {
     const startTime = performance.now();
     const issues: ValidationIssue[] = [];
-    
+
     try {
       // Configure parser and validator
       if (config?.functionRegistry) {
         this.dslParser = new DslParser<T>(config.functionRegistry);
       }
-      
-      if (config?.knownFields || config?.enablePerformanceWarnings !== undefined || config?.maxComplexity) {
+
+      if (
+        config?.knownFields ||
+        config?.enablePerformanceWarnings !== undefined ||
+        config?.maxComplexity
+      ) {
         this.dslValidator = new DslValidator({
           knownFields: config?.knownFields || [],
           enablePerformanceWarnings: config?.enablePerformanceWarnings ?? true,
           maxComplexity: config?.maxComplexity || 50,
-          functionRegistry: config?.functionRegistry
+          functionRegistry: config?.functionRegistry,
         });
       }
 
@@ -373,15 +422,17 @@ export class SpecificationBridgeService {
       issues.push(...validationIssues);
 
       // Check for errors that would prevent parsing
-      const hasErrors = validationIssues.some(issue => issue.severity === 'error');
+      const hasErrors = validationIssues.some(
+        (issue: ValidationIssue) => issue.severity === 'error',
+      );
       if (hasErrors) {
         return {
           success: false,
           issues,
           metrics: {
             parseTime: performance.now() - startTime,
-            complexity: this.calculateComplexity(expression)
-          }
+            complexity: this.calculateComplexity(expression),
+          },
         };
       }
 
@@ -395,16 +446,15 @@ export class SpecificationBridgeService {
         issues,
         metrics: {
           parseTime,
-          complexity: this.calculateComplexity(expression)
-        }
+          complexity: this.calculateComplexity(expression),
+        },
       };
-
     } catch (error) {
       issues.push({
         type: 'SyntaxError' as any,
         severity: 'error' as any,
         message: `Parse error: ${error}`,
-        position: { start: 0, end: expression.length, line: 1, column: 1 }
+        position: { start: 0, end: expression.length, line: 1, column: 1 },
       });
 
       return {
@@ -412,8 +462,8 @@ export class SpecificationBridgeService {
         issues,
         metrics: {
           parseTime: performance.now() - startTime,
-          complexity: this.calculateComplexity(expression)
-        }
+          complexity: this.calculateComplexity(expression),
+        },
       };
     }
   }
@@ -423,10 +473,12 @@ export class SpecificationBridgeService {
    */
   createContextualSpecification<T extends object = any>(
     template: string,
-    config?: SpecificationContextualConfig
+    config?: SpecificationContextualConfig,
   ): ContextualSpecification<T> {
-    const contextProvider = config?.contextProvider || this.createContextProviderFromVariables(config?.contextVariables || []);
-    
+    const contextProvider =
+      config?.contextProvider ||
+      this.createContextProviderFromVariables(config?.contextVariables || []);
+
     if (config?.strictContextValidation) {
       this.validateContextTokens(template, config.contextVariables || []);
     }
@@ -437,10 +489,17 @@ export class SpecificationBridgeService {
   /**
    * Resolves context tokens in a template using provided variables
    */
-  resolveContextTokens(template: string, contextVariables: ContextVariable[]): string {
-    const contextProvider = this.createContextProviderFromVariables(contextVariables);
-    const contextualSpec = new ContextualSpecification(template, contextProvider);
-    
+  resolveContextTokens(
+    template: string,
+    contextVariables: ContextVariable[],
+  ): string {
+    const contextProvider =
+      this.createContextProviderFromVariables(contextVariables);
+    const contextualSpec = new ContextualSpecification(
+      template,
+      contextProvider,
+    );
+
     // Create a dummy object to resolve tokens against
     const dummyObj = {};
     return contextualSpec.resolveTokens(template, dummyObj);
@@ -457,11 +516,14 @@ export class SpecificationBridgeService {
   /**
    * Validates that all context tokens in a template have corresponding variables
    */
-  validateContextTokens(template: string, contextVariables: ContextVariable[]): ValidationIssue[] {
+  validateContextTokens(
+    template: string,
+    contextVariables: ContextVariable[],
+  ): ValidationIssue[] {
     const issues: ValidationIssue[] = [];
     const tokens = this.extractContextTokens(template);
-    const variableNames = contextVariables.map(v => v.name);
-    
+    const variableNames = contextVariables.map((v) => v.name);
+
     for (const token of tokens) {
       if (!variableNames.includes(token)) {
         issues.push({
@@ -470,11 +532,11 @@ export class SpecificationBridgeService {
           message: `Unknown context variable: ${token}`,
           position: this.findTokenPosition(template, token),
           suggestion: this.suggestSimilarVariable(token, variableNames),
-          help: `Available variables: ${variableNames.join(', ')}`
+          help: `Available variables: ${variableNames.join(', ')}`,
         });
       }
     }
-    
+
     return issues;
   }
 
@@ -483,12 +545,14 @@ export class SpecificationBridgeService {
    */
   dslToContextualSpecification<T extends object = any>(
     dslExpression: string,
-    config?: SpecificationContextualConfig
+    config?: SpecificationContextualConfig,
   ): ContextualSpecification<T> {
     // Validate that the DSL contains context tokens
     const tokens = this.extractContextTokens(dslExpression);
     if (tokens.length === 0) {
-      throw new Error('DSL expression does not contain context tokens (${...})');
+      throw new Error(
+        'DSL expression does not contain context tokens (${...})',
+      );
     }
 
     return this.createContextualSpecification<T>(dslExpression, config);
@@ -497,7 +561,9 @@ export class SpecificationBridgeService {
   /**
    * Converts a ContextualSpecification back to DSL template
    */
-  contextualSpecificationToDsl<T extends object = any>(spec: ContextualSpecification<T>): string {
+  contextualSpecificationToDsl<T extends object = any>(
+    spec: ContextualSpecification<T>,
+  ): string {
     return spec.toDSL();
   }
 
@@ -506,7 +572,7 @@ export class SpecificationBridgeService {
    */
   validateExpressionRoundTrip<T extends object = any>(
     originalExpression: string,
-    config?: DslParsingConfig
+    config?: DslParsingConfig,
   ): {
     success: boolean;
     errors: string[];
@@ -518,27 +584,33 @@ export class SpecificationBridgeService {
 
     try {
       // Parse the original expression
-      const parseResult = this.parseDslExpression<T>(originalExpression, config);
-      
+      const parseResult = this.parseDslExpression<T>(
+        originalExpression,
+        config,
+      );
+
       if (!parseResult.success || !parseResult.specification) {
         errors.push('Failed to parse original expression');
-        parseResult.issues.forEach(issue => {
+        parseResult.issues.forEach((issue) => {
           if (issue.severity === 'error') {
             errors.push(issue.message);
           } else {
             warnings.push(issue.message);
           }
         });
-        
+
         return { success: false, errors, warnings };
       }
 
       // Export back to DSL
       const reconstructedExpression = parseResult.specification.toDSL();
-      
+
       // Parse the reconstructed expression
-      const reconstructedParseResult = this.parseDslExpression<T>(reconstructedExpression, config);
-      
+      const reconstructedParseResult = this.parseDslExpression<T>(
+        reconstructedExpression,
+        config,
+      );
+
       if (!reconstructedParseResult.success) {
         errors.push('Failed to parse reconstructed expression');
         return { success: false, errors, warnings, reconstructedExpression };
@@ -546,8 +618,10 @@ export class SpecificationBridgeService {
 
       // Compare the specifications
       const originalJson = JSON.stringify(parseResult.specification.toJSON());
-      const reconstructedJson = JSON.stringify(reconstructedParseResult.specification!.toJSON());
-      
+      const reconstructedJson = JSON.stringify(
+        reconstructedParseResult.specification!.toJSON(),
+      );
+
       if (originalJson !== reconstructedJson) {
         warnings.push('Specification structure changed during round-trip');
       }
@@ -556,9 +630,8 @@ export class SpecificationBridgeService {
         success: errors.length === 0,
         errors,
         warnings,
-        reconstructedExpression
+        reconstructedExpression,
       };
-
     } catch (error) {
       errors.push(`Round-trip validation failed: ${error}`);
       return { success: false, errors, warnings };
@@ -596,7 +669,7 @@ export class SpecificationBridgeService {
           keywords.push(config.operator as string);
         }
         break;
-      
+
       case 'andGroup':
       case 'orGroup':
       case 'notGroup':
@@ -605,7 +678,7 @@ export class SpecificationBridgeService {
           keywords.push((boolConfig.operator as string).toUpperCase());
         }
         break;
-      
+
       case 'functionCall':
         const funcConfig = node.config as any;
         if (funcConfig?.functionName) {
@@ -617,12 +690,16 @@ export class SpecificationBridgeService {
     return keywords;
   }
 
-  private createFieldSpecification<T extends object = any>(node: RuleNode): Specification<T> {
+  private createFieldSpecification<T extends object = any>(
+    node: RuleNode,
+  ): Specification<T> {
     const config = node.config as any;
     const fieldName = config?.field || config?.fieldName;
-    
+
     if (!fieldName || !config?.operator || config?.value === undefined) {
-      throw new Error('Field specification requires field, operator, and value');
+      throw new Error(
+        'Field specification requires field, operator, and value',
+      );
     }
 
     const field = fieldName as keyof T;
@@ -631,7 +708,12 @@ export class SpecificationBridgeService {
 
     let spec: Specification<T>;
     if (node.metadata) {
-      spec = SpecificationFactory.fieldWithMetadata<T>(field, operator, value, node.metadata);
+      spec = SpecificationFactory.fieldWithMetadata<T>(
+        field,
+        operator,
+        value,
+        node.metadata,
+      );
     } else {
       spec = SpecificationFactory.field<T>(field, operator, value);
     }
@@ -639,45 +721,51 @@ export class SpecificationBridgeService {
     return spec;
   }
 
-  private createBooleanGroupSpecification<T extends object = any>(node: RuleNode): Specification<T> {
+  private createBooleanGroupSpecification<T extends object = any>(
+    node: RuleNode,
+  ): Specification<T> {
     if (!node.children || node.children.length === 0) {
       throw new Error('Boolean group requires children');
     }
 
     // Resolve children nodes using the registry
     const childNodes = this.nodeRegistry.resolveChildren(node);
-    const childSpecs = childNodes.map(child => this.ruleNodeToSpecification<T>(child));
+    const childSpecs = childNodes.map((child) =>
+      this.ruleNodeToSpecification<T>(child),
+    );
     const booleanConfig = node.config as any;
     const operator = booleanConfig?.operator || 'and';
 
     switch (operator.toLowerCase()) {
       case 'and':
         return SpecificationFactory.and<T>(...childSpecs);
-      
+
       case 'or':
         return SpecificationFactory.or<T>(...childSpecs);
-      
+
       case 'not':
         if (childSpecs.length !== 1) {
           throw new Error('NOT operator requires exactly one child');
         }
         return SpecificationFactory.not<T>(childSpecs[0]);
-      
+
       case 'xor':
         return SpecificationFactory.xor<T>(...childSpecs);
-      
+
       case 'implies':
         if (childSpecs.length !== 2) {
           throw new Error('IMPLIES operator requires exactly two children');
         }
         return SpecificationFactory.implies<T>(childSpecs[0], childSpecs[1]);
-      
+
       default:
         throw new Error(`Unsupported boolean operator: ${operator}`);
     }
   }
 
-  private createFunctionSpecification<T extends object = any>(node: RuleNode): Specification<T> {
+  private createFunctionSpecification<T extends object = any>(
+    node: RuleNode,
+  ): Specification<T> {
     const functionConfig = node.config as any;
     if (!functionConfig?.functionName) {
       throw new Error('Function specification requires functionName');
@@ -685,7 +773,7 @@ export class SpecificationBridgeService {
 
     const functionName = functionConfig.functionName;
     const parameters = functionConfig.parameters || [];
-    
+
     // Convert parameters to function arguments
     const args = parameters.map((param: FunctionParameter) => {
       return this.convertValue(param.value, param.valueType);
@@ -694,10 +782,18 @@ export class SpecificationBridgeService {
     return SpecificationFactory.func<T>(functionName, args);
   }
 
-  private createFieldToFieldSpecification<T extends object = any>(node: RuleNode): Specification<T> {
+  private createFieldToFieldSpecification<T extends object = any>(
+    node: RuleNode,
+  ): Specification<T> {
     const fieldConfig = node.config as any;
-    if (!fieldConfig?.fieldA || !fieldConfig?.fieldB || !fieldConfig?.operator) {
-      throw new Error('Field-to-field specification requires fieldA, fieldB, and operator');
+    if (
+      !fieldConfig?.fieldA ||
+      !fieldConfig?.fieldB ||
+      !fieldConfig?.operator
+    ) {
+      throw new Error(
+        'Field-to-field specification requires fieldA, fieldB, and operator',
+      );
     }
 
     const fieldA = fieldConfig.fieldA as keyof T;
@@ -711,102 +807,134 @@ export class SpecificationBridgeService {
       operator,
       fieldB,
       transformA,
-      transformB
+      transformB,
     );
   }
 
-  private createCardinalitySpecification<T extends object = any>(node: RuleNode): Specification<T> {
+  private createCardinalitySpecification<T extends object = any>(
+    node: RuleNode,
+  ): Specification<T> {
     if (!node.children || node.children.length === 0 || !node.config) {
       throw new Error('Cardinality specification requires children and config');
     }
 
     // Resolve children nodes using the registry
     const childNodes = this.nodeRegistry.resolveChildren(node);
-    const childSpecs = childNodes.map(child => this.ruleNodeToSpecification<T>(child));
+    const childSpecs = childNodes.map((child) =>
+      this.ruleNodeToSpecification<T>(child),
+    );
     const config = node.config as CardinalityConfig;
 
     switch (config.cardinalityType) {
       case 'atLeast':
         return SpecificationFactory.atLeast<T>(config.count, childSpecs);
-      
+
       case 'exactly':
         return SpecificationFactory.exactly<T>(config.count, childSpecs);
-      
+
       default:
-        throw new Error(`Unsupported cardinality type: ${config.cardinalityType}`);
+        throw new Error(
+          `Unsupported cardinality type: ${config.cardinalityType}`,
+        );
     }
   }
 
   /**
    * Creates conditional validator specifications (Phase 1 implementation)
    */
-  private createConditionalValidatorSpecification<T extends object = any>(node: RuleNode): Specification<T> {
+  private createConditionalValidatorSpecification<T extends object = any>(
+    node: RuleNode,
+  ): Specification<T> {
     if (!node.config || node.config.type !== 'conditionalValidator') {
-      throw new Error('Conditional validator specification requires conditionalValidator config');
+      throw new Error(
+        'Conditional validator specification requires conditionalValidator config',
+      );
     }
 
     const config = node.config as ConditionalValidatorConfig;
-    
+
     if (!config.targetField || !config.condition) {
-      throw new Error('Conditional validator requires targetField and condition');
+      throw new Error(
+        'Conditional validator requires targetField and condition',
+      );
     }
 
     // Convert the condition node to a specification
     const conditionSpec = this.ruleNodeToSpecification<T>(config.condition);
-    
+
     // Apply inverse if specified
-    const finalConditionSpec = config.inverse ? 
-      SpecificationFactory.not<T>(conditionSpec) : 
-      conditionSpec;
+    const finalConditionSpec = config.inverse
+      ? SpecificationFactory.not<T>(conditionSpec)
+      : conditionSpec;
 
     const targetField = config.targetField as keyof T;
     const metadata = config.metadata;
 
     // Create the appropriate conditional validator specification
-    // Note: Using generic factory methods - specific conditional validator factory methods 
-    // should be implemented in praxis-specification when available
+    // Note: Using generic factory methods - specific conditional validator factory methods
+    // should be implemented in @praxis/specification when available
     let spec: Specification<T>;
-    
+
     switch (config.validatorType) {
       case 'requiredIf':
         // Create a generic specification for requiredIf
-        // This is a placeholder implementation - will be replaced when 
-        // praxis-specification adds native support for conditional validators
-        spec = SpecificationFactory.field<T>(targetField, ComparisonOperator.EQUALS, true);
+        // This is a placeholder implementation - will be replaced when
+        // @praxis/specification adds native support for conditional validators
+        spec = SpecificationFactory.field<T>(
+          targetField,
+          ComparisonOperator.EQUALS,
+          true,
+        );
         break;
-      
+
       case 'visibleIf':
         // Placeholder implementation for visibleIf
-        spec = SpecificationFactory.field<T>(targetField, ComparisonOperator.EQUALS, true);
+        spec = SpecificationFactory.field<T>(
+          targetField,
+          ComparisonOperator.EQUALS,
+          true,
+        );
         break;
-      
+
       case 'disabledIf':
         // Placeholder implementation for disabledIf
-        spec = SpecificationFactory.field<T>(targetField, ComparisonOperator.EQUALS, true);
+        spec = SpecificationFactory.field<T>(
+          targetField,
+          ComparisonOperator.EQUALS,
+          true,
+        );
         break;
-      
+
       case 'readonlyIf':
         // Placeholder implementation for readonlyIf
-        spec = SpecificationFactory.field<T>(targetField, ComparisonOperator.EQUALS, true);
+        spec = SpecificationFactory.field<T>(
+          targetField,
+          ComparisonOperator.EQUALS,
+          true,
+        );
         break;
-      
+
       default:
-        throw new Error(`Unsupported conditional validator type: ${config.validatorType}`);
+        throw new Error(
+          `Unsupported conditional validator type: ${config.validatorType}`,
+        );
     }
-    
+
     return spec;
   }
 
   /**
    * Creates collection validator specifications (Phase 2 implementation)
    */
-  private createCollectionValidatorSpecification<T extends object = any>(node: RuleNode): Specification<T> {
+  private createCollectionValidatorSpecification<T extends object = any>(
+    node: RuleNode,
+  ): Specification<T> {
     if (!node.config || !('type' in node.config)) {
       throw new Error('Collection validator specification requires config');
     }
 
     const config = node.config as CollectionValidatorConfig;
-    
+
     if (!config.targetCollection) {
       throw new Error('Collection validator requires targetCollection');
     }
@@ -814,72 +942,95 @@ export class SpecificationBridgeService {
     const targetField = config.targetCollection as keyof T;
 
     // Create the appropriate collection validator specification
-    // Note: Using placeholder implementations until praxis-specification adds native support
+    // Note: Using placeholder implementations until @praxis/specification adds native support
     let spec: Specification<T>;
-    
+
     switch (node.type) {
       case 'forEach':
         // ForEach implementation placeholder
         // Would iterate through array items and apply validation rules
-        if (!config.itemValidationRules || config.itemValidationRules.length === 0) {
-          throw new Error('ForEach validator requires at least one validation rule');
+        if (
+          !config.itemValidationRules ||
+          config.itemValidationRules.length === 0
+        ) {
+          throw new Error(
+            'ForEach validator requires at least one validation rule',
+          );
         }
-        
+
         // Create a placeholder that checks array exists
-        spec = SpecificationFactory.field<T>(targetField, ComparisonOperator.NOT_EQUALS, null);
+        spec = SpecificationFactory.field<T>(
+          targetField,
+          ComparisonOperator.NOT_EQUALS,
+          null,
+        );
         break;
-      
+
       case 'uniqueBy':
         // UniqueBy implementation placeholder
         // Would check uniqueness based on specified fields
         if (!config.uniqueByFields || config.uniqueByFields.length === 0) {
           throw new Error('UniqueBy validator requires at least one field');
         }
-        
+
         // Create a placeholder that checks array exists
-        spec = SpecificationFactory.field<T>(targetField, ComparisonOperator.NOT_EQUALS, null);
+        spec = SpecificationFactory.field<T>(
+          targetField,
+          ComparisonOperator.NOT_EQUALS,
+          null,
+        );
         break;
-      
+
       case 'minLength':
         // MinLength implementation placeholder
         // Would check array has minimum number of items
         if (config.minItems === undefined) {
           throw new Error('MinLength validator requires minItems value');
         }
-        
+
         // Create a placeholder that checks array exists
-        spec = SpecificationFactory.field<T>(targetField, ComparisonOperator.NOT_EQUALS, null);
+        spec = SpecificationFactory.field<T>(
+          targetField,
+          ComparisonOperator.NOT_EQUALS,
+          null,
+        );
         break;
-      
+
       case 'maxLength':
         // MaxLength implementation placeholder
         // Would check array doesn't exceed maximum items
         if (config.maxItems === undefined) {
           throw new Error('MaxLength validator requires maxItems value');
         }
-        
+
         // Create a placeholder that checks array exists
-        spec = SpecificationFactory.field<T>(targetField, ComparisonOperator.NOT_EQUALS, null);
+        spec = SpecificationFactory.field<T>(
+          targetField,
+          ComparisonOperator.NOT_EQUALS,
+          null,
+        );
         break;
-      
+
       default:
         throw new Error(`Unsupported collection validator type: ${node.type}`);
     }
-    
+
     return spec;
   }
 
   /**
    * Creates expression specification from DSL (Phase 4 implementation)
    */
-  private createExpressionSpecification<T extends object = any>(node: RuleNode): Specification<T> {
+  private createExpressionSpecification<T extends object = any>(
+    node: RuleNode,
+  ): Specification<T> {
     if (!node.config || !('expression' in node.config)) {
       throw new Error('Expression specification requires expression in config');
     }
 
     const config = node.config as any;
     const expression = config.expression as string;
-    
+
     if (!expression || expression.trim().length === 0) {
       throw new Error('Expression specification requires non-empty expression');
     }
@@ -890,18 +1041,20 @@ export class SpecificationBridgeService {
       contextProvider: config.contextProvider,
       knownFields: config.knownFields || [],
       enablePerformanceWarnings: config.enablePerformanceWarnings ?? true,
-      maxComplexity: config.maxComplexity || 50
+      maxComplexity: config.maxComplexity || 50,
     };
 
     const parseResult = this.parseDslExpression<T>(expression, parseConfig);
-    
+
     if (!parseResult.success || !parseResult.specification) {
       const errorMessages = parseResult.issues
-        .filter(issue => issue.severity === 'error')
-        .map(issue => issue.message)
+        .filter((issue) => issue.severity === 'error')
+        .map((issue) => issue.message)
         .join('; ');
-      
-      throw new Error(`Failed to parse DSL expression: ${errorMessages || 'Unknown parsing error'}`);
+
+      throw new Error(
+        `Failed to parse DSL expression: ${errorMessages || 'Unknown parsing error'}`,
+      );
     }
 
     return parseResult.specification;
@@ -910,14 +1063,16 @@ export class SpecificationBridgeService {
   /**
    * Creates contextual specification (Phase 4 implementation)
    */
-  private createContextualSpecificationFromNode<T extends object = any>(node: RuleNode): Specification<T> {
+  private createContextualSpecificationFromNode<T extends object = any>(
+    node: RuleNode,
+  ): Specification<T> {
     if (!node.config || !('template' in node.config)) {
       throw new Error('Contextual specification requires template in config');
     }
 
     const config = node.config as any;
     const template = config.template as string;
-    
+
     if (!template || template.trim().length === 0) {
       throw new Error('Contextual specification requires non-empty template');
     }
@@ -925,13 +1080,15 @@ export class SpecificationBridgeService {
     // Validate that the template contains context tokens
     const tokens = this.extractContextTokens(template);
     if (tokens.length === 0) {
-      throw new Error('Contextual specification template must contain at least one context token (${...})');
+      throw new Error(
+        'Contextual specification template must contain at least one context token (${...})',
+      );
     }
 
     const contextualConfig: SpecificationContextualConfig = {
       contextVariables: config.contextVariables || [],
       contextProvider: config.contextProvider,
-      strictContextValidation: config.strictContextValidation ?? false
+      strictContextValidation: config.strictContextValidation ?? false,
     };
 
     return this.createContextualSpecification<T>(template, contextualConfig);
@@ -943,49 +1100,49 @@ export class SpecificationBridgeService {
       case '==':
       case '=':
         return ComparisonOperator.EQUALS;
-      
+
       case 'notequals':
       case '!=':
       case '<>':
         return ComparisonOperator.NOT_EQUALS;
-      
+
       case 'greaterthan':
       case '>':
         return ComparisonOperator.GREATER_THAN;
-      
+
       case 'greaterthanorequal':
       case '>=':
         return ComparisonOperator.GREATER_THAN_OR_EQUAL;
-      
+
       case 'lessthan':
       case '<':
         return ComparisonOperator.LESS_THAN;
-      
+
       case 'lessthanorequal':
       case '<=':
         return ComparisonOperator.LESS_THAN_OR_EQUAL;
-      
+
       case 'contains':
         return ComparisonOperator.CONTAINS;
-      
+
       case 'startswith':
         return ComparisonOperator.STARTS_WITH;
-      
+
       case 'endswith':
         return ComparisonOperator.ENDS_WITH;
-      
+
       case 'in':
         return ComparisonOperator.IN;
-      
+
       case 'notin':
         return ComparisonOperator.NOT_EQUALS; // Using NOT_EQUALS as fallback for NOT_IN
-      
+
       case 'isnull':
         return ComparisonOperator.EQUALS; // Using EQUALS for IS_NULL check
-      
+
       case 'isnotnull':
         return ComparisonOperator.NOT_EQUALS; // Using NOT_EQUALS for IS_NOT_NULL check
-      
+
       default:
         throw new Error(`Unsupported comparison operator: ${operator}`);
     }
@@ -999,16 +1156,16 @@ export class SpecificationBridgeService {
     switch (valueType) {
       case 'literal':
         return value;
-      
+
       case 'field':
         return `@${value}`; // Field reference prefix
-      
+
       case 'context':
         return `$${value}`; // Context reference prefix
-      
+
       case 'function':
         return value; // Function calls are handled separately
-      
+
       default:
         return value;
     }
@@ -1021,7 +1178,7 @@ export class SpecificationBridgeService {
       label: this.generateNodeLabel(json),
       config: undefined,
       metadata: json.metadata,
-      children: []
+      children: [],
     };
 
     switch (json.type) {
@@ -1032,7 +1189,7 @@ export class SpecificationBridgeService {
           fieldName: json.field,
           operator: this.mapComparisonOperator(json.operator),
           value: json.value,
-          valueType: this.inferValueType(json.value)
+          valueType: this.inferValueType(json.value),
         } as FieldConditionConfig;
         break;
 
@@ -1041,16 +1198,18 @@ export class SpecificationBridgeService {
       case 'xor':
         baseNode.config = {
           type: 'booleanGroup',
-          operator: json.type
+          operator: json.type,
         } as BooleanGroupConfig;
-        const childNodes = json.specs.map((spec: any) => this.jsonToRuleNode(spec));
+        const childNodes = json.specs.map((spec: any) =>
+          this.jsonToRuleNode(spec),
+        );
         baseNode.children = childNodes.map((child: RuleNode) => child.id);
         break;
 
       case 'not':
         baseNode.config = {
           type: 'booleanGroup',
-          operator: 'not'
+          operator: 'not',
         } as BooleanGroupConfig;
         const childNode = this.jsonToRuleNode(json.spec);
         baseNode.children = [childNode.id];
@@ -1059,7 +1218,7 @@ export class SpecificationBridgeService {
       case 'implies':
         baseNode.config = {
           type: 'booleanGroup',
-          operator: 'implies'
+          operator: 'implies',
         } as BooleanGroupConfig;
         const antecedent = this.jsonToRuleNode(json.antecedent);
         const consequent = this.jsonToRuleNode(json.consequent);
@@ -1073,8 +1232,8 @@ export class SpecificationBridgeService {
           parameters: json.args.map((arg: any, index: number) => ({
             name: `param${index}`,
             value: arg,
-            valueType: this.inferValueType(arg)
-          }))
+            valueType: this.inferValueType(arg),
+          })),
         } as FunctionCallConfig;
         break;
 
@@ -1085,7 +1244,7 @@ export class SpecificationBridgeService {
           rightField: json.fieldB,
           operator: this.mapComparisonOperator(json.operator),
           leftTransforms: json.transformA ? [json.transformA] : [],
-          rightTransforms: json.transformB ? [json.transformB] : []
+          rightTransforms: json.transformB ? [json.transformB] : [],
         } as FieldToFieldConfig;
         break;
 
@@ -1094,9 +1253,11 @@ export class SpecificationBridgeService {
           type: 'cardinality',
           cardinalityType: 'atLeast',
           count: json.minimum || json.count,
-          conditions: []
+          conditions: [],
         };
-        baseNode.children = json.specs.map((spec: any) => this.jsonToRuleNode(spec));
+        baseNode.children = json.specs.map((spec: any) =>
+          this.jsonToRuleNode(spec),
+        );
         break;
 
       case 'exactly':
@@ -1104,9 +1265,11 @@ export class SpecificationBridgeService {
           type: 'cardinality',
           cardinalityType: 'exactly',
           count: json.exact || json.count,
-          conditions: []
+          conditions: [],
         };
-        baseNode.children = json.specs.map((spec: any) => this.jsonToRuleNode(spec));
+        baseNode.children = json.specs.map((spec: any) =>
+          this.jsonToRuleNode(spec),
+        );
         break;
 
       // Phase 1: Conditional Validators
@@ -1264,7 +1427,7 @@ export class SpecificationBridgeService {
         return 'endsWith';
       case ComparisonOperator.IN:
         return 'in';
-      // Note: NOT_IN, IS_NULL, IS_NOT_NULL are not available in praxis-specification ComparisonOperator enum
+      // Note: NOT_IN, IS_NULL, IS_NOT_NULL are not available in @praxis/specification ComparisonOperator enum
       // These would need to be handled as custom functions or additional operators
       default:
         return 'equals';
@@ -1322,7 +1485,9 @@ export class SpecificationBridgeService {
       case 'forEach':
         return `For Each: ${json.targetCollection}`;
       case 'uniqueBy':
-        const uniqueFields = json.uniqueByFields ? json.uniqueByFields.join(', ') : '';
+        const uniqueFields = json.uniqueByFields
+          ? json.uniqueByFields.join(', ')
+          : '';
         return `Unique By: ${uniqueFields}`;
       case 'minLength':
         return `Min Length: ${json.minItems} items`;
@@ -1343,12 +1508,14 @@ export class SpecificationBridgeService {
   /**
    * Creates a context provider from context variables
    */
-  private createContextProviderFromVariables(variables: ContextVariable[]): ContextProvider {
+  private createContextProviderFromVariables(
+    variables: ContextVariable[],
+  ): ContextProvider {
     const variableMap = new Map<string, any>();
-    
+
     for (const variable of variables) {
       let value: any = variable.example;
-      
+
       // Convert example to appropriate type
       if (value !== undefined && value !== null) {
         switch (variable.type) {
@@ -1356,7 +1523,10 @@ export class SpecificationBridgeService {
             value = typeof value === 'string' ? parseFloat(value) : value;
             break;
           case 'boolean':
-            value = typeof value === 'string' ? value.toLowerCase() === 'true' : Boolean(value);
+            value =
+              typeof value === 'string'
+                ? value.toLowerCase() === 'true'
+                : Boolean(value);
             break;
           case 'date':
             value = typeof value === 'string' ? new Date(value) : value;
@@ -1371,14 +1541,14 @@ export class SpecificationBridgeService {
             break;
         }
       }
-      
+
       variableMap.set(variable.name, value);
     }
 
-    // Create a context provider implementation aligned with praxis-specification ContextProvider interface
+    // Create a context provider implementation aligned with @praxis/specification ContextProvider interface
     return {
       hasValue: (path: string) => variableMap.has(path),
-      getValue: (path: string) => variableMap.get(path)
+      getValue: (path: string) => variableMap.get(path),
     };
   }
 
@@ -1388,16 +1558,22 @@ export class SpecificationBridgeService {
   private calculateComplexity(expression: string): number {
     // Simple complexity calculation based on operators and function calls
     const operators = ['&&', '||', '!', '==', '!=', '>', '<', '>=', '<=', 'in'];
-    const functions = ['contains', 'startsWith', 'endsWith', 'atLeast', 'exactly'];
-    
+    const functions = [
+      'contains',
+      'startsWith',
+      'endsWith',
+      'atLeast',
+      'exactly',
+    ];
+
     let complexity = 1; // Base complexity
-    
+
     // Count operators
     for (const operator of operators) {
       const matches = expression.split(operator).length - 1;
       complexity += matches;
     }
-    
+
     // Count function calls
     for (const func of functions) {
       const regex = new RegExp(`\\b${func}\\s*\\(`, 'g');
@@ -1406,7 +1582,7 @@ export class SpecificationBridgeService {
         complexity += matches.length * 2; // Functions are more complex
       }
     }
-    
+
     // Count parentheses nesting
     let depth = 0;
     let maxDepth = 0;
@@ -1419,25 +1595,28 @@ export class SpecificationBridgeService {
       }
     }
     complexity += maxDepth;
-    
+
     return complexity;
   }
 
   /**
    * Finds the position of a token in a template
    */
-  private findTokenPosition(template: string, token: string): { start: number; end: number; line: number; column: number } {
+  private findTokenPosition(
+    template: string,
+    token: string,
+  ): { start: number; end: number; line: number; column: number } {
     const tokenPattern = `\${${token}}`;
     const index = template.indexOf(tokenPattern);
-    
+
     if (index === -1) {
       return { start: 0, end: 0, line: 1, column: 1 };
     }
-    
+
     // Calculate line and column
     let line = 1;
     let column = 1;
-    
+
     for (let i = 0; i < index; i++) {
       if (template[i] === '\n') {
         line++;
@@ -1446,28 +1625,34 @@ export class SpecificationBridgeService {
         column++;
       }
     }
-    
+
     return {
       start: index,
       end: index + tokenPattern.length,
       line,
-      column
+      column,
     };
   }
 
   /**
    * Suggests similar variable names using Levenshtein distance
    */
-  private suggestSimilarVariable(target: string, availableVariables: string[]): string | undefined {
+  private suggestSimilarVariable(
+    target: string,
+    availableVariables: string[],
+  ): string | undefined {
     if (availableVariables.length === 0) return undefined;
 
-    const similarities = availableVariables.map(variable => ({
+    const similarities = availableVariables.map((variable) => ({
       variable,
-      distance: this.levenshteinDistance(target.toLowerCase(), variable.toLowerCase())
+      distance: this.levenshteinDistance(
+        target.toLowerCase(),
+        variable.toLowerCase(),
+      ),
     }));
 
     similarities.sort((a, b) => a.distance - b.distance);
-    
+
     // Only suggest if the distance is reasonable
     if (similarities[0].distance <= Math.max(2, target.length * 0.4)) {
       return `Did you mean "${similarities[0].variable}"?`;
@@ -1498,7 +1683,7 @@ export class SpecificationBridgeService {
           matrix[i][j] = Math.min(
             matrix[i - 1][j - 1] + 1,
             matrix[i][j - 1] + 1,
-            matrix[i - 1][j] + 1
+            matrix[i - 1][j] + 1,
           );
         }
       }

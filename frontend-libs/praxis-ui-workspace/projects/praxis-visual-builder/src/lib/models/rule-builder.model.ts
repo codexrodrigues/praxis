@@ -2,7 +2,13 @@
  * Models for the Visual Rule Builder
  */
 
-import { SpecificationMetadata, ComparisonOperator, ContextProvider } from 'praxis-specification';
+import {
+  ComparisonOperator,
+  ContextProvider,
+  type FunctionRegistry,
+  type SpecificationMetadata,
+} from '@praxis/specification';
+export type { SpecificationMetadata };
 
 /**
  * Value types for rule configuration
@@ -10,35 +16,45 @@ import { SpecificationMetadata, ComparisonOperator, ContextProvider } from 'prax
 export type ValueType = 'literal' | 'field' | 'context' | 'function';
 
 /**
- * Valid comparison operators (aligned with praxis-specification)
+ * Valid comparison operators (aligned with @praxis/specification)
  */
-export type ValidComparisonOperator = 'eq' | 'neq' | 'lt' | 'lte' | 'gt' | 'gte' | 'contains' | 'startsWith' | 'endsWith' | 'in';
+export type ValidComparisonOperator =
+  | 'eq'
+  | 'neq'
+  | 'lt'
+  | 'lte'
+  | 'gt'
+  | 'gte'
+  | 'contains'
+  | 'startsWith'
+  | 'endsWith'
+  | 'in';
 
 export interface RuleNode {
   /** Unique identifier for this rule node */
   id: string;
-  
+
   /** Type of rule node */
   type: RuleNodeType | RuleNodeTypeString;
-  
+
   /** Human-readable label for this rule */
   label?: string;
-  
+
   /** Rule metadata */
   metadata?: SpecificationMetadata;
-  
+
   /** Whether this node is currently selected */
   selected?: boolean;
-  
+
   /** Whether this node is expanded (for groups) */
   expanded?: boolean;
-  
+
   /** Parent node ID */
   parentId?: string;
-  
+
   /** Child node IDs (for groups) */
   children?: string[];
-  
+
   /** Rule-specific configuration */
   config?: RuleNodeConfig;
 }
@@ -46,61 +62,79 @@ export interface RuleNode {
 export enum RuleNodeType {
   // Basic field comparisons
   FIELD_CONDITION = 'fieldCondition',
-  
+
   // Boolean compositions
   AND_GROUP = 'andGroup',
   OR_GROUP = 'orGroup',
   NOT_GROUP = 'notGroup',
   XOR_GROUP = 'xorGroup',
   IMPLIES_GROUP = 'impliesGroup',
-  
+
   // Conditional validators (Phase 1 Implementation)
   REQUIRED_IF = 'requiredIf',
   VISIBLE_IF = 'visibleIf',
   DISABLED_IF = 'disabledIf',
   READONLY_IF = 'readonlyIf',
-  
+
   // Collection validations
   FOR_EACH = 'forEach',
   UNIQUE_BY = 'uniqueBy',
   MIN_LENGTH = 'minLength',
   MAX_LENGTH = 'maxLength',
-  
+
   // Optional field handling
   IF_DEFINED = 'ifDefined',
   IF_NOT_NULL = 'ifNotNull',
   IF_EXISTS = 'ifExists',
   WITH_DEFAULT = 'withDefault',
-  
+
   // Advanced types
   FUNCTION_CALL = 'functionCall',
   FIELD_TO_FIELD = 'fieldToField',
   CONTEXTUAL = 'contextual',
   AT_LEAST = 'atLeast',
   EXACTLY = 'exactly',
-  
+
   // Phase 4: Expression and Contextual Support
   EXPRESSION = 'expression',
   CONTEXTUAL_TEMPLATE = 'contextualTemplate',
-  
+
   // Custom/extensible
-  CUSTOM = 'custom'
+  CUSTOM = 'custom',
 }
 
 /**
  * String literal type for rule node types (for flexibility)
  */
-export type RuleNodeTypeString = 
+export type RuleNodeTypeString =
   | 'fieldCondition'
-  | 'andGroup' | 'orGroup' | 'notGroup' | 'xorGroup' | 'impliesGroup'
-  | 'requiredIf' | 'visibleIf' | 'disabledIf' | 'readonlyIf'
-  | 'forEach' | 'uniqueBy' | 'minLength' | 'maxLength'
-  | 'ifDefined' | 'ifNotNull' | 'ifExists' | 'withDefault'
-  | 'functionCall' | 'fieldToField' | 'contextual' | 'atLeast' | 'exactly'
-  | 'expression' | 'contextualTemplate'
+  | 'andGroup'
+  | 'orGroup'
+  | 'notGroup'
+  | 'xorGroup'
+  | 'impliesGroup'
+  | 'requiredIf'
+  | 'visibleIf'
+  | 'disabledIf'
+  | 'readonlyIf'
+  | 'forEach'
+  | 'uniqueBy'
+  | 'minLength'
+  | 'maxLength'
+  | 'ifDefined'
+  | 'ifNotNull'
+  | 'ifExists'
+  | 'withDefault'
+  | 'functionCall'
+  | 'fieldToField'
+  | 'contextual'
+  | 'atLeast'
+  | 'exactly'
+  | 'expression'
+  | 'contextualTemplate'
   | 'custom';
 
-export type RuleNodeConfig = 
+export type RuleNodeConfig =
   | FieldConditionConfig
   | BooleanGroupConfig
   | ConditionalValidatorConfig
@@ -119,10 +153,10 @@ export interface FieldConditionConfig {
   type: 'fieldCondition';
   /** Primary field name */
   fieldName: string;
-  /** Comparison operator aligned with praxis-specification */
+  /** Comparison operator aligned with @praxis/specification */
   operator: ValidComparisonOperator | string;
   /** Comparison value */
-  value: any;
+  value: unknown;
   /** Type of value for proper handling */
   valueType?: ValueType;
   /** Field to compare against (for field-to-field comparisons) */
@@ -148,18 +182,48 @@ export interface BooleanGroupConfig {
 }
 
 export interface ConditionalValidatorConfig {
-  type: 'conditionalValidator';
-  /** Type of conditional validator */
+  type: 'requiredIf' | 'visibleIf' | 'disabledIf' | 'readonlyIf';
+  /** Specific validator type (mirrors type for backward compatibility) */
   validatorType: 'requiredIf' | 'visibleIf' | 'disabledIf' | 'readonlyIf';
   /** Target field to apply conditional logic */
   targetField: string;
-  /** Embedded condition rule node */
-  condition: RuleNode;
+  /** Optional single condition (legacy support) */
+  condition?: RuleNode;
+  /** Multiple conditions for advanced mode */
+  conditions?: RuleNode[];
   /** Reference to condition rule node ID (for backward compatibility) */
   conditionNodeId?: string;
   /** Whether to invert the condition result */
   inverse?: boolean;
-  /** Metadata aligned with praxis-specification */
+  /** Logic operator to combine multiple conditions */
+  logicOperator?: 'and' | 'or';
+  /** Custom error message */
+  errorMessage?: string;
+  /** Validate on value change */
+  validateOnChange?: boolean;
+  /** Validate on blur */
+  validateOnBlur?: boolean;
+  /** Show error immediately */
+  showErrorImmediately?: boolean;
+  /** Animation type */
+  animation?: string;
+  /** Hide field label */
+  hideLabel?: boolean;
+  /** Preserve space when hidden */
+  preserveSpace?: boolean;
+  /** Style when disabled */
+  disabledStyle?: string;
+  /** Clear value when disabled */
+  clearOnDisable?: boolean;
+  /** Show disabled message */
+  showDisabledMessage?: boolean;
+  /** Custom disabled message */
+  disabledMessage?: string;
+  /** Readonly style */
+  readonlyStyle?: string;
+  /** Show readonly indicator */
+  showReadonlyIndicator?: boolean;
+  /** Metadata aligned with @praxis/specification */
   metadata?: SpecificationMetadata;
 }
 
@@ -181,13 +245,13 @@ export interface CollectionValidationConfig {
 
 /**
  * Enhanced collection validator configuration (Phase 2 Implementation)
- * Aligned with praxis-specification collection validation patterns
+ * Aligned with @praxis/specification collection validation patterns
  */
 export interface CollectionValidatorConfig {
   type: 'forEach' | 'uniqueBy' | 'minLength' | 'maxLength';
   /** Target collection field name */
   targetCollection: string;
-  
+
   // For Each specific
   /** Variable name for current item in forEach */
   itemVariable?: string;
@@ -199,7 +263,7 @@ export interface CollectionValidatorConfig {
     fieldPath: string;
     errorMessage?: string;
   }[];
-  
+
   // Unique By specific
   /** Fields to check uniqueness by */
   uniqueByFields?: string[];
@@ -209,7 +273,7 @@ export interface CollectionValidatorConfig {
   ignoreEmpty?: boolean;
   /** Custom error message for duplicates */
   duplicateErrorMessage?: string;
-  
+
   // Length specific
   /** Minimum number of items */
   minItems?: number;
@@ -221,7 +285,7 @@ export interface CollectionValidatorConfig {
   showItemCount?: boolean;
   /** Prevent adding items beyond maxItems */
   preventExcess?: boolean;
-  
+
   // Advanced options
   /** Validate when items are added */
   validateOnAdd?: boolean;
@@ -247,14 +311,6 @@ export interface CollectionValidatorConfig {
   metadata?: SpecificationMetadata;
 }
 
-export interface OptionalFieldConfig {
-  type: 'optionalField';
-  validationType: 'ifDefined' | 'ifNotNull' | 'ifExists' | 'withDefault';
-  fieldName: string;
-  defaultValue?: any;
-  condition?: string; // Reference to rule node ID
-}
-
 export interface FunctionCallConfig {
   type: 'functionCall';
   /** Name of the function to call */
@@ -269,7 +325,7 @@ export interface FunctionParameter {
   /** Parameter name */
   name: string;
   /** Parameter value */
-  value: any;
+  value: unknown;
   /** Type of parameter value */
   valueType: ValueType;
   /** Field name if valueType is 'field' */
@@ -299,7 +355,7 @@ export interface ContextualConfig {
   /** Template string with context placeholders */
   template: string;
   /** Available context variables */
-  contextVariables: Record<string, any>;
+  contextVariables: Record<string, unknown>;
   /** Optional context provider for dynamic values */
   contextProvider?: ContextProvider;
   /** Strict validation of context tokens */
@@ -325,7 +381,7 @@ export interface CustomConfig {
   /** Custom configuration type identifier */
   customType: string;
   /** Custom properties specific to the type */
-  properties: Record<string, any>;
+  properties: Record<string, unknown>;
   /** Optional metadata for validation */
   metadata?: SpecificationMetadata;
 }
@@ -337,7 +393,7 @@ export enum ConditionalValidatorType {
   REQUIRED_IF = 'requiredIf',
   VISIBLE_IF = 'visibleIf',
   DISABLED_IF = 'disabledIf',
-  READONLY_IF = 'readonlyIf'
+  READONLY_IF = 'readonlyIf',
 }
 
 /**
@@ -345,7 +401,7 @@ export enum ConditionalValidatorType {
  */
 export interface ConditionalValidatorPreview {
   targetField: string;
-  currentValue: any;
+  currentValue: unknown;
   conditionResult: boolean;
   validatorType: ConditionalValidatorType;
   resultingState: {
@@ -363,31 +419,31 @@ export interface ConditionalValidatorPreview {
 export interface RuleBuilderState {
   /** All rule nodes in the current session */
   nodes: Record<string, RuleNode>;
-  
+
   /** Root node IDs (top-level rules) */
   rootNodes: string[];
-  
+
   /** Currently selected node ID */
   selectedNodeId?: string;
-  
+
   /** Current DSL representation */
   currentDSL?: string;
-  
+
   /** Current JSON representation */
-  currentJSON?: any;
-  
+  currentJSON?: unknown;
+
   /** Validation errors */
   validationErrors: ValidationError[];
-  
+
   /** Build mode */
   mode: 'visual' | 'dsl' | 'json';
-  
+
   /** Whether the rule is dirty (has unsaved changes) */
   isDirty: boolean;
-  
+
   /** Undo/redo history */
   history: RuleBuilderSnapshot[];
-  
+
   /** Current history position */
   historyPosition: number;
 }
@@ -395,19 +451,19 @@ export interface RuleBuilderState {
 export interface ValidationError {
   /** Error ID */
   id: string;
-  
+
   /** Error message */
   message: string;
-  
+
   /** Error severity */
   severity: 'error' | 'warning' | 'info';
-  
+
   /** Associated node ID */
   nodeId?: string;
-  
+
   /** Error code for programmatic handling */
   code?: string;
-  
+
   /** Suggested fix */
   suggestion?: string;
 }
@@ -415,10 +471,10 @@ export interface ValidationError {
 export interface RuleBuilderSnapshot {
   /** Timestamp of this snapshot */
   timestamp: number;
-  
+
   /** Description of the change */
   description: string;
-  
+
   /** Complete state at this point */
   state: {
     nodes: Record<string, RuleNode>;
@@ -433,34 +489,34 @@ export interface RuleBuilderSnapshot {
 export interface RuleTemplate {
   /** Template ID */
   id: string;
-  
+
   /** Template name */
   name: string;
-  
+
   /** Template description */
   description: string;
-  
+
   /** Template category */
   category: string;
-  
+
   /** Template tags for search */
   tags: string[];
-  
+
   /** Rule nodes that make up this template */
   nodes: RuleNode[];
-  
+
   /** Root node IDs */
   rootNodes: string[];
-  
+
   /** Required field schemas for this template */
   requiredFields?: string[];
-  
+
   /** Example usage */
   example?: string;
-  
+
   /** Template preview image/icon */
   icon?: string;
-  
+
   /** Template metadata */
   metadata?: TemplateMetadata;
 }
@@ -471,35 +527,35 @@ export interface RuleTemplate {
 export interface TemplateMetadata {
   /** Creation date */
   createdAt?: Date;
-  
+
   /** Last update date */
   updatedAt?: Date;
-  
+
   /** Last used date */
   lastUsed?: Date;
-  
+
   /** Import date (if imported) */
   importedAt?: Date;
-  
+
   /** Template version */
   version?: string;
-  
+
   /** Usage count */
   usageCount?: number;
-  
+
   /** Template complexity */
   complexity?: 'simple' | 'medium' | 'complex';
-  
+
   /** Original template ID (for imports/copies) */
   originalId?: string;
-  
+
   /** Author information */
   author?: {
     name?: string;
     email?: string;
     organization?: string;
   };
-  
+
   /** Template size metrics */
   metrics?: {
     nodeCount?: number;
@@ -514,24 +570,24 @@ export interface TemplateMetadata {
 export interface ExportOptions {
   /** Export format */
   format: 'json' | 'dsl' | 'typescript' | 'form-config';
-  
+
   /** Include metadata in export */
   includeMetadata?: boolean;
-  
+
   /** Pretty print JSON/DSL */
   prettyPrint?: boolean;
-  
+
   /** Include comments in DSL */
   includeComments?: boolean;
-  
+
   /** Metadata position in DSL */
   metadataPosition?: 'before' | 'after' | 'inline';
-  
+
   /** TypeScript interface name (for TS export) */
   interfaceName?: string;
-  
+
   /** Additional export configuration */
-  config?: Record<string, any>;
+  config?: Record<string, unknown>;
 }
 
 /**
@@ -540,15 +596,15 @@ export interface ExportOptions {
 export interface ImportOptions {
   /** Source format */
   format: 'json' | 'dsl' | 'form-config';
-  
+
   /** Whether to merge with existing rules */
   merge?: boolean;
-  
+
   /** Whether to preserve existing metadata */
   preserveMetadata?: boolean;
-  
+
   /** Field schema mapping for validation */
-  fieldSchemas?: Record<string, any>;
+  fieldSchemas?: Record<string, unknown>;
 }
 
 /**
@@ -556,58 +612,58 @@ export interface ImportOptions {
  */
 export interface RuleBuilderConfig {
   /** Available field schemas */
-  fieldSchemas: Record<string, any>;
-  
+  fieldSchemas: Record<string, unknown>;
+
   /** Context variables */
-  contextVariables?: any[];
-  
+  contextVariables?: unknown[];
+
   /** Custom functions */
-  customFunctions?: any[];
-  
+  customFunctions?: unknown[];
+
   /** Available rule templates */
   templates?: RuleTemplate[];
-  
+
   /** UI configuration */
   ui?: {
     /** Theme */
     theme?: 'light' | 'dark' | 'auto';
-    
+
     /** Show advanced features */
     showAdvanced?: boolean;
-    
+
     /** Enable drag and drop */
     enableDragDrop?: boolean;
-    
+
     /** Show DSL preview */
     showDSLPreview?: boolean;
-    
+
     /** Show validation errors inline */
     showInlineErrors?: boolean;
-    
+
     /** Auto-save interval (ms) */
     autoSaveInterval?: number;
   };
-  
+
   /** Validation configuration */
   validation?: {
     /** Enable real-time validation */
     realTime?: boolean;
-    
+
     /** Validation strictness */
     strictness?: 'strict' | 'normal' | 'loose';
-    
+
     /** Custom validation rules */
-    customRules?: any[];
+    customRules?: unknown[];
   };
-  
+
   /** Export/import configuration */
   exportImport?: {
     /** Default export format */
     defaultExportFormat?: 'json' | 'dsl' | 'typescript';
-    
+
     /** Supported formats */
     supportedFormats?: string[];
-    
+
     /** Include metadata by default */
     includeMetadataByDefault?: boolean;
   };
@@ -625,7 +681,7 @@ export interface OptionalFieldConfig {
   /** Target field name */
   fieldName: string;
   /** Default value when field is undefined/null */
-  defaultValue?: any;
+  defaultValue?: unknown;
   /** Reference to condition rule node ID */
   conditionNodeId?: string;
   /** Optional metadata for validation */
@@ -635,51 +691,51 @@ export interface OptionalFieldConfig {
 // ===== Phase 4: Expression and Contextual Configuration Interfaces =====
 
 /**
- * Configuration for expression specifications (aligned with praxis-specification)
+ * Configuration for expression specifications (aligned with @praxis/specification)
  */
 export interface ExpressionConfig {
   type: 'expression';
-  
+
   /** DSL expression string */
   expression: string;
-  
+
   /** Function registry for validation */
-  functionRegistry?: any; // FunctionRegistry<any> from praxis-specification
-  
+  functionRegistry?: FunctionRegistry<unknown>;
+
   /** Context provider for variable resolution */
   contextProvider?: ContextProvider;
-  
+
   /** Known field names for validation */
   knownFields?: string[];
-  
+
   /** Enable performance warnings */
   enablePerformanceWarnings?: boolean;
-  
+
   /** Maximum expression complexity */
   maxComplexity?: number;
-  
-  /** Metadata aligned with praxis-specification */
+
+  /** Metadata aligned with @praxis/specification */
   metadata?: SpecificationMetadata;
 }
 
 /**
- * Configuration for contextual template specifications (aligned with praxis-specification)
+ * Configuration for contextual template specifications (aligned with @praxis/specification)
  */
 export interface ContextualTemplateConfig {
   type: 'contextualTemplate';
-  
+
   /** Template string with context tokens */
   template: string;
-  
+
   /** Available context variables */
-  contextVariables?: Record<string, any>;
-  
+  contextVariables?: Record<string, unknown>;
+
   /** Context provider instance */
   contextProvider?: ContextProvider;
-  
+
   /** Enable strict validation of context tokens */
   strictContextValidation?: boolean;
-  
-  /** Metadata aligned with praxis-specification */
+
+  /** Metadata aligned with @praxis/specification */
   metadata?: SpecificationMetadata;
 }

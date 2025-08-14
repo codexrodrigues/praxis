@@ -27,7 +27,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 import { Subject, BehaviorSubject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 
-import { DslParser, DslValidator, ValidationIssue } from 'praxis-specification';
+import { DslParser, DslValidator, ValidationIssue } from '@praxis/specification';
 import { FieldSchema } from '../models/field-schema.model';
 import { SpecificationBridgeService } from '../services/specification-bridge.service';
 
