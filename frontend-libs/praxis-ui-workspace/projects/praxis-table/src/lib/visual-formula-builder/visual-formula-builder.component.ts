@@ -313,7 +313,10 @@ import { FormulaGeneratorService } from './formula-generator.service';
                       type="number"
                       [value]="getValueInputValue(paramSchema.key)"
                       (input)="
-                        onValueInputLiteralChange(paramSchema.key, $event)
+                        onValueInputLiteralChange(
+                          paramSchema.key,
+                          $any($event.target).value
+                        )
                       "
                       [placeholder]="paramSchema.placeholder || ''"
                     />
