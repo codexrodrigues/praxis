@@ -10,10 +10,8 @@ describe('RulesEditorComponent', () => {
 
   const mockConfig: FormConfig = {
     fieldMetadata: [],
-    layout: { sections: [] },
-    formRules: {
-      field1: { visibleWhen: { field2: 'value' } },
-    },
+    sections: [],
+    formRules: { field1: { visibleWhen: { field2: 'value' } } } as any,
   };
 
   beforeEach(async () => {
@@ -32,7 +30,9 @@ describe('RulesEditorComponent', () => {
   });
 
   it('should initialize with stringified rules', () => {
-    expect(component.rulesAsString).toBe(JSON.stringify(mockConfig.formRules, null, 2));
+    expect(component.rulesAsString).toBe(
+      JSON.stringify(mockConfig.formRules, null, 2),
+    );
   });
 
   it('should update config on valid JSON change', () => {
@@ -42,9 +42,11 @@ describe('RulesEditorComponent', () => {
     component.onRulesChange(newRulesString);
 
     const expectedConfig = { ...mockConfig, formRules: newRules };
-    expect(component.configChange.emit).toHaveBeenCalledWith(jasmine.objectContaining({
-      formRules: newRules
-    }));
+    expect(component.configChange.emit).toHaveBeenCalledWith(
+      jasmine.objectContaining({
+        formRules: newRules,
+      }),
+    );
     expect(component.parsingError).toBeNull();
   });
 

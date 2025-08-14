@@ -58,18 +58,20 @@ import { FormConfig, FormBehaviorLayout } from '@praxis/core';
         <input
           matInput
           [value]="behavior.redirectAfterSave || ''"
-          (input)="updateBehavior('redirectAfterSave', ($event.target as HTMLInputElement).value)"
+          (input)="updateBehavior('redirectAfterSave', $event.target instanceof HTMLInputElement ? $event.target.value : '')"
         />
       </mat-form-field>
     </div>
   `,
-  styles: [`
-    .behavior-editor-form {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-  `]
+  styles: [
+    `
+      .behavior-editor-form {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+    `,
+  ],
 })
 export class BehaviorEditorComponent {
   @Input() config!: FormConfig;
@@ -87,6 +89,7 @@ export class BehaviorEditorComponent {
         [key]: value,
       },
     };
-    this.configChange.emit(newConfig);
+    this.config = newConfig;
+    this.configChange.emit(this.config);
   }
 }

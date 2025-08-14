@@ -7,9 +7,9 @@ export * from './lib/praxis-dynamic-form-config-editor';
 export * from './lib/json-config-editor/json-config-editor.component';
 
 // Layout editor components
-export * from './lib/layout-editor/form-layout-editor.component';
+export * from './lib/layout-editor/layout-editor.component';
 export * from './lib/layout-editor/row-configurator.component';
-export * from './lib/layout-editor/fieldset-configurator.component';
+export * from './lib/layout-editor/section-configurator.component';
 export * from './lib/layout-editor/field-configurator.component';
 
 // Services

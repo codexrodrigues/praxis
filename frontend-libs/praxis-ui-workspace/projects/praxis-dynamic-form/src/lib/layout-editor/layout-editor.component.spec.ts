@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { FormConfig } from '@praxis/core';
+import { FormConfig, FieldControlType } from '@praxis/core';
 import { LayoutEditorComponent } from './layout-editor.component';
 
 describe('LayoutEditorComponent', () => {
@@ -10,24 +10,22 @@ describe('LayoutEditorComponent', () => {
 
   const mockConfig: FormConfig = {
     fieldMetadata: [
-      { name: 'field1', controlType: 'text' },
-      { name: 'field2', controlType: 'text' },
-      { name: 'field3', controlType: 'text' },
+      { name: 'field1', label: 'field1', controlType: FieldControlType.INPUT },
+      { name: 'field2', label: 'field2', controlType: FieldControlType.INPUT },
+      { name: 'field3', label: 'field3', controlType: FieldControlType.INPUT },
     ],
-    layout: {
-      sections: [
-        {
-          id: 's1',
-          title: 'Section 1',
-          rows: [{ columns: [{ fields: ['field1'] }] }],
-        },
-        {
-          id: 's2',
-          title: 'Section 2',
-          rows: [{ columns: [{ fields: ['field2'] }] }],
-        },
-      ],
-    },
+    sections: [
+      {
+        id: 's1',
+        title: 'Section 1',
+        rows: [{ columns: [{ fields: ['field1'] }] }],
+      },
+      {
+        id: 's2',
+        title: 'Section 2',
+        rows: [{ columns: [{ fields: ['field2'] }] }],
+      },
+    ],
   };
 
   beforeEach(async () => {
@@ -47,25 +45,29 @@ describe('LayoutEditorComponent', () => {
 
   it('should add a new section and emit configChange', () => {
     spyOn(component.configChange, 'emit');
-    const initialSections = component.config.layout.sections.length;
+    const initialSections = component.config.sections.length;
 
     component.addSection();
 
     expect(component.configChange.emit).toHaveBeenCalled();
-    const newConfig = (component.configChange.emit as jasmine.Spy).calls.mostRecent().args[0];
-    expect(newConfig.layout.sections.length).toBe(initialSections + 1);
+    const newConfig = (
+      component.configChange.emit as jasmine.Spy
+    ).calls.mostRecent().args[0];
+    expect(newConfig.sections.length).toBe(initialSections + 1);
   });
 
   it('should remove a section and emit configChange', () => {
     spyOn(component.configChange, 'emit');
-    const initialSections = component.config.layout.sections.length;
+    const initialSections = component.config.sections.length;
 
     component.removeSection(0);
 
     expect(component.configChange.emit).toHaveBeenCalled();
-    const newConfig = (component.configChange.emit as jasmine.Spy).calls.mostRecent().args[0];
-    expect(newConfig.layout.sections.length).toBe(initialSections - 1);
-    expect(newConfig.layout.sections[0].id).toBe('s2');
+    const newConfig = (
+      component.configChange.emit as jasmine.Spy
+    ).calls.mostRecent().args[0];
+    expect(newConfig.sections.length).toBe(initialSections - 1);
+    expect(newConfig.sections[0].id).toBe('s2');
   });
 
   it('should correctly calculate available fields', () => {
@@ -75,7 +77,7 @@ describe('LayoutEditorComponent', () => {
   });
 
   it('should return empty availableFields when all are placed', () => {
-    component.config.layout.sections[0].rows[0].columns[0].fields.push('field3');
+    component.config.sections[0].rows[0].columns[0].fields.push('field3');
     fixture.detectChanges();
     const available = component.availableFields;
     expect(available.length).toBe(0);

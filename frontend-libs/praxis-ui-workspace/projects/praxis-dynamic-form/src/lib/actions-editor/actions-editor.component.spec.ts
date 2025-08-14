@@ -10,7 +10,7 @@ describe('ActionsEditorComponent', () => {
 
   const mockConfig: FormConfig = {
     fieldMetadata: [],
-    layout: { sections: [] },
+    sections: [],
     actions: {
       submit: { visible: true, label: 'Enviar' },
       cancel: { visible: false, label: 'Voltar' },
@@ -39,7 +39,11 @@ describe('ActionsEditorComponent', () => {
     const slideToggle = fixture.nativeElement.querySelector('mat-slide-toggle'); // First toggle is 'submit'
     slideToggle.click();
     fixture.detectChanges();
-    expect(component.updateAction).toHaveBeenCalledWith('submit', 'visible', false);
+    expect(component.updateAction).toHaveBeenCalledWith(
+      'submit',
+      'visible',
+      false,
+    );
   });
 
   it('should call updateAction on label change', () => {
@@ -48,7 +52,11 @@ describe('ActionsEditorComponent', () => {
     labelInput.value = 'Salvar';
     labelInput.dispatchEvent(new Event('input'));
     fixture.detectChanges();
-    expect(component.updateAction).toHaveBeenCalledWith('submit', 'label', 'Salvar');
+    expect(component.updateAction).toHaveBeenCalledWith(
+      'submit',
+      'label',
+      'Salvar',
+    );
   });
 
   it('should call updateLayout on position change', () => {

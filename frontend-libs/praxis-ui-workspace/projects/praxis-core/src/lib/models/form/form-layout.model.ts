@@ -1,13 +1,39 @@
+export interface FormActionButton {
+  visible: boolean;
+  label: string;
+}
+
 export interface FormActionsLayout {
+  /**
+   * Configuration for the submit button
+   */
+  submit: FormActionButton;
+
+  /**
+   * Configuration for the cancel button
+   */
+  cancel: FormActionButton;
+
+  /**
+   * Configuration for the reset button
+   */
+  reset: FormActionButton;
+
+  /**
+   * Button group positioning
+   */
+  position?: 'left' | 'center' | 'right' | 'justified';
+
+  containerClassName?: string;
+  containerStyles?: { [key: string]: any };
+
+  // Legacy properties for backward compatibility
   showSaveButton?: boolean;
   submitButtonLabel?: string;
   showCancelButton?: boolean;
   cancelButtonLabel?: string;
   showResetButton?: boolean;
   resetButtonLabel?: string;
-  position?: 'left' | 'center' | 'right' | 'justified';
-  containerClassName?: string;
-  containerStyles?: { [key: string]: any };
 }
 
 export interface FormApiLayout {
