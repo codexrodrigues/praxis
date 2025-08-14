@@ -47,11 +47,7 @@ import { FormConfig, FormActionsLayout, FormActionButton } from '@praxis/core';
           matInput
           [value]="actions.submit.label"
           (input)="
-            updateAction(
-              'submit',
-              'label',
-              ($event.target as HTMLInputElement)?.value ?? ''
-            )
+            updateAction('submit', 'label', $any($event.target).value ?? '')
           "
         />
       </mat-form-field>
@@ -61,11 +57,7 @@ import { FormConfig, FormActionsLayout, FormActionButton } from '@praxis/core';
           matInput
           [value]="actions.cancel.label"
           (input)="
-            updateAction(
-              'cancel',
-              'label',
-              ($event.target as HTMLInputElement)?.value ?? ''
-            )
+            updateAction('cancel', 'label', $any($event.target).value ?? '')
           "
         />
       </mat-form-field>
@@ -75,11 +67,7 @@ import { FormConfig, FormActionsLayout, FormActionButton } from '@praxis/core';
           matInput
           [value]="actions.reset.label"
           (input)="
-            updateAction(
-              'reset',
-              'label',
-              ($event.target as HTMLInputElement)?.value ?? ''
-            )
+            updateAction('reset', 'label', $any($event.target).value ?? '')
           "
         />
       </mat-form-field>
