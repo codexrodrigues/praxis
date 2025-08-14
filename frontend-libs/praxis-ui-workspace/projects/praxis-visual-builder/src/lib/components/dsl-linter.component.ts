@@ -12,8 +12,8 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSelectModule } from '@angular/material/select';
-import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatSelectModule, MatSelectChange } from '@angular/material/select';
+import { MatSlideToggleModule, MatSlideToggleChange } from '@angular/material/slide-toggle';
 import { MatTabsModule } from '@angular/material/tabs';
 
 import { Subject, takeUntil, debounceTime, distinctUntilChanged, BehaviorSubject } from 'rxjs';
@@ -178,8 +178,8 @@ export interface DslLintRule {
               <div class="filter-controls">
                 <mat-form-field appearance="outline" class="filter-field">
                   <mat-label>Filter by Severity</mat-label>
-                  <mat-select [value]="selectedSeverities" 
-                             (selectionChange)="onSeverityFilterChange($event.value)"
+                  <mat-select [value]="selectedSeverities"
+                             (selectionChange)="onSeverityFilterChange($event)"
                              multiple>
                     <mat-option value="error">
                       <mat-icon class="severity-icon error">error</mat-icon>
@@ -202,8 +202,8 @@ export interface DslLintRule {
                 
                 <mat-form-field appearance="outline" class="filter-field">
                   <mat-label>Filter by Category</mat-label>
-                  <mat-select [value]="selectedCategories" 
-                             (selectionChange)="onCategoryFilterChange($event.value)"
+                  <mat-select [value]="selectedCategories"
+                             (selectionChange)="onCategoryFilterChange($event)"
                              multiple>
                     <mat-option value="syntax">Syntax</mat-option>
                     <mat-option value="semantic">Semantic</mat-option>
@@ -384,9 +384,9 @@ export interface DslLintRule {
                   <div class="category-rules">
                     <div *ngFor="let rule of category.rules" class="rule-item">
                       <div class="rule-header">
-                        <mat-slide-toggle 
+                        <mat-slide-toggle
                           [checked]="rule.enabled"
-                          (toggleChange)="toggleRule(rule, $event.checked)">
+                          (toggleChange)="toggleRule(rule, $event)">
                         </mat-slide-toggle>
                         
                         <div class="rule-info">
@@ -1331,13 +1331,13 @@ export class DslLinterComponent implements OnInit, OnDestroy {
     }
   }
 
-  onSeverityFilterChange(severities: string[]): void {
-    this.selectedSeverities = severities;
+  onSeverityFilterChange(event: MatSelectChange): void {
+    this.selectedSeverities = event.value as string[];
     this.applyFilters();
   }
 
-  onCategoryFilterChange(categories: string[]): void {
-    this.selectedCategories = categories;
+  onCategoryFilterChange(event: MatSelectChange): void {
+    this.selectedCategories = event.value as string[];
     this.applyFilters();
   }
 
@@ -1442,7 +1442,8 @@ export class DslLinterComponent implements OnInit, OnDestroy {
     this.applyFilters();
   }
 
-  toggleRule(rule: DslLintRule, enabled: boolean): void {
+  toggleRule(rule: DslLintRule, change: MatSlideToggleChange): void {
+    const enabled = change.checked;
     rule.enabled = enabled;
     this.ruleToggled.emit({ rule, enabled });
     // Re-run linting to apply the rule change

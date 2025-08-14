@@ -109,7 +109,15 @@ export interface TemplateGalleryData {
           </mat-tab>
 
           <!-- Category Tabs -->
-          <mat-tab *ngFor="let category of categories" [label]="category.name">
+          <mat-tab *ngFor="let category of categories">
+            <ng-template mat-tab-label>
+              {{ category.name }}
+              <span
+                [matBadge]="getTemplatesByCategory(category.id).length"
+                matBadgeColor="primary"
+                matBadgeSize="small"
+              ></span>
+            </ng-template>
             <div class="tab-content">
               <div class="category-header">
                 <mat-icon>{{ category.icon }}</mat-icon>

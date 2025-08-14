@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { SpecificationBridgeService } from './specification-bridge.service';
 import { RuleBuilderService } from './rule-builder.service';
-import { DslParser, SpecificationFactory } from 'praxis-specification';
+import { DslParser, SpecificationFactory } from '@praxis/specification';
 import { RuleNode, ValidationError } from '../models/rule-builder.model';
 
 export interface RoundTripValidationResult {

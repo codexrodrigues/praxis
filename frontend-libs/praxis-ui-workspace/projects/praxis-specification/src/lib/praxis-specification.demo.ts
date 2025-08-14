@@ -1,5 +1,5 @@
 /**
- * Demo file showcasing praxis-specification functionality
+ * Demo file showcasing @praxis/specification functionality
  * This demonstrates all the Phase 1 features working together
  */
 

@@ -1,5 +1,5 @@
 /**
- * Basic test examples demonstrating praxis-specification functionality
+ * Basic test examples demonstrating @praxis/specification functionality
  */
 
 import { SpecificationFactory } from './utils/specification-factory';

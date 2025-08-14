@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChange
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, FormArray, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatSelectModule } from '@angular/material/select';
+import { MatSelectModule, MatSelectChange } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -53,8 +53,8 @@ import { FieldSchema, FieldType, CustomFunction } from '../models/field-schema.m
         
         <mat-form-field appearance="outline" class="function-select">
           <mat-label>Function</mat-label>
-          <mat-select formControlName="functionName" 
-                     (selectionChange)="onFunctionChanged($event.value)">
+          <mat-select formControlName="functionName"
+                     (selectionChange)="onFunctionChanged($event)">
             <mat-optgroup *ngFor="let category of functionCategories" [label]="category.name">
               <mat-option *ngFor="let func of category.functions" [value]="func.name">
                 <div class="function-option">
@@ -153,7 +153,7 @@ import { FieldSchema, FieldType, CustomFunction } from '../models/field-schema.m
                 <mat-form-field appearance="outline" class="value-type-select">
                   <mat-label>Value Type</mat-label>
                   <mat-select formControlName="valueType"
-                             (selectionChange)="onParameterValueTypeChanged(i, $event.value)">
+                             (selectionChange)="onParameterValueTypeChanged(i, $event)">
                     <mat-option value="literal">Literal Value</mat-option>
                     <mat-option value="field">Field Reference</mat-option>
                     <mat-option value="context">Context Variable</mat-option>
@@ -913,7 +913,8 @@ export class FunctionConditionEditorComponent implements OnInit, OnChanges {
   }
 
   // Event handlers
-  onFunctionChanged(functionName: string): void {
+  onFunctionChanged(event: string | MatSelectChange): void {
+    const functionName = typeof event === 'string' ? event : event.value;
     this.selectedFunction = this.customFunctions.find(f => f.name === functionName) || null;
     
     if (this.selectedFunction) {
@@ -923,7 +924,7 @@ export class FunctionConditionEditorComponent implements OnInit, OnChanges {
     }
   }
 
-  onParameterValueTypeChanged(index: number, valueType: string): void {
+  onParameterValueTypeChanged(index: number, event: MatSelectChange): void {
     const paramGroup = this.parametersArray.at(index);
     if (paramGroup) {
       paramGroup.patchValue({

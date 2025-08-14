@@ -270,7 +270,7 @@ projects/praxis-specification/src/lib/
 
 ### Basic Usage
 ```typescript
-import { SpecificationFactory, DslParser, DslExporter } from 'praxis-specification';
+import { SpecificationFactory, DslParser, DslExporter } from '@praxis/specification';
 
 interface User {
   id: number;

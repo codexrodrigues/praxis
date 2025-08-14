@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Specification, SpecificationFactory } from 'praxis-specification';
+import { Specification, SpecificationFactory } from '@praxis/specification';
 import { BaseRuleConverter } from './rule-converter.interface';
 import { RuleNode, BooleanGroupConfig } from '../../models/rule-builder.model';
 import { RuleNodeRegistryService } from '../rule-node-registry.service';

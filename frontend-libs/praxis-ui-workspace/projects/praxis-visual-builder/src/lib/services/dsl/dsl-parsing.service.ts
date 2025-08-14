@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { DslParser, DslValidator, ValidationIssue, FunctionRegistry } from 'praxis-specification';
-import { ContextProvider } from 'praxis-specification';
+import { DslParser, DslValidator, ValidationIssue, FunctionRegistry } from '@praxis/specification';
+import { ContextProvider } from '@praxis/specification';
 
 /**
  * Configuration for parsing DSL expressions

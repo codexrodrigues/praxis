@@ -3,7 +3,16 @@ import { Observable, from, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { RuleBuilderService } from './rule-builder.service';
 import { SpecificationBridgeService } from './specification-bridge.service';
-import { RuleNode, RuleBuilderState, ExportOptions } from '../models/rule-builder.model';
+import {
+  RuleNode,
+  RuleBuilderState,
+  ExportOptions,
+  FieldConditionConfig,
+} from '../models/rule-builder.model';
+
+interface CompleteRuleNode extends RuleNode {
+  children?: CompleteRuleNode[];
+}
 
 export interface ExportFormat {
   id: string;
@@ -65,18 +74,19 @@ export interface ExternalSystemConfig {
 }
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ExportIntegrationService {
   private readonly SUPPORTED_FORMATS: ExportFormat[] = [
     {
       id: 'json',
       name: 'JSON',
-      description: 'JavaScript Object Notation - Standard data interchange format',
+      description:
+        'JavaScript Object Notation - Standard data interchange format',
       fileExtension: 'json',
       mimeType: 'application/json',
       supportsMetadata: true,
-      supportsComments: false
+      supportsComments: false,
     },
     {
       id: 'json-schema',
@@ -85,7 +95,7 @@ export class ExportIntegrationService {
       fileExtension: 'schema.json',
       mimeType: 'application/schema+json',
       supportsMetadata: true,
-      supportsComments: true
+      supportsComments: true,
     },
     {
       id: 'dsl',
@@ -94,16 +104,17 @@ export class ExportIntegrationService {
       fileExtension: 'dsl',
       mimeType: 'text/plain',
       supportsMetadata: true,
-      supportsComments: true
+      supportsComments: true,
     },
     {
       id: 'yaml',
       name: 'YAML',
-      description: 'YAML Ain\'t Markup Language - Human-readable data serialization',
+      description:
+        "YAML Ain't Markup Language - Human-readable data serialization",
       fileExtension: 'yaml',
       mimeType: 'application/x-yaml',
       supportsMetadata: true,
-      supportsComments: true
+      supportsComments: true,
     },
     {
       id: 'xml',
@@ -112,7 +123,7 @@ export class ExportIntegrationService {
       fileExtension: 'xml',
       mimeType: 'application/xml',
       supportsMetadata: true,
-      supportsComments: true
+      supportsComments: true,
     },
     {
       id: 'typescript',
@@ -121,7 +132,7 @@ export class ExportIntegrationService {
       fileExtension: 'ts',
       mimeType: 'text/typescript',
       supportsMetadata: true,
-      supportsComments: true
+      supportsComments: true,
     },
     {
       id: 'openapi',
@@ -130,7 +141,7 @@ export class ExportIntegrationService {
       fileExtension: 'openapi.json',
       mimeType: 'application/vnd.oai.openapi+json',
       supportsMetadata: true,
-      supportsComments: false
+      supportsComments: false,
     },
     {
       id: 'csv',
@@ -139,15 +150,15 @@ export class ExportIntegrationService {
       fileExtension: 'csv',
       mimeType: 'text/csv',
       supportsMetadata: false,
-      supportsComments: false
-    }
+      supportsComments: false,
+    },
   ];
 
   private externalSystems: ExternalSystemConfig[] = [];
 
   constructor(
     private ruleBuilderService: RuleBuilderService,
-    private specificationBridge: SpecificationBridgeService
+    private specificationBridge: SpecificationBridgeService,
   ) {}
 
   /**
@@ -161,7 +172,7 @@ export class ExportIntegrationService {
    * Gets a specific export format by ID
    */
   getFormat(formatId: string): ExportFormat | null {
-    return this.SUPPORTED_FORMATS.find(f => f.id === formatId) || null;
+    return this.SUPPORTED_FORMATS.find((f) => f.id === formatId) || null;
   }
 
   /**
@@ -181,9 +192,12 @@ export class ExportIntegrationService {
   /**
    * Exports rules to multiple formats simultaneously
    */
-  exportToMultipleFormats(formats: string[], options: any = {}): Observable<ExportResult[]> {
-    const exportPromises = formats.map(format => 
-      this.performExport({ ...options, format })
+  exportToMultipleFormats(
+    formats: string[],
+    options: any = {},
+  ): Observable<ExportResult[]> {
+    const exportPromises = formats.map((format) =>
+      this.performExport({ ...options, format }),
     );
 
     return from(Promise.all(exportPromises));
@@ -193,19 +207,23 @@ export class ExportIntegrationService {
    * Integrates with external system
    */
   integrateWithSystem(
-    systemId: string, 
-    endpointId: string, 
+    systemId: string,
+    endpointId: string,
     exportFormat: string,
-    options: any = {}
+    options: any = {},
   ): Observable<IntegrationResult> {
-    return from(this.performIntegration(systemId, endpointId, exportFormat, options));
+    return from(
+      this.performIntegration(systemId, endpointId, exportFormat, options),
+    );
   }
 
   /**
    * Registers a new external system configuration
    */
   registerExternalSystem(config: ExternalSystemConfig): void {
-    const existingIndex = this.externalSystems.findIndex(s => s.id === config.id);
+    const existingIndex = this.externalSystems.findIndex(
+      (s) => s.id === config.id,
+    );
     if (existingIndex >= 0) {
       this.externalSystems[existingIndex] = config;
     } else {
@@ -223,7 +241,9 @@ export class ExportIntegrationService {
   /**
    * Tests connectivity to an external system
    */
-  testSystemConnectivity(systemId: string): Observable<{ success: boolean; message: string }> {
+  testSystemConnectivity(
+    systemId: string,
+  ): Observable<{ success: boolean; message: string }> {
     return from(this.performConnectivityTest(systemId));
   }
 
@@ -271,7 +291,7 @@ export class ExportIntegrationService {
         format,
         filename,
         size: new Blob([content]).size,
-        metadata: this.generateExportMetadata(state)
+        metadata: this.generateExportMetadata(state),
       };
 
       if (options.downloadFile) {
@@ -286,39 +306,45 @@ export class ExportIntegrationService {
         format: this.getFormat(options.format)!,
         filename: '',
         size: 0,
-        errors: [String(error)]
+        errors: [String(error)],
       };
     }
   }
 
-  private async generateContent(format: ExportFormat, state: RuleBuilderState, options: any): Promise<string> {
+  private async generateContent(
+    format: ExportFormat,
+    state: RuleBuilderState,
+    options: any,
+  ): Promise<string> {
     switch (format.id) {
       case 'json':
         return this.generateJson(state, options);
-      
+
       case 'json-schema':
         return this.generateJsonSchema(state, options);
-      
+
       case 'dsl':
         return this.generateDsl(state, options);
-      
+
       case 'yaml':
         return this.generateYaml(state, options);
-      
+
       case 'xml':
         return this.generateXml(state, options);
-      
+
       case 'typescript':
         return this.generateTypeScript(state, options);
-      
+
       case 'openapi':
         return this.generateOpenApi(state, options);
-      
+
       case 'csv':
         return this.generateCsv(state, options);
-      
+
       default:
-        throw new Error(`Content generation not implemented for format: ${format.id}`);
+        throw new Error(
+          `Content generation not implemented for format: ${format.id}`,
+        );
     }
   }
 
@@ -331,15 +357,19 @@ export class ExportIntegrationService {
     const jsonData = {
       version: '1.0',
       exportedAt: new Date().toISOString(),
-      metadata: options.includeMetadata ? this.generateExportMetadata(state) : undefined,
+      metadata: options.includeMetadata
+        ? this.generateExportMetadata(state)
+        : undefined,
       specification: specification.toJSON(),
-      visualRules: options.includeVisualRules ? {
-        nodes: state.nodes,
-        rootNodes: state.rootNodes
-      } : undefined
+      visualRules: options.includeVisualRules
+        ? {
+            nodes: state.nodes,
+            rootNodes: state.rootNodes,
+          }
+        : undefined,
     };
 
-    return options.prettyPrint 
+    return options.prettyPrint
       ? JSON.stringify(jsonData, null, 2)
       : JSON.stringify(jsonData);
   }
@@ -353,10 +383,10 @@ export class ExportIntegrationService {
       type: 'object',
       properties: this.generateSchemaProperties(state),
       required: this.generateSchemaRequired(state),
-      additionalProperties: false
+      additionalProperties: false,
     };
 
-    return options.prettyPrint 
+    return options.prettyPrint
       ? JSON.stringify(schema, null, 2)
       : JSON.stringify(schema);
   }
@@ -377,7 +407,7 @@ export class ExportIntegrationService {
         try {
           const dsl = this.specificationBridge.exportToDsl(rootNode, {
             includeMetadata: options.includeMetadata,
-            prettyPrint: options.prettyPrint
+            prettyPrint: options.prettyPrint,
           });
           parts.push(dsl);
           parts.push('');
@@ -396,11 +426,15 @@ export class ExportIntegrationService {
     const data = {
       version: '1.0',
       exportedAt: new Date().toISOString(),
-      metadata: options.includeMetadata ? this.generateExportMetadata(state) : undefined,
-      rules: state.rootNodes.map(nodeId => {
-        const node = this.buildCompleteRuleNode(nodeId, state.nodes);
-        return this.convertNodeToYamlObject(node);
-      }).filter(Boolean)
+      metadata: options.includeMetadata
+        ? this.generateExportMetadata(state)
+        : undefined,
+      rules: state.rootNodes
+        .map((nodeId) => {
+          const node = this.buildCompleteRuleNode(nodeId, state.nodes);
+          return this.convertNodeToYamlObject(node);
+        })
+        .filter(Boolean),
     };
 
     // Simple YAML generation (in production, use a proper YAML library)
@@ -409,7 +443,7 @@ export class ExportIntegrationService {
 
   private generateXml(state: RuleBuilderState, options: any): string {
     const lines = ['<?xml version="1.0" encoding="UTF-8"?>'];
-    
+
     if (options.includeComments) {
       lines.push('<!-- Praxis Rules XML Export -->');
       lines.push(`<!-- Generated at: ${new Date().toISOString()} -->`);
@@ -419,12 +453,16 @@ export class ExportIntegrationService {
 
     if (options.includeMetadata) {
       const metadata = this.generateExportMetadata(state);
-      lines.push('  <metadata>');
-      lines.push(`    <rulesCount>${metadata.rulesCount}</rulesCount>`);
-      lines.push(`    <complexity>${metadata.complexity}</complexity>`);
-      lines.push(`    <exportedAt>${metadata.exportedAt}</exportedAt>`);
-      lines.push(`    <version>${metadata.version}</version>`);
-      lines.push('  </metadata>');
+      if (metadata) {
+        lines.push('  <metadata>');
+        lines.push(`    <rulesCount>${metadata.rulesCount ?? 0}</rulesCount>`);
+        lines.push(
+          `    <complexity>${metadata.complexity ?? 'unknown'}</complexity>`,
+        );
+        lines.push(`    <exportedAt>${metadata.exportedAt ?? ''}</exportedAt>`);
+        lines.push(`    <version>${metadata.version ?? ''}</version>`);
+        lines.push('  </metadata>');
+      }
     }
 
     lines.push('  <rules>');
@@ -472,8 +510,10 @@ export class ExportIntegrationService {
     lines.push('');
 
     lines.push('export type RuleType =');
-    const uniqueTypes = new Set(Object.values(state.nodes).map(node => node.type));
-    const typeArray = Array.from(uniqueTypes).map(type => `  | '${type}'`);
+    const uniqueTypes = new Set(
+      Object.values(state.nodes).map((node) => node.type),
+    );
+    const typeArray = Array.from(uniqueTypes).map((type) => `  | '${type}'`);
     lines.push(typeArray.join('\n'));
     lines.push(';');
 
@@ -486,42 +526,61 @@ export class ExportIntegrationService {
       info: {
         title: 'Praxis Rules API',
         description: 'API specification with embedded rule validations',
-        version: '1.0.0'
+        version: '1.0.0',
       },
       paths: {},
       components: {
-        schemas: this.generateOpenApiSchemas(state)
-      }
+        schemas: this.generateOpenApiSchemas(state),
+      },
     };
 
-    return options.prettyPrint 
+    return options.prettyPrint
       ? JSON.stringify(spec, null, 2)
       : JSON.stringify(spec);
   }
 
   private generateCsv(state: RuleBuilderState, options: any): string {
-    const headers = ['ID', 'Type', 'Label', 'Field', 'Operator', 'Value', 'Parent ID'];
+    const headers = [
+      'ID',
+      'Type',
+      'Label',
+      'Field',
+      'Operator',
+      'Value',
+      'Parent ID',
+    ];
     const rows: string[][] = [headers];
 
-    const processNode = (node: RuleNode, parentId?: string) => {
+    const processNode = (node: CompleteRuleNode, parentId?: string) => {
+      let field = '';
+      let operator = '';
+      let value = '';
+
+      if (
+        node.type === 'fieldCondition' &&
+        node.config &&
+        'fieldName' in node.config
+      ) {
+        const cfg = node.config as FieldConditionConfig;
+        field = cfg.fieldName || cfg.field || '';
+        operator = String(cfg.operator ?? '');
+        value = cfg.value !== undefined ? String(cfg.value) : '';
+      }
+
       const row = [
         node.id,
         node.type,
         node.label || '',
-        String(node.config?.field || ''),
-        String(node.config?.operator || ''),
-        String(node.config?.value || ''),
-        parentId || ''
+        field,
+        operator,
+        value,
+        parentId || '',
       ];
       rows.push(row);
 
-      if (node.children) {
-        node.children.forEach(child => {
-          if (typeof child === 'object') {
-            processNode(child as RuleNode, node.id);
-          }
-        });
-      }
+      node.children?.forEach((child) => {
+        processNode(child, node.id);
+      });
     };
 
     for (const rootNodeId of state.rootNodes) {
@@ -531,74 +590,91 @@ export class ExportIntegrationService {
       }
     }
 
-    return rows.map(row => 
-      row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(',')
-    ).join('\n');
+    return rows
+      .map((row) =>
+        row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(','),
+      )
+      .join('\n');
   }
 
   private async performIntegration(
-    systemId: string, 
-    endpointId: string, 
-    exportFormat: string, 
-    options: any
+    systemId: string,
+    endpointId: string,
+    exportFormat: string,
+    options: any,
   ): Promise<IntegrationResult> {
     try {
-      const system = this.externalSystems.find(s => s.id === systemId);
+      const system = this.externalSystems.find((s) => s.id === systemId);
       if (!system) {
         throw new Error(`External system not found: ${systemId}`);
       }
 
-      const endpoint = system.endpoints.find(e => e.id === endpointId);
+      const endpoint = system.endpoints.find((e) => e.id === endpointId);
       if (!endpoint) {
         throw new Error(`Endpoint not found: ${endpointId}`);
       }
 
-      const exportResult = await this.performExport({ format: exportFormat, ...options });
+      const exportResult = await this.performExport({
+        format: exportFormat,
+        ...options,
+      });
       if (!exportResult.success) {
         throw new Error(`Export failed: ${exportResult.errors?.join(', ')}`);
       }
 
-      const response = await this.sendToEndpoint(endpoint, exportResult.content, exportFormat);
+      const response = await this.sendToEndpoint(
+        endpoint,
+        exportResult.content,
+        exportFormat,
+      );
 
       return {
         success: true,
         endpoint,
         response,
         statusCode: response.status,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
       return {
         success: false,
         endpoint: {} as IntegrationEndpoint,
         error: String(error),
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     }
   }
 
-  private async sendToEndpoint(endpoint: IntegrationEndpoint, content: string, format: string): Promise<any> {
+  private async sendToEndpoint(
+    endpoint: IntegrationEndpoint,
+    content: string,
+    format: string,
+  ): Promise<any> {
     if (!endpoint.url) {
       throw new Error('Endpoint URL is required');
     }
 
     const headers: Record<string, string> = {
       'Content-Type': this.getFormat(format)?.mimeType || 'application/json',
-      ...endpoint.headers
+      ...endpoint.headers,
     };
 
     // Add authentication headers if configured
     if (endpoint.authentication) {
       switch (endpoint.authentication.type) {
         case 'bearer':
-          headers['Authorization'] = `Bearer ${endpoint.authentication.credentials.token}`;
+          headers['Authorization'] =
+            `Bearer ${endpoint.authentication.credentials.token}`;
           break;
         case 'basic':
-          const encoded = btoa(`${endpoint.authentication.credentials.username}:${endpoint.authentication.credentials.password}`);
+          const encoded = btoa(
+            `${endpoint.authentication.credentials.username}:${endpoint.authentication.credentials.password}`,
+          );
           headers['Authorization'] = `Basic ${encoded}`;
           break;
         case 'apikey':
-          headers[endpoint.authentication.credentials.headerName] = endpoint.authentication.credentials.apiKey;
+          headers[endpoint.authentication.credentials.headerName] =
+            endpoint.authentication.credentials.apiKey;
           break;
       }
     }
@@ -606,7 +682,7 @@ export class ExportIntegrationService {
     const response = await fetch(endpoint.url, {
       method: endpoint.method,
       headers,
-      body: endpoint.method !== 'GET' ? content : undefined
+      body: endpoint.method !== 'GET' ? content : undefined,
     });
 
     if (!response.ok) {
@@ -615,13 +691,15 @@ export class ExportIntegrationService {
 
     return {
       status: response.status,
-      data: await response.text()
+      data: await response.text(),
     };
   }
 
-  private async performConnectivityTest(systemId: string): Promise<{ success: boolean; message: string }> {
+  private async performConnectivityTest(
+    systemId: string,
+  ): Promise<{ success: boolean; message: string }> {
     try {
-      const system = this.externalSystems.find(s => s.id === systemId);
+      const system = this.externalSystems.find((s) => s.id === systemId);
       if (!system) {
         return { success: false, message: `System not found: ${systemId}` };
       }
@@ -637,16 +715,20 @@ export class ExportIntegrationService {
       }
 
       const response = await fetch(endpoint.url, { method: 'HEAD' });
-      return { 
-        success: response.ok, 
-        message: response.ok ? 'Connection successful' : `HTTP ${response.status}` 
+      return {
+        success: response.ok,
+        message: response.ok
+          ? 'Connection successful'
+          : `HTTP ${response.status}`,
       };
     } catch (error) {
       return { success: false, message: String(error) };
     }
   }
 
-  private async generateShareableLink(options: any): Promise<{ url: string; token: string; expiresAt?: Date }> {
+  private async generateShareableLink(
+    options: any,
+  ): Promise<{ url: string; token: string; expiresAt?: Date }> {
     // Mock implementation - in production, this would integrate with a sharing service
     const token = this.generateToken();
     const baseUrl = window.location.origin;
@@ -655,11 +737,13 @@ export class ExportIntegrationService {
     return {
       url,
       token,
-      expiresAt: options.expiration
+      expiresAt: options.expiration,
     };
   }
 
-  private async performExternalImport(source: any): Promise<{ success: boolean; imported: any; errors?: string[] }> {
+  private async performExternalImport(
+    source: any,
+  ): Promise<{ success: boolean; imported: any; errors?: string[] }> {
     try {
       let content: string;
 
@@ -668,12 +752,12 @@ export class ExportIntegrationService {
           const response = await fetch(source.location);
           content = await response.text();
           break;
-        
+
         case 'file':
           // Would be handled by file input in the UI
           content = source.location;
           break;
-        
+
         default:
           throw new Error(`Unsupported import source type: ${source.type}`);
       }
@@ -682,43 +766,55 @@ export class ExportIntegrationService {
 
       return {
         success: true,
-        imported: { contentLength: content.length, format: source.format }
+        imported: { contentLength: content.length, format: source.format },
       };
     } catch (error) {
       return {
         success: false,
         imported: null,
-        errors: [String(error)]
+        errors: [String(error)],
       };
     }
   }
 
   // Utility methods
 
-  private buildCompleteRuleNode(nodeId: string, allNodes: Record<string, RuleNode>): RuleNode | null {
+  private buildCompleteRuleNode(
+    nodeId: string,
+    allNodes: Record<string, RuleNode>,
+  ): CompleteRuleNode | null {
     const node = allNodes[nodeId];
     if (!node) return null;
 
+    const childNodes = node.children
+      ?.map((childId) => this.buildCompleteRuleNode(childId, allNodes))
+      .filter((c): c is CompleteRuleNode => !!c);
+
     return {
       ...node,
-      children: node.children?.map(childId => {
-        if (typeof childId === 'string') {
-          return this.buildCompleteRuleNode(childId, allNodes);
-        }
-        return childId;
-      }).filter(Boolean) as RuleNode[]
+      children: childNodes && childNodes.length > 0 ? childNodes : undefined,
     };
   }
 
-  private generateExportMetadata(state: RuleBuilderState) {
+  private generateExportMetadata(state: RuleBuilderState | undefined): {
+    rulesCount: number;
+    complexity: 'low' | 'medium' | 'high';
+    exportedAt: string;
+    version: string;
+  } | null {
+    if (!state || !state.nodes) {
+      return null;
+    }
+
     const rulesCount = Object.keys(state.nodes).length;
-    const complexity = rulesCount > 20 ? 'high' : rulesCount > 10 ? 'medium' : 'low';
+    const complexity =
+      rulesCount > 20 ? 'high' : rulesCount > 10 ? 'medium' : 'low';
 
     return {
       rulesCount,
       complexity: complexity as 'low' | 'medium' | 'high',
       exportedAt: new Date().toISOString(),
-      version: '1.0.0'
+      version: '1.0.0',
     };
   }
 
@@ -727,7 +823,11 @@ export class ExportIntegrationService {
     return `praxis-rules-${timestamp}.${format.fileExtension}`;
   }
 
-  private downloadFile(content: string, filename: string, mimeType: string): void {
+  private downloadFile(
+    content: string,
+    filename: string,
+    mimeType: string,
+  ): void {
     const blob = new Blob([content], { type: mimeType });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -741,7 +841,7 @@ export class ExportIntegrationService {
 
   private generateToken(): string {
     return Array.from(crypto.getRandomValues(new Uint8Array(16)))
-      .map(b => b.toString(16).padStart(2, '0'))
+      .map((b) => b.toString(16).padStart(2, '0'))
       .join('');
   }
 
@@ -756,17 +856,17 @@ export class ExportIntegrationService {
     return [];
   }
 
-  private convertNodeToYamlObject(node: RuleNode | null): any {
+  private convertNodeToYamlObject(node: CompleteRuleNode | null): any {
     if (!node) return null;
     return {
       id: node.id,
       type: node.type,
       label: node.label,
       config: node.config,
-      children: node.children?.map(child => 
-        typeof child === 'object' ? this.convertNodeToYamlObject(child as RuleNode) : child
-      ).filter(Boolean),
-      metadata: node.metadata
+      children: node.children
+        ?.map((child) => this.convertNodeToYamlObject(child))
+        .filter(Boolean),
+      metadata: node.metadata,
     };
   }
 
@@ -777,13 +877,13 @@ export class ExportIntegrationService {
 
     for (const [key, value] of Object.entries(obj)) {
       if (value === undefined) continue;
-      
+
       result += `${spaces}${key}:`;
-      
+
       if (typeof value === 'object' && value !== null) {
         if (Array.isArray(value)) {
           result += '\n';
-          value.forEach(item => {
+          value.forEach((item) => {
             result += `${spaces}  - `;
             if (typeof item === 'object') {
               result += '\n' + this.objectToYaml(item, indent + 2);
@@ -802,28 +902,26 @@ export class ExportIntegrationService {
     return result;
   }
 
-  private nodeToXml(node: RuleNode, indent: number): string {
+  private nodeToXml(node: CompleteRuleNode, indent: number): string {
     const spaces = ' '.repeat(indent);
     let xml = `${spaces}<rule id="${node.id}" type="${node.type}">`;
-    
+
     if (node.label) {
       xml += `\n${spaces}  <label>${this.escapeXml(node.label)}</label>`;
     }
-    
+
     if (node.config) {
       xml += `\n${spaces}  <config>${this.escapeXml(JSON.stringify(node.config))}</config>`;
     }
-    
+
     if (node.children && node.children.length > 0) {
       xml += `\n${spaces}  <children>`;
-      node.children.forEach(child => {
-        if (typeof child === 'object') {
-          xml += '\n' + this.nodeToXml(child as RuleNode, indent + 4);
-        }
+      node.children.forEach((child) => {
+        xml += '\n' + this.nodeToXml(child, indent + 4);
       });
       xml += `\n${spaces}  </children>`;
     }
-    
+
     xml += `\n${spaces}</rule>`;
     return xml;
   }
@@ -846,9 +944,9 @@ export class ExportIntegrationService {
           id: { type: 'string' },
           type: { type: 'string' },
           label: { type: 'string' },
-          config: { type: 'object' }
-        }
-      }
+          config: { type: 'object' },
+        },
+      },
     };
   }
 }

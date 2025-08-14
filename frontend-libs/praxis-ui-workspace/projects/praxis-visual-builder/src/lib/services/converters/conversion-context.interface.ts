@@ -1,4 +1,4 @@
-import { Specification } from 'praxis-specification';
+import { Specification } from '@praxis/specification';
 import { RuleNode } from '../../models/rule-builder.model';
 
 /**

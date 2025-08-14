@@ -2,27 +2,38 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { v4 as uuidv4 } from 'uuid';
 
-import { 
-  RuleBuilderState, 
-  RuleNode, 
-  RuleNodeType, 
-  ValidationError, 
+import {
+  RuleBuilderState,
+  RuleNode,
+  RuleNodeType,
+  ValidationError,
   RuleBuilderSnapshot,
   ExportOptions,
   ImportOptions,
-  RuleBuilderConfig
+  RuleBuilderConfig,
 } from '../models/rule-builder.model';
 
-import { SpecificationFactory, Specification, DslExporter, DslValidator, DslParser } from 'praxis-specification';
+import {
+  SpecificationFactory,
+  Specification,
+  DslExporter,
+  DslValidator,
+  DslParser,
+  ValidationIssue,
+} from '@praxis/specification';
 import { SpecificationBridgeService } from './specification-bridge.service';
 import { RoundTripValidatorService } from './round-trip-validator.service';
 
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class RuleBuilderService {
-  private readonly _state = new BehaviorSubject<RuleBuilderState>(this.getInitialState());
-  private readonly _validationErrors = new BehaviorSubject<ValidationError[]>([]);
+  private readonly _state = new BehaviorSubject<RuleBuilderState>(
+    this.getInitialState(),
+  );
+  private readonly _validationErrors = new BehaviorSubject<ValidationError[]>(
+    [],
+  );
   private readonly _nodeSelected = new Subject<string>();
   private readonly _stateChanged = new Subject<void>();
 
@@ -38,10 +49,10 @@ export class RuleBuilderService {
 
   constructor(
     private specificationBridge: SpecificationBridgeService,
-    private roundTripValidator: RoundTripValidatorService
+    private roundTripValidator: RoundTripValidatorService,
   ) {
     // Auto-save functionality
-    this.state$.subscribe(state => {
+    this.state$.subscribe((state) => {
       if (state.isDirty && this.config?.ui?.autoSaveInterval) {
         // Implement auto-save logic here
       }
@@ -55,14 +66,14 @@ export class RuleBuilderService {
     this.config = config;
     this.dslValidator = new DslValidator({
       knownFields: Object.keys(config.fieldSchemas || {}),
-      knownFunctions: config.customFunctions?.map(f => f.name) || [],
-      enablePerformanceWarnings: true
+      knownFunctions: config.customFunctions?.map((f) => f.name) || [],
+      enablePerformanceWarnings: true,
     });
-    
+
     // Reset state
     this.updateState({
       ...this.getInitialState(),
-      isDirty: false
+      isDirty: false,
     });
   }
 
@@ -79,22 +90,26 @@ export class RuleBuilderService {
   addNode(node: Partial<RuleNode>, parentId?: string): string {
     const nodeId = node.id || uuidv4();
     const currentState = this.getCurrentState();
-    
+
     const newNode: RuleNode = {
       id: nodeId,
       type: node.type || RuleNodeType.FIELD_CONDITION,
-      label: node.label || this.generateNodeLabel((node.type as RuleNodeType) || RuleNodeType.FIELD_CONDITION),
+      label:
+        node.label ||
+        this.generateNodeLabel(
+          (node.type as RuleNodeType) || RuleNodeType.FIELD_CONDITION,
+        ),
       metadata: node.metadata,
       selected: false,
       expanded: true,
       parentId,
       children: [],
-      config: node.config
+      config: node.config,
     };
 
     const updatedNodes = {
       ...currentState.nodes,
-      [nodeId]: newNode
+      [nodeId]: newNode,
     };
 
     let updatedRootNodes = [...currentState.rootNodes];
@@ -105,7 +120,7 @@ export class RuleBuilderService {
       if (parent) {
         updatedNodes[parentId] = {
           ...parent,
-          children: [...(parent.children || []), nodeId]
+          children: [...(parent.children || []), nodeId],
         };
       }
     } else {
@@ -117,7 +132,7 @@ export class RuleBuilderService {
       ...currentState,
       nodes: updatedNodes,
       rootNodes: updatedRootNodes,
-      isDirty: true
+      isDirty: true,
     });
 
     this.saveSnapshot(`Added ${newNode.label || newNode.type} node`);
@@ -132,7 +147,7 @@ export class RuleBuilderService {
   updateNode(nodeId: string, updates: Partial<RuleNode>): void {
     const currentState = this.getCurrentState();
     const existingNode = currentState.nodes[nodeId];
-    
+
     if (!existingNode) {
       return;
     }
@@ -140,16 +155,16 @@ export class RuleBuilderService {
     const updatedNode = {
       ...existingNode,
       ...updates,
-      id: nodeId // Ensure ID doesn't change
+      id: nodeId, // Ensure ID doesn't change
     };
 
     this.updateState({
       ...currentState,
       nodes: {
         ...currentState.nodes,
-        [nodeId]: updatedNode
+        [nodeId]: updatedNode,
       },
-      isDirty: true
+      isDirty: true,
     });
 
     this.saveSnapshot(`Updated ${updatedNode.label || updatedNode.type} node`);
@@ -162,7 +177,7 @@ export class RuleBuilderService {
   removeNode(nodeId: string): void {
     const currentState = this.getCurrentState();
     const node = currentState.nodes[nodeId];
-    
+
     if (!node) {
       return;
     }
@@ -176,7 +191,7 @@ export class RuleBuilderService {
       if (parent) {
         updatedNodes[node.parentId] = {
           ...parent,
-          children: (parent.children || []).filter(id => id !== nodeId)
+          children: (parent.children || []).filter((id) => id !== nodeId),
         };
       }
     } else {
@@ -201,8 +216,11 @@ export class RuleBuilderService {
       ...currentState,
       nodes: updatedNodes,
       rootNodes: updatedRootNodes,
-      selectedNodeId: currentState.selectedNodeId === nodeId ? undefined : currentState.selectedNodeId,
-      isDirty: true
+      selectedNodeId:
+        currentState.selectedNodeId === nodeId
+          ? undefined
+          : currentState.selectedNodeId,
+      isDirty: true,
     });
 
     this.saveSnapshot(`Removed ${node.label || node.type} node`);
@@ -214,20 +232,23 @@ export class RuleBuilderService {
    */
   selectNode(nodeId?: string): void {
     const currentState = this.getCurrentState();
-    
+
     // Update selection
-    const updatedNodes = Object.keys(currentState.nodes).reduce((acc, id) => {
-      acc[id] = {
-        ...currentState.nodes[id],
-        selected: id === nodeId
-      };
-      return acc;
-    }, {} as Record<string, RuleNode>);
+    const updatedNodes = Object.keys(currentState.nodes).reduce(
+      (acc, id) => {
+        acc[id] = {
+          ...currentState.nodes[id],
+          selected: id === nodeId,
+        };
+        return acc;
+      },
+      {} as Record<string, RuleNode>,
+    );
 
     this.updateState({
       ...currentState,
       nodes: updatedNodes,
-      selectedNodeId: nodeId
+      selectedNodeId: nodeId,
     });
 
     if (nodeId) {
@@ -241,7 +262,7 @@ export class RuleBuilderService {
   moveNode(nodeId: string, newParentId?: string, index?: number): void {
     const currentState = this.getCurrentState();
     const node = currentState.nodes[nodeId];
-    
+
     if (!node || node.parentId === newParentId) {
       return;
     }
@@ -255,17 +276,19 @@ export class RuleBuilderService {
       if (currentParent) {
         updatedNodes[node.parentId] = {
           ...currentParent,
-          children: (currentParent.children || []).filter(id => id !== nodeId)
+          children: (currentParent.children || []).filter(
+            (id) => id !== nodeId,
+          ),
         };
       }
     } else {
-      updatedRootNodes = updatedRootNodes.filter(id => id !== nodeId);
+      updatedRootNodes = updatedRootNodes.filter((id) => id !== nodeId);
     }
 
     // Add to new parent
     updatedNodes[nodeId] = {
       ...node,
-      parentId: newParentId
+      parentId: newParentId,
     };
 
     if (newParentId) {
@@ -277,10 +300,10 @@ export class RuleBuilderService {
         } else {
           children.push(nodeId);
         }
-        
+
         updatedNodes[newParentId] = {
           ...newParent,
-          children
+          children,
         };
       }
     } else {
@@ -295,7 +318,7 @@ export class RuleBuilderService {
       ...currentState,
       nodes: updatedNodes,
       rootNodes: updatedRootNodes,
-      isDirty: true
+      isDirty: true,
     });
 
     this.saveSnapshot(`Moved ${node.label || node.type} node`);
@@ -306,7 +329,7 @@ export class RuleBuilderService {
    */
   toSpecification(): Specification<any> | null {
     const currentState = this.getCurrentState();
-    
+
     if (currentState.rootNodes.length === 0) {
       return null;
     }
@@ -314,16 +337,20 @@ export class RuleBuilderService {
     // If single root node, convert directly
     if (currentState.rootNodes.length === 1) {
       const rootNode = this.buildRuleNodeTree(currentState.rootNodes[0]);
-      return rootNode ? this.specificationBridge.ruleNodeToSpecification(rootNode) : null;
+      return rootNode
+        ? this.specificationBridge.ruleNodeToSpecification(rootNode)
+        : null;
     }
 
     // Multiple root nodes - combine with AND
     const specifications = currentState.rootNodes
-      .map(nodeId => {
+      .map((nodeId) => {
         const rootNode = this.buildRuleNodeTree(nodeId);
-        return rootNode ? this.specificationBridge.ruleNodeToSpecification(rootNode) : null;
+        return rootNode
+          ? this.specificationBridge.ruleNodeToSpecification(rootNode)
+          : null;
       })
-      .filter(spec => spec !== null) as Specification<any>[];
+      .filter((spec) => spec !== null) as Specification<any>[];
 
     if (specifications.length === 0) {
       return null;
@@ -341,7 +368,7 @@ export class RuleBuilderService {
    */
   export(options: ExportOptions): string {
     const currentState = this.getCurrentState();
-    
+
     if (currentState.rootNodes.length === 0) {
       return '';
     }
@@ -351,8 +378,10 @@ export class RuleBuilderService {
         const specification = this.toSpecification();
         if (!specification) return '';
         const json = specification.toJSON();
-        return options.prettyPrint ? JSON.stringify(json, null, 2) : JSON.stringify(json);
-      
+        return options.prettyPrint
+          ? JSON.stringify(json, null, 2)
+          : JSON.stringify(json);
+
       case 'dsl':
         if (currentState.rootNodes.length === 1) {
           const rootNode = this.buildRuleNodeTree(currentState.rootNodes[0]);
@@ -360,28 +389,32 @@ export class RuleBuilderService {
           return this.specificationBridge.exportToDsl(rootNode, {
             includeMetadata: options.includeMetadata,
             metadataPosition: options.metadataPosition || 'before',
-            prettyPrint: options.prettyPrint || false
+            prettyPrint: options.prettyPrint || false,
           });
         } else {
           // Multiple root nodes - export each and combine
           const dslParts = currentState.rootNodes
-            .map(nodeId => {
+            .map((nodeId) => {
               const rootNode = this.buildRuleNodeTree(nodeId);
-              return rootNode ? this.specificationBridge.exportToDsl(rootNode) : '';
+              return rootNode
+                ? this.specificationBridge.exportToDsl(rootNode)
+                : '';
             })
-            .filter(dsl => dsl.length > 0);
-          
-          return dslParts.length > 1 ? dslParts.join(' AND ') : dslParts[0] || '';
+            .filter((dsl) => dsl.length > 0);
+
+          return dslParts.length > 1
+            ? dslParts.join(' AND ')
+            : dslParts[0] || '';
         }
-      
+
       case 'typescript':
         const spec = this.toSpecification();
         return spec ? this.exportToTypeScript(spec, options) : '';
-      
+
       case 'form-config':
         const formSpec = this.toSpecification();
         return formSpec ? this.exportToFormConfig(formSpec, options) : '';
-      
+
       default:
         throw new Error(`Unsupported export format: ${options.format}`);
     }
@@ -399,30 +432,34 @@ export class RuleBuilderService {
           const json = JSON.parse(content);
           specification = SpecificationFactory.fromJSON(json);
           break;
-        
+
         case 'dsl':
           specification = this.dslParser.parse(content);
           break;
-        
+
         default:
           throw new Error(`Unsupported import format: ${options.format}`);
       }
 
       if (specification) {
-        const ruleNode = this.specificationBridge.specificationToRuleNode(specification);
+        const ruleNode =
+          this.specificationBridge.specificationToRuleNode(specification);
         const ruleNodes = this.flattenRuleNodeTree(ruleNode);
-        
+
         if (options.merge) {
           // Merge with existing rules
           const currentState = this.getCurrentState();
           const mergedNodes = { ...currentState.nodes, ...ruleNodes.nodes };
-          const mergedRootNodes = [...currentState.rootNodes, ...ruleNodes.rootNodes];
-          
+          const mergedRootNodes = [
+            ...currentState.rootNodes,
+            ...ruleNodes.rootNodes,
+          ];
+
           this.updateState({
             ...currentState,
             nodes: mergedNodes,
             rootNodes: mergedRootNodes,
-            isDirty: true
+            isDirty: true,
           });
         } else {
           // Replace all rules
@@ -430,7 +467,7 @@ export class RuleBuilderService {
             ...this.getInitialState(),
             nodes: ruleNodes.nodes,
             rootNodes: ruleNodes.rootNodes,
-            isDirty: true
+            isDirty: true,
           });
         }
 
@@ -448,15 +485,15 @@ export class RuleBuilderService {
    */
   undo(): void {
     const currentState = this.getCurrentState();
-    
+
     if (currentState.historyPosition > 0) {
       const snapshot = currentState.history[currentState.historyPosition - 1];
-      
+
       this.updateState({
         ...currentState,
         ...snapshot.state,
         historyPosition: currentState.historyPosition - 1,
-        isDirty: true
+        isDirty: true,
       });
     }
   }
@@ -466,15 +503,15 @@ export class RuleBuilderService {
    */
   redo(): void {
     const currentState = this.getCurrentState();
-    
+
     if (currentState.historyPosition < currentState.history.length - 1) {
       const snapshot = currentState.history[currentState.historyPosition + 1];
-      
+
       this.updateState({
         ...currentState,
         ...snapshot.state,
         historyPosition: currentState.historyPosition + 1,
-        isDirty: true
+        isDirty: true,
       });
     }
   }
@@ -485,9 +522,9 @@ export class RuleBuilderService {
   clear(): void {
     this.updateState({
       ...this.getInitialState(),
-      isDirty: false
+      isDirty: false,
     });
-    
+
     this.saveSnapshot('Cleared all rules');
   }
 
@@ -499,7 +536,7 @@ export class RuleBuilderService {
     const errors: ValidationError[] = [];
 
     // Validate each node
-    Object.values(currentState.nodes).forEach(node => {
+    Object.values(currentState.nodes).forEach((node) => {
       const nodeErrors = this.validateNode(node);
       errors.push(...nodeErrors);
     });
@@ -514,18 +551,20 @@ export class RuleBuilderService {
       if (specification) {
         const dsl = specification.toDSL();
         const dslErrors = this.dslValidator.validate(dsl);
-        
-        errors.push(...dslErrors.map(issue => ({
-          id: uuidv4(),
-          message: issue.message,
-          severity: issue.severity as 'error' | 'warning' | 'info',
-          code: issue.type
-        })));
+
+        errors.push(
+          ...dslErrors.map((issue: ValidationIssue) => ({
+            id: uuidv4(),
+            message: issue.message,
+            severity: issue.severity as 'error' | 'warning' | 'info',
+            code: issue.type,
+          })),
+        );
 
         this.updateState({
           ...currentState,
           currentDSL: dsl,
-          currentJSON: specification.toJSON()
+          currentJSON: specification.toJSON(),
         });
       }
     } catch (error) {
@@ -533,7 +572,7 @@ export class RuleBuilderService {
         id: uuidv4(),
         message: `Failed to generate specification: ${error}`,
         severity: 'error',
-        code: 'SPECIFICATION_GENERATION_ERROR'
+        code: 'SPECIFICATION_GENERATION_ERROR',
       });
     }
 
@@ -557,23 +596,27 @@ export class RuleBuilderService {
         const rootNode = this.buildRuleNodeTree(rootNodeId);
         if (rootNode) {
           const result = this.roundTripValidator.validateRoundTrip(rootNode);
-          
+
           if (!result.success) {
             // Add round-trip specific errors
-            errors.push(...result.errors.map(error => ({
-              ...error,
-              nodeId: rootNodeId,
-              code: `ROUND_TRIP_${error.code}`
-            })));
+            errors.push(
+              ...result.errors.map((error) => ({
+                ...error,
+                nodeId: rootNodeId,
+                code: `ROUND_TRIP_${error.code}`,
+              })),
+            );
           }
 
           // Add round-trip warnings as info-level validation errors
-          errors.push(...result.warnings.map(warning => ({
-            ...warning,
-            severity: 'info' as const,
-            nodeId: rootNodeId,
-            code: `ROUND_TRIP_${warning.code}`
-          })));
+          errors.push(
+            ...result.warnings.map((warning) => ({
+              ...warning,
+              severity: 'info' as const,
+              nodeId: rootNodeId,
+              code: `ROUND_TRIP_${warning.code}`,
+            })),
+          );
         }
       } catch (error) {
         errors.push({
@@ -581,7 +624,7 @@ export class RuleBuilderService {
           message: `Round-trip validation failed for node ${rootNodeId}: ${error}`,
           severity: 'warning',
           code: 'ROUND_TRIP_VALIDATION_ERROR',
-          nodeId: rootNodeId
+          nodeId: rootNodeId,
         });
       }
     }
@@ -632,13 +675,13 @@ export class RuleBuilderService {
       } catch (error) {
         failedNodes++;
         totalErrors++;
-        results.push({ 
-          nodeId: rootNodeId, 
+        results.push({
+          nodeId: rootNodeId,
           result: {
             success: false,
             errors: [{ message: `Validation failed: ${error}` }],
-            warnings: []
-          }
+            warnings: [],
+          },
         });
       }
     }
@@ -651,8 +694,8 @@ export class RuleBuilderService {
         successfulNodes,
         failedNodes,
         totalErrors,
-        totalWarnings
-      }
+        totalWarnings,
+      },
     };
   }
 
@@ -669,7 +712,7 @@ export class RuleBuilderService {
       mode: 'visual',
       isDirty: false,
       history: [],
-      historyPosition: -1
+      historyPosition: -1,
     };
   }
 
@@ -680,18 +723,21 @@ export class RuleBuilderService {
 
   private saveSnapshot(description: string): void {
     const currentState = this.getCurrentState();
-    
+
     const snapshot: RuleBuilderSnapshot = {
       timestamp: Date.now(),
       description,
       state: {
         nodes: { ...currentState.nodes },
         rootNodes: [...currentState.rootNodes],
-        selectedNodeId: currentState.selectedNodeId
-      }
+        selectedNodeId: currentState.selectedNodeId,
+      },
     };
 
-    const newHistory = currentState.history.slice(0, currentState.historyPosition + 1);
+    const newHistory = currentState.history.slice(
+      0,
+      currentState.historyPosition + 1,
+    );
     newHistory.push(snapshot);
 
     // Limit history size
@@ -703,7 +749,7 @@ export class RuleBuilderService {
     this.updateState({
       ...currentState,
       history: newHistory,
-      historyPosition: newHistory.length - 1
+      historyPosition: newHistory.length - 1,
     });
   }
 
@@ -734,7 +780,7 @@ export class RuleBuilderService {
       [RuleNodeType.EXACTLY]: 'Exactly',
       [RuleNodeType.EXPRESSION]: 'Expression',
       [RuleNodeType.CONTEXTUAL_TEMPLATE]: 'Contextual Template',
-      [RuleNodeType.CUSTOM]: 'Custom'
+      [RuleNodeType.CUSTOM]: 'Custom',
     };
 
     return labels[type] || type;
@@ -743,18 +789,21 @@ export class RuleBuilderService {
   private buildRuleNodeTree(nodeId: string): RuleNode | null {
     const currentState = this.getCurrentState();
     const node = currentState.nodes[nodeId];
-    
+
     if (!node) {
       return null;
     }
 
     return {
       ...node,
-      children: node.children || []
+      children: node.children || [],
     };
   }
 
-  private flattenRuleNodeTree(rootNode: RuleNode): { nodes: Record<string, RuleNode>, rootNodes: string[] } {
+  private flattenRuleNodeTree(rootNode: RuleNode): {
+    nodes: Record<string, RuleNode>;
+    rootNodes: string[];
+  } {
     const nodes: Record<string, RuleNode> = {};
     const rootNodes: string[] = [rootNode.id];
 
@@ -762,7 +811,7 @@ export class RuleBuilderService {
       // Store the node in the flat structure
       nodes[node.id] = {
         ...node,
-        children: node.children || []
+        children: node.children || [],
       };
 
       // Recursively flatten children if they exist and are RuleNode objects (not just IDs)
@@ -787,7 +836,7 @@ export class RuleBuilderService {
 
   private validateNode(node: RuleNode): ValidationError[] {
     const errors: ValidationError[] = [];
-    
+
     // Node-specific validation logic
     switch (node.type) {
       case RuleNodeType.FIELD_CONDITION:
@@ -801,20 +850,26 @@ export class RuleBuilderService {
 
   private validateStructure(state: RuleBuilderState): ValidationError[] {
     const errors: ValidationError[] = [];
-    
+
     // Check for orphaned nodes
     // Check for circular references
     // Check for invalid parent-child relationships
-    
+
     return errors;
   }
 
-  private exportToTypeScript(specification: Specification<any>, options: ExportOptions): string {
+  private exportToTypeScript(
+    specification: Specification<any>,
+    options: ExportOptions,
+  ): string {
     // Implementation for TypeScript export
     return `// TypeScript export not yet implemented`;
   }
 
-  private exportToFormConfig(specification: Specification<any>, options: ExportOptions): string {
+  private exportToFormConfig(
+    specification: Specification<any>,
+    options: ExportOptions,
+  ): string {
     // Implementation for form config export
     return `// Form config export not yet implemented`;
   }

@@ -16,7 +16,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatCheckboxModule, MatCheckboxChange } from '@angular/material/checkbox';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -166,9 +166,9 @@ import { FormulaGeneratorService } from './formula-generator.service';
               <!-- Value Input - Field or Literal -->
               <div *ngIf="paramSchema.type === 'value_input'" class="value-input-container">
                 <div class="value-input-selector">
-                  <mat-button-toggle-group 
-                    [value]="getValueInputMode(paramSchema.key)" 
-                    (change)="onValueInputModeChange(paramSchema.key, $event.value)"
+                  <mat-button-toggle-group
+                    [value]="getValueInputMode(paramSchema.key)"
+                    (valueChange)="onValueInputModeChange(paramSchema.key, $event)"
                     class="input-mode-toggle">
                     <mat-button-toggle value="field">
                       <mat-icon>data_object</mat-icon>
@@ -186,7 +186,7 @@ import { FormulaGeneratorService } from './formula-generator.service';
                   <mat-label>{{ paramSchema.label }}</mat-label>
                   <mat-select
                     [value]="getValueInputValue(paramSchema.key)"
-                    (selectionChange)="onValueInputFieldChange(paramSchema.key, $event.value)">
+                    (valueChange)="onValueInputFieldChange(paramSchema.key, $event)">
                     <mat-option *ngFor="let field of availableDataSchema" [value]="field.name">
                       <div class="field-option">
                         <mat-icon class="field-type-icon">{{ getFieldTypeIcon(field.type) }}</mat-icon>
@@ -208,7 +208,7 @@ import { FormulaGeneratorService } from './formula-generator.service';
                     <input
                       matInput
                       [value]="getValueInputValue(paramSchema.key)"
-                      (input)="onValueInputLiteralChange(paramSchema.key, $event)"
+                      (input)="onValueInputLiteralChange(paramSchema.key, ($event.target as HTMLInputElement).value)"
                       [placeholder]="paramSchema.placeholder || ''">
                     <mat-hint>{{ paramSchema.hint }}</mat-hint>
                   </mat-form-field>
@@ -229,7 +229,7 @@ import { FormulaGeneratorService } from './formula-generator.service';
                   <div *ngIf="paramSchema.valueType === 'boolean'" class="checkbox-field">
                     <mat-checkbox
                       [checked]="getValueInputValue(paramSchema.key)"
-                      (change)="onValueInputBooleanChange(paramSchema.key, $event.checked)">
+                      (change)="onValueInputBooleanChange(paramSchema.key, $event)">
                       {{ paramSchema.label }}
                     </mat-checkbox>
                     <div class="checkbox-hint">{{ paramSchema.hint }}</div>
@@ -724,26 +724,25 @@ export class VisualFormulaBuilderComponent implements OnInit, OnChanges {
     this.updateParameterFromValueInput(paramKey);
   }
 
-  onValueInputLiteralChange(paramKey: string, event: Event): void {
-    const target = event.target as HTMLInputElement;
-    const value = target.type === 'number' ? parseFloat(target.value) : target.value;
-    
+  onValueInputLiteralChange(paramKey: string, value: string): void {
+    const parsed = !isNaN(Number(value)) && value.trim() !== '' ? Number(value) : value;
+
     if (!this.valueInputStates[paramKey]) {
-      this.valueInputStates[paramKey] = { mode: 'literal', value };
+      this.valueInputStates[paramKey] = { mode: 'literal', value: parsed };
     } else {
-      this.valueInputStates[paramKey].value = value;
+      this.valueInputStates[paramKey].value = parsed;
     }
-    
+
     this.updateParameterFromValueInput(paramKey);
   }
 
-  onValueInputBooleanChange(paramKey: string, checked: boolean): void {
+  onValueInputBooleanChange(paramKey: string, change: MatCheckboxChange): void {
     if (!this.valueInputStates[paramKey]) {
-      this.valueInputStates[paramKey] = { mode: 'literal', value: checked };
+      this.valueInputStates[paramKey] = { mode: 'literal', value: change.checked };
     } else {
-      this.valueInputStates[paramKey].value = checked;
+      this.valueInputStates[paramKey].value = change.checked;
     }
-    
+
     this.updateParameterFromValueInput(paramKey);
   }
 

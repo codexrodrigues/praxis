@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Specification, SpecificationFactory, ComparisonOperator } from 'praxis-specification';
+import { Specification, SpecificationFactory, ComparisonOperator } from '@praxis/specification';
 import { BaseRuleConverter } from './rule-converter.interface';
 import { RuleNode, FieldConditionConfig } from '../../models/rule-builder.model';
 import { ConversionContext } from './conversion-context.interface';

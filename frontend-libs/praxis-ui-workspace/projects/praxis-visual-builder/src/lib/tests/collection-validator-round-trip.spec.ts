@@ -6,7 +6,7 @@ import {
   RuleNodeType 
 } from '../models/rule-builder.model';
 
-// TODO: Re-enable these tests when praxis-specification adds native support for collection validators
+// TODO: Re-enable these tests when @praxis/specification adds native support for collection validators
 describe.skip('CollectionValidatorRoundTripTests', () => {
   let bridgeService: SpecificationBridgeService;
 

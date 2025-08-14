@@ -1,4 +1,4 @@
-// Main entry point for praxis-specification library
+// Main entry point for @praxis/specification library
 export * from './specification';
 export * from './dsl';
 export * from './registry';
