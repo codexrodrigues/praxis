@@ -3,6 +3,8 @@ import {
   ComponentRef,
   HostListener,
   Injector,
+  DestroyRef,
+  inject,
   Type,
   ViewChild,
   ChangeDetectorRef,
@@ -41,6 +43,8 @@ export class SettingsPanelComponent {
   titleId = `praxis-settings-panel-title-${SettingsPanelComponent.nextId++}`;
   disableSaveButton = false;
 
+  private readonly destroyRef = inject(DestroyRef);
+
   @ViewChild('contentHost', { read: ViewContainerRef, static: true })
   private contentHost!: ViewContainerRef;
 
@@ -58,10 +62,12 @@ export class SettingsPanelComponent {
 
     const instance: any = this.contentRef.instance;
     if ('canSave$' in instance && instance.canSave$) {
-      instance.canSave$.pipe(takeUntilDestroyed()).subscribe((v: boolean) => {
-        this.disableSaveButton = !v;
-        this.cdr.detectChanges();
-      });
+      instance.canSave$
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((v: boolean) => {
+          this.disableSaveButton = !v;
+          this.cdr.detectChanges();
+        });
     }
   }
 
