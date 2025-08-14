@@ -227,6 +227,8 @@ export class PraxisTable
     if (storedConfig) {
       this.config = storedConfig;
     }
+    this.showToolbar = !!this.config.toolbar?.visible;
+    console.debug('[PraxisTable] Toolbar visibility on init', this.showToolbar);
   }
 
   ngAfterContentInit(): void {
@@ -244,6 +246,11 @@ export class PraxisTable
       if (this.resourcePath) {
         this.fetchData();
       }
+      this.showToolbar = !!this.config.toolbar?.visible;
+      console.debug(
+        '[PraxisTable] Toolbar visibility on config change',
+        this.showToolbar,
+      );
     }
 
     if (changes['resourcePath'] && this.resourcePath) {
@@ -308,6 +315,11 @@ export class PraxisTable
 
   openTableSettings(): void {
     try {
+      console.debug('[PraxisTable] Opening table settings', {
+        tableId: this.tableId,
+        config: this.config,
+      });
+
       const configCopy = JSON.parse(JSON.stringify(this.config)) as TableConfig;
 
       const ref = this.settingsPanel.open({
@@ -318,26 +330,35 @@ export class PraxisTable
 
       this.subscriptions.push(
         ref.applied$.subscribe((cfg: TableConfig) => {
+          console.debug('[PraxisTable] Applied config', cfg);
           if (!cfg) return;
           this.applyTableConfig(cfg);
         }),
         ref.saved$.subscribe((cfg: TableConfig) => {
+          console.debug('[PraxisTable] Saved config', cfg);
           if (!cfg) return;
           this.configStorage.saveConfig(`table-config:${this.tableId}`, cfg);
           this.applyTableConfig(cfg);
         }),
         ref.reset$.subscribe(() => {
+          console.debug('[PraxisTable] Resetting to default config');
           const defaults = this.tableDefaultsProvider.getDefaults(this.tableId);
           this.applyTableConfig(defaults);
         }),
       );
     } catch (error) {
-      // TODO: Implement proper error logging service
+      console.error('[PraxisTable] Error opening table settings', error);
     }
   }
 
   private applyTableConfig(cfg: TableConfig): void {
+    console.debug('[PraxisTable] Applying table config', cfg);
     this.config = { ...cfg };
+    this.showToolbar = !!cfg.toolbar?.visible;
+    console.debug(
+      '[PraxisTable] Toolbar visibility after apply',
+      this.showToolbar,
+    );
     this.setupColumns();
     this.applyDataSourceSettings();
     if (this.resourcePath) {

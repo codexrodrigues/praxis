@@ -59,12 +59,12 @@ describe('PraxisTable advanced filter integration', () => {
     fixture = TestBed.createComponent(PraxisTable);
     component = fixture.componentInstance;
     component.resourcePath = '/test';
-    component.showToolbar = true;
   });
 
   function setConfig(advancedEnabled: boolean): void {
     const config: TableConfig = {
       columns: [],
+      toolbar: { visible: true },
       behavior: {
         filtering: {
           enabled: true,
