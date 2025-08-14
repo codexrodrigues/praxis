@@ -4,6 +4,7 @@
  */
 
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { By } from '@angular/platform-browser';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TableConfig, TableConfigService, isTableConfigV2 } from '@praxis/core';
@@ -838,6 +839,38 @@ describe('Config Editors Integration Tests - Unified Architecture', () => {
       expect(mainEditorComponent.statusMessage).toBe(
         'Configurações salvas com sucesso!',
       );
+    });
+
+    it('should persist pagination change when saving immediately', () => {
+      const config: TableConfig = {
+        columns: [],
+        behavior: {
+          pagination: {
+            enabled: true,
+            pageSize: 10,
+            pageSizeOptions: [5, 10],
+            showFirstLastButtons: true,
+            showPageNumbers: true,
+            showPageInfo: true,
+            position: 'bottom',
+            style: 'default',
+            strategy: 'client',
+          },
+        },
+      };
+
+      (mainEditorComponent as any).panelData = config;
+      mainEditorComponent.ngOnInit();
+      mainEditorFixture.detectChanges();
+
+      const behaviorEditor = mainEditorFixture.debugElement.query(
+        By.directive(BehaviorConfigEditorComponent),
+      ).componentInstance as BehaviorConfigEditorComponent;
+
+      behaviorEditor.behaviorForm.get('paginationEnabled')?.setValue(false);
+
+      const saved = mainEditorComponent.onSave();
+      expect(saved?.behavior?.pagination?.enabled).toBe(false);
     });
   });
 });

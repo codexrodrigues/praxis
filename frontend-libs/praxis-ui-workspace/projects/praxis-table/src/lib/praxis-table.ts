@@ -7,6 +7,7 @@ import {
   EventEmitter,
   Inject,
   Input,
+  OnInit,
   OnChanges,
   OnDestroy,
   Output,
@@ -169,7 +170,7 @@ import { PraxisFilter } from './praxis-filter';
   ],
 })
 export class PraxisTable
-  implements OnChanges, AfterViewInit, AfterContentInit, OnDestroy
+  implements OnInit, OnChanges, AfterViewInit, AfterContentInit, OnDestroy
 {
   @Input() config: TableConfig = createDefaultTableConfig();
   @Input() resourcePath?: string;
@@ -217,6 +218,15 @@ export class PraxisTable
 
   get toolbarSearchEnabled(): boolean {
     return !!this.config?.toolbar?.search?.enabled;
+  }
+
+  ngOnInit(): void {
+    const storedConfig = this.configStorage.loadConfig<TableConfig>(
+      `table-config:${this.tableId}`,
+    );
+    if (storedConfig) {
+      this.config = storedConfig;
+    }
   }
 
   ngAfterContentInit(): void {
