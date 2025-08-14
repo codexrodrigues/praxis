@@ -58,7 +58,12 @@ import { FormConfig, FormBehaviorLayout } from '@praxis/core';
         <input
           matInput
           [value]="behavior.redirectAfterSave || ''"
-          (input)="updateBehavior('redirectAfterSave', $event.target instanceof HTMLInputElement ? $event.target.value : '')"
+          (input)="
+            updateBehavior(
+              'redirectAfterSave',
+              ($event.target as HTMLInputElement)?.value ?? ''
+            )
+          "
         />
       </mat-form-field>
     </div>

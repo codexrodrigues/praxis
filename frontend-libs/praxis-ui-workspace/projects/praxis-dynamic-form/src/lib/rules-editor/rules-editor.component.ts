@@ -17,7 +17,11 @@ import { FormConfig } from '@praxis/core';
         <textarea
           matInput
           [value]="rulesAsString"
-          (input)="onRulesChange($event.target instanceof HTMLTextAreaElement ? $event.target.value : '')"
+          (input)="
+            onRulesChange(
+              ($event.target as HTMLTextAreaElement)?.value ?? ''
+            )
+          "
           rows="10"
         ></textarea>
       </mat-form-field>
