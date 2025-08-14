@@ -4,6 +4,7 @@ import {
   OnInit,
   ChangeDetectorRef,
   Optional,
+  ViewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -115,6 +116,8 @@ import {
   providers: [TableConfigService],
 })
 export class PraxisTableConfigEditor implements OnInit, SettingsValueProvider {
+  @ViewChild(BehaviorConfigEditorComponent)
+  behaviorEditor?: BehaviorConfigEditorComponent;
   sections = [
     {
       id: 'overview',
@@ -349,6 +352,7 @@ export class PraxisTableConfigEditor implements OnInit, SettingsValueProvider {
    * apply the new settings.
    */
   onSave(): TableConfig | undefined {
+    this.behaviorEditor?.applyFormChanges();
     if (!this.canSave) {
       this.showError('Não há alterações válidas para salvar');
       return;
