@@ -5,7 +5,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSelectModule } from '@angular/material/select';
-import { FormConfig, FormActionsLayout } from '@praxis/core';
+import { FormConfig, FormActionsLayout, FormActionButton } from '@praxis/core';
 
 @Component({
   selector: 'praxis-actions-editor',
@@ -43,21 +43,36 @@ import { FormConfig, FormActionsLayout } from '@praxis/core';
       <h4>Labels dos Botões</h4>
       <mat-form-field>
         <mat-label>Label de Submeter</mat-label>
-        <input matInput [value]="actions.submit.label" (input)="updateAction('submit', 'label', $event.target.value)" />
+        <input
+          matInput
+          [value]="actions.submit.label"
+          (input)="updateAction('submit', 'label', $event.target instanceof HTMLInputElement ? $event.target.value : '')"
+        />
       </mat-form-field>
       <mat-form-field>
         <mat-label>Label de Cancelar</mat-label>
-        <input matInput [value]="actions.cancel.label" (input)="updateAction('cancel', 'label', $event.target.value)" />
+        <input
+          matInput
+          [value]="actions.cancel.label"
+          (input)="updateAction('cancel', 'label', $event.target instanceof HTMLInputElement ? $event.target.value : '')"
+        />
       </mat-form-field>
       <mat-form-field>
         <mat-label>Label de Resetar</mat-label>
-        <input matInput [value]="actions.reset.label" (input)="updateAction('reset', 'label', $event.target.value)" />
+        <input
+          matInput
+          [value]="actions.reset.label"
+          (input)="updateAction('reset', 'label', $event.target instanceof HTMLInputElement ? $event.target.value : '')"
+        />
       </mat-form-field>
 
       <h4>Posicionamento</h4>
       <mat-form-field>
         <mat-label>Alinhamento dos Botões</mat-label>
-        <mat-select [value]="actions.position" (selectionChange)="updateLayout('position', $event.value)">
+        <mat-select
+          [value]="actions.position"
+          (selectionChange)="updateLayout('position', $event.value)"
+        >
           <mat-option value="left">Esquerda</mat-option>
           <mat-option value="center">Centro</mat-option>
           <mat-option value="right">Direita</mat-option>
@@ -66,39 +81,48 @@ import { FormConfig, FormActionsLayout } from '@praxis/core';
       </mat-form-field>
     </div>
   `,
-  styles: [`
-    .actions-editor-form {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-  `]
+  styles: [
+    `
+      .actions-editor-form {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+    `,
+  ],
 })
 export class ActionsEditorComponent {
   @Input() config!: FormConfig;
   @Output() configChange = new EventEmitter<FormConfig>();
 
   get actions(): FormActionsLayout {
-    return this.config.actions || {
-      submit: { visible: true, label: 'Submit' },
-      cancel: { visible: true, label: 'Cancel' },
-      reset: { visible: false, label: 'Reset' },
-      position: 'right',
-    };
+    return (
+      this.config.actions || {
+        submit: { visible: true, label: 'Submit' },
+        cancel: { visible: true, label: 'Cancel' },
+        reset: { visible: false, label: 'Reset' },
+        position: 'right',
+      }
+    );
   }
 
-  updateAction(button: 'submit' | 'cancel' | 'reset', key: 'visible' | 'label', value: any) {
+  updateAction(
+    button: 'submit' | 'cancel' | 'reset',
+    key: keyof FormActionButton,
+    value: any,
+  ) {
     const newConfig = {
       ...this.config,
       actions: {
         ...this.actions,
         [button]: {
           ...this.actions[button],
-          [key]: value
-        }
-      }
+          [key]: value,
+        } as FormActionButton,
+      },
     };
-    this.configChange.emit(newConfig);
+    this.config = newConfig;
+    this.configChange.emit(this.config);
   }
 
   updateLayout(key: 'position', value: any) {
@@ -106,9 +130,10 @@ export class ActionsEditorComponent {
       ...this.config,
       actions: {
         ...this.actions,
-        [key]: value
-      }
+        [key]: value,
+      },
     };
-    this.configChange.emit(newConfig);
+    this.config = newConfig;
+    this.configChange.emit(this.config);
   }
 }

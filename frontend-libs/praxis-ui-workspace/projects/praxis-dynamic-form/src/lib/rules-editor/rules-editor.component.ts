@@ -8,20 +8,16 @@ import { FormConfig } from '@praxis/core';
 @Component({
   selector: 'praxis-rules-editor',
   standalone: true,
-  imports: [
-    CommonModule,
-    FormsModule,
-    MatFormFieldModule,
-    MatInputModule,
-  ],
+  imports: [CommonModule, FormsModule, MatFormFieldModule, MatInputModule],
   template: `
     <div class="rules-editor-form">
       <p>Defina as regras de visibilidade e obrigatoriedade em formato JSON.</p>
       <mat-form-field>
         <mat-label>Regras do Formulário (JSON)</mat-label>
-        <textarea matInput
+        <textarea
+          matInput
           [value]="rulesAsString"
-          (input)="onRulesChange($event.target.value)"
+          (input)="onRulesChange($event.target instanceof HTMLTextAreaElement ? $event.target.value : '')"
           rows="10"
         ></textarea>
       </mat-form-field>
@@ -30,16 +26,18 @@ import { FormConfig } from '@praxis/core';
       </mat-error>
     </div>
   `,
-  styles: [`
-    .rules-editor-form {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    textarea {
-      font-family: monospace;
-    }
-  `]
+  styles: [
+    `
+      .rules-editor-form {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      textarea {
+        font-family: monospace;
+      }
+    `,
+  ],
 })
 export class RulesEditorComponent implements OnInit {
   @Input() config!: FormConfig;

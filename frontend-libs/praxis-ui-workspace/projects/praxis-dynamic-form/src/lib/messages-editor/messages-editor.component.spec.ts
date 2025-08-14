@@ -10,7 +10,7 @@ describe('MessagesEditorComponent', () => {
 
   const mockConfig: FormConfig = {
     fieldMetadata: [],
-    layout: { sections: [] },
+    sections: [],
     messages: {
       createRegistrySuccess: 'Created!',
       createRegistryError: 'Failed to create.',
@@ -38,7 +38,10 @@ describe('MessagesEditorComponent', () => {
     input.value = 'Success!';
     input.dispatchEvent(new Event('input'));
     fixture.detectChanges();
-    expect(component.updateMessage).toHaveBeenCalledWith('createRegistrySuccess', 'Success!');
+    expect(component.updateMessage).toHaveBeenCalledWith(
+      'createRegistrySuccess',
+      'Success!',
+    );
   });
 
   it('should emit configChange on update', () => {
