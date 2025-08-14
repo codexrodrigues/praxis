@@ -227,6 +227,8 @@ export class PraxisTable
     if (storedConfig) {
       this.config = storedConfig;
     }
+    this.showToolbar = !!this.config.toolbar?.visible;
+    console.debug('[PraxisTable] Toolbar visibility on init', this.showToolbar);
   }
 
   ngAfterContentInit(): void {
@@ -244,6 +246,11 @@ export class PraxisTable
       if (this.resourcePath) {
         this.fetchData();
       }
+      this.showToolbar = !!this.config.toolbar?.visible;
+      console.debug(
+        '[PraxisTable] Toolbar visibility on config change',
+        this.showToolbar,
+      );
     }
 
     if (changes['resourcePath'] && this.resourcePath) {
@@ -347,6 +354,11 @@ export class PraxisTable
   private applyTableConfig(cfg: TableConfig): void {
     console.debug('[PraxisTable] Applying table config', cfg);
     this.config = { ...cfg };
+    this.showToolbar = !!cfg.toolbar?.visible;
+    console.debug(
+      '[PraxisTable] Toolbar visibility after apply',
+      this.showToolbar,
+    );
     this.setupColumns();
     this.applyDataSourceSettings();
     if (this.resourcePath) {
