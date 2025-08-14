@@ -18,7 +18,7 @@ export class FilterConfigService {
    * Load a persisted filter configuration for the given key.
    */
   load(key: string): FilterConfig | undefined {
-    return this.storage.loadConfig<FilterConfig>(this.PREFIX + key);
+    return this.storage.loadConfig<FilterConfig>(this.PREFIX + key) ?? undefined;
   }
 
   /**

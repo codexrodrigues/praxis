@@ -1202,7 +1202,6 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
     const ref = this.settingsPanel.open({
       id: `form.${this.formId}`,
       title: 'Configuração do Formulário',
-      width: 720,
       content: {
         component: PraxisDynamicFormConfigEditor,
         inputs: initialConfig,

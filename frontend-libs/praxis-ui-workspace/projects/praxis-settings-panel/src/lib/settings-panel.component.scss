@@ -4,13 +4,12 @@
   height: 100%;
   background: var(--surface);
   border-left: 1px solid var(--border-color);
-  width: min(85vw, 720px);
-  transform: translateX(100%);
-  transition: transform 300ms ease;
+  width: 720px;
+  transition: width 300ms ease;
 }
 
 .settings-panel.expanded {
-  transform: translateX(0);
+  width: min(95vw, 1200px);
 }
 
 .settings-panel-header {
@@ -56,6 +55,12 @@
 }
 
 :host ::ng-deep .praxis-settings-panel-pane {
-  display: flex;
-  justify-content: flex-end;
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  height: 100vh !important;
+}
+
+:host ::ng-deep .praxis-settings-panel-pane .settings-panel {
+  pointer-events: auto;
 }

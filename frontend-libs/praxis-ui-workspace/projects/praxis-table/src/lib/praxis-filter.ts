@@ -195,17 +195,17 @@ const DEFAULT_I18N: I18n = {
         <ng-template #nativeSummary>
           <div class="summary-header">
             <img
-              *ngIf="summaryMap?.avatar && summaryMap.avatar(summary)"
-              [src]="summaryMap.avatar(summary)"
+              *ngIf="summaryMap?.avatar?.(summary)"
+              [src]="summaryMap?.avatar?.(summary)"
               class="summary-avatar"
               alt=""
             />
             <div class="summary-text">
               <div class="summary-title">
-                {{ summaryMap?.title ? summaryMap.title(summary) : '' }}
+                {{ summaryMap?.title?.(summary) || '' }}
               </div>
               <div class="summary-subtitle" *ngIf="summaryMap?.subtitle">
-                {{ summaryMap.subtitle(summary) }}
+                {{ summaryMap?.subtitle?.(summary) }}
               </div>
             </div>
           </div>
@@ -565,7 +565,7 @@ export class PraxisFilter implements OnInit, OnChanges {
         const safe = validateConfig(cfg);
         applyChanges(safe);
         persistConfig(safe, 'Configurações aplicadas');
-        ref.close('apply');
+        ref.close('save');
       });
 
       ref.saved$.pipe(take(1)).subscribe((cfg: FilterConfig) => {
@@ -662,7 +662,7 @@ export class PraxisFilter implements OnInit, OnChanges {
 
   private advancedForm?: FormGroup<Record<string, any>>;
 
-  private loadSchema(): void {
+  loadSchema(): void {
     if (this.schemaMetas) {
       this.applySchemaMetas();
       return;

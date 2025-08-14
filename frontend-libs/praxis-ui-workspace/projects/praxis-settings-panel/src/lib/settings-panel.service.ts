@@ -37,7 +37,6 @@ export class SettingsPanelService {
       panelClass: 'praxis-settings-panel-pane',
       positionStrategy: this.overlay.position().global().top('0').right('0'),
       height: '100vh',
-      width: '100vw',
       scrollStrategy: this.overlay.scrollStrategies.block(),
     };
 
