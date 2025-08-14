@@ -15,6 +15,11 @@ import {
   JsonValidationResult,
   JsonEditorEvent,
 } from './json-config-editor/json-config-editor.component';
+import { LayoutEditorComponent } from './layout-editor/layout-editor.component';
+import { BehaviorEditorComponent } from './behavior-editor/behavior-editor.component';
+import { ActionsEditorComponent } from './actions-editor/actions-editor.component';
+import { MessagesEditorComponent } from './messages-editor/messages-editor.component';
+import { RulesEditorComponent } from './rules-editor/rules-editor.component';
 import { normalizeFormConfig } from './utils/normalize-form-config';
 
 @Component({
@@ -27,6 +32,11 @@ import { normalizeFormConfig } from './utils/normalize-form-config';
     MatIconModule,
     MatCardModule,
     JsonConfigEditorComponent,
+    LayoutEditorComponent,
+    BehaviorEditorComponent,
+    ActionsEditorComponent,
+    MessagesEditorComponent,
+    RulesEditorComponent,
   ],
   providers: [FormConfigService],
   styles: [
@@ -59,26 +69,42 @@ import { normalizeFormConfig } from './utils/normalize-form-config';
         <mat-tab-group class="config-tabs">
           <mat-tab label="Layout">
             <div class="tab-content">
-              <!-- Layout editor placeholder -->
-              <p>Layout editor coming soon.</p>
+              <praxis-layout-editor
+                [config]="editedConfig"
+                (configChange)="onConfigChange($event)"
+              ></praxis-layout-editor>
             </div>
           </mat-tab>
           <mat-tab label="Comportamento">
             <div class="tab-content">
-              <!-- Behavior editor placeholder -->
-              <p>Behavior editor coming soon.</p>
+              <praxis-behavior-editor
+                [config]="editedConfig"
+                (configChange)="onConfigChange($event)"
+              ></praxis-behavior-editor>
+            </div>
+          </mat-tab>
+          <mat-tab label="Ações">
+            <div class="tab-content">
+              <praxis-actions-editor
+                [config]="editedConfig"
+                (configChange)="onConfigChange($event)"
+              ></praxis-actions-editor>
             </div>
           </mat-tab>
           <mat-tab label="Regras">
             <div class="tab-content">
-              <!-- Rules editor placeholder -->
-              <p>Rules editor coming soon.</p>
+              <praxis-rules-editor
+                [config]="editedConfig"
+                (configChange)="onConfigChange($event)"
+              ></praxis-rules-editor>
             </div>
           </mat-tab>
           <mat-tab label="Mensagens">
             <div class="tab-content">
-              <!-- Messages editor placeholder -->
-              <p>Messages editor coming soon.</p>
+              <praxis-messages-editor
+                [config]="editedConfig"
+                (configChange)="onConfigChange($event)"
+              ></praxis-messages-editor>
             </div>
           </mat-tab>
           <mat-tab label="JSON">
@@ -131,5 +157,9 @@ export class PraxisDynamicFormConfigEditor implements SettingsValueProvider {
 
   onJsonEditorEvent(_event: JsonEditorEvent): void {
     // no-op for now
+  }
+
+  onConfigChange(newConfig: FormConfig): void {
+    this.editedConfig = newConfig;
   }
 }
