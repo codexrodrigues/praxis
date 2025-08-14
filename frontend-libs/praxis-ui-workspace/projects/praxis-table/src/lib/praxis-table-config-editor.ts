@@ -294,6 +294,10 @@ export class PraxisTableConfigEditor implements OnInit, SettingsValueProvider {
   }
 
   getSettingsValue(): TableConfig {
+    console.debug(
+      '[PraxisTableConfigEditor] getSettingsValue',
+      this.editedConfig,
+    );
     return this.editedConfig;
   }
 
@@ -355,6 +359,10 @@ export class PraxisTableConfigEditor implements OnInit, SettingsValueProvider {
     this.behaviorEditor?.applyFormChanges();
     if (!this.canSave) {
       this.showError('Não há alterações válidas para salvar');
+      console.debug(
+        '[PraxisTableConfigEditor] onSave blocked - cannot save',
+        this.editedConfig,
+      );
       return;
     }
 
@@ -364,9 +372,14 @@ export class PraxisTableConfigEditor implements OnInit, SettingsValueProvider {
       }
 
       this.showSuccess('Configurações salvas com sucesso!');
+      console.debug(
+        '[PraxisTableConfigEditor] onSave returning config',
+        this.editedConfig,
+      );
       return this.editedConfig;
     } catch (error) {
       this.showError('Configuração inválida. Verifique os campos.');
+      console.error('[PraxisTableConfigEditor] onSave error', error);
       return;
     }
   }
