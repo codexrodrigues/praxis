@@ -16,6 +16,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { CdkTrapFocus } from '@angular/cdk/a11y';
 import { SettingsPanelRef } from './settings-panel.ref';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { firstValueFrom, isObservable } from 'rxjs';
 
 @Component({
   selector: 'praxis-settings-panel',
@@ -74,11 +75,28 @@ export class SettingsPanelComponent {
     this.ref.apply(value);
   }
 
+  /**
+   * Saves the settings emitted by the embedded editor.
+   *
+   * The editor component must return the updated configuration from its
+   * `onSave()` method. The returned value is forwarded through the panel's
+   * {@link SettingsPanelRef#saved$} stream so consumers can persist the new
+   * settings. If nothing is returned, `getSettingsValue()` is used as a fallback.
+   */
   onSave(): void {
     const instance: any = this.contentRef?.instance;
-    instance?.onSave?.();
-    const value = instance?.getSettingsValue?.();
-    this.ref.save(value);
+    const result = instance?.onSave?.();
+
+    if (isObservable(result)) {
+      firstValueFrom(result).then((value) => this.ref.save(value));
+    } else if (result instanceof Promise) {
+      result.then((value: unknown) => this.ref.save(value));
+    } else if (result !== undefined) {
+      this.ref.save(result);
+    } else {
+      const value = instance?.getSettingsValue?.();
+      this.ref.save(value);
+    }
   }
 
   toggleExpand(): void {

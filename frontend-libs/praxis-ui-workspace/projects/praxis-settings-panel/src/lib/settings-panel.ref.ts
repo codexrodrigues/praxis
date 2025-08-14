@@ -19,6 +19,12 @@ export class SettingsPanelRef {
     this.appliedSubject.next(value);
   }
 
+  /**
+   * Emits the provided value on {@link saved$} and closes the panel.
+   *
+   * This should be called with the configuration object returned by the
+   * editor's `onSave()` method so that consumers can persist the new settings.
+   */
   save(value: any): void {
     this.savedSubject.next(value);
     this.close('save');

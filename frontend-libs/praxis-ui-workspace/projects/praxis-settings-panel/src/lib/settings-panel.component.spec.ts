@@ -1,5 +1,10 @@
 import { Component, Injector } from '@angular/core';
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import {
+  ComponentFixture,
+  TestBed,
+  fakeAsync,
+  tick,
+} from '@angular/core/testing';
 import { BehaviorSubject } from 'rxjs';
 import { SettingsPanelComponent } from './settings-panel.component';
 import { SettingsPanelRef } from './settings-panel.ref';
@@ -25,6 +30,21 @@ class DummyProvider implements SettingsValueProvider {
   }
   onSave() {
     this.onSaveCalled = true;
+    return { foo: 'baz' };
+  }
+}
+
+@Component({
+  standalone: true,
+  template: '',
+})
+class AsyncProvider implements SettingsValueProvider {
+  getSettingsValue() {
+    return { foo: 'sync' };
+  }
+
+  onSave() {
+    return Promise.resolve({ foo: 'async' });
   }
 }
 
@@ -35,7 +55,12 @@ describe('SettingsPanelComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [SettingsPanelComponent, DummyProvider, NoopAnimationsModule],
+      imports: [
+        SettingsPanelComponent,
+        DummyProvider,
+        AsyncProvider,
+        NoopAnimationsModule,
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(SettingsPanelComponent);
@@ -68,8 +93,21 @@ describe('SettingsPanelComponent', () => {
     component.onSave();
 
     expect(instance.onSave).toHaveBeenCalled();
-    expect(ref.save).toHaveBeenCalledWith(instance.getSettingsValue());
+    expect(ref.save).toHaveBeenCalledWith({ foo: 'baz' });
   });
+
+  it('should handle async onSave result', fakeAsync(() => {
+    component.attachContent(
+      AsyncProvider,
+      TestBed.inject(Injector),
+      ref as unknown as SettingsPanelRef,
+    );
+
+    component.onSave();
+    tick();
+
+    expect(ref.save).toHaveBeenCalledWith({ foo: 'async' });
+  }));
 
   it('should toggle expanded state and class', () => {
     fixture.detectChanges();

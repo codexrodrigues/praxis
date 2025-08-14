@@ -340,22 +340,30 @@ export class PraxisTableConfigEditor implements OnInit, SettingsValueProvider {
     this.showSuccess('Configurações resetadas para padrão');
   }
 
-  onSave(): void {
+  /**
+   * Called by the settings panel when the user chooses to persist changes.
+   *
+   * The returned configuration is sent back to the panel via
+   * `panelRef.save(returnedConfig)` and subsequently emitted on `saved$`.
+   * Returning the current `TableConfig` is therefore required for the table to
+   * apply the new settings.
+   */
+  onSave(): TableConfig | undefined {
     if (!this.canSave) {
       this.showError('Não há alterações válidas para salvar');
       return;
     }
 
-    // Validação final
     try {
-      // Garantir que a configuração editada é válida
       if (!this.editedConfig || !Array.isArray(this.editedConfig.columns)) {
         throw new Error('Configuração inválida');
       }
 
       this.showSuccess('Configurações salvas com sucesso!');
+      return this.editedConfig;
     } catch (error) {
       this.showError('Configuração inválida. Verifique os campos.');
+      return;
     }
   }
 
