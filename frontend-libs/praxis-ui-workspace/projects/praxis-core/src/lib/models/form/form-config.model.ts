@@ -1,10 +1,10 @@
 import type { FieldMetadata } from '../component-metadata.interface';
-import type { 
-  FormActionsLayout, 
-  FormBehaviorLayout, 
-  FormApiLayout, 
-  FormMessagesLayout, 
-  FormLayoutRule 
+import type {
+  FormActionsLayout,
+  FormBehaviorLayout,
+  FormApiLayout,
+  FormMessagesLayout,
+  FormLayoutRule,
 } from './form-layout.model';
 
 export interface FormColumn {
@@ -25,27 +25,33 @@ export interface FormSection {
 export interface FormConfig {
   /** Layout sections for simple form organization */
   sections: FormSection[];
-  
+
   /** Complete field metadata for all fields in the form */
   fieldMetadata?: FieldMetadata[];
-  
+
   /** Form configuration metadata */
   metadata?: FormConfigMetadata;
-  
+
   /** Form actions configuration */
   actions?: FormActionsLayout;
-  
+
   /** Form behavior configuration */
   behavior?: FormBehaviorLayout;
-  
+
   /** Form API configuration */
   api?: FormApiLayout;
-  
+
   /** Form messages/i18n configuration */
   messages?: FormMessagesLayout;
-  
+
   /** Form rules for dynamic behavior */
   formRules?: FormLayoutRule[];
+
+  /**
+   * Raw state emitted by the visual rule builder.
+   * Stored separately to allow round-trip editing without losing metadata.
+   */
+  formRulesState?: unknown;
 }
 
 export interface FormConfigMetadata {
@@ -83,7 +89,7 @@ export interface FormConfigState {
 }
 
 export function createDefaultFormConfig(): FormConfig {
-  return { 
+  return {
     sections: [
       {
         id: 'personal-info',
@@ -93,16 +99,13 @@ export function createDefaultFormConfig(): FormConfig {
           {
             columns: [
               { fields: ['nome', 'email'] },
-              { fields: ['telefone', 'dataNascimento'] }
-            ]
+              { fields: ['telefone', 'dataNascimento'] },
+            ],
           },
           {
-            columns: [
-              { fields: ['endereco'] },
-              { fields: ['cidade', 'cep'] }
-            ]
-          }
-        ]
+            columns: [{ fields: ['endereco'] }, { fields: ['cidade', 'cep'] }],
+          },
+        ],
       },
       {
         id: 'professional-info',
@@ -112,12 +115,12 @@ export function createDefaultFormConfig(): FormConfig {
           {
             columns: [
               { fields: ['cargo', 'departamento'] },
-              { fields: ['salario', 'dataAdmissao'] }
-            ]
-          }
-        ]
-      }
-    ]
+              { fields: ['salario', 'dataAdmissao'] },
+            ],
+          },
+        ],
+      },
+    ],
   };
 }
 
@@ -137,16 +140,16 @@ export function createEmptyFormConfig(): FormConfig {
  * Useful when combining layout with server-loaded metadata
  */
 export function mergeFieldMetadata(
-  config: FormConfig, 
-  fieldMetadata: FieldMetadata[]
+  config: FormConfig,
+  fieldMetadata: FieldMetadata[],
 ): FormConfig {
   return {
     ...config,
     fieldMetadata: fieldMetadata,
     metadata: {
       ...config.metadata,
-      lastUpdated: new Date()
-    }
+      lastUpdated: new Date(),
+    },
   };
 }
 
@@ -156,24 +159,24 @@ export function mergeFieldMetadata(
  */
 export function getReferencedFieldMetadata(
   config: FormConfig,
-  allFieldMetadata: FieldMetadata[]
+  allFieldMetadata: FieldMetadata[],
 ): FieldMetadata[] {
   // Get all field names referenced in the config
   const referencedFieldNames = new Set<string>();
-  
-  config.sections.forEach(section => {
-    section.rows.forEach(row => {
-      row.columns.forEach(column => {
-        column.fields.forEach(fieldName => {
+
+  config.sections.forEach((section) => {
+    section.rows.forEach((row) => {
+      row.columns.forEach((column) => {
+        column.fields.forEach((fieldName) => {
           referencedFieldNames.add(fieldName);
         });
       });
     });
   });
-  
+
   // Return only metadata for referenced fields
-  return allFieldMetadata.filter(metadata => 
-    referencedFieldNames.has(metadata.name)
+  return allFieldMetadata.filter((metadata) =>
+    referencedFieldNames.has(metadata.name),
   );
 }
 
@@ -207,61 +210,68 @@ export interface FieldConflict {
  */
 export function syncWithServerMetadata(
   localConfig: FormConfig,
-  serverMetadata: FieldMetadata[]
+  serverMetadata: FieldMetadata[],
 ): { config: FormConfig; syncResult: SyncResult } {
   const localFields = localConfig.fieldMetadata || [];
-  const localFieldsMap = new Map(localFields.map(f => [f.name, f]));
-  const serverFieldsMap = new Map(serverMetadata.map(f => [f.name, f]));
-  
+  const localFieldsMap = new Map(localFields.map((f) => [f.name, f]));
+  const serverFieldsMap = new Map(serverMetadata.map((f) => [f.name, f]));
+
   // Detect changes
-  const addedFields = serverMetadata.filter(f => !localFieldsMap.has(f.name));
-  const removedFields = localFields.filter(f => !serverFieldsMap.has(f.name)).map(f => f.name);
+  const addedFields = serverMetadata.filter((f) => !localFieldsMap.has(f.name));
+  const removedFields = localFields
+    .filter((f) => !serverFieldsMap.has(f.name))
+    .map((f) => f.name);
   const modifiedFields: FieldModification[] = [];
-  
+
   // Check for modifications
-  localFields.forEach(localField => {
+  localFields.forEach((localField) => {
     const serverField = serverFieldsMap.get(localField.name);
     if (serverField) {
       // Compare key properties
-      ['label', 'required', 'maxLength', 'minLength', 'dataType'].forEach(prop => {
-        if ((localField as any)[prop] !== (serverField as any)[prop]) {
-          modifiedFields.push({
-            fieldName: localField.name,
-            property: prop,
-            localValue: (localField as any)[prop],
-            serverValue: (serverField as any)[prop]
-          });
-        }
-      });
+      ['label', 'required', 'maxLength', 'minLength', 'dataType'].forEach(
+        (prop) => {
+          if ((localField as any)[prop] !== (serverField as any)[prop]) {
+            modifiedFields.push({
+              fieldName: localField.name,
+              property: prop,
+              localValue: (localField as any)[prop],
+              serverValue: (serverField as any)[prop],
+            });
+          }
+        },
+      );
     }
   });
-  
+
   // Build merged config
   const mergedFieldMetadata = [
     ...serverMetadata, // All server fields
-    ...localFields.filter(f => !serverFieldsMap.has(f.name)) // Keep removed fields if customized
+    ...localFields.filter((f) => !serverFieldsMap.has(f.name)), // Keep removed fields if customized
   ];
-  
+
   // Update sections to include new fields
   const updatedSections = [...localConfig.sections];
   if (addedFields.length > 0 && updatedSections.length > 0) {
     // Add new fields to the last section
     const lastSection = updatedSections[updatedSections.length - 1];
     const lastRow = lastSection.rows[lastSection.rows.length - 1];
-    
-    addedFields.forEach(field => {
+
+    addedFields.forEach((field) => {
       lastRow.columns.push({ fields: [field.name] });
     });
   }
-  
+
   const syncResult: SyncResult = {
-    hasChanges: addedFields.length > 0 || removedFields.length > 0 || modifiedFields.length > 0,
+    hasChanges:
+      addedFields.length > 0 ||
+      removedFields.length > 0 ||
+      modifiedFields.length > 0,
     addedFields,
     removedFields,
     modifiedFields,
-    conflicts: [] // TODO: Implement conflict detection
+    conflicts: [], // TODO: Implement conflict detection
   };
-  
+
   const updatedConfig: FormConfig = {
     ...localConfig,
     sections: updatedSections,
@@ -269,10 +279,10 @@ export function syncWithServerMetadata(
     metadata: {
       ...localConfig.metadata,
       lastUpdated: new Date(),
-      serverHash: generateMetadataHash(serverMetadata)
-    }
+      serverHash: generateMetadataHash(serverMetadata),
+    },
   };
-  
+
   return { config: updatedConfig, syncResult };
 }
 
@@ -280,11 +290,11 @@ export function syncWithServerMetadata(
  * Generates a hash from metadata for change detection
  */
 function generateMetadataHash(metadata: FieldMetadata[]): string {
-  const relevant = metadata.map(f => ({
+  const relevant = metadata.map((f) => ({
     name: f.name,
     type: f.controlType,
     required: f.required,
-    validators: f.validators
+    validators: f.validators,
   }));
   return btoa(JSON.stringify(relevant)).substring(0, 16);
 }
@@ -298,20 +308,26 @@ export function convertFormLayoutToConfig(formLayout: any): FormConfig {
     return createDefaultFormConfig();
   }
 
-  const sections: FormSection[] = formLayout.fieldsets.map((fieldset: any, index: number) => ({
-    id: fieldset.id || `section-${index}`,
-    title: fieldset.title || `Seção ${index + 1}`,
-    description: fieldset.description,
-    rows: fieldset.rows?.map((row: any) => ({
-      columns: row.fields?.map((field: any) => ({
-        fields: Array.isArray(field) ? field : [field.name || field]
-      })) || [{ fields: [] }]
-    })) || [{
-      columns: [{ 
-        fields: fieldset.fields?.map((f: any) => f.name || f) || [] 
-      }]
-    }]
-  }));
+  const sections: FormSection[] = formLayout.fieldsets.map(
+    (fieldset: any, index: number) => ({
+      id: fieldset.id || `section-${index}`,
+      title: fieldset.title || `Seção ${index + 1}`,
+      description: fieldset.description,
+      rows: fieldset.rows?.map((row: any) => ({
+        columns: row.fields?.map((field: any) => ({
+          fields: Array.isArray(field) ? field : [field.name || field],
+        })) || [{ fields: [] }],
+      })) || [
+        {
+          columns: [
+            {
+              fields: fieldset.fields?.map((f: any) => f.name || f) || [],
+            },
+          ],
+        },
+      ],
+    }),
+  );
 
   return { sections };
 }
