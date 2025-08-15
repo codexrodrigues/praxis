@@ -63,8 +63,6 @@ import { PraxisFilter } from './praxis-filter';
     <praxis-table-toolbar
       *ngIf="showToolbar"
       [config]="config"
-      [showFilter]="toolbarSearchEnabled"
-      [filterValue]="filterValue"
       (toolbarAction)="onToolbarAction($event)"
     >
       <praxis-filter
@@ -196,7 +194,6 @@ export class PraxisTable
   dataSource = new MatTableDataSource<any>();
   displayedColumns: string[] = [];
   visibleColumns: ColumnDefinition[] = [];
-  filterValue = '';
   private dataSubject = new BehaviorSubject<any[]>([]);
   private pageIndex = 0;
   private pageSize = 5;
@@ -216,10 +213,6 @@ export class PraxisTable
     );
   }
 
-  get toolbarSearchEnabled(): boolean {
-    return !!this.config?.toolbar?.search?.enabled;
-  }
-
   ngOnInit(): void {
     const storedConfig = this.configStorage.loadConfig<TableConfig>(
       `table-config:${this.tableId}`,
@@ -227,7 +220,10 @@ export class PraxisTable
     if (storedConfig) {
       this.config = storedConfig;
     }
-    this.showToolbar = !!this.config.toolbar?.visible;
+    this.showToolbar = !!(
+      this.config.toolbar?.visible ||
+      this.config.behavior?.filtering?.advancedFilters?.enabled
+    );
     console.debug('[PraxisTable] Toolbar visibility on init', this.showToolbar);
   }
 
@@ -246,7 +242,10 @@ export class PraxisTable
       if (this.resourcePath) {
         this.fetchData();
       }
-      this.showToolbar = !!this.config.toolbar?.visible;
+      this.showToolbar = !!(
+        this.config.toolbar?.visible ||
+        this.config.behavior?.filtering?.advancedFilters?.enabled
+      );
       console.debug(
         '[PraxisTable] Toolbar visibility on config change',
         this.showToolbar,
@@ -354,7 +353,9 @@ export class PraxisTable
   private applyTableConfig(cfg: TableConfig): void {
     console.debug('[PraxisTable] Applying table config', cfg);
     this.config = { ...cfg };
-    this.showToolbar = !!cfg.toolbar?.visible;
+    this.showToolbar = !!(
+      cfg.toolbar?.visible || cfg.behavior?.filtering?.advancedFilters?.enabled
+    );
     console.debug(
       '[PraxisTable] Toolbar visibility after apply',
       this.showToolbar,
@@ -740,8 +741,6 @@ export class PraxisTable
         return this.config.actions?.bulk?.enabled ?? false;
       case 'rowActions':
         return this.config.actions?.row?.enabled ?? false;
-      case 'globalFilter':
-        return this.config.behavior?.filtering?.globalFilter?.enabled ?? false;
       case 'columnFilters':
         return this.config.behavior?.filtering?.columnFilters?.enabled ?? false;
       case 'export':

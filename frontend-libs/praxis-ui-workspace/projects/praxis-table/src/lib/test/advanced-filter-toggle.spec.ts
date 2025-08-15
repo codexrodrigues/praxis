@@ -61,10 +61,10 @@ describe('PraxisTable advanced filter integration', () => {
     component.resourcePath = '/test';
   });
 
-  function setConfig(advancedEnabled: boolean): void {
+  function setConfig(advancedEnabled: boolean, toolbarVisible = true): void {
     const config: TableConfig = {
       columns: [],
-      toolbar: { visible: true },
+      toolbar: { visible: toolbarVisible },
       behavior: {
         filtering: {
           enabled: true,
@@ -79,6 +79,12 @@ describe('PraxisTable advanced filter integration', () => {
 
   it('should render PraxisFilter when advanced filters are enabled', () => {
     setConfig(true);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('praxis-filter')).toBeTruthy();
+  });
+
+  it('should render PraxisFilter even if toolbar is hidden in config', () => {
+    setConfig(true, false);
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('praxis-filter')).toBeTruthy();
   });

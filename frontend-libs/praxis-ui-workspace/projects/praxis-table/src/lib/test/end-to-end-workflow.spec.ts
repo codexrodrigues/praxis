@@ -215,13 +215,6 @@ describe('End-to-End Workflow Tests', () => {
               position: 'end' as const,
             },
           ],
-          search: {
-            enabled: true,
-            placeholder: 'Pesquisar funcionários...',
-            position: 'center' as const,
-            realtime: true,
-            delay: 300,
-          },
         },
       };
       editorComponent.onToolbarActionsConfigChange(enhancedToolbar);
@@ -493,7 +486,6 @@ describe('End-to-End Workflow Tests', () => {
           },
           filtering: {
             enabled: true,
-            globalFilter: { enabled: true, placeholder: 'Search products...' },
           },
           selection: {
             enabled: true,
@@ -530,13 +522,6 @@ describe('End-to-End Workflow Tests', () => {
               position: 'end',
             },
           ],
-          search: {
-            enabled: true,
-            placeholder: 'Search products...',
-            position: 'center',
-            realtime: true,
-            delay: 250,
-          },
         },
         actions: {
           row: {
@@ -675,7 +660,6 @@ describe('End-to-End Workflow Tests', () => {
           },
           filtering: {
             enabled: true,
-            globalFilter: { enabled: false },
           },
           selection: {
             enabled: false,
@@ -831,10 +815,6 @@ describe('End-to-End Workflow Tests', () => {
           },
           filtering: {
             enabled: true,
-            globalFilter: {
-              enabled: true,
-              placeholder: 'Search users by name, email, or department...',
-            },
           },
           selection: {
             enabled: true,
@@ -883,13 +863,6 @@ describe('End-to-End Workflow Tests', () => {
               position: 'end',
             },
           ],
-          search: {
-            enabled: true,
-            placeholder: 'Search users...',
-            position: 'center',
-            realtime: true,
-            delay: 300,
-          },
         },
         actions: {
           row: {
@@ -1127,7 +1100,6 @@ describe('End-to-End Workflow Tests', () => {
           },
           filtering: {
             enabled: true,
-            globalFilter: { enabled: true },
           },
           selection: {
             enabled: true,

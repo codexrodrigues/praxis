@@ -4,8 +4,6 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
 import { TableConfig } from '@praxis/core';
 
 @Component({
@@ -17,8 +15,6 @@ import { TableConfig } from '@praxis/core';
     MatButtonModule,
     MatIconModule,
     MatMenuModule,
-    MatFormFieldModule,
-    MatInputModule,
   ],
   template: `
     <mat-toolbar class="praxis-toolbar">
@@ -43,13 +39,6 @@ import { TableConfig } from '@praxis/core';
           <mat-icon *ngIf="action.icon">{{ action.icon }}</mat-icon>
           {{ action.label }}
         </button>
-      </ng-container>
-      <ng-container *ngIf="showFilter">
-        <span class="spacer"></span>
-        <mat-form-field appearance="outline" style="margin-right:8px;">
-          <mat-label>Filtro</mat-label>
-          <input matInput [value]="filterValue" />
-        </mat-form-field>
       </ng-container>
       <ng-content select="[advancedFilter]"></ng-content>
       <ng-content select="[toolbar]"></ng-content>
@@ -80,8 +69,6 @@ import { TableConfig } from '@praxis/core';
 })
 export class PraxisTableToolbar {
   @Input() config?: TableConfig;
-  @Input() showFilter = false;
-  @Input() filterValue = '';
   @Output() toolbarAction = new EventEmitter<{ action: string }>();
 
   emitToolbarAction(event: Event, action: string): void {

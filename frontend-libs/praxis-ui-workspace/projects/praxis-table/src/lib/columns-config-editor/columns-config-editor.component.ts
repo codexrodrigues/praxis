@@ -198,14 +198,6 @@ interface ExtendedColumnDefinition extends ColumnDefinition {
                       </mat-checkbox>
 
                       <mat-checkbox
-                        [(ngModel)]="globalFilterable"
-                        (ngModelChange)="applyGlobalFilterable($event)"
-                        class="feature-checkbox"
-                      >
-                        Filtros
-                      </mat-checkbox>
-
-                      <mat-checkbox
                         [(ngModel)]="globalStickyEnabled"
                         (ngModelChange)="applyGlobalSticky($event)"
                         class="feature-checkbox"
@@ -592,7 +584,6 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
 
   // V2 specific features
   globalResizable = false;
-  globalFilterable = false;
   globalStickyEnabled = false;
 
   // Race condition prevention
@@ -658,9 +649,6 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
     if (this.isV2Config) {
       this.globalResizable = this.columns.every(
         (col) => (col as any).resizable !== false,
-      );
-      this.globalFilterable = this.columns.every(
-        (col) => (col as any).filterable !== false,
       );
       this.globalStickyEnabled = this.columns.some(
         (col) => (col as any).sticky === true,
@@ -736,17 +724,6 @@ export class ColumnsConfigEditorComponent implements OnInit, OnDestroy {
       this.columns.forEach((column) => {
         if (!this.isColumnExplicitlySet(column, 'resizable')) {
           (column as any).resizable = enabled;
-        }
-      });
-      this.emitConfigChange('global');
-    }
-  }
-
-  applyGlobalFilterable(enabled: boolean): void {
-    if (this.isV2Config) {
-      this.columns.forEach((column) => {
-        if (!this.isColumnExplicitlySet(column, 'filterable')) {
-          (column as any).filterable = enabled;
         }
       });
       this.emitConfigChange('global');

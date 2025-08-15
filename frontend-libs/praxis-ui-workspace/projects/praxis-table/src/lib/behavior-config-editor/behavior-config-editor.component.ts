@@ -208,27 +208,6 @@ export interface BehaviorConfigChange {
               class="config-fields"
               *ngIf="behaviorForm.get('filteringEnabled')?.value"
             >
-              <mat-slide-toggle
-                formControlName="globalSearchEnabled"
-                class="toggle-field"
-              >
-                Busca global
-                <mat-icon
-                  class="info-icon"
-                  matTooltip="Campo de busca que filtra todas as colunas"
-                >
-                  info_outline
-                </mat-icon>
-              </mat-slide-toggle>
-
-              <mat-form-field
-                appearance="outline"
-                *ngIf="behaviorForm.get('globalSearchEnabled')?.value"
-              >
-                <mat-label>Placeholder da busca</mat-label>
-                <input matInput formControlName="searchPlaceholder" />
-              </mat-form-field>
-
               <div *ngIf="isV2">
                 <mat-slide-toggle
                   formControlName="columnFiltersEnabled"
@@ -495,8 +474,6 @@ export class BehaviorConfigEditorComponent implements OnInit, OnDestroy {
 
       // Filtering
       filteringEnabled: [!!gridOptions.filterable],
-      globalSearchEnabled: [!!gridOptions.filterable],
-      searchPlaceholder: ['Buscar...'],
       columnFiltersEnabled: [false], // V2 only
       advancedFiltersEnabled: [false], // V2 only
       filterDebounce: [300], // V2 only
@@ -545,10 +522,6 @@ export class BehaviorConfigEditorComponent implements OnInit, OnDestroy {
       if (behavior.filtering) {
         this.behaviorForm.patchValue({
           filteringEnabled: behavior.filtering.enabled !== false,
-          globalSearchEnabled:
-            behavior.filtering.globalFilter?.enabled !== false,
-          searchPlaceholder:
-            behavior.filtering.globalFilter?.placeholder || 'Buscar...',
           columnFiltersEnabled:
             behavior.filtering.columnFilters?.enabled || false,
           advancedFiltersEnabled:
@@ -632,13 +605,6 @@ export class BehaviorConfigEditorComponent implements OnInit, OnDestroy {
       // Filtering
       v2Config.behavior.filtering = {
         enabled: values.filteringEnabled,
-        globalFilter: {
-          enabled: values.globalSearchEnabled,
-          placeholder: values.searchPlaceholder,
-          position: 'toolbar',
-          caseSensitive: false,
-          allowRegex: false,
-        },
         columnFilters: {
           enabled: values.columnFiltersEnabled,
           defaultType: 'text',
