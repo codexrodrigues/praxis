@@ -1,4 +1,4 @@
-import { Component, ViewChild, Inject, Optional, OnInit } from '@angular/core';
+import { Component, ViewChild, Inject, Optional, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -6,6 +6,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { FormConfig, FieldMetadata } from '@praxis/core';
 import type { FieldDataType } from '@praxis/core';
+import { BehaviorSubject } from 'rxjs';
 import {
   SETTINGS_PANEL_DATA,
   SettingsValueProvider,
@@ -137,13 +138,18 @@ import { normalizeFormConfig } from './utils/normalize-form-config';
   `,
 })
 export class PraxisDynamicFormConfigEditor
-  implements SettingsValueProvider, OnInit
+  implements SettingsValueProvider, OnInit, OnDestroy
 {
   @ViewChild(JsonConfigEditorComponent) jsonEditor?: JsonConfigEditorComponent;
 
   editedConfig: FormConfig;
   ruleBuilderConfig!: RuleBuilderConfig;
   private initialConfig: FormConfig;
+
+  // Observables obrigatórios da interface SettingsValueProvider
+  isDirty$ = new BehaviorSubject<boolean>(false);
+  isValid$ = new BehaviorSubject<boolean>(true);
+  isBusy$ = new BehaviorSubject<boolean>(false);
 
   constructor(
     private configService: FormConfigService,
@@ -158,15 +164,48 @@ export class PraxisDynamicFormConfigEditor
     this.ruleBuilderConfig = this.createRuleBuilderConfig(
       this.editedConfig.fieldMetadata || [],
     );
+    // Inicializar estado de validação - assumir válido por padrão
+    this.isValid$.next(true);
+    this.updateDirtyState();
   }
 
   reset(): void {
-    this.editedConfig = structuredClone(this.initialConfig);
-    this.jsonEditor?.updateJsonFromConfig(this.editedConfig);
+    this.isBusy$.next(true);
+    
+    try {
+      this.editedConfig = structuredClone(this.initialConfig);
+      this.jsonEditor?.updateJsonFromConfig(this.editedConfig);
+      // Resetar validação para estado válido
+      this.isValid$.next(true);
+      this.updateDirtyState();
+    } finally {
+      this.isBusy$.next(false);
+    }
+  }
+
+  private updateDirtyState(): void {
+    // Verificar se há alterações em relação à configuração inicial
+    const hasChanges = 
+      JSON.stringify(this.initialConfig) !== JSON.stringify(this.editedConfig);
+    
+    this.isDirty$.next(hasChanges);
+    // Nota: isValid$ é atualizado em onJsonValidationChange quando necessário
+    // Para outras validações futuras, verificar se não há validação JSON em andamento
   }
 
   getSettingsValue(): FormConfig {
     return this.editedConfig;
+  }
+
+  onSave(): FormConfig {
+    this.isBusy$.next(true);
+    
+    try {
+      // Realizar qualquer validação ou processamento final aqui
+      return this.editedConfig;
+    } finally {
+      this.isBusy$.next(false);
+    }
   }
 
   onJsonConfigChange(newConfig: FormConfig): void {
@@ -174,10 +213,13 @@ export class PraxisDynamicFormConfigEditor
     this.ruleBuilderConfig = this.createRuleBuilderConfig(
       newConfig.fieldMetadata || [],
     );
+    this.updateDirtyState();
   }
 
-  onJsonValidationChange(_result: JsonValidationResult): void {
-    // placeholder for future validation status handling
+  onJsonValidationChange(result: JsonValidationResult): void {
+    // Atualizar estado de validação baseado no resultado do JSON
+    this.isValid$.next(result.isValid);
+    this.updateDirtyState();
   }
 
   onJsonEditorEvent(_event: JsonEditorEvent): void {
@@ -195,6 +237,7 @@ export class PraxisDynamicFormConfigEditor
         newConfig.fieldMetadata || [],
       );
     }
+    this.updateDirtyState();
   }
 
   onRulesChanged(rules: any): void {
@@ -202,6 +245,7 @@ export class PraxisDynamicFormConfigEditor
       ...this.editedConfig,
       formRules: rules.rootNodes.map((nodeId: string) => rules.nodes[nodeId]),
     };
+    this.updateDirtyState();
   }
 
   private createRuleBuilderConfig(
@@ -246,5 +290,12 @@ export class PraxisDynamicFormConfigEditor
       json: FieldType.JSON,
     };
     return mapping[dataType ?? 'text'];
+  }
+
+  ngOnDestroy(): void {
+    // Finalizar observables para evitar memory leaks
+    this.isDirty$.complete();
+    this.isValid$.complete();
+    this.isBusy$.complete();
   }
 }

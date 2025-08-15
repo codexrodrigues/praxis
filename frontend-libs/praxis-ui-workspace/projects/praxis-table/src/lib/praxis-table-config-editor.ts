@@ -2,6 +2,7 @@ import {
   Component,
   Inject,
   OnInit,
+  OnDestroy,
   ChangeDetectorRef,
   Optional,
   ViewChild,
@@ -115,7 +116,7 @@ import {
   `,
   providers: [TableConfigService],
 })
-export class PraxisTableConfigEditor implements OnInit, SettingsValueProvider {
+export class PraxisTableConfigEditor implements OnInit, OnDestroy, SettingsValueProvider {
   @ViewChild(BehaviorConfigEditorComponent)
   behaviorEditor?: BehaviorConfigEditorComponent;
   sections = [
@@ -143,7 +144,11 @@ export class PraxisTableConfigEditor implements OnInit, SettingsValueProvider {
   hasSuccess = false;
   statusMessage = '';
   private isValidJson = true;
-  canSave$ = new BehaviorSubject<boolean>(false);
+  
+  // Observables obrigatórios da interface SettingsValueProvider
+  isDirty$ = new BehaviorSubject<boolean>(false);
+  isValid$ = new BehaviorSubject<boolean>(true);
+  isBusy$ = new BehaviorSubject<boolean>(false);
 
   constructor(
     private cdr: ChangeDetectorRef,
@@ -199,6 +204,8 @@ export class PraxisTableConfigEditor implements OnInit, SettingsValueProvider {
 
   onJsonValidationChange(result: JsonValidationResult): void {
     this.isValidJson = result.isValid;
+    // Atualizar diretamente o observable de validação
+    this.isValid$.next(result.isValid);
     this.updateCanSaveState();
   }
 
@@ -258,9 +265,16 @@ export class PraxisTableConfigEditor implements OnInit, SettingsValueProvider {
     // Verificar se há alterações válidas
     const hasChanges =
       JSON.stringify(this.originalConfig) !== JSON.stringify(this.editedConfig);
-    const canSave = hasChanges && this.isValidJson;
+    const isValid = this.isValidJson;
+    const canSave = hasChanges && isValid;
+    
     this.canSave = canSave;
-    this.canSave$.next(canSave);
+    
+    // Atualizar observables da interface SettingsValueProvider
+    this.isDirty$.next(hasChanges);
+    this.isValid$.next(isValid);
+    // isBusy$ será atualizado em operações específicas
+    
     this.cdr.markForCheck();
   }
 
@@ -306,45 +320,52 @@ export class PraxisTableConfigEditor implements OnInit, SettingsValueProvider {
   }
 
   onResetToDefaults(): void {
-    // Reset para configuração padrão unificada
-    const defaultConfig: TableConfig = {
-      columns: [],
-      behavior: {
-        sorting: {
-          enabled: true,
-          multiSort: false,
-          strategy: 'client',
-          showSortIndicators: true,
-          indicatorPosition: 'end',
-          allowClearSort: true,
+    // Indicar que está processando
+    this.isBusy$.next(true);
+    
+    try {
+      // Reset para configuração padrão unificada
+      const defaultConfig: TableConfig = {
+        columns: [],
+        behavior: {
+          sorting: {
+            enabled: true,
+            multiSort: false,
+            strategy: 'client',
+            showSortIndicators: true,
+            indicatorPosition: 'end',
+            allowClearSort: true,
+          },
+          filtering: {
+            enabled: false,
+            strategy: 'client',
+            debounceTime: 300,
+          },
+          pagination: {
+            enabled: true,
+            pageSize: 10,
+            pageSizeOptions: [5, 10, 25, 50],
+            showFirstLastButtons: true,
+            showPageNumbers: true,
+            showPageInfo: true,
+            position: 'bottom',
+            style: 'default',
+            strategy: 'client',
+          },
         },
-        filtering: {
-          enabled: false,
-          strategy: 'client',
-          debounceTime: 300,
+        toolbar: {
+          visible: false,
+          position: 'top',
         },
-        pagination: {
-          enabled: true,
-          pageSize: 10,
-          pageSizeOptions: [5, 10, 25, 50],
-          showFirstLastButtons: true,
-          showPageNumbers: true,
-          showPageInfo: true,
-          position: 'bottom',
-          style: 'default',
-          strategy: 'client',
-        },
-      },
-      toolbar: {
-        visible: false,
-        position: 'top',
-      },
-    };
+      };
 
-    this.editedConfig = defaultConfig;
-    this.updateConfigurationVersion();
-    this.updateCanSaveState();
-    this.showSuccess('Configurações resetadas para padrão');
+      this.editedConfig = defaultConfig;
+      this.updateConfigurationVersion();
+      this.updateCanSaveState();
+      this.showSuccess('Configurações resetadas para padrão');
+    } finally {
+      this.isBusy$.next(false);
+    }
   }
 
   /**
@@ -367,6 +388,9 @@ export class PraxisTableConfigEditor implements OnInit, SettingsValueProvider {
     }
 
     try {
+      // Indicar que está ocupado durante salvamento
+      this.isBusy$.next(true);
+      
       if (!this.editedConfig || !Array.isArray(this.editedConfig.columns)) {
         throw new Error('Configuração inválida');
       }
@@ -376,11 +400,15 @@ export class PraxisTableConfigEditor implements OnInit, SettingsValueProvider {
         '[PraxisTableConfigEditor] onSave returning config',
         this.editedConfig,
       );
+      
       return this.editedConfig;
     } catch (error) {
       this.showError('Configuração inválida. Verifique os campos.');
       console.error('[PraxisTableConfigEditor] onSave error', error);
       return;
+    } finally {
+      // Sempre restaurar estado não-ocupado
+      this.isBusy$.next(false);
     }
   }
 
@@ -497,5 +525,12 @@ export class PraxisTableConfigEditor implements OnInit, SettingsValueProvider {
         this.showSuccess('Configurações de formatação atualizadas');
         break;
     }
+  }
+
+  ngOnDestroy(): void {
+    // Finalizar observables para evitar memory leaks
+    this.isDirty$.complete();
+    this.isValid$.complete();
+    this.isBusy$.complete();
   }
 }

@@ -2,10 +2,14 @@ import { TestBed } from '@angular/core/testing';
 import { SettingsPanelService } from './settings-panel.service';
 import { Component } from '@angular/core';
 import { SettingsValueProvider } from './settings-panel.types';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, BehaviorSubject } from 'rxjs';
 
 @Component({ standalone: true, template: '' })
 class DummyComponent implements SettingsValueProvider {
+  isDirty$ = new BehaviorSubject<boolean>(false);
+  isValid$ = new BehaviorSubject<boolean>(true);
+  isBusy$ = new BehaviorSubject<boolean>(false);
+
   getSettingsValue() {
     return {};
   }
