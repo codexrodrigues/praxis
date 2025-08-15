@@ -19,3 +19,4 @@ export * from './lib/services/form-context.service';
 
 // Utilities
 export * from './lib/utils/form-rule.utils';
+export * from './lib/utils/rule-converters';

@@ -1,4 +1,11 @@
-import { Component, ViewChild, Inject, Optional, OnInit, OnDestroy } from '@angular/core';
+import {
+  Component,
+  ViewChild,
+  Inject,
+  Optional,
+  OnInit,
+  OnDestroy,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatTabsModule } from '@angular/material/tabs';
@@ -14,6 +21,7 @@ import {
 import {
   PraxisVisualBuilder,
   RuleBuilderConfig,
+  RuleBuilderState,
   FieldSchema,
   FieldType,
 } from '@praxis/visual-builder';
@@ -28,6 +36,10 @@ import { BehaviorEditorComponent } from './behavior-editor/behavior-editor.compo
 import { ActionsEditorComponent } from './actions-editor/actions-editor.component';
 import { MessagesEditorComponent } from './messages-editor/messages-editor.component';
 import { normalizeFormConfig } from './utils/normalize-form-config';
+import {
+  formLayoutRulesToBuilderState,
+  ruleBuilderStateToFormLayoutRules,
+} from './utils/rule-converters';
 
 @Component({
   selector: 'praxis-dynamic-form-config-editor',
@@ -108,7 +120,7 @@ import { normalizeFormConfig } from './utils/normalize-form-config';
             <div class="tab-content visual-builder-content">
               <praxis-visual-builder
                 [config]="ruleBuilderConfig"
-                [initialRules]="editedConfig.formRules"
+                [initialRules]="ruleBuilderState"
                 (rulesChanged)="onRulesChanged($event)"
               ></praxis-visual-builder>
             </div>
@@ -144,6 +156,7 @@ export class PraxisDynamicFormConfigEditor
 
   editedConfig: FormConfig;
   ruleBuilderConfig!: RuleBuilderConfig;
+  ruleBuilderState?: RuleBuilderState;
   private initialConfig: FormConfig;
 
   // Observables obrigatórios da interface SettingsValueProvider
@@ -164,6 +177,9 @@ export class PraxisDynamicFormConfigEditor
     this.ruleBuilderConfig = this.createRuleBuilderConfig(
       this.editedConfig.fieldMetadata || [],
     );
+    this.ruleBuilderState =
+      (this.editedConfig.formRulesState as RuleBuilderState | undefined) ||
+      formLayoutRulesToBuilderState(this.editedConfig.formRules || []);
     // Inicializar estado de validação - assumir válido por padrão
     this.isValid$.next(true);
     this.updateDirtyState();
@@ -171,10 +187,13 @@ export class PraxisDynamicFormConfigEditor
 
   reset(): void {
     this.isBusy$.next(true);
-    
+
     try {
       this.editedConfig = structuredClone(this.initialConfig);
       this.jsonEditor?.updateJsonFromConfig(this.editedConfig);
+      this.ruleBuilderState =
+        (this.editedConfig.formRulesState as RuleBuilderState | undefined) ||
+        formLayoutRulesToBuilderState(this.editedConfig.formRules || []);
       // Resetar validação para estado válido
       this.isValid$.next(true);
       this.updateDirtyState();
@@ -185,9 +204,9 @@ export class PraxisDynamicFormConfigEditor
 
   private updateDirtyState(): void {
     // Verificar se há alterações em relação à configuração inicial
-    const hasChanges = 
+    const hasChanges =
       JSON.stringify(this.initialConfig) !== JSON.stringify(this.editedConfig);
-    
+
     this.isDirty$.next(hasChanges);
     // Nota: isValid$ é atualizado em onJsonValidationChange quando necessário
     // Para outras validações futuras, verificar se não há validação JSON em andamento
@@ -199,7 +218,7 @@ export class PraxisDynamicFormConfigEditor
 
   onSave(): FormConfig {
     this.isBusy$.next(true);
-    
+
     try {
       // Realizar qualquer validação ou processamento final aqui
       return this.editedConfig;
@@ -213,6 +232,9 @@ export class PraxisDynamicFormConfigEditor
     this.ruleBuilderConfig = this.createRuleBuilderConfig(
       newConfig.fieldMetadata || [],
     );
+    this.ruleBuilderState =
+      (newConfig.formRulesState as RuleBuilderState | undefined) ||
+      formLayoutRulesToBuilderState(newConfig.formRules || []);
     this.updateDirtyState();
   }
 
@@ -237,14 +259,19 @@ export class PraxisDynamicFormConfigEditor
         newConfig.fieldMetadata || [],
       );
     }
+    this.ruleBuilderState =
+      (newConfig.formRulesState as RuleBuilderState | undefined) ||
+      formLayoutRulesToBuilderState(newConfig.formRules || []);
     this.updateDirtyState();
   }
 
-  onRulesChanged(rules: any): void {
+  onRulesChanged(state: RuleBuilderState): void {
     this.editedConfig = {
       ...this.editedConfig,
-      formRules: rules.rootNodes.map((nodeId: string) => rules.nodes[nodeId]),
+      formRules: ruleBuilderStateToFormLayoutRules(state),
+      formRulesState: state,
     };
+    this.ruleBuilderState = state;
     this.updateDirtyState();
   }
 
