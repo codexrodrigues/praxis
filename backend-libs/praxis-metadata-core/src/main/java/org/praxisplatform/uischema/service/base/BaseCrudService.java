@@ -49,6 +49,18 @@ public interface BaseCrudService<E, D, ID, FD extends GenericFilterDTO> {
 
     default void deleteById(ID id) { getRepository().findById(id).ifPresent(e -> getRepository().delete(e)); }
 
+    /**
+     * Exclui todos os registros correspondentes aos IDs fornecidos.
+     *
+     * @param ids Coleção de identificadores a serem removidos
+     */
+    default void deleteAllById(Iterable<ID> ids) {
+        if (ids == null) {
+            throw new IllegalArgumentException("ids must not be null");
+        }
+        getRepository().deleteAllById(ids);
+    }
+
     // Método para paginação
     default Page<E> findAll(Pageable pageable) {
         Pageable sortedPageable = pageable;

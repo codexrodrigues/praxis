@@ -25,12 +25,17 @@ import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { SelectionModel } from '@angular/cdk/collections';
 import { BehaviorSubject, take, Subscription } from 'rxjs';
 import { SettingsPanelService } from '@praxis/settings-panel';
 import {
   ColumnDefinition,
   FieldDefinition,
   GenericCrudService,
+  BatchDeleteProgress,
+  BatchDeleteResult,
   Page,
   Pageable,
   TableConfig,
@@ -56,6 +61,8 @@ import { PraxisFilter } from './praxis-filter';
     MatSortModule,
     MatIconModule,
     MatMenuModule,
+    MatSnackBarModule,
+    MatCheckboxModule,
     PraxisTableToolbar,
     PraxisFilter,
   ],
@@ -96,6 +103,25 @@ import { PraxisFilter } from './praxis-filter';
       [matSortDisabled]="!getSortingEnabled()"
       class="mat-elevation-z8"
     >
+      <ng-container
+        *ngIf="config.behavior?.selection?.enabled"
+        matColumnDef="_select"
+      >
+        <th mat-header-cell *matHeaderCellDef>
+          <mat-checkbox
+            (change)="masterToggle()"
+            [checked]="isAllSelected()"
+            [indeterminate]="selection.hasValue() && !isAllSelected()"
+          ></mat-checkbox>
+        </th>
+        <td mat-cell *matCellDef="let row">
+          <mat-checkbox
+            (click)="$event.stopPropagation()"
+            (change)="toggleRow(row)"
+            [checked]="selection.isSelected(row)"
+          ></mat-checkbox>
+        </td>
+      </ng-container>
       <ng-container
         *ngFor="let column of visibleColumns"
         [matColumnDef]="column.field"
@@ -176,6 +202,9 @@ export class PraxisTable
   /** Controls toolbar visibility */
   @Input() showToolbar = false;
 
+  /** Habilita exclusão automática */
+  @Input() autoDelete = false;
+
   /** Enable edit mode */
   @Input() editModeEnabled = false;
 
@@ -185,6 +214,18 @@ export class PraxisTable
   @Output() rowClick = new EventEmitter<{ row: any; index: number }>();
   @Output() rowAction = new EventEmitter<{ action: string; row: any }>();
   @Output() toolbarAction = new EventEmitter<{ action: string }>();
+  @Output() bulkAction = new EventEmitter<{ action: string; rows: any[] }>();
+
+  @Output() beforeDelete = new EventEmitter<any>();
+  @Output() afterDelete = new EventEmitter<any>();
+  @Output() deleteError = new EventEmitter<{ row: any; error: unknown }>();
+
+  @Output() beforeBulkDelete = new EventEmitter<any[]>();
+  @Output() afterBulkDelete = new EventEmitter<any[]>();
+  @Output() bulkDeleteError = new EventEmitter<{
+    rows: any[];
+    error: unknown;
+  }>();
 
   @ViewChild(MatPaginator) paginator?: MatPaginator;
   @ViewChild(MatSort) sort?: MatSort;
@@ -195,9 +236,28 @@ export class PraxisTable
   displayedColumns: string[] = [];
   visibleColumns: ColumnDefinition[] = [];
   private dataSubject = new BehaviorSubject<any[]>([]);
+  selection = new SelectionModel<any>(true, []);
   private pageIndex = 0;
   private pageSize = 5;
   private sortState: Sort = { active: '', direction: '' };
+
+  toggleRow(row: any): void {
+    this.selection.toggle(row);
+  }
+
+  masterToggle(): void {
+    if (this.isAllSelected()) {
+      this.selection.clear();
+    } else {
+      this.dataSource.data.forEach((row) => this.selection.select(row));
+    }
+  }
+
+  isAllSelected(): boolean {
+    const numSelected = this.selection.selected.length;
+    const numRows = this.dataSource.data.length;
+    return numSelected === numRows;
+  }
   private subscriptions: Subscription[] = [];
 
   constructor(
@@ -207,9 +267,13 @@ export class PraxisTable
     private formattingService: DataFormattingService,
     @Inject(CONFIG_STORAGE) private configStorage: ConfigStorage,
     private tableDefaultsProvider: TableDefaultsProvider,
+    private snackBar: MatSnackBar,
   ) {
     this.subscriptions.push(
-      this.dataSubject.subscribe((data) => (this.dataSource.data = data)),
+      this.dataSubject.subscribe((data) => {
+        this.dataSource.data = data;
+        this.selection.clear();
+      }),
     );
   }
 
@@ -291,11 +355,104 @@ export class PraxisTable
   onRowAction(action: string, row: any, event: Event): void {
     event.stopPropagation();
     (event.target as HTMLElement).blur();
-    this.rowAction.emit({ action, row });
+    const cfg = this.config.actions?.row?.actions.find(
+      (a) => a.action === action,
+    );
+    if (action === 'delete' && (this.autoDelete || cfg?.autoDelete)) {
+      this.beforeDelete.emit(row);
+      this.snackBar.open(
+        this.config.messages?.actions?.progress?.delete || 'Removendo...',
+      );
+      this.crudService.delete(row.id).subscribe({
+        next: () => {
+          this.snackBar.open(
+            this.config.messages?.actions?.success?.delete ||
+              'Registro removido',
+            undefined,
+            { duration: 3000 },
+          );
+          this.afterDelete.emit(row);
+          this.fetchData();
+        },
+        error: (error) => {
+          this.snackBar.open(
+            this.config.messages?.actions?.errors?.delete || 'Erro ao remover',
+            undefined,
+            { duration: 3000 },
+          );
+          this.deleteError.emit({ row, error });
+        },
+      });
+    } else {
+      this.rowAction.emit({ action, row });
+    }
   }
 
   onToolbarAction(event: { action: string }): void {
-    this.toolbarAction.emit(event);
+    const bulk = this.config.actions?.bulk?.actions.find(
+      (a) => a.action === event.action,
+    );
+    if (bulk) {
+      if (event.action === 'delete' && (this.autoDelete || bulk.autoDelete)) {
+        const rows = this.selection.selected.slice();
+        const ids = rows.map((r) => r.id);
+        this.beforeBulkDelete.emit(rows);
+        const progress = (e: BatchDeleteProgress) => {
+          this.snackBar.open(
+            (this.config.messages?.actions?.progress?.deleteMultiple ||
+              'Removendo...') + ` ${e.index}/${e.total}`,
+            undefined,
+            { duration: 1000 },
+          );
+        };
+        this.crudService.deleteMany(ids, { progress }).subscribe({
+          next: (result: BatchDeleteResult) => {
+            if (result.errors.length) {
+              this.snackBar.open(
+                this.config.messages?.actions?.errors?.delete ||
+                  'Erro ao remover',
+                undefined,
+                { duration: 3000 },
+              );
+              const failedIds = new Set(result.errors.map((e) => e.id));
+              const failedRows = rows.filter((r) => failedIds.has(r.id));
+              this.selection.clear();
+              failedRows.forEach((r) => this.selection.select(r));
+              this.bulkDeleteError.emit({
+                rows: failedRows,
+                error: result.errors,
+              });
+            } else {
+              this.snackBar.open(
+                this.config.messages?.actions?.success?.delete ||
+                  'Registros removidos',
+                undefined,
+                { duration: 3000 },
+              );
+              this.afterBulkDelete.emit(rows);
+              this.selection.clear();
+            }
+            this.fetchData();
+          },
+          error: (error) => {
+            this.snackBar.open(
+              this.config.messages?.actions?.errors?.delete ||
+                'Erro ao remover',
+              undefined,
+              { duration: 3000 },
+            );
+            this.bulkDeleteError.emit({ rows, error });
+          },
+        });
+      } else {
+        this.bulkAction.emit({
+          action: event.action,
+          rows: this.selection.selected,
+        });
+      }
+    } else {
+      this.toolbarAction.emit(event);
+    }
   }
 
   onAdvancedFilterSubmit(criteria: Record<string, any>): void {
@@ -384,6 +541,9 @@ export class PraxisTable
       .filter((c) => c.visible !== false)
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     this.displayedColumns = this.visibleColumns.map((c) => c.field);
+    if (this.config.behavior?.selection?.enabled) {
+      this.displayedColumns.unshift('_select');
+    }
     if (this.config.actions?.row?.enabled) {
       this.displayedColumns.push('_actions');
     }

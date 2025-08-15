@@ -823,6 +823,12 @@ export interface RowAction {
 
   /** Separador após esta ação */
   separator?: boolean;
+
+  /** Habilita exclusão automática ao acionar */
+  autoDelete?: boolean;
+
+  /** Endpoint personalizado para exclusão */
+  deleteEndpoint?: string;
 }
 
 export interface BulkActionsConfig {
@@ -867,6 +873,12 @@ export interface BulkAction {
 
   /** Máximo de itens selecionados */
   maxSelections?: number;
+
+  /** Habilita exclusão automática ao acionar */
+  autoDelete?: boolean;
+
+  /** Endpoint personalizado para exclusão */
+  deleteEndpoint?: string;
 }
 
 export interface ContextActionsConfig {
@@ -1152,6 +1164,18 @@ export interface ActionMessagesConfig {
     delete: string;
     export: string;
     import: string;
+  };
+
+  /** Mensagens de progresso */
+  progress?: {
+    delete: string;
+    deleteMultiple: string;
+  };
+
+  /** Mensagens de cancelamento */
+  canceled?: {
+    delete: string;
+    deleteMultiple: string;
   };
 
   /** Mensagens de erro */

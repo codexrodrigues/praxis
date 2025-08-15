@@ -314,6 +314,30 @@ public abstract class AbstractCrudController<E, D, ID, FD extends GenericFilterD
         return ResponseEntity.noContent().build();
     }
 
+    @DeleteMapping("/batch")
+    @Operation(
+            summary = "Excluir registros em lote",
+            description = "Remove múltiplos registros pelos IDs fornecidos.",
+            responses = {
+                    @ApiResponse(
+                            responseCode = "204",
+                            description = "Registros excluídos com sucesso."
+                    ),
+                    @ApiResponse(
+                            responseCode = "400",
+                            description = "Lista de IDs vazia ou nula."
+                    )
+            }
+    )
+    public ResponseEntity<Void> deleteBatch(@RequestBody List<ID> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        getService().deleteAllById(ids);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping(SCHEMAS_PATH)
     @Operation(
             summary = "Obter esquema da entidade para configuração dinâmica",

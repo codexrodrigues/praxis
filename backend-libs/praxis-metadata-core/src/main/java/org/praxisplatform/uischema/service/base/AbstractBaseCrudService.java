@@ -66,4 +66,10 @@ public abstract class AbstractBaseCrudService<E, D, ID, FD extends GenericFilter
     public void deleteById(ID id) {
         BaseCrudService.super.deleteById(id);
     }
+
+    @Override
+    @Transactional
+    public void deleteAllById(Iterable<ID> ids) {
+        BaseCrudService.super.deleteAllById(ids);
+    }
 }
