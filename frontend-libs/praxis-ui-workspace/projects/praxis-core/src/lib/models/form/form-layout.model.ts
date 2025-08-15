@@ -2,8 +2,19 @@ import type { FieldMetadata } from '../component-metadata.interface';
 import type { Specification } from '@praxis/specification';
 
 export interface FormActionButton {
+  id?: string; // Add an ID for custom buttons
   visible: boolean;
   label: string;
+  icon?: string; // Material Icon
+  color?: 'primary' | 'accent' | 'warn' | 'basic';
+  disabled?: boolean;
+  type?: 'button' | 'submit' | 'reset';
+  action?: string; // Custom event for `customAction` emitter
+  tooltip?: string;
+  loading?: boolean;
+  size?: 'small' | 'medium' | 'large';
+  variant?: 'raised' | 'stroked' | 'flat' | 'fab';
+  shortcut?: string; // Keyboard shortcut
 }
 
 export interface FormActionsLayout {
@@ -23,9 +34,26 @@ export interface FormActionsLayout {
   reset: FormActionButton;
 
   /**
-   * Button group positioning
+   * Custom buttons
    */
-  position?: 'left' | 'center' | 'right' | 'justified';
+  custom?: FormActionButton[];
+
+  /**
+   * Layout and behavior
+   */
+  position?: 'left' | 'center' | 'right' | 'justified' | 'split';
+  orientation?: 'horizontal' | 'vertical';
+  spacing?: 'compact' | 'normal' | 'spacious';
+  sticky?: boolean;
+
+  /**
+   * Responsive settings
+   */
+  mobile?: {
+    position?: 'left' | 'center' | 'right' | 'justified';
+    orientation?: 'horizontal' | 'vertical';
+    collapseToMenu?: boolean;
+  };
 
   containerClassName?: string;
   containerStyles?: { [key: string]: any };
@@ -66,11 +94,38 @@ export interface FormMetadataLayout {
 }
 
 export interface FormMessagesLayout {
+  // Existing feedback messages (backward compatible)
   updateRegistrySuccess?: string;
   createRegistrySuccess?: string;
   updateRegistryError?: string;
   createRegistryError?: string;
-  [key: string]: any;
+
+  // Pre-action confirmation messages
+  confirmations?: {
+    submit?: string;
+    cancel?: string;
+    reset?: string;
+    [customAction: string]: string | undefined; // For custom actions
+  };
+
+  // Messages for custom actions
+  customActions?: {
+    [actionId: string]: {
+      success?: string;
+      error?: string;
+      confirmation?: string; // Overrides confirmations[actionId] if present
+    };
+  };
+
+  // Loading state messages
+  loading?: {
+    submit?: string;
+    cancel?: string;
+    reset?: string;
+    [customAction: string]: string | undefined;
+  };
+
+  [key: string]: any; // For extensibility
 }
 
 export interface FormRowLayout {

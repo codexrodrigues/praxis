@@ -68,3 +68,16 @@ export interface FormInitializationError {
   recoverable: boolean;
   userMessage: string;
 }
+
+export interface FormCustomActionEvent {
+  actionId: string;
+  formData: any;
+  isValid: boolean;
+  source: 'button' | 'shortcut';
+}
+
+export interface FormActionConfirmationEvent {
+  actionId: 'submit' | 'cancel' | 'reset' | string;
+  message: string;
+  confirmed: boolean;
+}

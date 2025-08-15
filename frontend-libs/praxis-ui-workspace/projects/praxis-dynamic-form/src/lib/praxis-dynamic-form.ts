@@ -24,6 +24,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatMenuModule } from '@angular/material/menu';
 
 import { Subject, firstValueFrom } from 'rxjs';
 import { debounceTime, takeUntil } from 'rxjs/operators';
@@ -54,7 +56,14 @@ import {
   FormSection,
   FormRow,
   FormColumn,
+  FormActionButton,
+  FormCustomActionEvent,
+  FormActionConfirmationEvent,
 } from '@praxis/core';
+import {
+  ConfirmDialogComponent,
+  ConfirmDialogData,
+} from '@praxis/dynamic-fields';
 import { FormLayoutService } from './services/form-layout.service';
 import { FormContextService } from './services/form-context.service';
 import { FormRulesService } from './services/form-rules.service';
@@ -74,6 +83,8 @@ import { normalizeFormConfig } from './utils/normalize-form-config';
     MatButtonModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
+    MatDialogModule,
+    MatMenuModule,
   ],
   template: `
     @if (isLoading) {
@@ -194,27 +205,107 @@ import { normalizeFormConfig } from './utils/normalize-form-config';
           </div>
         }
 
-        <div class="form-actions" [class.loading]="isLoading">
-          <button
-            type="submit"
-            mat-raised-button
-            color="primary"
-            [disabled]="form.invalid || isLoading"
-            [attr.aria-label]="
-              mode === 'edit' ? 'Atualizar registro' : 'Criar novo registro'
-            "
-          >
-            @if (isLoading) {
-              <mat-icon>hourglass_empty</mat-icon>
+        <div
+          class="form-actions"
+          [class.loading]="isLoading"
+          [style.justify-content]="
+            config.actions?.position === 'justified' ||
+            config.actions?.position === 'split'
+              ? 'space-between'
+              : config.actions?.position
+          "
+          [ngClass]="[
+            'position-' + (config.actions?.position || 'right'),
+            'orientation-' + (config.actions?.orientation || 'horizontal'),
+            'spacing-' + (config.actions?.spacing || 'normal'),
+            {
+              'mobile-menu-active':
+                config.actions?.mobile?.collapseToMenu ?? false
             }
-            {{
-              isLoading
-                ? 'Processando...'
-                : mode === 'edit'
-                  ? 'Atualizar'
-                  : 'Criar'
-            }}
-          </button>
+          ]"
+        >
+          <!-- Desktop/Normal View -->
+          <div class="desktop-actions">
+            @for (button of getActionButtons(); track button.id) {
+              @if (button.visible) {
+                <button
+                  [type]="button.type || 'button'"
+                  [mat-raised-button]="
+                    button.variant === 'raised' || !button.variant
+                  "
+                  [mat-stroked-button]="button.variant === 'stroked'"
+                  [mat-flat-button]="button.variant === 'flat'"
+                  [mat-fab]="button.variant === 'fab'"
+                  [color]="button.color"
+                  [disabled]="
+                    button.disabled ||
+                    (button.type === 'submit' && form.invalid)
+                  "
+                  [matTooltip]="button.tooltip"
+                  (click)="onActionButtonClick(button, $event)"
+                  [attr.aria-label]="button.label"
+                >
+                  @if (button.icon) {
+                    <mat-icon>{{ button.icon }}</mat-icon>
+                  }
+                  <span>{{ button.label }}</span>
+                </button>
+              }
+            }
+          </div>
+
+          <!-- Mobile Collapsed View -->
+          @if (config.actions?.mobile?.collapseToMenu) {
+            <div class="mobile-actions">
+              @for (button of getVisibleButtons(); track button.id) {
+                <button
+                  [type]="button.type || 'button'"
+                  [mat-raised-button]="
+                    button.variant === 'raised' || !button.variant
+                  "
+                  [mat-stroked-button]="button.variant === 'stroked'"
+                  [mat-flat-button]="button.variant === 'flat'"
+                  [mat-fab]="button.variant === 'fab'"
+                  [color]="button.color"
+                  [disabled]="
+                    button.disabled ||
+                    (button.type === 'submit' && form.invalid)
+                  "
+                  [matTooltip]="button.tooltip"
+                  (click)="onActionButtonClick(button, $event)"
+                  [attr.aria-label]="button.label"
+                >
+                  @if (button.icon) {
+                    <mat-icon>{{ button.icon }}</mat-icon>
+                  }
+                  <span>{{ button.label }}</span>
+                </button>
+              }
+              @if (getCollapsedButtons().length > 0) {
+                <button
+                  mat-icon-button
+                  [matMenuTriggerFor]="actionsMenu"
+                  aria-label="More actions"
+                >
+                  <mat-icon>more_vert</mat-icon>
+                </button>
+                <mat-menu #actionsMenu="matMenu">
+                  @for (button of getCollapsedButtons(); track button.id) {
+                    <button
+                      mat-menu-item
+                      (click)="onActionButtonClick(button, $event)"
+                      [disabled]="button.disabled"
+                    >
+                      @if (button.icon) {
+                        <mat-icon>{{ button.icon }}</mat-icon>
+                      }
+                      <span>{{ button.label }}</span>
+                    </button>
+                  }
+                </mat-menu>
+              }
+            </div>
+          }
         </div>
       </form>
     }
@@ -442,6 +533,10 @@ import { normalizeFormConfig } from './utils/normalize-form-config';
         opacity: 0.7;
       }
 
+      .mobile-actions {
+        display: none;
+      }
+
       @media (max-width: 768px) {
         .form-row {
           flex-direction: column;
@@ -454,6 +549,17 @@ import { normalizeFormConfig } from './utils/normalize-form-config';
 
         .form-actions {
           padding: 0.75rem;
+        }
+
+        .form-actions.mobile-menu-active {
+          .desktop-actions {
+            display: none;
+          }
+          .mobile-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+          }
         }
       }
     `,
@@ -512,6 +618,8 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   @Output() syncCompleted = new EventEmitter<SyncResult>();
   @Output() initializationError = new EventEmitter<FormInitializationError>();
   @Output() editModeEnabledChange = new EventEmitter<boolean>();
+  @Output() customAction = new EventEmitter<FormCustomActionEvent>();
+  @Output() actionConfirmation = new EventEmitter<FormActionConfirmationEvent>();
 
   // Estado interno para UX
   isLoading = false;
@@ -546,6 +654,7 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
     private contextService: FormContextService,
     private rulesService: FormRulesService,
     private settingsPanel: SettingsPanelService,
+    private dialog: MatDialog,
     @Inject(CONFIG_STORAGE) private configStorage: ConfigStorage,
   ) {
     this.form = this.fb.group({});
@@ -1079,6 +1188,21 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   }
 
   /**
+   * Returns the buttons that should remain visible on mobile when collapseToMenu is true.
+   * By default, this is the first button (usually submit).
+   */
+  getVisibleButtons(): FormActionButton[] {
+    return this.getActionButtons().slice(0, 1);
+  }
+
+  /**
+   * Returns the buttons that should be collapsed into a menu on mobile.
+   */
+  getCollapsedButtons(): FormActionButton[] {
+    return this.getActionButtons().slice(1);
+  }
+
+  /**
    * Generates a complete FormConfig from FieldMetadata array
    * Includes both layout and field metadata
    */
@@ -1174,6 +1298,143 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   isColumnVisible(column: FormColumn): boolean {
     // A column is visible if at least one of its fields is visible.
     return column.fields.some((fieldName) => this.fieldVisibility[fieldName]);
+  }
+
+  /**
+   * Constructs a unified list of action buttons for rendering.
+   * Merges standard, custom, and legacy configurations.
+   */
+  getActionButtons(): FormActionButton[] {
+    const actions = this.config.actions;
+    if (!actions) {
+      // Fallback to a single default submit button if no actions are configured
+      return [
+        {
+          id: 'submit',
+          label: 'Submit',
+          visible: true,
+          type: 'submit',
+          color: 'primary',
+        },
+      ];
+    }
+
+    const buttons: FormActionButton[] = [];
+
+    // 1. Submit Button
+    const submitBtn = {
+      id: 'submit',
+      type: 'submit',
+      color: 'primary',
+      ...actions.submit,
+    };
+    if (actions.showSaveButton === false) submitBtn.visible = false;
+    if (actions.submitButtonLabel) submitBtn.label = actions.submitButtonLabel;
+    buttons.push(submitBtn);
+
+    // 2. Cancel Button
+    const cancelBtn = { id: 'cancel', type: 'button', ...actions.cancel };
+    if (actions.showCancelButton === false) cancelBtn.visible = false;
+    if (actions.cancelButtonLabel) cancelBtn.label = actions.cancelButtonLabel;
+    buttons.push(cancelBtn);
+
+    // 3. Reset Button
+    const resetBtn = { id: 'reset', type: 'reset', ...actions.reset };
+    if (actions.showResetButton === false) resetBtn.visible = false;
+    if (actions.resetButtonLabel) resetBtn.label = actions.resetButtonLabel;
+    buttons.push(resetBtn);
+
+    // 4. Custom Buttons
+    if (actions.custom) {
+      buttons.push(...actions.custom);
+    }
+
+    return buttons;
+  }
+
+  onActionButtonClick(button: FormActionButton, event: Event): void {
+    const actionId = button.id || button.action;
+    if (!actionId) return;
+
+    const confirmationMessage = this._getConfirmationMessage(actionId);
+
+    if (confirmationMessage) {
+      // Prevent default form submission if confirmation is needed
+      if (button.type === 'submit') {
+        event.preventDefault();
+      }
+      this._showConfirmationDialog(actionId, confirmationMessage, () =>
+        this._executeAction(button),
+      );
+    } else {
+      // No confirmation needed, execute directly
+      this._executeAction(button);
+    }
+  }
+
+  private _getConfirmationMessage(actionId: string): string | undefined {
+    const messages = this.config.messages;
+    if (!messages) return undefined;
+
+    // Priority: customActions > confirmations
+    const customMessage = messages.customActions?.[actionId]?.confirmation;
+    if (customMessage) return customMessage;
+
+    return messages.confirmations?.[actionId];
+  }
+
+  private _showConfirmationDialog(
+    actionId: string,
+    message: string,
+    onConfirm: () => void,
+  ): void {
+    const dialogRef = this.dialog.open<
+      ConfirmDialogComponent,
+      ConfirmDialogData,
+      boolean
+    >(ConfirmDialogComponent, {
+      data: {
+        title: 'Confirmação',
+        message: message,
+        confirmText: 'Confirmar',
+        cancelText: 'Cancelar',
+        type: actionId === 'cancel' || actionId === 'reset' ? 'warning' : 'info',
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((confirmed) => {
+      this.actionConfirmation.emit({ actionId, message, confirmed: !!confirmed });
+      if (confirmed) {
+        onConfirm();
+      }
+    });
+  }
+
+  private _executeAction(button: FormActionButton): void {
+    const actionId = button.id || button.action;
+    if (!actionId) return;
+
+    switch (actionId) {
+      case 'submit':
+        this.onSubmit();
+        break;
+      case 'cancel':
+        this.formCancel.emit();
+        break;
+      case 'reset':
+        this.form.reset();
+        this.formReset.emit();
+        break;
+      default:
+        // This is a custom action
+        this.customAction.emit({
+          actionId: actionId,
+          formData: this.form.value,
+          isValid: this.form.valid,
+          source: 'button',
+        });
+        break;
+    }
   }
 
   onSubmit(): void {
