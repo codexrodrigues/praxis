@@ -31,27 +31,53 @@
     </button>
   </header>
   <div class="settings-panel-body">
-    <section class="settings-panel-content">
-      <ng-template #contentHost></ng-template>
-    </section>
+    <ng-template #contentHost></ng-template>
   </div>
   <footer class="settings-panel-footer">
-    <button mat-button type="button" (click)="onReset()">Redefinir</button>
+    <button mat-button type="button" (click)="onReset()" [disabled]="isBusy">
+      Redefinir
+    </button>
     <span class="spacer"></span>
-    <button mat-stroked-button type="button" (click)="onCancel()">
+    <button
+      mat-stroked-button
+      type="button"
+      (click)="onCancel()"
+      [disabled]="isBusy"
+    >
       Cancelar
     </button>
-    <button mat-stroked-button type="button" (click)="onApply()">
-      Aplicar
+    <button
+      mat-stroked-button
+      type="button"
+      (click)="onApply()"
+      [disabled]="!canApply"
+      [matTooltip]="disabledReason"
+      [matTooltipDisabled]="canApply"
+      aria-busy="isBusy"
+    >
+      <mat-progress-spinner
+        *ngIf="isBusy"
+        mode="indeterminate"
+        diameter="20"
+      ></mat-progress-spinner>
+      <span *ngIf="!isBusy">Aplicar</span>
     </button>
     <button
       mat-flat-button
       color="primary"
       type="button"
       (click)="onSave()"
-      [disabled]="disableSaveButton"
+      [disabled]="!canSave"
+      [matTooltip]="disabledReason"
+      [matTooltipDisabled]="canSave"
+      aria-busy="isBusy"
     >
-      Salvar &amp; Fechar
+      <mat-progress-spinner
+        *ngIf="isBusy"
+        mode="indeterminate"
+        diameter="20"
+      ></mat-progress-spinner>
+      <span *ngIf="!isBusy">Salvar &amp; Fechar</span>
     </button>
   </footer>
 </div>
