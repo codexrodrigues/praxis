@@ -4,6 +4,8 @@ import {
   OnChanges,
   SimpleChanges,
   ChangeDetectionStrategy,
+  Output,
+  EventEmitter,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
@@ -41,6 +43,7 @@ import { map, startWith } from 'rxjs/operators';
 export class FilterSettingsComponent implements OnChanges {
   @Input() metadata: FieldMetadata[] = [];
   @Input() settings: FilterConfig | undefined;
+  @Output() settingsChange = new EventEmitter<FilterConfig>();
 
   form: FormGroup<{
     quickField: FormControl<string | null>;
@@ -68,6 +71,10 @@ export class FilterSettingsComponent implements OnChanges {
       map(() => this.form.dirty && this.form.valid),
       startWith(false),
     );
+
+    this.form.valueChanges
+      .pipe(map(() => this.getSettingsValue()))
+      .subscribe((cfg) => this.settingsChange.emit(cfg));
   }
 
   ngOnChanges(changes: SimpleChanges): void {

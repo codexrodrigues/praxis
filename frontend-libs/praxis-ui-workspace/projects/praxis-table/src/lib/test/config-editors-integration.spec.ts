@@ -15,6 +15,7 @@ import { BehaviorConfigEditorComponent } from '../behavior-config-editor/behavio
 import { ToolbarActionsEditorComponent } from '../toolbar-actions-editor/toolbar-actions-editor.component';
 import { MessagesLocalizationEditorComponent } from '../messages-localization-editor/messages-localization-editor.component';
 import { ColumnsConfigEditorComponent } from '../columns-config-editor/columns-config-editor.component';
+import { FilterConfig } from '../services/filter-config.service';
 
 describe('Config Editors Integration Tests - Unified Architecture', () => {
   let mainEditorComponent: PraxisTableConfigEditor;
@@ -193,6 +194,54 @@ describe('Config Editors Integration Tests - Unified Architecture', () => {
     });
   });
 
+  describe('Filter Settings Editor Integration', () => {
+    it('should apply filter settings changes to config', () => {
+      const config: TableConfig = {
+        columns: [{ field: 'name', header: 'Name', type: 'string' }],
+        behavior: {
+          filtering: { enabled: true, strategy: 'client', debounceTime: 300 },
+        },
+      };
+
+      (mainEditorComponent as any).panelData = config;
+      mainEditorComponent.ngOnInit();
+
+      const newSettings: FilterConfig = {
+        quickField: 'name',
+        placeholder: 'Buscar',
+        showAdvanced: true,
+      };
+
+      mainEditorComponent.onFilterSettingsChange(newSettings);
+
+      expect(
+        mainEditorComponent.editedConfig.behavior?.filtering?.advancedFilters
+          ?.settings,
+      ).toEqual(newSettings);
+    });
+  });
+
+  describe('Advanced filter and toolbar interaction', () => {
+    it('should enable toolbar when advanced filters are activated', () => {
+      const config: TableConfig = {
+        columns: [],
+        toolbar: { visible: false },
+        behavior: {
+          filtering: {
+            enabled: true,
+            strategy: 'client',
+            debounceTime: 300,
+            advancedFilters: { enabled: true },
+          },
+        },
+      } as TableConfig;
+
+      mainEditorComponent.onBehaviorConfigChange(config);
+
+      expect(mainEditorComponent.editedConfig.toolbar?.visible).toBeTrue();
+    });
+  });
+
   describe('Behavior Config Editor Integration', () => {
     let behaviorEditor: BehaviorConfigEditorComponent;
     let behaviorFixture: ComponentFixture<BehaviorConfigEditorComponent>;
@@ -284,11 +333,6 @@ describe('Config Editors Integration Tests - Unified Architecture', () => {
             enabled: true,
             strategy: 'client',
             debounceTime: 300,
-            globalFilter: {
-              enabled: true,
-              placeholder: 'Buscar...',
-              position: 'toolbar',
-            },
           },
           selection: {
             enabled: true,
@@ -656,7 +700,6 @@ describe('Config Editors Integration Tests - Unified Architecture', () => {
 
       expect(columnsEditor.isV2Config).toBe(true);
       expect(columnsEditor.globalResizable).toBe(true);
-      expect(columnsEditor.globalFilterable).toBe(true);
     });
 
     it('should handle column reordering', () => {

@@ -168,4 +168,24 @@ describe('FilterSettingsComponent', () => {
     expect(result.quickField).toBeUndefined();
     expect(result.alwaysVisibleFields).toEqual(['status']);
   });
+
+  it('should emit settingsChange on form updates', () => {
+    const fixture = TestBed.createComponent(FilterSettingsComponent);
+    const component = fixture.componentInstance;
+    component.metadata = metadata;
+    component.settings = settings;
+    component.ngOnChanges({
+      settings: new SimpleChange(null, settings, true),
+    });
+    const spy = jasmine.createSpy('settingsChange');
+    component.settingsChange.subscribe(spy);
+
+    component.form.patchValue({ placeholder: 'Novo' });
+    expect(spy).toHaveBeenCalledWith({
+      quickField: 'name',
+      alwaysVisibleFields: ['status'],
+      placeholder: 'Novo',
+      showAdvanced: false,
+    });
+  });
 });

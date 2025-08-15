@@ -178,7 +178,7 @@ export class ExampleComponent {
     behavior: {
       pagination: { enabled: true, pageSize: 10 },
       sorting: { enabled: true },
-      filtering: { enabled: true, globalFilter: { enabled: true } },
+      filtering: { enabled: true },
     },
   };
 

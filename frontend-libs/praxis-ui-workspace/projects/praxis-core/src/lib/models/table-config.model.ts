@@ -28,7 +28,7 @@ export type {
   PerformanceConfig,
   PluginConfig,
   AccessibilityConfig,
-  
+
   // Behavior sub-configs
   PaginationConfig,
   SortingConfig,
@@ -37,46 +37,45 @@ export type {
   InteractionConfig,
   ResizingConfig,
   DraggingConfig,
-  
+
   // Appearance sub-configs
   BorderConfig,
   ElevationConfig,
   SpacingConfig,
   TypographyConfig,
-  
+
   // Toolbar sub-configs
   ToolbarLayoutConfig,
-  ToolbarSearchConfig,
   ToolbarFilterConfig,
   ToolbarSettingsConfig,
-  
+
   // Actions sub-configs
   RowActionsConfig,
   BulkActionsConfig,
-  
+
   // Messages sub-configs
   StateMessagesConfig,
   ActionMessagesConfig,
   ValidationMessagesConfig,
-  
+
   // Localization sub-configs
   DateTimeLocaleConfig,
   NumberLocaleConfig,
   CurrencyLocaleConfig,
   FormattingLocaleConfig,
-  
+
   // Export sub-configs
   GeneralExportConfig,
   CsvExportConfig,
   ExcelExportConfig,
   PdfExportConfig,
-  
+
   // Performance sub-configs
   VirtualizationConfig,
   LazyLoadingConfig,
-  
+
   // Accessibility sub-configs
-  KeyboardAccessibilityConfig
+  KeyboardAccessibilityConfig,
 } from './table-config-v2.model';
 
 // =============================================================================
@@ -92,7 +91,7 @@ export function createDefaultTableConfig(): TableConfig {
       version: '2.0.0',
       name: 'Default Table',
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     },
     columns: [],
     behavior: {
@@ -105,7 +104,7 @@ export function createDefaultTableConfig(): TableConfig {
         showPageInfo: true,
         position: 'bottom',
         style: 'default',
-        strategy: 'client'
+        strategy: 'client',
       },
       sorting: {
         enabled: true,
@@ -113,22 +112,20 @@ export function createDefaultTableConfig(): TableConfig {
         strategy: 'client',
         showSortIndicators: true,
         indicatorPosition: 'end',
-        allowClearSort: true
+        allowClearSort: true,
       },
       filtering: {
         enabled: true,
         strategy: 'client',
         debounceTime: 300,
-        globalFilter: {
-          enabled: true,
-          placeholder: 'Buscar...',
-          position: 'toolbar'
-        },
         columnFilters: {
           enabled: false,
           defaultType: 'text',
-          position: 'header'
-        }
+          position: 'header',
+        },
+        advancedFilters: {
+          enabled: false,
+        },
       },
       selection: {
         enabled: false,
@@ -137,12 +134,12 @@ export function createDefaultTableConfig(): TableConfig {
         allowSelectAll: true,
         checkboxPosition: 'start',
         persistSelection: false,
-        persistOnDataUpdate: false
+        persistOnDataUpdate: false,
       },
       interaction: {
         rowClick: {
           enabled: true,
-          action: 'select'
+          action: 'select',
         },
         // hoverHighlight: {
         //   enabled: true,
@@ -157,13 +154,13 @@ export function createDefaultTableConfig(): TableConfig {
         autoFit: false,
         persistWidths: true,
         minColumnWidth: 50,
-        maxColumnWidth: 500
+        maxColumnWidth: 500,
       },
       dragging: {
         columns: false,
         rows: false,
-        showDragIndicator: false
-      }
+        showDragIndicator: false,
+      },
     },
     appearance: {
       density: 'comfortable',
@@ -173,11 +170,11 @@ export function createDefaultTableConfig(): TableConfig {
         showOuterBorder: true,
         style: 'solid',
         width: 1,
-        color: '#e0e0e0'
+        color: '#e0e0e0',
       },
       elevation: {
         level: 1,
-        shadowColor: 'rgba(0, 0, 0, 0.1)'
+        shadowColor: 'rgba(0, 0, 0, 0.1)',
       },
       spacing: {
         cellPadding: '8px 16px',
@@ -188,12 +185,12 @@ export function createDefaultTableConfig(): TableConfig {
         headerFontWeight: '500',
         fontWeight: '400',
         fontSize: '14px',
-        headerFontSize: '14px'
-      }
+        headerFontSize: '14px',
+      },
     },
     toolbar: {
       visible: false,
-      position: 'top'
+      position: 'top',
     },
     actions: {
       row: {
@@ -203,16 +200,21 @@ export function createDefaultTableConfig(): TableConfig {
         display: 'icons',
         trigger: 'hover',
         actions: [
-          { id: 'view', label: 'Visualizar', icon: 'visibility', action: 'view' },
+          {
+            id: 'view',
+            label: 'Visualizar',
+            icon: 'visibility',
+            action: 'view',
+          },
           { id: 'edit', label: 'Editar', icon: 'edit', action: 'edit' },
-          { id: 'delete', label: 'Excluir', icon: 'delete', action: 'delete' }
-        ]
+          { id: 'delete', label: 'Excluir', icon: 'delete', action: 'delete' },
+        ],
       },
       bulk: {
         enabled: false,
         position: 'toolbar',
-        actions: []
-      }
+        actions: [],
+      },
     },
     export: {
       enabled: false,
@@ -225,12 +227,12 @@ export function createDefaultTableConfig(): TableConfig {
         empty: 'Nenhum dado disponível',
         error: 'Erro ao carregar dados',
         noResults: 'Nenhum resultado encontrado',
-        loadingMore: 'Carregando mais dados...'
-      }
+        loadingMore: 'Carregando mais dados...',
+      },
     },
     localization: {
       locale: 'pt-BR',
-      direction: 'ltr'
+      direction: 'ltr',
     },
     // data: {
     //   source: 'local',
@@ -242,13 +244,13 @@ export function createDefaultTableConfig(): TableConfig {
         itemHeight: 48,
         bufferSize: 10,
         minContainerHeight: 200,
-        strategy: 'fixed'
+        strategy: 'fixed',
       },
       lazyLoading: {
         threshold: 100,
         images: true,
-        components: true
-      }
+        components: true,
+      },
     },
     accessibility: {
       enabled: true,
@@ -256,18 +258,18 @@ export function createDefaultTableConfig(): TableConfig {
         dataChanges: true,
         userActions: true,
         loadingStates: true,
-        liveRegion: 'polite'
+        liveRegion: 'polite',
       },
       keyboard: {
         shortcuts: true,
         tabNavigation: true,
         arrowNavigation: true,
         skipLinks: false,
-        focusTrap: false
+        focusTrap: false,
       },
       highContrast: false,
-      reduceMotion: false
-    }
+      reduceMotion: false,
+    },
   };
 }
 
@@ -293,7 +295,10 @@ export function cloneTableConfig(config: TableConfig): TableConfig {
 /**
  * Merge duas configurações TableConfig, priorizando a segunda
  */
-export function mergeTableConfigs(base: TableConfig, override: Partial<TableConfig>): TableConfig {
+export function mergeTableConfigs(
+  base: TableConfig,
+  override: Partial<TableConfig>,
+): TableConfig {
   const cloned = cloneTableConfig(base);
   return {
     ...cloned,
@@ -301,33 +306,45 @@ export function mergeTableConfigs(base: TableConfig, override: Partial<TableConf
     meta: {
       ...cloned.meta,
       ...override.meta,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     },
     columns: override.columns || cloned.columns,
-    behavior: override.behavior ? {
-      ...cloned.behavior,
-      ...override.behavior
-    } : cloned.behavior,
-    appearance: override.appearance ? {
-      ...cloned.appearance,
-      ...override.appearance
-    } : cloned.appearance,
-    toolbar: override.toolbar ? {
-      ...cloned.toolbar,
-      ...override.toolbar
-    } : cloned.toolbar,
-    actions: override.actions ? {
-      ...cloned.actions,
-      ...override.actions
-    } : cloned.actions,
-    messages: override.messages ? {
-      ...cloned.messages,
-      ...override.messages
-    } : cloned.messages,
-    localization: override.localization ? {
-      ...cloned.localization,
-      ...override.localization
-    } : cloned.localization
+    behavior: override.behavior
+      ? {
+          ...cloned.behavior,
+          ...override.behavior,
+        }
+      : cloned.behavior,
+    appearance: override.appearance
+      ? {
+          ...cloned.appearance,
+          ...override.appearance,
+        }
+      : cloned.appearance,
+    toolbar: override.toolbar
+      ? {
+          ...cloned.toolbar,
+          ...override.toolbar,
+        }
+      : cloned.toolbar,
+    actions: override.actions
+      ? {
+          ...cloned.actions,
+          ...override.actions,
+        }
+      : cloned.actions,
+    messages: override.messages
+      ? {
+          ...cloned.messages,
+          ...override.messages,
+        }
+      : cloned.messages,
+    localization: override.localization
+      ? {
+          ...cloned.localization,
+          ...override.localization,
+        }
+      : cloned.localization,
   };
 }
 
@@ -341,11 +358,11 @@ export function getEssentialConfig(config: TableConfig): Partial<TableConfig> {
       pagination: config.behavior?.pagination,
       sorting: config.behavior?.sorting,
       filtering: config.behavior?.filtering,
-      selection: config.behavior?.selection
+      selection: config.behavior?.selection,
     },
     toolbar: config.toolbar,
     actions: config.actions,
-    messages: config.messages
+    messages: config.messages,
   };
 }
 

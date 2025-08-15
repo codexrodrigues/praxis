@@ -4,11 +4,11 @@
  */
 
 import { TestBed } from '@angular/core/testing';
-import { 
-  TableConfig, 
+import {
+  TableConfig,
   TableConfigService,
   ColumnDefinition,
-  isValidTableConfig
+  isValidTableConfig,
 } from '@praxis/core';
 
 describe('Unified Table Configuration Tests', () => {
@@ -16,9 +16,7 @@ describe('Unified Table Configuration Tests', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [
-        TableConfigService
-      ]
+      providers: [TableConfigService],
     });
 
     configService = TestBed.inject(TableConfigService);
@@ -28,25 +26,25 @@ describe('Unified Table Configuration Tests', () => {
     it('should correctly validate valid configurations', () => {
       const validConfigs: TableConfig[] = [
         {
-          columns: [{ field: 'test', header: 'Test' }]
+          columns: [{ field: 'test', header: 'Test' }],
         },
         {
           meta: { version: '2.0.0' },
           columns: [{ field: 'test', header: 'Test' }],
-          behavior: { 
-            pagination: { enabled: true, pageSize: 10 } 
-          }
+          behavior: {
+            pagination: { enabled: true, pageSize: 10 },
+          },
         },
         {
           meta: { version: '2.0.0' },
           columns: [],
           toolbar: { visible: true, position: 'top' },
           appearance: { density: 'compact' },
-          messages: { states: { loading: 'Loading...' } }
-        }
+          messages: { states: { loading: 'Loading...' } },
+        },
       ];
 
-      validConfigs.forEach(config => {
+      validConfigs.forEach((config) => {
         expect(isValidTableConfig(config)).toBe(true);
       });
     });
@@ -70,8 +68,8 @@ describe('Unified Table Configuration Tests', () => {
       const config: TableConfig = {
         columns: [
           { field: 'id', header: 'ID', type: 'number', visible: true },
-          { field: 'name', header: 'Name', type: 'string', sortable: false }
-        ]
+          { field: 'name', header: 'Name', type: 'string', sortable: false },
+        ],
       };
 
       configService.loadConfig(config);
@@ -85,8 +83,20 @@ describe('Unified Table Configuration Tests', () => {
       const config: TableConfig = {
         meta: { version: '2.0.0', name: 'Advanced Table' },
         columns: [
-          { field: 'id', header: 'ID', type: 'number', visible: true, sortable: true },
-          { field: 'name', header: 'Name', type: 'string', visible: true, filterable: true }
+          {
+            field: 'id',
+            header: 'ID',
+            type: 'number',
+            visible: true,
+            sortable: true,
+          },
+          {
+            field: 'name',
+            header: 'Name',
+            type: 'string',
+            visible: true,
+            filterable: true,
+          },
         ],
         behavior: {
           pagination: {
@@ -94,44 +104,60 @@ describe('Unified Table Configuration Tests', () => {
             pageSize: 25,
             pageSizeOptions: [10, 25, 50, 100],
             showFirstLastButtons: true,
-            strategy: 'client'
+            strategy: 'client',
           },
           sorting: {
             enabled: true,
-            multiSort: true
+            multiSort: true,
           },
           filtering: {
             enabled: true,
-            globalFilter: { enabled: true, placeholder: 'Search...' }
           },
           selection: {
             enabled: true,
             type: 'multiple',
-            mode: 'checkbox'
-          }
+            mode: 'checkbox',
+          },
         },
         toolbar: {
           visible: true,
           position: 'top',
           actions: [
-            { id: 'add', label: 'Add', icon: 'add', type: 'button', action: 'add', position: 'start' }
-          ]
+            {
+              id: 'add',
+              label: 'Add',
+              icon: 'add',
+              type: 'button',
+              action: 'add',
+              position: 'start',
+            },
+          ],
         },
         actions: {
           row: {
             enabled: true,
             actions: [
               { id: 'edit', label: 'Edit', icon: 'edit', action: 'edit' },
-              { id: 'delete', label: 'Delete', icon: 'delete', action: 'delete' }
-            ]
+              {
+                id: 'delete',
+                label: 'Delete',
+                icon: 'delete',
+                action: 'delete',
+              },
+            ],
           },
           bulk: {
             enabled: true,
             actions: [
-              { id: 'deleteSelected', label: 'Delete Selected', icon: 'delete', action: 'deleteSelected' }
-            ]
-          }
-        }
+              {
+                id: 'deleteSelected',
+                label: 'Delete Selected',
+                icon: 'delete',
+                action: 'deleteSelected',
+              },
+            ],
+          },
+        },
       };
 
       configService.loadConfig(config);
@@ -148,15 +174,15 @@ describe('Unified Table Configuration Tests', () => {
       const initialConfig: TableConfig = {
         columns: [
           { field: 'id', header: 'ID', type: 'number' },
-          { field: 'name', header: 'Name', type: 'string' }
-        ]
+          { field: 'name', header: 'Name', type: 'string' },
+        ],
       };
 
       configService.loadConfig(initialConfig);
 
       // Update column
       configService.updateColumn(0, { header: 'Updated ID', width: '100px' });
-      
+
       const updatedColumn = configService.getColumn(0);
       expect(updatedColumn?.header).toBe('Updated ID');
       expect(updatedColumn?.width).toBe('100px');
@@ -166,7 +192,7 @@ describe('Unified Table Configuration Tests', () => {
         field: 'email',
         header: 'Email',
         type: 'string',
-        visible: true
+        visible: true,
       };
 
       configService.addColumn(newColumn);
@@ -182,8 +208,8 @@ describe('Unified Table Configuration Tests', () => {
         columns: [
           { field: 'first', header: 'First' },
           { field: 'second', header: 'Second' },
-          { field: 'third', header: 'Third' }
-        ]
+          { field: 'third', header: 'Third' },
+        ],
       };
 
       configService.loadConfig(config);
@@ -205,14 +231,14 @@ describe('Unified Table Configuration Tests', () => {
         behavior: {
           pagination: { enabled: true },
           sorting: { enabled: true, multiSort: true },
-          filtering: { enabled: true, globalFilter: { enabled: true } }
+          filtering: { enabled: true },
         },
         toolbar: { visible: true },
         actions: {
           row: { enabled: true, actions: [] },
-          bulk: { enabled: true, actions: [] }
+          bulk: { enabled: true, actions: [] },
         },
-        export: { enabled: true, formats: ['csv'] }
+        export: { enabled: true, formats: ['csv'] },
       };
 
       configService.loadConfig(config);
@@ -225,16 +251,16 @@ describe('Unified Table Configuration Tests', () => {
       // Test individual behavior configs
       expect(configService.getPaginationConfig()?.enabled).toBe(true);
       expect(configService.getSortingConfig()?.multiSort).toBe(true);
-      expect(configService.getFilteringConfig()?.globalFilter?.enabled).toBe(true);
+      expect(configService.getFilteringConfig()?.enabled).toBe(true);
     });
 
     it('should handle disabled features', () => {
       const config: TableConfig = {
         columns: [{ field: 'test', header: 'Test' }],
         behavior: {
-          pagination: { enabled: false }
+          pagination: { enabled: false },
         },
-        toolbar: { visible: false }
+        toolbar: { visible: false },
       };
 
       configService.loadConfig(config);
@@ -248,23 +274,29 @@ describe('Unified Table Configuration Tests', () => {
     it('should provide accurate configuration statistics', () => {
       const config: TableConfig = {
         columns: [
-          { field: 'id', header: 'ID', visible: true, sortable: true, sticky: true },
+          {
+            field: 'id',
+            header: 'ID',
+            visible: true,
+            sortable: true,
+            sticky: true,
+          },
           { field: 'name', header: 'Name', visible: true, sortable: false },
           { field: 'email', header: 'Email', visible: false },
-          { field: 'status', header: 'Status', visible: true }
+          { field: 'status', header: 'Status', visible: true },
         ],
         behavior: {
           pagination: { enabled: true },
           sorting: { enabled: true },
           filtering: { enabled: true },
-          selection: { enabled: true }
+          selection: { enabled: true },
         },
         toolbar: { visible: true },
         actions: {
           row: { enabled: true, actions: [] },
-          bulk: { enabled: true, actions: [] }
+          bulk: { enabled: true, actions: [] },
         },
-        export: { enabled: true, formats: ['csv'] }
+        export: { enabled: true, formats: ['csv'] },
       };
 
       configService.loadConfig(config);
@@ -291,11 +323,11 @@ describe('Unified Table Configuration Tests', () => {
         meta: { version: '2.0.0', name: 'Test Export' },
         columns: [
           { field: 'id', header: 'ID', type: 'number' },
-          { field: 'name', header: 'Name', type: 'string' }
+          { field: 'name', header: 'Name', type: 'string' },
         ],
         behavior: {
-          pagination: { enabled: true, pageSize: 10 }
-        }
+          pagination: { enabled: true, pageSize: 10 },
+        },
       };
 
       configService.loadConfig(config);
@@ -331,11 +363,11 @@ describe('Unified Table Configuration Tests', () => {
       const validConfig: TableConfig = {
         columns: [
           { field: 'id', header: 'ID' },
-          { field: 'name', header: 'Name' }
+          { field: 'name', header: 'Name' },
         ],
         behavior: {
-          pagination: { enabled: true, pageSize: 10 }
-        }
+          pagination: { enabled: true, pageSize: 10 },
+        },
       };
 
       configService.loadConfig(validConfig);
@@ -350,8 +382,8 @@ describe('Unified Table Configuration Tests', () => {
       const invalidConfig = {
         columns: [
           { field: '', header: '' }, // Missing field and header
-          { field: 'valid', header: 'Valid' }
-        ]
+          { field: 'valid', header: 'Valid' },
+        ],
       } as TableConfig;
 
       configService.loadConfig(invalidConfig);
@@ -370,8 +402,8 @@ describe('Unified Table Configuration Tests', () => {
           header: `Header ${i}`,
           type: i % 3 === 0 ? 'number' : i % 3 === 1 ? 'string' : 'boolean',
           visible: i < 50,
-          sortable: i % 2 === 0
-        }))
+          sortable: i % 2 === 0,
+        })),
       };
 
       const startTime = performance.now();

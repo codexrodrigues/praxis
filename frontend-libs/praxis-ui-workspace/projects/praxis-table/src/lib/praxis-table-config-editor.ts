@@ -39,6 +39,9 @@ import {
   MessagesLocalizationEditorComponent,
   MessagesLocalizationChange,
 } from './messages-localization-editor/messages-localization-editor.component';
+import { FilterSettingsComponent } from './filter-settings/filter-settings.component';
+import { FilterConfig } from './services/filter-config.service';
+import { FieldMetadata, FieldControlType } from '@praxis/core';
 
 @Component({
   selector: 'praxis-table-config-editor',
@@ -53,6 +56,7 @@ import {
     BehaviorConfigEditorComponent,
     ToolbarActionsEditorComponent,
     MessagesLocalizationEditorComponent,
+    FilterSettingsComponent,
   ],
   template: `
     <div class="config-editor-container">
@@ -85,6 +89,15 @@ import {
                 (toolbarActionsChange)="onToolbarActionsChange($event)"
               ></toolbar-actions-editor>
 
+              <filter-settings
+                *ngSwitchCase="'filters'"
+                [metadata]="columnMetas"
+                [settings]="
+                  editedConfig.behavior?.filtering?.advancedFilters?.settings
+                "
+                (settingsChange)="onFilterSettingsChange($event)"
+              ></filter-settings>
+
               <messages-localization-editor
                 *ngSwitchCase="'messages'"
                 [config]="editedConfig"
@@ -116,7 +129,9 @@ import {
   `,
   providers: [TableConfigService],
 })
-export class PraxisTableConfigEditor implements OnInit, OnDestroy, SettingsValueProvider {
+export class PraxisTableConfigEditor
+  implements OnInit, OnDestroy, SettingsValueProvider
+{
   @ViewChild(BehaviorConfigEditorComponent)
   behaviorEditor?: BehaviorConfigEditorComponent;
   sections = [
@@ -127,6 +142,7 @@ export class PraxisTableConfigEditor implements OnInit, OnDestroy, SettingsValue
     },
     { id: 'columns', label: 'Colunas', icon: 'view_column' },
     { id: 'toolbar', label: 'Barra de Ferramentas & Ações', icon: 'build' },
+    { id: 'filters', label: 'Filtros', icon: 'filter_alt' },
     { id: 'messages', label: 'Mensagens & Localização', icon: 'chat' },
     { id: 'json', label: 'JSON', icon: 'code' },
   ];
@@ -144,11 +160,12 @@ export class PraxisTableConfigEditor implements OnInit, OnDestroy, SettingsValue
   hasSuccess = false;
   statusMessage = '';
   private isValidJson = true;
-  
+
   // Observables obrigatórios da interface SettingsValueProvider
   isDirty$ = new BehaviorSubject<boolean>(false);
   isValid$ = new BehaviorSubject<boolean>(true);
   isBusy$ = new BehaviorSubject<boolean>(false);
+  columnMetas: FieldMetadata[] = [];
 
   constructor(
     private cdr: ChangeDetectorRef,
@@ -186,6 +203,7 @@ export class PraxisTableConfigEditor implements OnInit, OnDestroy, SettingsValue
 
       // Configurar estado inicial
       this.updateConfigurationVersion();
+      this.updateColumnMetas();
       this.updateCanSaveState();
     } catch (error) {
       // TODO: Implement proper error logging service
@@ -234,6 +252,7 @@ export class PraxisTableConfigEditor implements OnInit, OnDestroy, SettingsValue
   onColumnsConfigChange(newConfig: TableConfig): void {
     this.editedConfig = newConfig;
     this.updateConfigurationVersion();
+    this.updateColumnMetas();
     this.updateCanSaveState();
   }
 
@@ -261,20 +280,47 @@ export class PraxisTableConfigEditor implements OnInit, OnDestroy, SettingsValue
     }
   }
 
+  onFilterSettingsChange(cfg: FilterConfig): void {
+    if (!this.editedConfig.behavior) {
+      this.editedConfig.behavior = {} as any;
+    }
+    if (!this.editedConfig.behavior.filtering) {
+      this.editedConfig.behavior.filtering = {
+        enabled: true,
+        strategy: 'client',
+        debounceTime: 300,
+      };
+    }
+    const filtering = this.editedConfig.behavior.filtering;
+    filtering.advancedFilters = {
+      ...(filtering.advancedFilters || { enabled: false }),
+      settings: cfg,
+    };
+    this.updateCanSaveState();
+  }
+
+  private updateColumnMetas(): void {
+    this.columnMetas = (this.editedConfig.columns || []).map((c) => ({
+      name: c.field,
+      label: c.header,
+      controlType: FieldControlType.INPUT,
+    }));
+  }
+
   private updateCanSaveState(): void {
     // Verificar se há alterações válidas
     const hasChanges =
       JSON.stringify(this.originalConfig) !== JSON.stringify(this.editedConfig);
     const isValid = this.isValidJson;
     const canSave = hasChanges && isValid;
-    
+
     this.canSave = canSave;
-    
+
     // Atualizar observables da interface SettingsValueProvider
     this.isDirty$.next(hasChanges);
     this.isValid$.next(isValid);
     // isBusy$ será atualizado em operações específicas
-    
+
     this.cdr.markForCheck();
   }
 
@@ -322,7 +368,7 @@ export class PraxisTableConfigEditor implements OnInit, OnDestroy, SettingsValue
   onResetToDefaults(): void {
     // Indicar que está processando
     this.isBusy$.next(true);
-    
+
     try {
       // Reset para configuração padrão unificada
       const defaultConfig: TableConfig = {
@@ -390,7 +436,7 @@ export class PraxisTableConfigEditor implements OnInit, OnDestroy, SettingsValue
     try {
       // Indicar que está ocupado durante salvamento
       this.isBusy$.next(true);
-      
+
       if (!this.editedConfig || !Array.isArray(this.editedConfig.columns)) {
         throw new Error('Configuração inválida');
       }
@@ -400,7 +446,7 @@ export class PraxisTableConfigEditor implements OnInit, OnDestroy, SettingsValue
         '[PraxisTableConfigEditor] onSave returning config',
         this.editedConfig,
       );
-      
+
       return this.editedConfig;
     } catch (error) {
       this.showError('Configuração inválida. Verifique os campos.');
@@ -451,6 +497,15 @@ export class PraxisTableConfigEditor implements OnInit, OnDestroy, SettingsValue
   // Event handlers para o BehaviorConfigEditorComponent
   onBehaviorConfigChange(newConfig: TableConfig): void {
     this.editedConfig = newConfig;
+    // Ensure toolbar is visible when advanced filters are enabled
+    const advancedEnabled =
+      this.editedConfig.behavior?.filtering?.advancedFilters?.enabled;
+    if (advancedEnabled) {
+      this.editedConfig.toolbar = {
+        ...(this.editedConfig.toolbar || {}),
+        visible: true,
+      };
+    }
     this.updateConfigurationVersion();
     this.updateCanSaveState();
   }
