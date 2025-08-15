@@ -186,33 +186,38 @@ export class PraxisTableConfigEditor
         return;
       }
 
-      this.originalConfig = config;
+      console.debug('[PraxisTableConfigEditor] ngOnInit received config', config);
 
-      // Safe JSON cloning with error handling
-      try {
-        this.editedConfig = JSON.parse(JSON.stringify(this.originalConfig));
-      } catch (cloneError) {
-        // TODO: Implement proper error logging service
-        this.editedConfig = { columns: [] }; // fallback to empty config
-      }
+      // Normalizar ambas as configurações antes de armazenar para garantir comparação consistente
+      this.originalConfig = this.normalizeTableConfig(config);
+      this.editedConfig = this.normalizeTableConfig(config);
+
+      console.debug('[PraxisTableConfigEditor] ngOnInit normalized configs', {
+        original: this.originalConfig,
+        edited: this.editedConfig
+      });
 
       // Sempre usar V2 (arquitetura unificada)
       this.isV2Config = true;
 
       this.statusMessage = 'Pronto para configurar';
 
-      // Configurar estado inicial
-      this.updateConfigurationVersion();
+      // Configurar estado inicial - detectar versão sem modificar editedConfig
+      this.updateConfigurationVersionInfo();
       this.updateColumnMetas();
+      
+      // updateCanSaveState deve mostrar que não há mudanças após a normalização inicial
       this.updateCanSaveState();
     } catch (error) {
       // TODO: Implement proper error logging service
+      console.error('[PraxisTableConfigEditor] ngOnInit error', error);
       this.showError('Erro ao inicializar editor');
     }
   }
 
   // Event handlers para o JsonConfigEditorComponent
   onJsonConfigChange(newConfig: TableConfig): void {
+    console.debug('[PraxisTableConfigEditor] onJsonConfigChange received', newConfig);
     this.editedConfig = newConfig;
 
     // Update state directly
@@ -250,6 +255,7 @@ export class PraxisTableConfigEditor
 
   // Event handlers para o ColumnsConfigEditorComponent
   onColumnsConfigChange(newConfig: TableConfig): void {
+    console.debug('[PraxisTableConfigEditor] onColumnsConfigChange received', newConfig);
     this.editedConfig = newConfig;
     this.updateConfigurationVersion();
     this.updateColumnMetas();
@@ -281,21 +287,30 @@ export class PraxisTableConfigEditor
   }
 
   onFilterSettingsChange(cfg: FilterConfig): void {
-    if (!this.editedConfig.behavior) {
-      this.editedConfig.behavior = {} as any;
-    }
-    if (!this.editedConfig.behavior.filtering) {
-      this.editedConfig.behavior.filtering = {
-        enabled: true,
-        strategy: 'client',
-        debounceTime: 300,
-      };
-    }
-    const filtering = this.editedConfig.behavior.filtering;
-    filtering.advancedFilters = {
-      ...(filtering.advancedFilters || { enabled: false }),
-      settings: cfg,
+    console.debug('[PraxisTableConfigEditor] onFilterSettingsChange received', cfg);
+    
+    // Create a new config object to ensure change detection
+    const newConfig = {
+      ...this.editedConfig,
+      behavior: {
+        ...this.editedConfig.behavior,
+        filtering: {
+          ...(this.editedConfig.behavior?.filtering || {
+            enabled: true,
+            strategy: 'client' as const,
+            debounceTime: 300,
+          }),
+          advancedFilters: {
+            ...(this.editedConfig.behavior?.filtering?.advancedFilters || { enabled: false }),
+            settings: cfg,
+          },
+        },
+      },
     };
+
+    this.editedConfig = newConfig;
+    console.debug('[PraxisTableConfigEditor] onFilterSettingsChange updated editedConfig', this.editedConfig);
+    
     this.updateCanSaveState();
   }
 
@@ -308,11 +323,22 @@ export class PraxisTableConfigEditor
   }
 
   private updateCanSaveState(): void {
-    // Verificar se há alterações válidas
-    const hasChanges =
-      JSON.stringify(this.originalConfig) !== JSON.stringify(this.editedConfig);
+    // Normalizar configurações antes da comparação para evitar falsos positivos
+    const normalizedOriginal = this.normalizeTableConfig(this.originalConfig);
+    const normalizedEdited = this.normalizeTableConfig(this.editedConfig);
+    
+    // Verificar se há alterações válidas usando comparação robusta
+    const hasChanges = !this.deepEqual(normalizedOriginal, normalizedEdited);
     const isValid = this.isValidJson;
     const canSave = hasChanges && isValid;
+
+    console.debug('[PraxisTableConfigEditor] updateCanSaveState', {
+      hasChanges,
+      isValid,
+      canSave,
+      originalConfigKeys: Object.keys(normalizedOriginal),
+      editedConfigKeys: Object.keys(normalizedEdited)
+    });
 
     this.canSave = canSave;
 
@@ -351,6 +377,124 @@ export class PraxisTableConfigEditor
     this.hasSuccess = false;
     this.hasErrors = false;
     this.cdr.markForCheck();
+  }
+
+  /**
+   * Normaliza uma configuração de tabela para comparação consistente
+   * Remove propriedades undefined, ordena arrays e objetos de forma consistente
+   */
+  private normalizeTableConfig(config: TableConfig): TableConfig {
+    if (!config) {
+      return { columns: [] };
+    }
+
+    // Deep clone and normalize
+    const normalized = JSON.parse(JSON.stringify(config, (key, value) => {
+      // Convert undefined to null for consistent comparison
+      if (value === undefined) {
+        return null;
+      }
+      return value;
+    }));
+
+    // Ensure required properties exist
+    if (!normalized.columns) {
+      normalized.columns = [];
+    }
+
+    // Sort columns by field name for consistent comparison
+    if (Array.isArray(normalized.columns)) {
+      normalized.columns.sort((a: any, b: any) => (a.field || '').localeCompare(b.field || ''));
+    }
+
+    // Normalize behavior section
+    if (normalized.behavior) {
+      // Remove empty nested objects
+      Object.keys(normalized.behavior).forEach(key => {
+        if (normalized.behavior[key] && typeof normalized.behavior[key] === 'object' && Object.keys(normalized.behavior[key]).length === 0) {
+          delete normalized.behavior[key];
+        }
+      });
+      
+      // If behavior is empty, remove it
+      if (Object.keys(normalized.behavior).length === 0) {
+        delete normalized.behavior;
+      }
+    }
+
+    // Normalize filtering advanced settings
+    if (normalized.behavior?.filtering?.advancedFilters?.settings) {
+      const settings = normalized.behavior.filtering.advancedFilters.settings;
+      
+      // Remove undefined/null values from settings
+      Object.keys(settings).forEach(key => {
+        if (settings[key] === undefined || settings[key] === null || settings[key] === '') {
+          delete settings[key];
+        }
+      });
+      
+      // Sort arrays consistently
+      if (Array.isArray(settings.alwaysVisibleFields)) {
+        settings.alwaysVisibleFields.sort();
+      }
+    }
+
+    return normalized;
+  }
+
+  /**
+   * Realiza comparação profunda de objetos, ignorando ordem de propriedades
+   */
+  private deepEqual(obj1: any, obj2: any): boolean {
+    if (obj1 === obj2) {
+      return true;
+    }
+
+    if (obj1 == null || obj2 == null) {
+      return obj1 === obj2;
+    }
+
+    if (typeof obj1 !== typeof obj2) {
+      return false;
+    }
+
+    if (typeof obj1 !== 'object') {
+      return obj1 === obj2;
+    }
+
+    if (Array.isArray(obj1) !== Array.isArray(obj2)) {
+      return false;
+    }
+
+    if (Array.isArray(obj1)) {
+      if (obj1.length !== obj2.length) {
+        return false;
+      }
+      for (let i = 0; i < obj1.length; i++) {
+        if (!this.deepEqual(obj1[i], obj2[i])) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    const keys1 = Object.keys(obj1);
+    const keys2 = Object.keys(obj2);
+
+    if (keys1.length !== keys2.length) {
+      return false;
+    }
+
+    for (const key of keys1) {
+      if (!keys2.includes(key)) {
+        return false;
+      }
+      if (!this.deepEqual(obj1[key], obj2[key])) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   getSettingsValue(): TableConfig {
@@ -460,11 +604,25 @@ export class PraxisTableConfigEditor
 
   /**
    * Atualiza as flags de versão baseado na configuração atual
+   * Esta versão pode modificar a configuração, deve ser usada após mudanças
    */
   private updateConfigurationVersion(): void {
     this.isV2Config = isTableConfigV2(this.editedConfig);
 
     // Atualizar mensagem de status baseado na versão
+    if (this.isV2Config) {
+      this.statusMessage = 'Configuração V2 - Recursos avançados disponíveis';
+    }
+  }
+
+  /**
+   * Apenas detecta a versão da configuração sem modificá-la
+   * Usado durante inicialização para evitar marcar como dirty
+   */
+  private updateConfigurationVersionInfo(): void {
+    this.isV2Config = isTableConfigV2(this.editedConfig);
+
+    // Atualizar mensagem de status baseado na versão sem modificar a configuração
     if (this.isV2Config) {
       this.statusMessage = 'Configuração V2 - Recursos avançados disponíveis';
     }
@@ -502,7 +660,8 @@ export class PraxisTableConfigEditor
       this.editedConfig.behavior?.filtering?.advancedFilters?.enabled;
     if (advancedEnabled) {
       this.editedConfig.toolbar = {
-        ...(this.editedConfig.toolbar || {}),
+        ...this.editedConfig.toolbar,
+        position: this.editedConfig.toolbar?.position ?? 'top',
         visible: true,
       };
     }

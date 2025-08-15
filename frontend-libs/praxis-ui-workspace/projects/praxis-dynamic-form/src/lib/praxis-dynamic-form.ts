@@ -230,12 +230,13 @@ import { normalizeFormConfig } from './utils/normalize-form-config';
               @if (button.visible) {
                 <button
                   [type]="button.type || 'button'"
-                  [mat-raised-button]="
-                    button.variant === 'raised' || !button.variant
-                  "
-                  [mat-stroked-button]="button.variant === 'stroked'"
-                  [mat-flat-button]="button.variant === 'flat'"
-                  [mat-fab]="button.variant === 'fab'"
+                  [ngClass]="{
+                    'mat-raised-button': button.variant === 'raised' || !button.variant,
+                    'mat-stroked-button': button.variant === 'stroked',
+                    'mat-flat-button': button.variant === 'flat',
+                    'mat-fab': button.variant === 'fab'
+                  }"
+                  mat-button
                   [color]="button.color"
                   [disabled]="
                     button.disabled ||
@@ -260,12 +261,13 @@ import { normalizeFormConfig } from './utils/normalize-form-config';
               @for (button of getVisibleButtons(); track button.id) {
                 <button
                   [type]="button.type || 'button'"
-                  [mat-raised-button]="
-                    button.variant === 'raised' || !button.variant
-                  "
-                  [mat-stroked-button]="button.variant === 'stroked'"
-                  [mat-flat-button]="button.variant === 'flat'"
-                  [mat-fab]="button.variant === 'fab'"
+                  [ngClass]="{
+                    'mat-raised-button': button.variant === 'raised' || !button.variant,
+                    'mat-stroked-button': button.variant === 'stroked',
+                    'mat-flat-button': button.variant === 'flat',
+                    'mat-fab': button.variant === 'fab'
+                  }"
+                  mat-button
                   [color]="button.color"
                   [disabled]="
                     button.disabled ||
@@ -1322,26 +1324,34 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
     const buttons: FormActionButton[] = [];
 
     // 1. Submit Button
-    const submitBtn = {
-      id: 'submit',
-      type: 'submit',
-      color: 'primary',
+    const submitBtn: FormActionButton = {
       ...actions.submit,
+      id: 'submit',
+      type: 'submit' as const,
+      color: 'primary' as const,
+      visible: actions.showSaveButton !== false,
+      label: actions.submitButtonLabel || actions.submit?.label || 'Submit',
     };
-    if (actions.showSaveButton === false) submitBtn.visible = false;
-    if (actions.submitButtonLabel) submitBtn.label = actions.submitButtonLabel;
     buttons.push(submitBtn);
 
     // 2. Cancel Button
-    const cancelBtn = { id: 'cancel', type: 'button', ...actions.cancel };
-    if (actions.showCancelButton === false) cancelBtn.visible = false;
-    if (actions.cancelButtonLabel) cancelBtn.label = actions.cancelButtonLabel;
+    const cancelBtn: FormActionButton = {
+      ...actions.cancel,
+      id: 'cancel',
+      type: 'button' as const,
+      visible: actions.showCancelButton !== false,
+      label: actions.cancelButtonLabel || actions.cancel?.label || 'Cancel',
+    };
     buttons.push(cancelBtn);
 
     // 3. Reset Button
-    const resetBtn = { id: 'reset', type: 'reset', ...actions.reset };
-    if (actions.showResetButton === false) resetBtn.visible = false;
-    if (actions.resetButtonLabel) resetBtn.label = actions.resetButtonLabel;
+    const resetBtn: FormActionButton = {
+      ...actions.reset,
+      id: 'reset',
+      type: 'reset' as const,
+      visible: actions.showResetButton !== false,
+      label: actions.resetButtonLabel || actions.reset?.label || 'Reset',
+    };
     buttons.push(resetBtn);
 
     // 4. Custom Buttons
