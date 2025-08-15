@@ -19,7 +19,10 @@ import { MatListModule } from '@angular/material/list';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
-import { MatButtonToggleModule, MatButtonToggleChange } from '@angular/material/button-toggle';
+import {
+  MatButtonToggleModule,
+  MatButtonToggleChange,
+} from '@angular/material/button-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
@@ -43,8 +46,13 @@ import {
   ExportOptions,
   ImportOptions,
   RuleBuilderConfig,
+  RuleNodeConfig,
 } from '../models/rule-builder.model';
-import { FieldSchema, CustomFunction, ContextVariable } from '../models/field-schema.model';
+import {
+  FieldSchema,
+  CustomFunction,
+  ContextVariable,
+} from '../models/field-schema.model';
 
 @Component({
   selector: 'praxis-rule-editor',
@@ -373,7 +381,11 @@ import { FieldSchema, CustomFunction, ContextVariable } from '../models/field-sc
 
       <!-- Validation Errors Panel -->
       <div
-        *ngIf="showValidationErrors && validationErrors && validationErrors.length > 0"
+        *ngIf="
+          showValidationErrors &&
+          validationErrors &&
+          validationErrors.length > 0
+        "
         class="validation-panel"
       >
         <div class="validation-header">
@@ -868,7 +880,9 @@ export class RuleEditorComponent implements OnInit, OnDestroy {
   private initializeBuilder(): void {
     if (this.config) {
       this.ruleBuilderService.initialize(this.config);
-      this.fieldSchemaService.setFieldSchemas(this.config.fieldSchemas as Record<string, FieldSchema>);
+      this.fieldSchemaService.setFieldSchemas(
+        this.config.fieldSchemas as Record<string, FieldSchema>,
+      );
 
       if (this.config.contextVariables) {
         this.fieldSchemaService.setContext({
@@ -1050,12 +1064,21 @@ export class RuleEditorComponent implements OnInit, OnDestroy {
     // Open add rule dialog
   }
 
-  onNodeAdded(event: any): void {
-    // Handle node added from canvas
+  onNodeAdded(event: {
+    type: RuleNodeType;
+    parentId?: string;
+    config?: RuleNodeConfig;
+  }): void {
+    const nodeId = this.ruleBuilderService.addNode(
+      { type: event.type, config: event.config },
+      event.parentId,
+    );
+    this.ruleBuilderService.selectNode(nodeId);
+    this.snackBar.open('Rule added', 'Close', { duration: 2000 });
   }
 
-  onNodeUpdated(event: any): void {
-    // Handle node updated from canvas
+  onNodeUpdated(event: { nodeId: string; updates: Partial<RuleNode> }): void {
+    this.ruleBuilderService.updateNode(event.nodeId, event.updates);
   }
 
   onMetadataUpdated(event: any): void {
