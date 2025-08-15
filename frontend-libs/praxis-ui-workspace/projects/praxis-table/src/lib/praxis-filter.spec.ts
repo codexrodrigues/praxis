@@ -80,10 +80,11 @@ describe('PraxisFilter', () => {
     },
     tags?: FilterTag[],
     allowSaveTags = false,
+    resourcePath = '/test',
   ): void {
     fixture = TestBed.createComponent(PraxisFilter);
     component = fixture.componentInstance;
-    component.resourcePath = '/test';
+    component.resourcePath = resourcePath;
     component.formId = 'f1';
     if (quickField) {
       component.quickField = quickField;
@@ -148,6 +149,46 @@ describe('PraxisFilter', () => {
     component.onClear();
     expect(spy).toHaveBeenCalled();
     expect(component.quickControl.value).toBe('');
+  });
+
+  it('should load filter schema from /filter endpoint', () => {
+    createComponent();
+    expect(crud.getFilteredSchema).toHaveBeenCalledWith(
+      jasmine.objectContaining({
+        path: '/test/filter',
+        operation: 'post',
+        schemaType: 'request',
+      }),
+    );
+  });
+
+  it('normalizes resourcePath without leading slash', () => {
+    createComponent(
+      undefined,
+      [],
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      undefined,
+      false,
+      'test',
+    );
+    expect(crud.getFilteredSchema).toHaveBeenCalledWith(
+      jasmine.objectContaining({ path: '/test/filter' }),
+    );
+  });
+
+  it('should fallback to generic schema when filter schema fails', () => {
+    crud.getFilteredSchema.and.returnValue(throwError(() => new Error('x')));
+    crud.getSchema.and.returnValue(of([]));
+    createComponent();
+    expect(crud.getFilteredSchema).toHaveBeenCalledWith(
+      jasmine.objectContaining({ path: '/test/filter' }),
+    );
+    expect(crud.getSchema).toHaveBeenCalled();
+    expect(component.schemaError).toBeFalse();
   });
 
   it('should resolve quick field using dynamic component', () => {

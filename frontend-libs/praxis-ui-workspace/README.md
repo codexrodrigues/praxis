@@ -27,6 +27,7 @@ O Praxis UI Workspace é um monorepo Angular que contém uma coleção de biblio
 - ✅ **Editores Especializados**: Configuration editors para diferentes aspectos
 - ✅ **Performance**: Virtualização e lazy loading integrados
 - ✅ **Acessibilidade**: Suporte completo a screen readers e navegação por teclado
+- ✅ **Filtros Dinâmicos**: Carregamento de campos via schema específico de `POST /filter`
 
 ### 🎨 Praxis Visual Builder (`@praxis/visual-builder`)
 
@@ -89,7 +90,7 @@ O Praxis UI Workspace é um monorepo Angular que contém uma coleção de biblio
 ```
 Preciso de...
 ├─ 🔤 Um campo de input individual? → @praxis/dynamic-fields
-├─ 📝 Um formulário completo? → @praxis/dynamic-form  
+├─ 📝 Um formulário completo? → @praxis/dynamic-form
 ├─ 📊 Uma tabela de dados? → @praxis/table
 ├─ 🔄 CRUD completo (tabela + form)? → @praxis/crud
 ├─ ✅ Validação e regras complexas? → @praxis/specification
@@ -104,6 +105,7 @@ Preciso de...
 Fornecer a infraestrutura base compartilhada por todas as outras bibliotecas: interfaces, modelos, serviços fundamentais e utilitários.
 
 **✅ Quando Usar**
+
 - Precisa de interfaces TypeScript (TableConfig, FormConfig, FieldDefinition)
 - Implementar serviços de CRUD genéricos
 - Acessar tokens de injeção (API_URL, OVERLAY_DECISION_MATRIX)
@@ -111,6 +113,7 @@ Fornecer a infraestrutura base compartilhada por todas as outras bibliotecas: in
 - Normalizar schemas do backend
 
 **📋 Responsabilidades**
+
 - Definições de tipos e interfaces base
 - GenericCrudService para operações REST
 - SchemaNormalizerService para metadados
@@ -119,6 +122,7 @@ Fornecer a infraestrutura base compartilhada por todas as outras bibliotecas: in
 - Modelos de paginação e resposta API
 
 **❌ NÃO Pertence Aqui**
+
 - Componentes visuais (vão para outras libs)
 - Lógica de negócio específica
 - Implementações concretas de UI
@@ -126,6 +130,7 @@ Fornecer a infraestrutura base compartilhada por todas as outras bibliotecas: in
 **🔗 Dependências**: Nenhuma (é a base)
 
 **💡 Exemplo de Uso**
+
 ```typescript
 import { TableConfig, GenericCrudService, API_URL } from '@praxis/core';
 
@@ -144,12 +149,14 @@ constructor(private crud: GenericCrudService<Usuario>) {
 Fornecer componentes de input individuais e reutilizáveis com Material Design, com sistema de registro dinâmico e lazy loading.
 
 **✅ Quando Usar**
+
 - Precisa de um campo de input específico (text, select, date, etc.)
 - Quer lazy loading de componentes
 - Necessita de componentes Material Design padronizados
 - Implementar novos tipos de input customizados
 
 **📋 Responsabilidades**
+
 - Componentes individuais de input (30+ tipos)
 - Sistema de registro dinâmico (ComponentRegistry)
 - Lazy loading e cache de componentes
@@ -157,6 +164,7 @@ Fornecer componentes de input individuais e reutilizáveis com Material Design, 
 - Componentes especializados (ColorPicker, TimePicker, FileUpload)
 
 **❌ NÃO Pertence Aqui**
+
 - Layout de formulários (vai para dynamic-form)
 - Lógica de CRUD
 - Configuração de tabelas
@@ -165,8 +173,9 @@ Fornecer componentes de input individuais e reutilizáveis com Material Design, 
 **🔗 Dependências**: @praxis/core
 
 **💡 Exemplo de Uso**
+
 ```typescript
-import { ComponentRegistryService, FieldControlType } from '@praxis/dynamic-fields';
+import { ComponentRegistryService, FieldControlType } from "@praxis/dynamic-fields";
 
 // Registrar e usar componente dinamicamente
 const component = await registry.getComponent(FieldControlType.DATE_PICKER);
@@ -178,6 +187,7 @@ const component = await registry.getComponent(FieldControlType.DATE_PICKER);
 Construir formulários completos e dinâmicos com layout configurável, regras condicionais e integração com backend.
 
 **✅ Quando Usar**
+
 - Precisa de um formulário completo (não apenas campos)
 - Quer layout configurável (fieldsets, rows, columns)
 - Necessita de regras condicionais entre campos
@@ -185,6 +195,7 @@ Construir formulários completos e dinâmicos com layout configurável, regras c
 - Integração com backend para save/load
 
 **📋 Responsabilidades**
+
 - PraxisDynamicForm component
 - Sistema de layout (fieldsets, rows, fields)
 - Editor visual de layout (drag-and-drop)
@@ -193,6 +204,7 @@ Construir formulários completos e dinâmicos com layout configurável, regras c
 - Persistência de configurações
 
 **❌ NÃO Pertence Aqui**
+
 - Componentes de input individuais (vêm do dynamic-fields)
 - Tabelas de dados
 - Validações complexas de negócio (usar specification)
@@ -200,6 +212,7 @@ Construir formulários completos e dinâmicos com layout configurável, regras c
 **🔗 Dependências**: @praxis/core, @praxis/dynamic-fields
 
 **💡 Exemplo de Uso**
+
 ```typescript
 <praxis-dynamic-form
   [formId]="'user-form'"
@@ -216,6 +229,7 @@ Construir formulários completos e dinâmicos com layout configurável, regras c
 Fornecer componente de tabela empresarial com recursos avançados como paginação, ordenação, filtros e editores visuais.
 
 **✅ Quando Usar**
+
 - Exibir dados em formato tabular
 - Necessita paginação, ordenação ou filtros
 - Quer configuração visual da tabela
@@ -223,6 +237,7 @@ Fornecer componente de tabela empresarial com recursos avançados como paginaç�
 - Seleção e ações em lote
 
 **📋 Responsabilidades**
+
 - PraxisTable component
 - Paginação client/server-side
 - Ordenação múltipla
@@ -232,6 +247,7 @@ Fornecer componente de tabela empresarial com recursos avançados como paginaç�
 - Exportação de dados
 
 **❌ NÃO Pertence Aqui**
+
 - Formulários de edição (usar dynamic-form)
 - Lógica de CRUD (usar crud lib)
 - Componentes de input
@@ -239,6 +255,7 @@ Fornecer componente de tabela empresarial com recursos avançados como paginaç�
 **🔗 Dependências**: @praxis/core, @praxis/dynamic-fields
 
 **💡 Exemplo de Uso**
+
 ```typescript
 <praxis-table
   [config]="tableConfig"
@@ -254,6 +271,7 @@ Fornecer componente de tabela empresarial com recursos avançados como paginaç�
 Sistema de especificações para validações complexas, regras de negócio e composição booleana avançada.
 
 **✅ Quando Usar**
+
 - Validações além das básicas (required, min, max)
 - Regras de negócio complexas
 - Validações condicionais entre campos
@@ -261,6 +279,7 @@ Sistema de especificações para validações complexas, regras de negócio e co
 - DSL para expressões de validação
 
 **📋 Responsabilidades**
+
 - Motor de especificações
 - Validadores condicionais
 - Composição booleana
@@ -269,6 +288,7 @@ Sistema de especificações para validações complexas, regras de negócio e co
 - Metadata de especificações
 
 **❌ NÃO Pertence Aqui**
+
 - Componentes visuais
 - Lógica de UI
 - Operações CRUD
@@ -277,13 +297,11 @@ Sistema de especificações para validações complexas, regras de negócio e co
 **🔗 Dependências**: @praxis/core
 
 **💡 Exemplo de Uso**
-```typescript
-import { FieldSpecification, AndSpecification } from '@praxis/specification';
 
-const spec = new AndSpecification([
-  new FieldSpecification('age', '>=', 18),
-  new FieldSpecification('hasLicense', '==', true)
-]);
+```typescript
+import { FieldSpecification, AndSpecification } from "@praxis/specification";
+
+const spec = new AndSpecification([new FieldSpecification("age", ">=", 18), new FieldSpecification("hasLicense", "==", true)]);
 
 const isValid = spec.isSatisfiedBy(context);
 ```
@@ -294,6 +312,7 @@ const isValid = spec.isSatisfiedBy(context);
 Ferramentas visuais para construção de regras, expressões DSL e templates com interface gráfica intuitiva.
 
 **✅ Quando Usar**
+
 - Editor visual de regras de negócio
 - Construtor de expressões DSL
 - Templates de regras reutilizáveis
@@ -301,6 +320,7 @@ Ferramentas visuais para construção de regras, expressões DSL e templates com
 - Validação em tempo real de expressões
 
 **📋 Responsabilidades**
+
 - Visual Rule Builder
 - Expression Editor com autocomplete
 - Context Variable Manager
@@ -310,6 +330,7 @@ Ferramentas visuais para construção de regras, expressões DSL e templates com
 - Export/Import de regras
 
 **❌ NÃO Pertence Aqui**
+
 - Execução de regras (usar specification)
 - Componentes de formulário
 - Tabelas de dados
@@ -318,6 +339,7 @@ Ferramentas visuais para construção de regras, expressões DSL e templates com
 **🔗 Dependências**: @praxis/core, @praxis/specification
 
 **💡 Exemplo de Uso**
+
 ```typescript
 <praxis-visual-rule-builder
   [fieldSchemas]="fields"
@@ -333,6 +355,7 @@ Ferramentas visuais para construção de regras, expressões DSL e templates com
 Unificar tabela e formulário em um componente CRUD completo com suporte a diferentes modos de abertura (modal/rota).
 
 **✅ Quando Usar**
+
 - CRUD completo sem configuração manual
 - Integração automática tabela + formulário
 - Alternar entre modal e navegação por rota
@@ -340,6 +363,7 @@ Unificar tabela e formulário em um componente CRUD completo com suporte a difer
 - Ações padronizadas (criar, editar, excluir)
 
 **📋 Responsabilidades**
+
 - PraxisCrudComponent
 - CrudLauncherService
 - Gestão de modais e rotas
@@ -348,6 +372,7 @@ Unificar tabela e formulário em um componente CRUD completo com suporte a difer
 - Dialog host para formulários
 
 **❌ NÃO Pertence Aqui**
+
 - Componentes de input básicos
 - Validações de negócio
 - Editores visuais
@@ -356,6 +381,7 @@ Unificar tabela e formulário em um componente CRUD completo com suporte a difer
 **🔗 Dependências**: @praxis/core, @praxis/dynamic-form, @praxis/table
 
 **💡 Exemplo de Uso**
+
 ```typescript
 <praxis-crud
   [metadata]="crudMetadata"
@@ -370,6 +396,7 @@ Unificar tabela e formulário em um componente CRUD completo com suporte a difer
 Fornecer painéis deslizantes (drawers) para configurações, preferências e opções avançadas da aplicação.
 
 **✅ Quando Usar**
+
 - Painéis de configuração da aplicação
 - Preferências do usuário
 - Configurações avançadas
@@ -377,6 +404,7 @@ Fornecer painéis deslizantes (drawers) para configurações, preferências e op
 - Persistência de preferências
 
 **📋 Responsabilidades**
+
 - SettingsPanelComponent
 - SettingsPanelService
 - Gestão de estado do painel
@@ -385,6 +413,7 @@ Fornecer painéis deslizantes (drawers) para configurações, preferências e op
 - Integração com temas
 
 **❌ NÃO Pertence Aqui**
+
 - Formulários de dados (usar dynamic-form)
 - Tabelas (usar table)
 - Validações complexas
@@ -393,6 +422,7 @@ Fornecer painéis deslizantes (drawers) para configurações, preferências e op
 **🔗 Dependências**: @praxis/core
 
 **💡 Exemplo de Uso**
+
 ```typescript
 constructor(private settingsPanel: SettingsPanelService) {}
 
@@ -407,16 +437,16 @@ openSettings() {
 
 ## 🔗 Matriz de Responsabilidades
 
-| Biblioteca | Input | Form | Table | CRUD | Rules | Visual | Config |
-|------------|-------|------|-------|------|-------|--------|--------|
-| core | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ Interfaces |
-| dynamic-fields | ✅ Individual | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| dynamic-form | ❌ | ✅ Completo | ❌ | ❌ | ✅ Simples | ❌ | ✅ Layout |
-| table | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ Columns |
-| specification | ❌ | ❌ | ❌ | ❌ | ✅ Complexas | ❌ | ❌ |
-| visual-builder | ❌ | ❌ | ❌ | ❌ | ✅ Editor | ✅ | ❌ |
-| crud | ❌ | ✅ Via form | ✅ Via table | ✅ | ❌ | ❌ | ✅ Metadata |
-| settings-panel | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ App |
+| Biblioteca     | Input         | Form        | Table        | CRUD | Rules        | Visual | Config        |
+| -------------- | ------------- | ----------- | ------------ | ---- | ------------ | ------ | ------------- |
+| core           | ❌            | ❌          | ❌           | ❌   | ❌           | ❌     | ✅ Interfaces |
+| dynamic-fields | ✅ Individual | ❌          | ❌           | ❌   | ❌           | ❌     | ❌            |
+| dynamic-form   | ❌            | ✅ Completo | ❌           | ❌   | ✅ Simples   | ❌     | ✅ Layout     |
+| table          | ❌            | ❌          | ✅           | ❌   | ❌           | ❌     | ✅ Columns    |
+| specification  | ❌            | ❌          | ❌           | ❌   | ✅ Complexas | ❌     | ❌            |
+| visual-builder | ❌            | ❌          | ❌           | ❌   | ✅ Editor    | ✅     | ❌            |
+| crud           | ❌            | ✅ Via form | ✅ Via table | ✅   | ❌           | ❌     | ✅ Metadata   |
+| settings-panel | ❌            | ❌          | ❌           | ❌   | ❌           | ❌     | ✅ App        |
 
 ## 🚀 Novidades da Arquitetura Unificada
 
@@ -471,19 +501,22 @@ npm start
 ## 📚 Guia de Navegação
 
 ### 🏗️ Build e Desenvolvimento
+
 - [🏗️ Arquitetura de Build](#%EF%B8%8F-arquitetura-de-build) - Por que monorepo e como funciona
 - [⚙️ Comandos de Build Detalhados](#%EF%B8%8F-comandos-de-build-detalhados) - Watch, produção e debug
 - [📦 Processo de Publicação](#-processo-de-publicação) - Versionamento e NPM publish
 - [🏗️ Build e Deploy Avançado](#%EF%B8%8F-build-e-deploy-avançado) - CI/CD, Docker e otimizações
 - [🔧 Desenvolvimento](#-desenvolvimento) - Setup, debug e fluxo de trabalho
 
-### 🎯 Uso e Integração  
+### 🎯 Uso e Integração
+
 - [📚 Arquitetura das Bibliotecas](#-arquitetura-das-bibliotecas) - Objetivos e responsabilidades de cada lib
 - [📝 Uso Básico](#-uso-básico) - Exemplos práticos
 - [🔗 Integração com Backend](#-integração-com-backend-praxis-metadata-core) - Metadados e APIs
 - [🧭 Matriz de Decisão de Overlays](#-matriz-de-decisão-de-overlays) - Seleção automática de UI patterns
 
 ### 📖 Documentação e Referências
+
 - [📚 Documentação](#-documentação) - Guias detalhados e API reference
 - [🧪 Testes](#-testes) - Como executar e configurar testes
 - [🤝 Contribuição](#-contribuição) - Guidelines para contribuir
@@ -791,7 +824,7 @@ O projeto segue [Semantic Versioning](https://semver.org/):
 # 🐛 Bug fix (1.0.0 → 1.0.1)
 npm run release patch
 
-# ✨ Nova funcionalidade (1.0.1 → 1.1.0)  
+# ✨ Nova funcionalidade (1.0.1 → 1.1.0)
 npm run release minor
 
 # 💥 Breaking change (1.1.0 → 2.0.0)
@@ -812,7 +845,7 @@ npm run build:libs:prod
 
 # 2️⃣ Publicação individual (em ordem de dependência)
 cd dist/praxis-core && npm publish
-cd ../praxis-dynamic-fields && npm publish  
+cd ../praxis-dynamic-fields && npm publish
 cd ../praxis-specification && npm publish
 cd ../praxis-dynamic-form && npm publish
 cd ../praxis-table && npm publish
@@ -899,13 +932,13 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: '18'
-          cache: 'npm'
-      
+          node-version: "18"
+          cache: "npm"
+
       - run: npm ci
       - run: npm run build
       - run: npm test
-      
+
       # Build all libraries
       - run: |
           ng build praxis-core
@@ -919,12 +952,14 @@ jobs:
 #### ❌ Problemas Comuns
 
 **1. Erro de Dependência Circular:**
+
 ```bash
 # ❌ ERROR: Circular dependency detected
 # ✅ Solução: Revisar imports e extrair interfaces comuns
 ```
 
 **2. Memory Issues:**
+
 ```bash
 # ❌ JavaScript heap out of memory
 # ✅ Solução: Aumentar memória do Node.js
@@ -933,6 +968,7 @@ npm run build
 ```
 
 **3. TypeScript Errors:**
+
 ```bash
 # ❌ TS errors in libs
 # ✅ Verificar tsconfig.json e dependências
@@ -940,6 +976,7 @@ ng build praxis-core --verbose
 ```
 
 **4. ng-packagr Issues:**
+
 ```bash
 # ❌ ng-packagr build failed
 # ✅ Limpar cache e rebuildar
@@ -1015,7 +1052,7 @@ npm start           # Terminal 2: Servidor da aplicação
 
 ```bash
 # 🎯 Core: Interfaces, modelos, serviços base
-# 📦 Dynamic Fields: Componentes de input reutilizáveis  
+# 📦 Dynamic Fields: Componentes de input reutilizáveis
 # 📋 Dynamic Form: Formulários dinâmicos e layout
 # 🗃️ Table: Componentes de tabela avançados
 # 🎨 Visual Builder: Ferramentas visuais e rule builders
@@ -1034,7 +1071,7 @@ ng generate component nova-funcionalidade --project=praxis-table
 # - Editar o código do componente
 # - Adicionar ao public-api.ts da biblioteca
 
-# 3. Testar localmente  
+# 3. Testar localmente
 ng test praxis-table
 
 # 4. Build para verificar se não quebrou nada
@@ -1049,7 +1086,7 @@ npm run dev
 ```
 projects/praxis-[lib]/src/lib/
 ├── components/          # Componentes UI
-├── services/           # Serviços e lógica de negócio  
+├── services/           # Serviços e lógica de negócio
 ├── models/             # Interfaces e tipos
 ├── utils/              # Utilitários
 ├── directives/         # Diretivas customizadas
@@ -1081,6 +1118,7 @@ ps aux | grep "ng build"
 #### 🚨 Problemas Comuns
 
 **1. Lib não atualiza na aplicação:**
+
 ```bash
 # ✅ Verificar se watch está ativo
 npm run watch-all
@@ -1090,6 +1128,7 @@ ng build praxis-core --watch
 ```
 
 **2. Erros de TypeScript:**
+
 ```bash
 # ✅ Verificar public-api.ts atualizado
 cat projects/praxis-core/src/public-api.ts
@@ -1099,6 +1138,7 @@ npx tsc --noEmit --project projects/praxis-core/tsconfig.lib.json
 ```
 
 **3. Hot reload quebrado:**
+
 ```bash
 # ✅ Restart completo
 pkill -f "ng serve"
@@ -1107,6 +1147,7 @@ npm run dev
 ```
 
 **4. Dependências quebradas:**
+
 ```bash
 # ✅ Limpar node_modules
 rm -rf node_modules package-lock.json
