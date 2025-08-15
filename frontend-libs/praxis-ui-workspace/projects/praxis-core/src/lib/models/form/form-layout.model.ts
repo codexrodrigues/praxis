@@ -71,7 +71,6 @@ export interface FormMessagesLayout {
 }
 
 import type { FieldMetadata } from '../component-metadata.interface';
-import { Specification } from '@praxis/specification';
 
 export interface FormRowLayout {
   id: string;
@@ -80,8 +79,8 @@ export interface FormRowLayout {
   orientation: 'horizontal' | 'vertical';
   fields: FieldMetadata[];
   styles?: { [key: string]: any };
-  hiddenCondition?: Specification<any>;
-  visibilityCondition?: Specification<any>;
+  hiddenCondition?: any; // Re-evaluating this; Specification object is not serializable
+  visibilityCondition?: any;
 }
 
 export interface NestedFieldsetLayout extends FormRowLayout {
@@ -113,7 +112,7 @@ export interface FormLayoutRule {
   targetFields: string[];
   description?: string;
   effect: {
-    condition: Specification<any> | null;
+    condition: string | null; // Changed to store DSL string
     styleClass?: string;
     style?: { [key: string]: any };
   };
