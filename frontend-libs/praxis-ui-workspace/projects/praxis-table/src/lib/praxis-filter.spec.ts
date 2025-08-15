@@ -17,6 +17,8 @@ import {
   FilterConfig,
 } from './services/filter-config.service';
 import { SettingsPanelService } from '@praxis/settings-panel';
+import { OverlayContainer } from '@angular/cdk/overlay';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 describe('PraxisFilter', () => {
   let component: PraxisFilter;
@@ -25,6 +27,8 @@ describe('PraxisFilter', () => {
   let storage: jasmine.SpyObj<ConfigStorage>;
   let configService: FilterConfigService;
   let settingsPanel: jasmine.SpyObj<SettingsPanelService>;
+  let overlayContainer: OverlayContainer;
+  let overlayElement: HTMLElement;
 
   beforeEach(async () => {
     crud = jasmine.createSpyObj('GenericCrudService', [
@@ -44,7 +48,7 @@ describe('PraxisFilter', () => {
     settingsPanel = jasmine.createSpyObj('SettingsPanelService', ['open']);
 
     await TestBed.configureTestingModule({
-      imports: [PraxisFilter],
+      imports: [PraxisFilter, NoopAnimationsModule],
       providers: [
         { provide: GenericCrudService, useValue: crud },
         { provide: CONFIG_STORAGE, useValue: storage },
@@ -53,6 +57,12 @@ describe('PraxisFilter', () => {
       ],
     }).compileComponents();
     configService = TestBed.inject(FilterConfigService);
+    overlayContainer = TestBed.inject(OverlayContainer);
+    overlayElement = overlayContainer.getContainerElement();
+  });
+
+  afterEach(() => {
+    overlayContainer.ngOnDestroy();
   });
 
   function createComponent(
@@ -459,7 +469,6 @@ describe('PraxisFilter', () => {
   });
 
   it('should open settings panel and apply configuration', () => {
-
     const applied$ = new Subject<FilterConfig>();
     const saved$ = new Subject<FilterConfig>();
     const ref = { applied$, saved$, close: jasmine.createSpy('close') } as any;
@@ -497,6 +506,23 @@ describe('PraxisFilter', () => {
       placeholder: undefined,
       showAdvanced: false,
     });
-
   });
+
+  it('should open advanced filter as overlay, close with ESC and restore focus', fakeAsync(() => {
+    createComponent();
+    const el: HTMLElement = fixture.nativeElement;
+    const btn = el.querySelector('button[cdkoverlayorigin]') as HTMLElement;
+    btn.click();
+    fixture.detectChanges();
+    expect(
+      overlayElement.querySelector('.praxis-filter-advanced'),
+    ).toBeTruthy();
+    overlayElement.dispatchEvent(
+      new KeyboardEvent('keydown', { key: 'Escape' }),
+    );
+    tick();
+    fixture.detectChanges();
+    expect(component.advancedOpen).toBeFalse();
+    expect(document.activeElement).toBe(btn);
+  }));
 });

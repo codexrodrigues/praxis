@@ -9,6 +9,7 @@ import {
   SimpleChanges,
   DestroyRef,
   TemplateRef,
+  ViewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
@@ -35,6 +36,8 @@ import { FilterSettingsComponent } from './filter-settings/filter-settings.compo
 import { SettingsPanelService } from '@praxis/settings-panel';
 import { DynamicFieldLoaderDirective } from '@praxis/dynamic-fields';
 import { PraxisDynamicForm } from '@praxis/dynamic-form';
+import { OverlayModule, CdkOverlayOrigin } from '@angular/cdk/overlay';
+import { CdkTrapFocus } from '@angular/cdk/a11y';
 import { Subject, of } from 'rxjs';
 import { catchError, debounceTime, map, take, takeUntil } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -79,6 +82,8 @@ const DEFAULT_I18N: I18n = {
     MatSnackBarModule,
     DynamicFieldLoaderDirective,
     PraxisDynamicForm,
+    OverlayModule,
+    CdkTrapFocus,
   ],
   template: `
     <ng-container *ngIf="modeState === 'filter'; else summaryCard">
@@ -116,7 +121,13 @@ const DEFAULT_I18N: I18n = {
         <button mat-raised-button color="primary" (click)="onSubmit()">
           {{ i18nLabels.apply }}
         </button>
-        <button mat-button type="button" (click)="toggleAdvanced()">
+        <button
+          #advancedBtn="cdkOverlayOrigin"
+          cdkOverlayOrigin
+          mat-button
+          type="button"
+          (click)="toggleAdvanced()"
+        >
           {{ advancedOpen ? i18nLabels.edit : i18nLabels.advanced }}
         </button>
         <button mat-button type="button" (click)="onClear()">
@@ -160,30 +171,44 @@ const DEFAULT_I18N: I18n = {
           </mat-chip>
         </mat-chip-set>
       </div>
-      <div class="praxis-filter-advanced" *ngIf="advancedOpen">
-        <mat-progress-bar
-          *ngIf="schemaLoading"
-          mode="indeterminate"
-        ></mat-progress-bar>
-        <p *ngIf="schemaError" class="schema-error">
-          Erro ao carregar filtros.
-          <button mat-button type="button" (click)="loadSchema()">
-            Tentar novamente
-          </button>
-        </p>
-        <praxis-dynamic-form
-          *ngIf="!schemaLoading && !schemaError && advancedConfig"
-          [formId]="formId"
-          [resourcePath]="resourcePath"
-          [mode]="'edit'"
-          [config]="advancedConfig"
-          (formReady)="onAdvancedReady($event)"
-          (valueChange)="onAdvancedChange($event)"
-        ></praxis-dynamic-form>
-        <p *ngIf="!schemaLoading && !schemaError && !advancedConfig">
-          {{ i18nLabels.noData }}
-        </p>
-      </div>
+      <ng-template
+        cdkConnectedOverlay
+        [cdkConnectedOverlayOrigin]="advancedBtn"
+        [cdkConnectedOverlayOpen]="advancedOpen"
+        [cdkConnectedOverlayHasBackdrop]="true"
+        (backdropClick)="toggleAdvanced()"
+        (detach)="onOverlayDetach()"
+      >
+        <div
+          class="praxis-filter-advanced"
+          cdkTrapFocus
+          cdkTrapFocusAutoCapture
+          (keydown.escape)="toggleAdvanced()"
+        >
+          <mat-progress-bar
+            *ngIf="schemaLoading"
+            mode="indeterminate"
+          ></mat-progress-bar>
+          <p *ngIf="schemaError" class="schema-error">
+            Erro ao carregar filtros.
+            <button mat-button type="button" (click)="loadSchema()">
+              Tentar novamente
+            </button>
+          </p>
+          <praxis-dynamic-form
+            *ngIf="!schemaLoading && !schemaError && advancedConfig"
+            [formId]="formId"
+            [resourcePath]="resourcePath"
+            [mode]="'edit'"
+            [config]="advancedConfig"
+            (formReady)="onAdvancedReady($event)"
+            (valueChange)="onAdvancedChange($event)"
+          ></praxis-dynamic-form>
+          <p *ngIf="!schemaLoading && !schemaError && !advancedConfig">
+            {{ i18nLabels.noData }}
+          </p>
+        </div>
+      </ng-template>
     </ng-container>
     <ng-template #summaryCard>
       <div class="praxis-filter-card" (keydown.escape)="onClear()">
@@ -343,6 +368,8 @@ export class PraxisFilter implements OnInit, OnChanges {
   i18nLabels: I18n = DEFAULT_I18N;
   private placeholder?: string;
   private configKey!: string;
+  @ViewChild('advancedBtn', { read: CdkOverlayOrigin })
+  advancedBtn?: CdkOverlayOrigin;
 
   constructor(
     private crud: GenericCrudService<any>,
@@ -354,12 +381,10 @@ export class PraxisFilter implements OnInit, OnChanges {
   ) {}
 
   ngOnInit(): void {
-    console.log('PFILTER:init');
     this.crud.configure(this.resourcePath);
     this.configKey = this.persistenceKey ?? this.formId;
     const cfg = this.filterConfig.load(this.configKey);
     if (cfg) {
-      console.log('PFILTER:config:load', cfg);
       if (!this.quickField && cfg.quickField) {
         this.quickField = cfg.quickField;
       }
@@ -389,7 +414,6 @@ export class PraxisFilter implements OnInit, OnChanges {
       );
       if (saved) {
         this.dto = { ...saved };
-        console.log('PFILTER:persist:load', this.dto);
         if (this.quickField && saved[this.quickField]) {
           this.quickControl.setValue(saved[this.quickField], {
             emitEvent: false,
@@ -417,7 +441,6 @@ export class PraxisFilter implements OnInit, OnChanges {
             delete this.dto[this.quickField];
           }
         }
-        console.log('PFILTER:change', this.dto);
         this.change.emit({ ...this.dto });
         this.persist();
       });
@@ -435,7 +458,6 @@ export class PraxisFilter implements OnInit, OnChanges {
             this.dto[k] = v;
           }
         });
-        console.log('PFILTER:change', this.dto);
         this.change.emit({ ...this.dto });
         this.persist();
       });
@@ -474,7 +496,6 @@ export class PraxisFilter implements OnInit, OnChanges {
   }
 
   onSubmit(): void {
-    console.log('PFILTER:submit', this.dto);
     this.submit.emit({ ...this.dto });
     this.persist();
   }
@@ -484,9 +505,7 @@ export class PraxisFilter implements OnInit, OnChanges {
     this.alwaysForm.reset(undefined, { emitEvent: false });
     this.advancedForm?.reset(undefined, { emitEvent: false });
     this.dto = {};
-    console.log('PFILTER:clear');
     this.clear.emit();
-    console.log('PFILTER:change', this.dto);
     this.change.emit({});
     this.clearPersisted();
   }
@@ -497,9 +516,15 @@ export class PraxisFilter implements OnInit, OnChanges {
 
   toggleAdvanced(): void {
     this.advancedOpen = !this.advancedOpen;
-    console.log(
-      this.advancedOpen ? 'PFILTER:advanced:open' : 'PFILTER:advanced:close',
-    );
+    if (!this.advancedOpen) {
+      this.advancedBtn?.elementRef.nativeElement.focus();
+    }
+    this.saveConfig();
+  }
+
+  onOverlayDetach(): void {
+    this.advancedOpen = false;
+    this.advancedBtn?.elementRef.nativeElement.focus();
     this.saveConfig();
   }
 
@@ -584,7 +609,6 @@ export class PraxisFilter implements OnInit, OnChanges {
   switchToFilter(): void {
     if (this.modeState !== 'filter') {
       this.modeState = 'filter';
-      console.log('PFILTER:mode:switch filter');
       this.modeChange.emit('filter');
     }
   }
@@ -607,7 +631,6 @@ export class PraxisFilter implements OnInit, OnChanges {
     this.persistTags();
     this.updateDisplayedTags();
     this.tagsChange.emit([...this.displayedTags]);
-    console.log('PFILTER:tag:create', tag.id);
   }
 
   renameTag(tag: FilterTag, label?: string): void {
@@ -623,7 +646,6 @@ export class PraxisFilter implements OnInit, OnChanges {
     this.persistTags();
     this.updateDisplayedTags();
     this.tagsChange.emit([...this.displayedTags]);
-    console.log('PFILTER:tag:rename', tag.id);
   }
 
   deleteTag(tag: FilterTag): void {
@@ -631,7 +653,6 @@ export class PraxisFilter implements OnInit, OnChanges {
     this.persistTags();
     this.updateDisplayedTags();
     this.tagsChange.emit([...this.displayedTags]);
-    console.log('PFILTER:tag:delete', tag.id);
   }
 
   isUserTag(tag: FilterTag): boolean {
@@ -653,8 +674,6 @@ export class PraxisFilter implements OnInit, OnChanges {
     }
     this.alwaysForm.patchValue(tag.patch, { emitEvent: false });
     this.advancedForm?.patchValue(tag.patch, { emitEvent: false });
-    console.log('PFILTER:tag:apply', tag.id);
-    console.log('PFILTER:change', this.dto);
     this.change.emit({ ...this.dto });
     this.persist();
     this.onSubmit();
@@ -667,7 +686,7 @@ export class PraxisFilter implements OnInit, OnChanges {
       this.applySchemaMetas();
       return;
     }
-    console.log('PFILTER:schema:load:start');
+
     this.schemaLoading = true;
     this.schemaError = false;
     this.crud
@@ -679,11 +698,9 @@ export class PraxisFilter implements OnInit, OnChanges {
       .pipe(
         catchError((err) => {
           console.error('PFILTER:schema:load:error', err);
-          console.error('PFILTER:error:schema', err);
           return this.crud.getSchema().pipe(
             catchError((err2) => {
               console.error('PFILTER:schema:load:error', err2);
-              console.error('PFILTER:error:schema', err2);
               this.schemaLoading = false;
               this.schemaError = true;
               return of([]);
@@ -698,7 +715,6 @@ export class PraxisFilter implements OnInit, OnChanges {
           return;
         }
         this.schemaLoading = false;
-        console.log('PFILTER:schema:load:success');
         this.schemaMetas = metas;
         this.applySchemaMetas();
       });
@@ -722,9 +738,6 @@ export class PraxisFilter implements OnInit, OnChanges {
           {},
         );
         this.quickForm.addControl(this.quickField, this.quickControl);
-        console.log('PFILTER:quick-field:resolved', this.quickField);
-      } else {
-        console.warn('PFILTER:quick-field:fallback', this.quickField);
       }
     }
     this.alwaysVisibleMetas = metas.filter((m) =>
@@ -781,14 +794,12 @@ export class PraxisFilter implements OnInit, OnChanges {
   private persist(): void {
     if (this.persistenceKey) {
       this.configStorage.saveConfig(this.persistenceKey, this.dto);
-      console.log('PFILTER:persist:save', this.dto);
     }
   }
 
   private clearPersisted(): void {
     if (this.persistenceKey) {
       this.configStorage.clearConfig(this.persistenceKey);
-      console.log('PFILTER:persist:clear');
     }
   }
 
@@ -800,7 +811,6 @@ export class PraxisFilter implements OnInit, OnChanges {
       showAdvanced: this.advancedOpen,
     };
     this.filterConfig.save(this.configKey, config);
-    console.log('PFILTER:config:save', config);
   }
 
   private persistTags(): void {
@@ -827,14 +837,9 @@ export class PraxisFilter implements OnInit, OnChanges {
       if (this.modeState === 'card') {
         this.advancedOpen = false;
       }
-      console.log(`PFILTER:mode:switch ${this.modeState}`);
       this.modeChange.emit(this.modeState);
       if (this.modeState === 'card') {
-        console.log(
-          `PFILTER:summary:render:${
-            this.summaryTemplate ? 'template' : 'native'
-          }`,
-        );
+        // noop
       }
     }
   }
