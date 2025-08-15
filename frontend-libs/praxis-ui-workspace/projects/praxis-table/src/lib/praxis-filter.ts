@@ -681,6 +681,12 @@ export class PraxisFilter implements OnInit, OnChanges {
 
   private advancedForm?: FormGroup<Record<string, any>>;
 
+  private getFilterSchemaPath(): string {
+    const base = (this.resourcePath ?? '').replace(/\/+$/, '');
+    const normalized = base.startsWith('/') ? base : `/${base}`;
+    return `${normalized}/filter`;
+  }
+
   loadSchema(): void {
     if (this.schemaMetas) {
       this.applySchemaMetas();
@@ -691,7 +697,7 @@ export class PraxisFilter implements OnInit, OnChanges {
     this.schemaError = false;
     this.crud
       .getFilteredSchema({
-        path: this.resourcePath,
+        path: this.getFilterSchemaPath(),
         operation: 'post',
         schemaType: 'request',
       })
