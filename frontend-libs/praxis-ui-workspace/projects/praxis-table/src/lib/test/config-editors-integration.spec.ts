@@ -482,7 +482,7 @@ describe('Config Editors Integration Tests - Unified Architecture', () => {
         currentIndex: 1,
       } as any;
 
-      toolbarEditor.onToolbarActionReorder(mockEvent);
+      toolbarEditor.dropToolbarAction(mockEvent);
 
       const newOrder = toolbarEditor.toolbarActions.map((a) => a.id);
       expect(newOrder).toEqual(['action2', 'action1']);
