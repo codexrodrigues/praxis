@@ -1,5 +1,12 @@
 import { Injectable } from '@angular/core';
-import { DslParser, DslValidator, ValidationIssue, FunctionRegistry } from '@praxis/specification';
+import {
+  DslParser,
+  DslValidator,
+  ValidationIssue,
+  ValidationSeverity,
+  ValidationIssueType,
+  FunctionRegistry,
+} from '@praxis/specification';
 import { ContextProvider } from '@praxis/specification';
 
 /**
@@ -40,75 +47,66 @@ export interface DslParsingResult<T extends object = any> {
  * Extracted from SpecificationBridgeService to follow SRP
  */
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class DslParsingService {
-  private dslParser: DslParser<any>;
-  private dslValidator: DslValidator;
-
-  constructor() {
-    this.dslParser = new DslParser();
-    this.dslValidator = new DslValidator();
-  }
+  constructor() {}
 
   /**
    * Parse a DSL expression into a specification
    */
   parseDsl<T extends object = any>(
-    dslExpression: string, 
-    config?: DslParsingConfig
+    dslExpression: string,
+    config?: DslParsingConfig,
   ): DslParsingResult<T> {
     const startTime = performance.now();
     const issues: ValidationIssue[] = [];
 
     try {
-      // First validate the DSL syntax
-      const validationResult = this.dslValidator.validate(dslExpression, {
-        knownFields: config?.knownFields || [],
+      const validator = new DslValidator({
+        knownFields: config?.knownFields,
         functionRegistry: config?.functionRegistry,
-        enablePerformanceWarnings: config?.enablePerformanceWarnings || false
+        enablePerformanceWarnings: config?.enablePerformanceWarnings,
+        maxComplexity: config?.maxComplexity,
       });
+      const validationIssues = validator.validate(dslExpression);
+      issues.push(...validationIssues);
 
-      issues.push(...validationResult.issues);
-
-      // If there are critical errors, don't attempt parsing
-      const criticalErrors = issues.filter(issue => issue.severity === 'error');
+      const criticalErrors = issues.filter(
+        (issue) => issue.severity === ValidationSeverity.ERROR,
+      );
       if (criticalErrors.length > 0) {
         return {
           success: false,
           issues,
           metrics: {
             parseTime: performance.now() - startTime,
-            complexity: this.calculateComplexity(dslExpression)
-          }
+            complexity: this.calculateComplexity(dslExpression),
+          },
         };
       }
 
-      // Parse the DSL
-      const specification = this.dslParser.parse<T>(dslExpression, {
-        functionRegistry: config?.functionRegistry,
-        contextProvider: config?.contextProvider
-      });
-
+      const parser = new DslParser<any>(config?.functionRegistry);
+      const specification = parser.parse(dslExpression);
       const endTime = performance.now();
-      
+
       return {
         success: true,
         specification,
         issues,
         metrics: {
           parseTime: endTime - startTime,
-          complexity: this.calculateComplexity(dslExpression)
-        }
+          complexity: this.calculateComplexity(dslExpression),
+        },
       };
-
     } catch (error) {
       issues.push({
-        id: 'parsing-error',
-        severity: 'error',
-        category: 'syntax',
-        message: `Failed to parse DSL: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        position: { start: 0, end: dslExpression.length }
+        type: ValidationIssueType.SYNTAX_ERROR,
+        severity: ValidationSeverity.ERROR,
+        message: `Failed to parse DSL: ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }`,
+        position: { start: 0, end: dslExpression.length, line: 1, column: 1 },
       });
 
       return {
@@ -116,8 +114,8 @@ export class DslParsingService {
         issues,
         metrics: {
           parseTime: performance.now() - startTime,
-          complexity: this.calculateComplexity(dslExpression)
-        }
+          complexity: this.calculateComplexity(dslExpression),
+        },
       };
     }
   }
@@ -125,23 +123,29 @@ export class DslParsingService {
   /**
    * Validate DSL syntax without parsing
    */
-  validateDsl(dslExpression: string, config?: DslParsingConfig): ValidationIssue[] {
+  validateDsl(
+    dslExpression: string,
+    config?: DslParsingConfig,
+  ): ValidationIssue[] {
     try {
-      const result = this.dslValidator.validate(dslExpression, {
-        knownFields: config?.knownFields || [],
+      const validator = new DslValidator({
+        knownFields: config?.knownFields,
         functionRegistry: config?.functionRegistry,
-        enablePerformanceWarnings: config?.enablePerformanceWarnings || false
+        enablePerformanceWarnings: config?.enablePerformanceWarnings,
+        maxComplexity: config?.maxComplexity,
       });
-
-      return result.issues;
+      return validator.validate(dslExpression);
     } catch (error) {
-      return [{
-        id: 'validation-error',
-        severity: 'error',
-        category: 'syntax',
-        message: `Validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        position: { start: 0, end: dslExpression.length }
-      }];
+      return [
+        {
+          type: ValidationIssueType.SYNTAX_ERROR,
+          severity: ValidationSeverity.ERROR,
+          message: `Validation failed: ${
+            error instanceof Error ? error.message : 'Unknown error'
+          }`,
+          position: { start: 0, end: dslExpression.length, line: 1, column: 1 },
+        },
+      ];
     }
   }
 
@@ -149,9 +153,9 @@ export class DslParsingService {
    * Get suggestions for DSL completion
    */
   getDslSuggestions(
-    partialExpression: string, 
+    partialExpression: string,
     cursorPosition: number,
-    config?: DslParsingConfig
+    config?: DslParsingConfig,
   ): string[] {
     try {
       // This would typically use a language service or parser
@@ -159,15 +163,28 @@ export class DslParsingService {
 
       // Add field suggestions
       if (config?.knownFields) {
-        const currentToken = this.getCurrentToken(partialExpression, cursorPosition);
-        const matchingFields = config.knownFields.filter(field => 
-          field.toLowerCase().startsWith(currentToken.toLowerCase())
+        const currentToken = this.getCurrentToken(
+          partialExpression,
+          cursorPosition,
+        );
+        const matchingFields = config.knownFields.filter((field) =>
+          field.toLowerCase().startsWith(currentToken.toLowerCase()),
         );
         suggestions.push(...matchingFields);
       }
 
       // Add operator suggestions
-      const operators = ['==', '!=', '>', '<', '>=', '<=', 'contains', 'startsWith', 'endsWith'];
+      const operators = [
+        '==',
+        '!=',
+        '>',
+        '<',
+        '>=',
+        '<=',
+        'contains',
+        'startsWith',
+        'endsWith',
+      ];
       suggestions.push(...operators);
 
       // Add function suggestions
@@ -212,23 +229,23 @@ export class DslParsingService {
    */
   isValidDsl(dslExpression: string, config?: DslParsingConfig): boolean {
     const issues = this.validateDsl(dslExpression, config);
-    return !issues.some(issue => issue.severity === 'error');
+    return !issues.some((issue) => issue.severity === 'error');
   }
 
   private calculateComplexity(dslExpression: string): number {
     // Simple complexity calculation based on operators and nesting
     let complexity = 1;
-    
+
     // Count operators
     complexity += (dslExpression.match(/&&|\|\|/g) || []).length * 2;
     complexity += (dslExpression.match(/==|!=|>=|<=|>|</g) || []).length;
-    
+
     // Count parentheses (nesting)
     complexity += (dslExpression.match(/\(/g) || []).length;
-    
+
     // Count function calls
     complexity += (dslExpression.match(/\w+\(/g) || []).length * 3;
-    
+
     return complexity;
   }
 
@@ -236,13 +253,13 @@ export class DslParsingService {
     // Extract the current word/token at cursor position
     const beforeCursor = expression.substring(0, cursorPosition);
     const afterCursor = expression.substring(cursorPosition);
-    
+
     const beforeMatch = beforeCursor.match(/(\w+)$/);
     const afterMatch = afterCursor.match(/^(\w*)/);
-    
+
     const before = beforeMatch ? beforeMatch[1] : '';
     const after = afterMatch ? afterMatch[1] : '';
-    
+
     return before + after;
   }
 }

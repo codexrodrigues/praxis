@@ -5,6 +5,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { FormConfig, FieldMetadata } from '@praxis/core';
+import type { FieldDataType } from '@praxis/core';
 import {
   SETTINGS_PANEL_DATA,
   SettingsValueProvider,
@@ -13,6 +14,7 @@ import {
   PraxisVisualBuilder,
   RuleBuilderConfig,
   FieldSchema,
+  FieldType,
 } from '@praxis/visual-builder';
 import { FormConfigService } from './services/form-config.service';
 import {
@@ -61,7 +63,7 @@ import { normalizeFormConfig } from './utils/normalize-form-config';
       }
       .tab-content {
         padding: 16px;
-        height: calc(100% - 48px); // Account for tab header height
+        height: calc(100% - 48px); /* Account for tab header height */
         overflow-y: auto;
       }
       .visual-builder-content {
@@ -145,7 +147,7 @@ export class PraxisDynamicFormConfigEditor
 
   constructor(
     private configService: FormConfigService,
-    @Optional() @Inject(SETTINGS_PANEL_DATA) injectedData?: FormConfig
+    @Optional() @Inject(SETTINGS_PANEL_DATA) injectedData?: FormConfig,
   ) {
     this.initialConfig = normalizeFormConfig(injectedData);
     this.editedConfig = structuredClone(this.initialConfig);
@@ -154,7 +156,7 @@ export class PraxisDynamicFormConfigEditor
 
   ngOnInit(): void {
     this.ruleBuilderConfig = this.createRuleBuilderConfig(
-      this.editedConfig.fieldMetadata || []
+      this.editedConfig.fieldMetadata || [],
     );
   }
 
@@ -170,7 +172,7 @@ export class PraxisDynamicFormConfigEditor
   onJsonConfigChange(newConfig: FormConfig): void {
     this.editedConfig = newConfig;
     this.ruleBuilderConfig = this.createRuleBuilderConfig(
-      newConfig.fieldMetadata || []
+      newConfig.fieldMetadata || [],
     );
   }
 
@@ -190,7 +192,7 @@ export class PraxisDynamicFormConfigEditor
       JSON.stringify(this.ruleBuilderConfig.fieldSchemas)
     ) {
       this.ruleBuilderConfig = this.createRuleBuilderConfig(
-        newConfig.fieldMetadata || []
+        newConfig.fieldMetadata || [],
       );
     }
   }
@@ -203,7 +205,7 @@ export class PraxisDynamicFormConfigEditor
   }
 
   private createRuleBuilderConfig(
-    fieldMetadata: FieldMetadata[]
+    fieldMetadata: FieldMetadata[],
   ): RuleBuilderConfig {
     return {
       fieldSchemas: this.mapMetadataToSchema(fieldMetadata),
@@ -211,16 +213,38 @@ export class PraxisDynamicFormConfigEditor
     };
   }
 
-  private mapMetadataToSchema(metadata: FieldMetadata[]): FieldSchema[] {
-    return metadata.map((field) => ({
-      name: field.name,
-      label: field.label,
-      type: field.dataType || 'string', // Default to string if dataType is not set
-      options: field.options?.map((opt) => ({
-        label: opt.label,
-        value: opt.value,
-      })),
-      // Add other mappings as needed
-    }));
+  private mapMetadataToSchema(
+    metadata: FieldMetadata[],
+  ): Record<string, FieldSchema> {
+    const schemas: Record<string, FieldSchema> = {};
+    for (const field of metadata) {
+      schemas[field.name] = {
+        name: field.name,
+        label: field.label,
+        type: this.mapDataTypeToFieldType(field.dataType),
+        description: field.description,
+        required: field.required,
+        allowedValues: field.options?.map((opt) => ({
+          label: opt.text,
+          value: opt.value,
+        })),
+      };
+    }
+    return schemas;
+  }
+
+  private mapDataTypeToFieldType(dataType?: FieldDataType): FieldType {
+    const mapping: Record<FieldDataType, FieldType> = {
+      text: FieldType.STRING,
+      number: FieldType.NUMBER,
+      email: FieldType.EMAIL,
+      date: FieldType.DATE,
+      password: FieldType.STRING,
+      file: FieldType.STRING,
+      url: FieldType.URL,
+      boolean: FieldType.BOOLEAN,
+      json: FieldType.JSON,
+    };
+    return mapping[dataType ?? 'text'];
   }
 }
