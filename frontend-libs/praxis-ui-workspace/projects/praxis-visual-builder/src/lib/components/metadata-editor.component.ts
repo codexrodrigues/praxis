@@ -825,7 +825,7 @@ export class MetadataEditorComponent implements OnInit, OnChanges {
 
   // Autocomplete data
   availableTags = ['validation', 'ui', 'business', 'security', 'performance', 'accessibility'];
-  filteredTags: Observable<string[]>;
+  filteredTags!: Observable<string[]>;
 
   availableIcons = [
     { value: 'rule', label: 'Rule' },

@@ -44,7 +44,7 @@ import {
   ImportOptions,
   RuleBuilderConfig,
 } from '../models/rule-builder.model';
-import { FieldSchema } from '../models/field-schema.model';
+import { FieldSchema, CustomFunction, ContextVariable } from '../models/field-schema.model';
 
 @Component({
   selector: 'praxis-rule-editor',
@@ -71,7 +71,6 @@ import { FieldSchema } from '../models/field-schema.model';
     DslViewerComponent,
     JsonViewerComponent,
     RoundTripTesterComponent,
-    ExportDialogComponent,
     DslLinterComponent,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -295,7 +294,7 @@ import { FieldSchema } from '../models/field-schema.model';
                 <mat-tab label="DSL Preview">
                   <div class="dsl-viewer">
                     <praxis-dsl-viewer
-                      [dsl]="currentState?.currentDSL"
+                      [dsl]="currentState?.currentDSL || ''"
                       [editable]="currentState?.mode === 'dsl'"
                       (dslChanged)="onDslChanged($event)"
                     >
@@ -350,7 +349,7 @@ import { FieldSchema } from '../models/field-schema.model';
 
         <div class="status-center">
           <div
-            *ngIf="validationErrors?.length > 0"
+            *ngIf="validationErrors && validationErrors.length > 0"
             class="validation-status error"
           >
             <mat-icon>error</mat-icon>
@@ -374,7 +373,7 @@ import { FieldSchema } from '../models/field-schema.model';
 
       <!-- Validation Errors Panel -->
       <div
-        *ngIf="showValidationErrors && validationErrors?.length > 0"
+        *ngIf="showValidationErrors && validationErrors && validationErrors.length > 0"
         class="validation-panel"
       >
         <div class="validation-header">
@@ -869,12 +868,12 @@ export class RuleEditorComponent implements OnInit, OnDestroy {
   private initializeBuilder(): void {
     if (this.config) {
       this.ruleBuilderService.initialize(this.config);
-      this.fieldSchemaService.setFieldSchemas(this.config.fieldSchemas);
+      this.fieldSchemaService.setFieldSchemas(this.config.fieldSchemas as Record<string, FieldSchema>);
 
       if (this.config.contextVariables) {
         this.fieldSchemaService.setContext({
-          contextVariables: this.config.contextVariables,
-          customFunctions: this.config.customFunctions,
+          contextVariables: this.config.contextVariables as ContextVariable[],
+          customFunctions: this.config.customFunctions as CustomFunction[],
         });
       }
     }

@@ -38,7 +38,6 @@ import {
     CdkTrapFocus,
     MatProgressSpinnerModule,
     MatDialogModule,
-    ConfirmDialogComponent,
   ],
   templateUrl: './settings-panel.component.html',
   styleUrls: ['./settings-panel.component.scss'],

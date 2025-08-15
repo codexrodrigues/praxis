@@ -66,7 +66,7 @@ export class RuleBuilderService {
     this.config = config;
     this.dslValidator = new DslValidator({
       knownFields: Object.keys(config.fieldSchemas || {}),
-      knownFunctions: config.customFunctions?.map((f) => f.name) || [],
+      knownFunctions: config.customFunctions?.map((f) => (f as any)?.name).filter(Boolean) || [],
       enablePerformanceWarnings: true,
     });
 
@@ -816,11 +816,11 @@ export class RuleBuilderService {
 
       // Recursively flatten children if they exist and are RuleNode objects (not just IDs)
       if (node.children && node.children.length > 0) {
-        // If children are already string IDs, no need to flatten
-        const firstChild = node.children[0];
-        if (typeof firstChild === 'object' && firstChild.id) {
+        // Check if children are RuleNode objects or string IDs
+        const firstChild = node.children[0] as any;
+        if (typeof firstChild === 'object' && firstChild && 'id' in firstChild) {
           // Children are RuleNode objects, need to flatten them
-          node.children.forEach((child: any) => {
+          (node.children as any[]).forEach((child: any) => {
             if (child && typeof child === 'object' && child.id) {
               child.parentId = node.id;
               flattenNode(child);

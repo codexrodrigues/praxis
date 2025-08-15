@@ -10,7 +10,7 @@ import {
   FieldConditionConfig,
 } from '../models/rule-builder.model';
 
-interface CompleteRuleNode extends RuleNode {
+interface CompleteRuleNode extends Omit<RuleNode, 'children'> {
   children?: CompleteRuleNode[];
 }
 
@@ -291,7 +291,7 @@ export class ExportIntegrationService {
         format,
         filename,
         size: new Blob([content]).size,
-        metadata: this.generateExportMetadata(state),
+        metadata: this.generateExportMetadata(state) ?? undefined,
       };
 
       if (options.downloadFile) {
@@ -405,7 +405,8 @@ export class ExportIntegrationService {
       const rootNode = this.buildCompleteRuleNode(rootNodeId, state.nodes);
       if (rootNode) {
         try {
-          const dsl = this.specificationBridge.exportToDsl(rootNode, {
+          const flatNode = this.flattenCompleteRuleNode(rootNode);
+          const dsl = this.specificationBridge.exportToDsl(flatNode, {
             includeMetadata: options.includeMetadata,
             prettyPrint: options.prettyPrint,
           });
@@ -793,6 +794,13 @@ export class ExportIntegrationService {
     return {
       ...node,
       children: childNodes && childNodes.length > 0 ? childNodes : undefined,
+    };
+  }
+
+  private flattenCompleteRuleNode(completeNode: CompleteRuleNode): RuleNode {
+    return {
+      ...completeNode,
+      children: completeNode.children?.map(child => child.id),
     };
   }
 

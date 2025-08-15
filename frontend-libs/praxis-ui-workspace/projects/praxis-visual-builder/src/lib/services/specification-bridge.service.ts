@@ -845,9 +845,9 @@ export class SpecificationBridgeService {
   private createConditionalValidatorSpecification<T extends object = any>(
     node: RuleNode,
   ): Specification<T> {
-    if (!node.config || node.config.type !== 'conditionalValidator') {
+    if (!node.config || !['requiredIf', 'visibleIf', 'disabledIf', 'readonlyIf'].includes(node.config.type)) {
       throw new Error(
-        'Conditional validator specification requires conditionalValidator config',
+        'Conditional validator specification requires conditional validator config',
       );
     }
 
@@ -1278,7 +1278,7 @@ export class SpecificationBridgeService {
       case 'disabledIf':
       case 'readonlyIf':
         baseNode.config = {
-          type: 'conditionalValidator',
+          type: json.type as 'requiredIf' | 'visibleIf' | 'disabledIf' | 'readonlyIf',
           validatorType: json.type,
           targetField: json.targetField,
           condition: this.jsonToRuleNode(json.condition),

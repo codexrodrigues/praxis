@@ -335,8 +335,6 @@ export class RuleValidationService {
         issues.push(...this.validateBooleanGroup(node, context));
         break;
       case 'cardinality':
-      case 'atLeast':
-      case 'exactly':
         issues.push(...this.validateCardinality(node, context));
         break;
     }
@@ -565,17 +563,22 @@ export class RuleValidationService {
     switch (node.config?.type) {
       case 'fieldCondition':
         return 1;
-      case 'andGroup':
-      case 'orGroup':
-        return 2;
-      case 'notGroup':
-        return 1;
-      case 'xorGroup':
-      case 'impliesGroup':
-        return 3;
+      case 'booleanGroup':
+        // Check the operator for complexity
+        const booleanConfig = node.config as any;
+        switch (booleanConfig.operator) {
+          case 'and':
+          case 'or':
+            return 2;
+          case 'not':
+            return 1;
+          case 'xor':
+          case 'implies':
+            return 3;
+          default:
+            return 2;
+        }
       case 'cardinality':
-      case 'atLeast':
-      case 'exactly':
         return 4;
       default:
         return 1;

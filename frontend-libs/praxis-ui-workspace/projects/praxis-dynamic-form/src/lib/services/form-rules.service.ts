@@ -51,10 +51,20 @@ export class FormRulesService {
       }
 
       try {
-        // Create a new parser for each rule to ensure a clean state
-        const parser = new DslParser<any>();
-        const spec = parser.parse(rule.effect.condition);
-        const isSatisfied = spec.isSatisfiedBy(formData);
+        let isSatisfied: boolean;
+        
+        if (typeof rule.effect.condition === 'string') {
+          // Parse DSL string
+          const parser = new DslParser<any>();
+          const spec = parser.parse(rule.effect.condition);
+          isSatisfied = spec.isSatisfiedBy(formData);
+        } else if (rule.effect.condition && typeof rule.effect.condition === 'object') {
+          // Already a Specification object
+          isSatisfied = rule.effect.condition.isSatisfiedBy(formData);
+        } else {
+          // Skip if condition is null or invalid
+          continue;
+        }
 
         for (const fieldName of rule.targetFields) {
           if (rule.context === 'visibility') {

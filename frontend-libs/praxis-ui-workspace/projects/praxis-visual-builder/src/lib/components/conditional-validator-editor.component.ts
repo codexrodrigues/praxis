@@ -738,6 +738,7 @@ export class ConditionalValidatorEditorComponent implements OnInit, OnChanges {
     const formValue = this.validatorForm.value;
     const config: ConditionalValidatorConfig = {
       type: this.mapValidatorTypeToRuleType(formValue.validatorType),
+      validatorType: this.mapValidatorTypeToRuleType(formValue.validatorType),
       targetField: formValue.targetField,
       conditions:
         this.conditionMode === 'simple'
@@ -913,23 +914,23 @@ export class ConditionalValidatorEditorComponent implements OnInit, OnChanges {
 
   private mapRuleTypeToValidatorType(ruleType: string): string {
     const mapping: Record<string, string> = {
-      [RuleNodeType.REQUIRED_IF]: 'requiredIf',
-      [RuleNodeType.VISIBLE_IF]: 'visibleIf',
-      [RuleNodeType.DISABLED_IF]: 'disabledIf',
-      [RuleNodeType.READONLY_IF]: 'readonlyIf',
+      'requiredIf': 'requiredIf',
+      'visibleIf': 'visibleIf',
+      'disabledIf': 'disabledIf',
+      'readonlyIf': 'readonlyIf',
     };
 
     return mapping[ruleType] || 'requiredIf';
   }
 
-  private mapValidatorTypeToRuleType(validatorType: string): string {
-    const mapping: Record<string, string> = {
-      requiredIf: RuleNodeType.REQUIRED_IF,
-      visibleIf: RuleNodeType.VISIBLE_IF,
-      disabledIf: RuleNodeType.DISABLED_IF,
-      readonlyIf: RuleNodeType.READONLY_IF,
+  private mapValidatorTypeToRuleType(validatorType: string): 'requiredIf' | 'visibleIf' | 'disabledIf' | 'readonlyIf' {
+    const mapping: Record<string, 'requiredIf' | 'visibleIf' | 'disabledIf' | 'readonlyIf'> = {
+      'requiredIf': 'requiredIf',
+      'visibleIf': 'visibleIf',
+      'disabledIf': 'disabledIf',
+      'readonlyIf': 'readonlyIf',
     };
 
-    return mapping[validatorType] || RuleNodeType.REQUIRED_IF;
+    return mapping[validatorType] || 'requiredIf';
   }
 }

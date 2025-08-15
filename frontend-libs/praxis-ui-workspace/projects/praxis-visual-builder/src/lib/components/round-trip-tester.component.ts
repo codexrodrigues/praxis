@@ -938,10 +938,14 @@ export class RoundTripTesterComponent implements OnInit {
       children: node.children?.map(childId => {
         if (typeof childId === 'string') {
           const childNode = allNodes[childId];
-          return childNode ? this.buildCompleteRuleTree(childNode, allNodes) : childId;
+          if (childNode) {
+            // Recursively build child tree but only return the ID for the children array
+            this.buildCompleteRuleTree(childNode, allNodes);
+          }
+          return childId;
         }
         return childId;
-      }) as RuleNode[]
+      })
     };
   }
 
@@ -951,14 +955,8 @@ export class RoundTripTesterComponent implements OnInit {
       const rootNode = state.nodes[state.rootNodes[0]];
       if (!rootNode) return 'Unknown';
       
-      // Convert enum values to string if needed
-      const nodeType = rootNode.type;
-      if (typeof nodeType === 'string') {
-        return nodeType;
-      }
-      
-      // Handle enum values
-      return nodeType.toString();
+      // rootNode.type is always a string (RuleNodeType | RuleNodeTypeString)
+      return String(rootNode.type);
     }
     return 'None';
   }
@@ -976,29 +974,29 @@ export class RoundTripTesterComponent implements OnInit {
     const ruleType = testCase.visualRule.type;
     
     // Handle field conditions
-    if (ruleType === 'fieldCondition' || ruleType === RuleNodeType.FIELD_CONDITION) {
+    if (ruleType === 'fieldCondition') {
       return 'primary';
     }
     
     // Handle boolean groups
-    if (ruleType === 'andGroup' || ruleType === RuleNodeType.AND_GROUP) {
+    if (ruleType === 'andGroup') {
       return 'accent';
     }
-    if (ruleType === 'orGroup' || ruleType === RuleNodeType.OR_GROUP) {
+    if (ruleType === 'orGroup') {
       return 'accent';
     }
-    if (ruleType === 'notGroup' || ruleType === RuleNodeType.NOT_GROUP) {
+    if (ruleType === 'notGroup') {
       return 'accent';
     }
-    if (ruleType === 'xorGroup' || ruleType === RuleNodeType.XOR_GROUP) {
+    if (ruleType === 'xorGroup') {
       return 'accent';
     }
-    if (ruleType === 'impliesGroup' || ruleType === RuleNodeType.IMPLIES_GROUP) {
+    if (ruleType === 'impliesGroup') {
       return 'accent';
     }
     
     // Handle function calls
-    if (ruleType === 'functionCall' || ruleType === RuleNodeType.FUNCTION_CALL) {
+    if (ruleType === 'functionCall') {
       return 'warn';
     }
     

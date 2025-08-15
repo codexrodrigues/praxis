@@ -232,11 +232,11 @@ export interface ExportDialogData {
                       </div>
                       <div class="detail-row" *ngIf="result.metadata">
                         <strong>Rules Count:</strong>
-                        {{ result.metadata?.rulesCount }}
+                        {{ result.metadata.rulesCount }}
                       </div>
                       <div class="detail-row" *ngIf="result.metadata">
                         <strong>Complexity:</strong>
-                        {{ result.metadata?.complexity }}
+                        {{ result.metadata.complexity }}
                       </div>
 
                       <div class="action-buttons">

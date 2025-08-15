@@ -36,8 +36,7 @@ import { FieldConditionEditorComponent } from './field-condition-editor.componen
     MatTooltipModule,
     MatTabsModule,
     MatDividerModule,
-    MatSliderModule,
-    FieldConditionEditorComponent
+    MatSliderModule
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -279,9 +278,8 @@ import { FieldConditionEditorComponent } from './field-condition-editor.componen
             <mat-slider 
               [min]="0" 
               [max]="100" 
-              [step]="1" 
-              [value]="minItems"
-              (valueChange)="onMinItemsChange($event)">
+              [step]="1">
+              <input matSliderThumb formControlName="minItems">
             </mat-slider>
           </div>
 
@@ -290,9 +288,8 @@ import { FieldConditionEditorComponent } from './field-condition-editor.componen
             <mat-slider 
               [min]="1" 
               [max]="1000" 
-              [step]="1" 
-              [value]="maxItems"
-              (valueChange)="onMaxItemsChange($event)">
+              [step]="1">
+              <input matSliderThumb formControlName="maxItems">
             </mat-slider>
           </div>
 
@@ -1051,14 +1048,6 @@ export class CollectionValidatorEditorComponent implements OnInit, OnChanges {
     this.targetCollection = event.value;
   }
 
-  onMinItemsChange(value: number): void {
-    this.collectionForm.patchValue({ minItems: value });
-  }
-
-  onMaxItemsChange(value: number): void {
-    this.collectionForm.patchValue({ maxItems: value });
-  }
-
   addItemValidationRule(): void {
     const rule = this.fb.group({
       ruleType: ['required'],
@@ -1118,23 +1107,23 @@ export class CollectionValidatorEditorComponent implements OnInit, OnChanges {
   // Helper methods
   private mapRuleTypeToValidatorType(ruleType: string): string {
     const mapping: Record<string, string> = {
-      [RuleNodeType.FOR_EACH]: 'forEach',
-      [RuleNodeType.UNIQUE_BY]: 'uniqueBy',
-      [RuleNodeType.MIN_LENGTH]: 'minLength',
-      [RuleNodeType.MAX_LENGTH]: 'maxLength'
+      'forEach': 'forEach',
+      'uniqueBy': 'uniqueBy',
+      'minLength': 'minLength',
+      'maxLength': 'maxLength'
     };
     
     return mapping[ruleType] || 'forEach';
   }
 
-  private mapValidatorTypeToRuleType(validatorType: string): string {
-    const mapping: Record<string, string> = {
-      'forEach': RuleNodeType.FOR_EACH,
-      'uniqueBy': RuleNodeType.UNIQUE_BY,
-      'minLength': RuleNodeType.MIN_LENGTH,
-      'maxLength': RuleNodeType.MAX_LENGTH
+  private mapValidatorTypeToRuleType(validatorType: string): 'forEach' | 'uniqueBy' | 'minLength' | 'maxLength' {
+    const mapping: Record<string, 'forEach' | 'uniqueBy' | 'minLength' | 'maxLength'> = {
+      'forEach': 'forEach',
+      'uniqueBy': 'uniqueBy',
+      'minLength': 'minLength',
+      'maxLength': 'maxLength'
     };
     
-    return mapping[validatorType] || RuleNodeType.FOR_EACH;
+    return mapping[validatorType] || 'forEach';
   }
 }

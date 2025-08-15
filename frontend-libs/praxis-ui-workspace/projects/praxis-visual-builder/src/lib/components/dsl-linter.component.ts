@@ -386,7 +386,7 @@ export interface DslLintRule {
                       <div class="rule-header">
                         <mat-slide-toggle
                           [checked]="rule.enabled"
-                          (toggleChange)="toggleRule(rule, $event)">
+                          (change)="toggleRule(rule, $event)">
                         </mat-slide-toggle>
                         
                         <div class="rule-info">
@@ -1354,7 +1354,7 @@ export class DslLinterComponent implements OnInit, OnDestroy {
   }
 
   getSeverityIcon(severity: string): string {
-    const icons = {
+    const icons: Record<string, string> = {
       'error': 'error',
       'warning': 'warning',
       'info': 'info',

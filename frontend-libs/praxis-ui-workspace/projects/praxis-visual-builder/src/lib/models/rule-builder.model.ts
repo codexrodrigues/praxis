@@ -170,7 +170,7 @@ export interface FieldConditionConfig {
 }
 
 export interface BooleanGroupConfig {
-  type: 'booleanGroup';
+  type: 'booleanGroup' | 'andGroup' | 'orGroup' | 'notGroup' | 'xorGroup' | 'impliesGroup';
   /** Boolean operator type */
   operator: 'and' | 'or' | 'not' | 'xor' | 'implies';
   /** Minimum required true conditions (for atLeast scenarios) */

@@ -201,7 +201,7 @@ export interface TemplateSortOption {
                     <mat-icon>{{ category.icon }}</mat-icon>
                     <span>{{ category.name }}</span>
                     <span
-                      [matBadge]="category.templates?.length || 0"
+                      [matBadge]="category.templates.length || 0"
                       matBadgeColor="primary"
                       matBadgeSize="small"
                     ></span>

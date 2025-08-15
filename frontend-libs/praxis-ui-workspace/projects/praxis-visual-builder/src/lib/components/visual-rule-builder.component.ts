@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-import { RuleBuilderState } from '../models/rule-builder.model';
+import { RuleBuilderState, RuleNode } from '../models/rule-builder.model';
 
 /**
  * Placeholder Visual Rule Builder Component
@@ -131,15 +131,15 @@ export class VisualRuleBuilderComponent {
     }
 
     const nodeId = `sample-node-${Date.now()}`;
-    const sampleNode = {
+    const sampleNode: RuleNode = {
       id: nodeId,
-      type: 'fieldCondition' as any,
+      type: 'fieldCondition',
       label: 'Sample Rule',
       config: {
         type: 'fieldCondition',
         fieldName: 'email',
-        operator: 'isNotEmpty',
-        value: null
+        operator: 'neq',
+        value: ''
       }
     };
 

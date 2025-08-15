@@ -4,7 +4,7 @@ import {
   DslExporter,
   ExportOptions,
 } from '@praxis/specification';
-import { RuleNode } from '../models/rule-builder.model';
+import { RuleNode, RuleNodeType, RuleNodeTypeString } from '../models/rule-builder.model';
 import { ConverterFactoryService } from './converters/converter-factory.service';
 import {
   DslParsingService,
@@ -123,7 +123,12 @@ export class RuleConversionService {
   ): string {
     try {
       const specification = this.convertRuleToSpecification<T>(node);
-      return this.dslExporter.export(specification, options);
+      if (options) {
+        // Create a new exporter with custom options
+        const customExporter = new DslExporter(options);
+        return customExporter.export(specification);
+      }
+      return this.dslExporter.export(specification);
     } catch (error) {
       throw new ConversionError(
         'DSL_EXPORT_FAILED',
@@ -287,7 +292,7 @@ export class RuleConversionService {
 
     return {
       id: String(json.id || `node-${Date.now()}`),
-      type: (config['type'] as string) || 'fieldCondition',
+      type: (config['type'] as RuleNodeType | RuleNodeTypeString) || 'fieldCondition',
       config: config as any,
       children,
     };

@@ -23,6 +23,7 @@ import { CdkDragDrop, DragDropModule } from '@angular/cdk/drag-drop';
 import {
   RuleNode,
   RuleNodeType,
+  RuleNodeTypeString,
   RuleNodeConfig,
   FieldConditionConfig,
   BooleanGroupConfig,
@@ -213,26 +214,26 @@ import { CollectionValidatorEditorComponent } from './collection-validator-edito
           <div *ngIf="node?.metadata" class="metadata-preview">
             <mat-chip-set class="metadata-chips">
               <mat-chip
-                *ngIf="node.metadata?.code"
+                *ngIf="node!.metadata?.code"
                 class="metadata-chip code-chip"
               >
-                {{ node.metadata?.code }}
+                {{ node!.metadata!.code }}
               </mat-chip>
 
               <mat-chip
-                *ngIf="node.metadata?.tag"
+                *ngIf="node!.metadata?.tag"
                 class="metadata-chip tag-chip"
               >
-                {{ node.metadata?.tag }}
+                {{ node!.metadata!.tag }}
               </mat-chip>
             </mat-chip-set>
 
             <div
-              *ngIf="node.metadata?.message"
+              *ngIf="node!.metadata?.message"
               class="metadata-message"
-              [title]="node.metadata?.message"
+              [title]="node!.metadata?.message"
             >
-              {{ node.metadata?.message }}
+              {{ node!.metadata!.message }}
             </div>
           </div>
         </div>
@@ -261,7 +262,7 @@ import { CollectionValidatorEditorComponent } from './collection-validator-edito
         <div
           class="children-list"
           cdkDropList
-          [cdkDropListData]="node?.children"
+          [cdkDropListData]="node?.children || []"
           (cdkDropListDropped)="onChildDrop($event)"
         >
           <div
@@ -287,7 +288,7 @@ import { CollectionValidatorEditorComponent } from './collection-validator-edito
             <div *ngIf="!isLastChild(childId)" class="child-connector">
               <div class="connector-line"></div>
               <div class="connector-operator">
-                {{ getBooleanOperator()?.toUpperCase() }}
+                {{ getBooleanOperator().toUpperCase() }}
               </div>
             </div>
           </div>
@@ -869,6 +870,6 @@ export class RuleNodeComponent {
       .split(/(?=[A-Z])/)
       .join(' ')
       .toLowerCase()
-      .replace(/^\w/, (c) => c.toUpperCase());
+      .replace(/^\w/, (c: string) => c.toUpperCase());
   }
 }

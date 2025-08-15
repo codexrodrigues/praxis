@@ -203,7 +203,7 @@ export interface TemplateEditorResult {
                 <div class="template-variables-section">
                   <h5>Template Variables</h5>
                   <p class="field-description">
-                    Variables like {{fieldName}} will be replaced when the template is applied.
+                    Variables like {{ '{{fieldName}}' }} will be replaced when the template is applied.
                   </p>
                   
                   <div class="detected-variables">
@@ -797,7 +797,9 @@ export class TemplateEditorDialogComponent implements OnInit {
           organization: advancedInfo.organization
         },
         complexity: this.calculateComplexity(),
-        nodeCount: this.previewNodes.length
+        metrics: {
+          nodeCount: this.previewNodes.length
+        }
       }
     };
 
