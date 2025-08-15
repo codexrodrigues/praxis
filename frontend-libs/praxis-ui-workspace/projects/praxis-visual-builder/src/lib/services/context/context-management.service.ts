@@ -1,13 +1,24 @@
 import { Injectable } from '@angular/core';
 import { ContextProvider } from '@praxis/specification';
-import { ContextVariable } from '../../components/expression-editor.component';
+/**
+ * Context variable definition used by the context management service
+ * Renamed to avoid conflicts with other ContextVariable interfaces
+ */
+export interface ContextEntry {
+  /** Full path identifier for the variable */
+  path: string;
+  /** Actual value of the variable */
+  value: unknown;
+  /** Optional type hint for validation */
+  type?: string;
+}
 
 /**
  * Configuration for contextual specification support
  */
 export interface ContextualConfig {
   /** Context variables available for token resolution */
-  contextVariables?: ContextVariable[];
+  contextVariables?: ContextEntry[];
   /** Context provider instance */
   contextProvider?: ContextProvider;
   /** Enable strict validation of context tokens */
@@ -47,7 +58,7 @@ export interface ContextScope {
  * Extracted from SpecificationBridgeService to follow SRP
  */
 @Injectable({
-  providedIn: 'root'
+  providedIn: 'root',
 })
 export class ContextManagementService {
   private scopes = new Map<string, ContextScope>();
@@ -58,7 +69,7 @@ export class ContextManagementService {
     this.globalScope = {
       id: 'global',
       name: 'Global Context',
-      variables: new Map()
+      variables: new Map(),
     };
     this.scopes.set('global', this.globalScope);
   }
@@ -66,17 +77,17 @@ export class ContextManagementService {
   /**
    * Create a context provider from context variables
    */
-  createContextProvider(contextVariables: ContextVariable[]): ContextProvider {
+  createContextProvider(contextVariables: ContextEntry[]): ContextProvider {
     const variableMap = new Map<string, any>();
-    
+
     for (const variable of contextVariables) {
       variableMap.set(variable.path, variable.value);
-      
+
       // Also add with dot notation if path contains dots
       if (variable.path.includes('.')) {
         const segments = variable.path.split('.');
         let current = variableMap;
-        
+
         // Create nested structure
         for (let i = 0; i < segments.length - 1; i++) {
           const segment = segments[i];
@@ -85,14 +96,14 @@ export class ContextManagementService {
           }
           current = current.get(segment);
         }
-        
+
         current.set(segments[segments.length - 1], variable.value);
       }
     }
 
     return {
       hasValue: (path: string) => this.hasContextValue(path, variableMap),
-      getValue: (path: string) => this.getContextValue(path, variableMap)
+      getValue: (path: string) => this.getContextValue(path, variableMap),
     };
   }
 
@@ -112,7 +123,7 @@ export class ContextManagementService {
       id,
       name,
       parentId,
-      variables: new Map()
+      variables: new Map(),
     };
 
     this.scopes.set(id, scope);
@@ -123,10 +134,10 @@ export class ContextManagementService {
    * Set a variable in a specific scope
    */
   setVariable(
-    scopeId: string, 
-    name: string, 
-    value: any, 
-    type?: ContextValue['type']
+    scopeId: string,
+    name: string,
+    value: any,
+    type?: ContextValue['type'],
   ): void {
     const scope = this.scopes.get(scopeId);
     if (!scope) {
@@ -136,7 +147,7 @@ export class ContextManagementService {
     const contextValue: ContextValue = {
       value,
       type: type || this.inferType(value),
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     };
 
     scope.variables.set(name, contextValue);
@@ -169,17 +180,17 @@ export class ContextManagementService {
    */
   getAllVariables(scopeId: string): Map<string, ContextValue> {
     const allVariables = new Map<string, ContextValue>();
-    
+
     // Collect variables from parent scopes first (so they can be overridden)
     this.collectVariablesRecursive(scopeId, allVariables);
-    
+
     return allVariables;
   }
 
   /**
    * Validate context variables
    */
-  validateContext(contextVariables: ContextVariable[]): {
+  validateContext(contextVariables: ContextEntry[]): {
     isValid: boolean;
     issues: string[];
   } {
@@ -200,13 +211,15 @@ export class ContextManagementService {
 
       // Validate value type consistency
       if (variable.type && typeof variable.value !== variable.type) {
-        issues.push(`Type mismatch for ${variable.path}: expected ${variable.type}, got ${typeof variable.value}`);
+        issues.push(
+          `Type mismatch for ${variable.path}: expected ${variable.type}, got ${typeof variable.value}`,
+        );
       }
     }
 
     return {
       isValid: issues.length === 0,
-      issues
+      issues,
     };
   }
 
@@ -215,13 +228,13 @@ export class ContextManagementService {
    */
   createScopedProvider(scopeId: string): ContextProvider {
     const variables = this.getAllVariables(scopeId);
-    
+
     return {
       hasValue: (path: string) => variables.has(path),
       getValue: (path: string) => {
         const contextValue = variables.get(path);
         return contextValue ? contextValue.value : undefined;
-      }
+      },
     };
   }
 
@@ -230,7 +243,8 @@ export class ContextManagementService {
    */
   mergeProviders(...providers: ContextProvider[]): ContextProvider {
     return {
-      hasValue: (path: string) => providers.some(provider => provider.hasValue(path)),
+      hasValue: (path: string) =>
+        providers.some((provider) => provider.hasValue(path)),
       getValue: (path: string) => {
         // Return from the first provider that has the value
         for (const provider of providers) {
@@ -239,7 +253,7 @@ export class ContextManagementService {
           }
         }
         return undefined;
-      }
+      },
     };
   }
 
@@ -255,14 +269,15 @@ export class ContextManagementService {
     const scopesToCheck = scopeId ? [scopeId] : Array.from(this.scopes.keys());
     let totalVariables = 0;
     let totalSize = 0;
-    const scopeStats: { id: string; name: string; variableCount: number }[] = [];
+    const scopeStats: { id: string; name: string; variableCount: number }[] =
+      [];
 
     for (const id of scopesToCheck) {
       const scope = this.scopes.get(id);
       if (scope) {
         const variableCount = scope.variables.size;
         totalVariables += variableCount;
-        
+
         // Estimate size
         for (const [, value] of scope.variables) {
           totalSize += this.estimateSize(value.value);
@@ -271,7 +286,7 @@ export class ContextManagementService {
         scopeStats.push({
           id: scope.id,
           name: scope.name,
-          variableCount
+          variableCount,
         });
       }
     }
@@ -280,11 +295,14 @@ export class ContextManagementService {
       scopeCount: scopesToCheck.length,
       variableCount: totalVariables,
       totalSize,
-      scopes: scopeStats
+      scopes: scopeStats,
     };
   }
 
-  private hasContextValue(path: string, variableMap: Map<string, any>): boolean {
+  private hasContextValue(
+    path: string,
+    variableMap: Map<string, any>,
+  ): boolean {
     // Check direct path
     if (variableMap.has(path)) {
       return true;
@@ -294,7 +312,7 @@ export class ContextManagementService {
     if (path.includes('.')) {
       const segments = path.split('.');
       let current: any = variableMap;
-      
+
       for (const segment of segments) {
         if (current instanceof Map && current.has(segment)) {
           current = current.get(segment);
@@ -302,7 +320,7 @@ export class ContextManagementService {
           return false;
         }
       }
-      
+
       return true;
     }
 
@@ -319,7 +337,7 @@ export class ContextManagementService {
     if (path.includes('.')) {
       const segments = path.split('.');
       let current: any = variableMap;
-      
+
       for (const segment of segments) {
         if (current instanceof Map && current.has(segment)) {
           current = current.get(segment);
@@ -327,7 +345,7 @@ export class ContextManagementService {
           return undefined;
         }
       }
-      
+
       return current;
     }
 
@@ -335,8 +353,8 @@ export class ContextManagementService {
   }
 
   private collectVariablesRecursive(
-    scopeId: string, 
-    variables: Map<string, ContextValue>
+    scopeId: string,
+    variables: Map<string, ContextValue>,
   ): void {
     const scope = this.scopes.get(scopeId);
     if (!scope) return;
@@ -360,12 +378,12 @@ export class ContextManagementService {
   private inferType(value: any): ContextValue['type'] {
     if (Array.isArray(value)) return 'array';
     if (value === null || value === undefined) return 'object';
-    
+
     const type = typeof value;
     if (type === 'string' || type === 'number' || type === 'boolean') {
       return type;
     }
-    
+
     return 'object';
   }
 
