@@ -5,12 +5,13 @@ import {
   fakeAsync,
   tick,
 } from '@angular/core/testing';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, of } from 'rxjs';
 import { SettingsPanelComponent } from './settings-panel.component';
 import { SettingsPanelRef } from './settings-panel.ref';
-import { SettingsValueProvider } from './settings-panel.types';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { MatDialog } from '@angular/material/dialog';
 
+// Mocks
 class MockSettingsPanelRef {
   apply = jasmine.createSpy('apply');
   save = jasmine.createSpy('save');
@@ -18,13 +19,24 @@ class MockSettingsPanelRef {
   close = jasmine.createSpy('close');
 }
 
+class MockMatDialog {
+  open = jasmine.createSpy('open').and.returnValue({
+    afterClosed: () => of(true), // Default to confirmed
+  });
+}
+
 @Component({
   standalone: true,
   template: '',
 })
-class DummyProvider implements SettingsValueProvider {
-  canSave$ = new BehaviorSubject<boolean>(false);
+class DummyProvider {
+  isDirty$ = new BehaviorSubject<boolean>(false);
+  isValid$ = new BehaviorSubject<boolean>(true);
+  isBusy$ = new BehaviorSubject<boolean>(false);
+
   onSaveCalled = false;
+  resetCalled = false;
+
   getSettingsValue() {
     return { foo: 'bar' };
   }
@@ -32,19 +44,9 @@ class DummyProvider implements SettingsValueProvider {
     this.onSaveCalled = true;
     return { foo: 'baz' };
   }
-}
-
-@Component({
-  standalone: true,
-  template: '',
-})
-class AsyncProvider implements SettingsValueProvider {
-  getSettingsValue() {
-    return { foo: 'sync' };
-  }
-
-  onSave() {
-    return Promise.resolve({ foo: 'async' });
+  reset() {
+    this.resetCalled = true;
+    this.isDirty$.next(false);
   }
 }
 
@@ -52,88 +54,139 @@ describe('SettingsPanelComponent', () => {
   let component: SettingsPanelComponent;
   let fixture: ComponentFixture<SettingsPanelComponent>;
   let ref: MockSettingsPanelRef;
+  let dialog: MockMatDialog;
+  let dummyProvider: DummyProvider;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [
-        SettingsPanelComponent,
-        DummyProvider,
-        AsyncProvider,
-        NoopAnimationsModule,
+      imports: [SettingsPanelComponent, DummyProvider, NoopAnimationsModule],
+      providers: [
+        { provide: MatDialog, useClass: MockMatDialog },
+        { provide: SettingsPanelRef, useClass: MockSettingsPanelRef },
       ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(SettingsPanelComponent);
     component = fixture.componentInstance;
-    ref = new MockSettingsPanelRef();
-  });
+    ref = TestBed.inject(SettingsPanelRef) as unknown as MockSettingsPanelRef;
+    dialog = TestBed.inject(MatDialog) as unknown as MockMatDialog;
 
-  it('should toggle save button based on canSave$', () => {
+    // Attach a dummy provider for most tests
     component.attachContent(
       DummyProvider,
       TestBed.inject(Injector),
-      ref as unknown as SettingsPanelRef,
+      ref as unknown as SettingsPanelRef
     );
-    const instance = component.contentRef!.instance as DummyProvider;
-    expect(component.disableSaveButton).toBeTrue();
-
-    instance.canSave$.next(true);
-    expect(component.disableSaveButton).toBeFalse();
+    dummyProvider = component.contentRef!.instance as DummyProvider;
   });
 
-  it('should call child onSave before saving value', () => {
-    component.attachContent(
-      DummyProvider,
-      TestBed.inject(Injector),
-      ref as unknown as SettingsPanelRef,
-    );
-    const instance = component.contentRef!.instance as DummyProvider;
-    spyOn(instance, 'onSave').and.callThrough();
+  describe('State Management and Button Disabling', () => {
+    it('should have buttons disabled by default when not dirty', () => {
+      expect(component.isDirty).toBeFalse();
+      expect(component.isValid).toBeTrue();
+      expect(component.isBusy).toBeFalse();
+      expect(component.canApply).toBeFalse();
+      expect(component.canSave).toBeFalse();
+    });
 
-    component.onSave();
+    it('should enable buttons when dirty and valid', () => {
+      dummyProvider.isDirty$.next(true);
+      fixture.detectChanges();
+      expect(component.canApply).toBeTrue();
+      expect(component.canSave).toBeTrue();
+    });
 
-    expect(instance.onSave).toHaveBeenCalled();
-    expect(ref.save).toHaveBeenCalledWith({ foo: 'baz' });
+    it('should disable buttons when form is invalid', () => {
+      dummyProvider.isDirty$.next(true);
+      dummyProvider.isValid$.next(false);
+      fixture.detectChanges();
+      expect(component.canApply).toBeFalse();
+      expect(component.canSave).toBeFalse();
+    });
+
+    it('should disable buttons when busy', () => {
+      dummyProvider.isDirty$.next(true);
+      dummyProvider.isBusy$.next(true);
+      fixture.detectChanges();
+      expect(component.canApply).toBeFalse();
+      expect(component.canSave).toBeFalse();
+    });
+
+    it('should provide the correct disabled reason', () => {
+      // Not dirty
+      dummyProvider.isDirty$.next(false);
+      expect(component.disabledReason).toContain('Nenhuma alteração');
+
+      // Invalid
+      dummyProvider.isDirty$.next(true);
+      dummyProvider.isValid$.next(false);
+      expect(component.disabledReason).toContain('erros');
+
+      // Busy
+      dummyProvider.isValid$.next(true);
+      dummyProvider.isBusy$.next(true);
+      expect(component.disabledReason).toContain('Operação em andamento');
+    });
   });
 
-  it('should handle async onSave result', fakeAsync(() => {
-    component.attachContent(
-      AsyncProvider,
-      TestBed.inject(Injector),
-      ref as unknown as SettingsPanelRef,
-    );
+  describe('Actions', () => {
+    it('should call child onSave before saving value', () => {
+      dummyProvider.isDirty$.next(true);
+      spyOn(dummyProvider, 'onSave').and.callThrough();
+      component.onSave();
+      expect(dummyProvider.onSave).toHaveBeenCalled();
+      expect(ref.save).toHaveBeenCalledWith({ foo: 'baz' });
+    });
 
-    component.onSave();
-    tick();
+    it('should not call save if canSave is false', () => {
+      dummyProvider.isDirty$.next(false); // canSave is false
+      component.onSave();
+      expect(ref.save).not.toHaveBeenCalled();
+    });
 
-    expect(ref.save).toHaveBeenCalledWith({ foo: 'async' });
-  }));
+    it('should call apply if canApply is true', () => {
+      dummyProvider.isDirty$.next(true);
+      component.onApply();
+      expect(ref.apply).toHaveBeenCalledWith({ foo: 'bar' });
+    });
+  });
 
-  it('should toggle expanded state and class', () => {
-    fixture.detectChanges();
-    const panel: HTMLElement =
-      fixture.nativeElement.querySelector('.settings-panel');
-    const icon: HTMLElement = fixture.nativeElement.querySelector(
-      'header button mat-icon',
-    );
-    const toggleButton: HTMLButtonElement =
-      fixture.nativeElement.querySelector('header button');
-    expect(panel.classList.contains('expanded')).toBeFalse();
-    expect(icon.textContent?.trim()).toBe('chevron_left');
-    expect(toggleButton.getAttribute('aria-expanded')).toBe('false');
+  describe('Confirmation Dialogs', () => {
+    it('should NOT open confirmation on onCancel if not dirty', () => {
+      dummyProvider.isDirty$.next(false);
+      component.onCancel();
+      expect(dialog.open).not.toHaveBeenCalled();
+      expect(ref.close).toHaveBeenCalledWith('cancel');
+    });
 
-    component.toggleExpand();
-    fixture.detectChanges();
-    expect(component.expanded).toBeTrue();
-    expect(panel.classList.contains('expanded')).toBeTrue();
-    expect(icon.textContent?.trim()).toBe('chevron_right');
-    expect(toggleButton.getAttribute('aria-expanded')).toBe('true');
+    it('should open confirmation on onCancel if dirty', () => {
+      dummyProvider.isDirty$.next(true);
+      component.onCancel();
+      expect(dialog.open).toHaveBeenCalled();
+      expect(ref.close).toHaveBeenCalledWith('cancel');
+    });
 
-    component.toggleExpand();
-    fixture.detectChanges();
-    expect(component.expanded).toBeFalse();
-    expect(panel.classList.contains('expanded')).toBeFalse();
-    expect(icon.textContent?.trim()).toBe('chevron_left');
-    expect(toggleButton.getAttribute('aria-expanded')).toBe('false');
+    it('should NOT close on onCancel if user cancels dialog', () => {
+      dialog.open.and.returnValue({ afterClosed: () => of(false) } as any);
+      dummyProvider.isDirty$.next(true);
+      component.onCancel();
+      expect(dialog.open).toHaveBeenCalled();
+      expect(ref.close).not.toHaveBeenCalled();
+    });
+
+    it('should always open confirmation on onReset', () => {
+      component.onReset();
+      expect(dialog.open).toHaveBeenCalled();
+      expect(dummyProvider.resetCalled).toBeTrue();
+      expect(ref.reset).toHaveBeenCalled();
+    });
+
+    it('should NOT reset if user cancels dialog', () => {
+      dialog.open.and.returnValue({ afterClosed: () => of(false) } as any);
+      component.onReset();
+      expect(dialog.open).toHaveBeenCalled();
+      expect(dummyProvider.resetCalled).toBeFalse();
+      expect(ref.reset).not.toHaveBeenCalled();
+    });
   });
 });

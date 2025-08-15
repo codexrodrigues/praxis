@@ -16,9 +16,16 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { CdkTrapFocus } from '@angular/cdk/a11y';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { SettingsPanelRef } from './settings-panel.ref';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { firstValueFrom, isObservable } from 'rxjs';
+import { firstValueFrom, isObservable, of } from 'rxjs';
+import { filter, switchMap } from 'rxjs/operators';
+import {
+  ConfirmDialogComponent,
+  ConfirmDialogData,
+} from '@praxis/dynamic-fields';
 
 @Component({
   selector: 'praxis-settings-panel',
@@ -29,6 +36,9 @@ import { firstValueFrom, isObservable } from 'rxjs';
     MatIconModule,
     MatTooltipModule,
     CdkTrapFocus,
+    MatProgressSpinnerModule,
+    MatDialogModule,
+    ConfirmDialogComponent,
   ],
   templateUrl: './settings-panel.component.html',
   styleUrls: ['./settings-panel.component.scss'],
@@ -41,14 +51,38 @@ export class SettingsPanelComponent {
   contentRef?: ComponentRef<any>;
   private static nextId = 0;
   titleId = `praxis-settings-panel-title-${SettingsPanelComponent.nextId++}`;
-  disableSaveButton = false;
+
+  isDirty = false;
+  isValid = true;
+  isBusy = false;
+
+  get canApply(): boolean {
+    return this.isDirty && this.isValid && !this.isBusy;
+  }
+
+  get canSave(): boolean {
+    return this.isDirty && this.isValid && !this.isBusy;
+  }
+
+  get disabledReason(): string {
+    if (this.isBusy) {
+      return 'Operação em andamento...';
+    }
+    if (!this.isValid) {
+      return 'O formulário contém erros que precisam ser corrigidos.';
+    }
+    if (!this.isDirty) {
+      return 'Nenhuma alteração para aplicar ou salvar.';
+    }
+    return '';
+  }
 
   private readonly destroyRef = inject(DestroyRef);
 
   @ViewChild('contentHost', { read: ViewContainerRef, static: true })
   private contentHost!: ViewContainerRef;
 
-  constructor(private cdr: ChangeDetectorRef) {}
+  constructor(private cdr: ChangeDetectorRef, private dialog: MatDialog) {}
 
   attachContent(
     component: Type<any>,
@@ -61,35 +95,63 @@ export class SettingsPanelComponent {
     });
 
     const instance: any = this.contentRef.instance;
-    if ('canSave$' in instance && instance.canSave$) {
-      instance.canSave$
+
+    if (instance.isDirty$) {
+      instance.isDirty$
         .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe((v: boolean) => {
-          this.disableSaveButton = !v;
-          this.cdr.detectChanges();
+        .subscribe((dirty: boolean) => {
+          this.isDirty = dirty;
+          this.cdr.markForCheck();
+        });
+    }
+
+    if (instance.isValid$) {
+      instance.isValid$
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((valid: boolean) => {
+          this.isValid = valid;
+          this.cdr.markForCheck();
+        });
+    }
+
+    if (instance.isBusy$) {
+      instance.isBusy$
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe((busy: boolean) => {
+          this.isBusy = busy;
+          this.cdr.markForCheck();
         });
     }
   }
 
   onReset(): void {
-    this.contentRef?.instance?.reset?.();
-    this.ref.reset();
+    const dialogData: ConfirmDialogData = {
+      title: 'Redefinir Alterações',
+      message: 'Tem certeza de que deseja redefinir todas as alterações?',
+      confirmText: 'Redefinir',
+      cancelText: 'Cancelar',
+      type: 'warning',
+      icon: 'restart_alt',
+    };
+
+    this.dialog
+      .open(ConfirmDialogComponent, { data: dialogData })
+      .afterClosed()
+      .pipe(filter((confirmed) => confirmed))
+      .subscribe(() => {
+        this.contentRef?.instance?.reset?.();
+        this.ref.reset();
+      });
   }
 
   onApply(): void {
+    if (!this.canApply) return;
     const value = this.contentRef?.instance?.getSettingsValue?.();
     this.ref.apply(value);
   }
 
-  /**
-   * Saves the settings emitted by the embedded editor.
-   *
-   * The editor component must return the updated configuration from its
-   * `onSave()` method. The returned value is forwarded through the panel's
-   * {@link SettingsPanelRef#saved$} stream so consumers can persist the new
-   * settings. If nothing is returned, `getSettingsValue()` is used as a fallback.
-   */
   onSave(): void {
+    if (!this.canSave) return;
     const instance: any = this.contentRef?.instance;
     const result = instance?.onSave?.();
 
@@ -111,17 +173,41 @@ export class SettingsPanelComponent {
   }
 
   onCancel(): void {
-    this.ref.close('cancel');
+    of(this.isDirty)
+      .pipe(
+        switchMap((dirty) => {
+          if (!dirty) {
+            return of(true);
+          }
+          const dialogData: ConfirmDialogData = {
+            title: 'Descartar Alterações',
+            message:
+              'Você tem alterações não salvas. Tem certeza de que deseja descartá-las?',
+            confirmText: 'Descartar',
+            cancelText: 'Continuar Editando',
+            type: 'warning',
+            icon: 'warning',
+          };
+          return this.dialog
+            .open(ConfirmDialogComponent, { data: dialogData })
+            .afterClosed();
+        }),
+        filter((confirmed) => confirmed),
+      )
+      .subscribe(() => {
+        this.ref.close('cancel');
+      });
   }
 
   @HostListener('document:keydown', ['$event'])
   handleKeydown(event: KeyboardEvent): void {
     if (event.key === 'Escape') {
-      this.ref.close('esc');
-    } else if (event.key === 'Enter' && event.ctrlKey) {
       event.preventDefault();
-      this.onApply();
-    } else if ((event.key === 's' || event.key === 'S') && event.ctrlKey) {
+      this.onCancel();
+    } else if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+      event.preventDefault();
+      this.onSave();
+    } else if ((event.key === 's' || event.key === 'S') && (event.ctrlKey || event.metaKey)) {
       event.preventDefault();
       this.onSave();
     }
