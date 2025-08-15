@@ -3,7 +3,7 @@ import {
   HttpClientTestingModule,
   HttpTestingController,
 } from '@angular/common/http/testing';
-import { GenericCrudService } from './generic-crud.service';
+import { GenericCrudService, BatchDeleteResult } from './generic-crud.service';
 import { API_URL, ApiUrlConfig } from '../tokens/api-url.token';
 import { SchemaNormalizerService } from './schema-normalizer.service';
 
@@ -61,5 +61,44 @@ describe('GenericCrudService', () => {
     const req = httpMock.expectOne('http://localhost:8087/api/external/all');
     expect(req.request.method).toBe('GET');
     req.flush({ data: [] });
+  });
+
+  it('should delete multiple ids sequentially', () => {
+    service.configure('items');
+    const progress: any[] = [];
+    service
+      .deleteMany([1, 2], { progress: (e) => progress.push(e) })
+      .subscribe((result) => {
+        expect(result.successIds).toEqual([1, 2]);
+        expect(result.errors.length).toBe(0);
+      });
+
+    const req1 = httpMock.expectOne('http://localhost:8087/api/items/1');
+    expect(req1.request.method).toBe('DELETE');
+    req1.flush({});
+
+    const req2 = httpMock.expectOne('http://localhost:8087/api/items/2');
+    expect(req2.request.method).toBe('DELETE');
+    req2.flush({});
+
+    expect(progress.length).toBe(2);
+  });
+
+  it('should report errors for failed deletions', () => {
+    service.configure('items');
+    let result: BatchDeleteResult<number> | undefined;
+    service.deleteMany([1, 2]).subscribe((r) => (result = r));
+
+    const req1 = httpMock.expectOne('http://localhost:8087/api/items/1');
+    expect(req1.request.method).toBe('DELETE');
+    req1.flush('err', { status: 500, statusText: 'Server Error' });
+
+    const req2 = httpMock.expectOne('http://localhost:8087/api/items/2');
+    expect(req2.request.method).toBe('DELETE');
+    req2.flush({});
+
+    expect(result?.successIds).toEqual([2]);
+    expect(result?.errors.length).toBe(1);
+    expect(result?.errors[0].id).toBe(1);
   });
 });

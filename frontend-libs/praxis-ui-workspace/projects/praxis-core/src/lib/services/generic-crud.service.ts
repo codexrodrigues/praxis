@@ -3,8 +3,15 @@ import {
   HttpErrorResponse,
   HttpParams,
 } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { Observable, throwError, from, of, EMPTY } from 'rxjs';
+import {
+  catchError,
+  map,
+  concatMap,
+  toArray,
+  tap,
+  takeUntil,
+} from 'rxjs/operators';
 
 import { RestApiResponse } from '../models/rest-api-response.model';
 import { Page, Pageable } from '../models/page.model';
@@ -72,6 +79,24 @@ export interface CrudOperationOptions {
   parentPath?: string;
   /** Chave do endpoint configurado via ApiUrlConfig */
   endpointKey?: ApiEndpoint;
+}
+
+export interface BatchDeleteProgress<ID = string | number> {
+  id: ID;
+  success: boolean;
+  error?: unknown;
+  index: number;
+  total: number;
+}
+
+export interface BatchDeleteResult<ID = string | number> {
+  successIds: ID[];
+  errors: BatchDeleteProgress<ID>[];
+}
+
+export interface BatchDeleteOptions extends CrudOperationOptions {
+  progress?: (event: BatchDeleteProgress) => void;
+  cancel$?: Observable<unknown>;
 }
 
 /**
@@ -656,6 +681,49 @@ export class GenericCrudService<T> {
         RestApiResponse<void>
       >(url, { headers: composeHeadersWithVersion(entry) })
       .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Realiza exclusão de múltiplos registros sequencialmente.
+   * Emite progresso opcionalmente e permite cancelamento via Observable.
+   */
+  public deleteMany(
+    ids: Array<string | number>,
+    options?: BatchDeleteOptions,
+  ): Observable<BatchDeleteResult<string | number>> {
+    this.ensureConfigured();
+    if (!ids || ids.length === 0) {
+      return of({ successIds: [], errors: [] });
+    }
+    const total = ids.length;
+    return from(ids).pipe(
+      takeUntil(options?.cancel$ ?? EMPTY),
+      concatMap((id, index) =>
+        this.delete(id, options).pipe(
+          map(() => ({
+            id,
+            success: true,
+            index: index + 1,
+            total,
+          })),
+          catchError((error) =>
+            of({
+              id,
+              success: false,
+              error,
+              index: index + 1,
+              total,
+            }),
+          ),
+          tap((event) => options?.progress?.(event)),
+        ),
+      ),
+      toArray(),
+      map((events) => ({
+        successIds: events.filter((e) => e.success).map((e) => e.id),
+        errors: events.filter((e) => !e.success),
+      })),
+    );
   }
 
   /**

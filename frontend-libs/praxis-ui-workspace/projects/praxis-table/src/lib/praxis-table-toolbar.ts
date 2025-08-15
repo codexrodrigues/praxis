@@ -40,6 +40,17 @@ import { TableConfig } from '@praxis/core';
           {{ action.label }}
         </button>
       </ng-container>
+      <ng-container *ngIf="config?.actions?.bulk?.enabled">
+        <button
+          mat-button
+          *ngFor="let action of config?.actions?.bulk?.actions"
+          [color]="action.color || 'primary'"
+          (click)="emitToolbarAction($event, action.action)"
+        >
+          <mat-icon *ngIf="action.icon">{{ action.icon }}</mat-icon>
+          {{ action.label }}
+        </button>
+      </ng-container>
       <ng-content select="[advancedFilter]"></ng-content>
       <ng-content select="[toolbar]"></ng-content>
       <span class="spacer"></span>

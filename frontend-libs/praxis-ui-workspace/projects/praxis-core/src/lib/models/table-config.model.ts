@@ -207,7 +207,13 @@ export function createDefaultTableConfig(): TableConfig {
             action: 'view',
           },
           { id: 'edit', label: 'Editar', icon: 'edit', action: 'edit' },
-          { id: 'delete', label: 'Excluir', icon: 'delete', action: 'delete' },
+          {
+            id: 'delete',
+            label: 'Excluir',
+            icon: 'delete',
+            action: 'delete',
+            autoDelete: false,
+          },
         ],
       },
       bulk: {
