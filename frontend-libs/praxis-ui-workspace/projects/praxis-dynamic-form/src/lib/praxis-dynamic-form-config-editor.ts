@@ -1,14 +1,19 @@
-import { Component, ViewChild, Inject, Optional } from '@angular/core';
+import { Component, ViewChild, Inject, Optional, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
-import { FormConfig } from '@praxis/core';
+import { FormConfig, FieldMetadata } from '@praxis/core';
 import {
   SETTINGS_PANEL_DATA,
   SettingsValueProvider,
 } from '@praxis/settings-panel';
+import {
+  PraxisVisualBuilder,
+  RuleBuilderConfig,
+  FieldSchema,
+} from '@praxis/visual-builder';
 import { FormConfigService } from './services/form-config.service';
 import {
   JsonConfigEditorComponent,
@@ -19,7 +24,6 @@ import { LayoutEditorComponent } from './layout-editor/layout-editor.component';
 import { BehaviorEditorComponent } from './behavior-editor/behavior-editor.component';
 import { ActionsEditorComponent } from './actions-editor/actions-editor.component';
 import { MessagesEditorComponent } from './messages-editor/messages-editor.component';
-import { RulesEditorComponent } from './rules-editor/rules-editor.component';
 import { normalizeFormConfig } from './utils/normalize-form-config';
 
 @Component({
@@ -36,7 +40,7 @@ import { normalizeFormConfig } from './utils/normalize-form-config';
     BehaviorEditorComponent,
     ActionsEditorComponent,
     MessagesEditorComponent,
-    RulesEditorComponent,
+    PraxisVisualBuilder,
   ],
   providers: [FormConfigService],
   styles: [
@@ -57,6 +61,12 @@ import { normalizeFormConfig } from './utils/normalize-form-config';
       }
       .tab-content {
         padding: 16px;
+        height: calc(100% - 48px); // Account for tab header height
+        overflow-y: auto;
+      }
+      .visual-builder-content {
+        padding: 0;
+        height: 100%;
       }
       .json-field {
         width: 100%;
@@ -92,11 +102,12 @@ import { normalizeFormConfig } from './utils/normalize-form-config';
             </div>
           </mat-tab>
           <mat-tab label="Regras">
-            <div class="tab-content">
-              <praxis-rules-editor
-                [config]="editedConfig"
-                (configChange)="onConfigChange($event)"
-              ></praxis-rules-editor>
+            <div class="tab-content visual-builder-content">
+              <praxis-visual-builder
+                [config]="ruleBuilderConfig"
+                [initialRules]="editedConfig.formRules"
+                (rulesChanged)="onRulesChanged($event)"
+              ></praxis-visual-builder>
             </div>
           </mat-tab>
           <mat-tab label="Mensagens">
@@ -123,19 +134,28 @@ import { normalizeFormConfig } from './utils/normalize-form-config';
     </div>
   `,
 })
-export class PraxisDynamicFormConfigEditor implements SettingsValueProvider {
+export class PraxisDynamicFormConfigEditor
+  implements SettingsValueProvider, OnInit
+{
   @ViewChild(JsonConfigEditorComponent) jsonEditor?: JsonConfigEditorComponent;
 
   editedConfig: FormConfig;
+  ruleBuilderConfig!: RuleBuilderConfig;
   private initialConfig: FormConfig;
 
   constructor(
     private configService: FormConfigService,
-    @Optional() @Inject(SETTINGS_PANEL_DATA) injectedData?: FormConfig,
+    @Optional() @Inject(SETTINGS_PANEL_DATA) injectedData?: FormConfig
   ) {
     this.initialConfig = normalizeFormConfig(injectedData);
     this.editedConfig = structuredClone(this.initialConfig);
     this.configService.loadConfig(structuredClone(this.initialConfig));
+  }
+
+  ngOnInit(): void {
+    this.ruleBuilderConfig = this.createRuleBuilderConfig(
+      this.editedConfig.fieldMetadata || []
+    );
   }
 
   reset(): void {
@@ -149,6 +169,9 @@ export class PraxisDynamicFormConfigEditor implements SettingsValueProvider {
 
   onJsonConfigChange(newConfig: FormConfig): void {
     this.editedConfig = newConfig;
+    this.ruleBuilderConfig = this.createRuleBuilderConfig(
+      newConfig.fieldMetadata || []
+    );
   }
 
   onJsonValidationChange(_result: JsonValidationResult): void {
@@ -161,5 +184,43 @@ export class PraxisDynamicFormConfigEditor implements SettingsValueProvider {
 
   onConfigChange(newConfig: FormConfig): void {
     this.editedConfig = newConfig;
+    // Potentially update rule builder config if fields change
+    if (
+      JSON.stringify(newConfig.fieldMetadata) !==
+      JSON.stringify(this.ruleBuilderConfig.fieldSchemas)
+    ) {
+      this.ruleBuilderConfig = this.createRuleBuilderConfig(
+        newConfig.fieldMetadata || []
+      );
+    }
+  }
+
+  onRulesChanged(rules: any): void {
+    this.editedConfig = {
+      ...this.editedConfig,
+      formRules: rules.rootNodes.map((nodeId: string) => rules.nodes[nodeId]),
+    };
+  }
+
+  private createRuleBuilderConfig(
+    fieldMetadata: FieldMetadata[]
+  ): RuleBuilderConfig {
+    return {
+      fieldSchemas: this.mapMetadataToSchema(fieldMetadata),
+      // Add any other necessary configurations for the visual builder here
+    };
+  }
+
+  private mapMetadataToSchema(metadata: FieldMetadata[]): FieldSchema[] {
+    return metadata.map((field) => ({
+      name: field.name,
+      label: field.label,
+      type: field.dataType || 'string', // Default to string if dataType is not set
+      options: field.options?.map((opt) => ({
+        label: opt.label,
+        value: opt.value,
+      })),
+      // Add other mappings as needed
+    }));
   }
 }

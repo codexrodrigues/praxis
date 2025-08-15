@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { FormControl, FormGroup, Validators } from '@angular/forms';
 import { of, Subject } from 'rxjs';
 import { PraxisDynamicForm } from './praxis-dynamic-form';
 import {
@@ -320,5 +321,198 @@ describe('PraxisDynamicForm', () => {
 
     ctrl.setValue({ minPrice: 100, maxPrice: 200 });
     expect(ctrl.valid).toBeTrue();
+  });
+
+  describe('Form Rules Engine', () => {
+    let formConfig: FormConfig;
+
+    beforeEach(() => {
+      // Common config for all rule tests
+      formConfig = {
+        sections: [
+          {
+            id: 's1',
+            rows: [
+              {
+                columns: [
+                  { fields: ['field_a'] },
+                  { fields: ['field_b'] },
+                  { fields: ['field_c'] },
+                ],
+              },
+            ],
+          },
+        ],
+        fieldMetadata: [
+          { name: 'field_a', label: 'Field A', controlType: FieldControlType.INPUT },
+          { name: 'field_b', label: 'Field B', controlType: FieldControlType.INPUT },
+          { name: 'field_c', label: 'Field C', controlType: FieldControlType.INPUT },
+        ],
+        formRules: [], // Rules will be added in each test
+      };
+    });
+
+    it('should make a field visible when its visibility rule condition is met', async () => {
+      formConfig.formRules = [
+        {
+          id: 'vis1',
+          name: 'Show B if A is "show"',
+          context: 'visibility',
+          targetFields: ['field_b'],
+          effect: {
+            condition: 'field_a == "show"',
+          },
+        },
+      ] as any;
+      component.config = formConfig;
+      (component as any).buildFormFromConfig();
+      fixture.detectChanges();
+
+      // Initially, the condition is false, so field_b should be hidden
+      component.form.get('field_a')?.setValue('hide');
+      await fixture.whenStable();
+      fixture.detectChanges();
+      expect(component.fieldVisibility['field_b']).toBe(false);
+
+      // Meet the condition
+      component.form.get('field_a')?.setValue('show');
+      await fixture.whenStable();
+      fixture.detectChanges();
+      expect(component.fieldVisibility['field_b']).toBe(true);
+      expect(component.form.get('field_b')?.enabled).toBe(true);
+    });
+
+    it('should make a field hidden and disabled when its visibility rule condition is not met', async () => {
+      formConfig.formRules = [
+        {
+          id: 'vis1',
+          name: 'Show B if A is "show"',
+          context: 'visibility',
+          targetFields: ['field_b'],
+          effect: {
+            condition: 'field_a == "show"',
+          },
+        },
+      ] as any;
+      component.config = formConfig;
+      (component as any).buildFormFromConfig();
+      const fieldBControl = component.form.get('field_b')!;
+
+      // Start with the condition met
+      component.form.get('field_a')?.setValue('show');
+      await fixture.whenStable();
+      fixture.detectChanges();
+      expect(component.fieldVisibility['field_b']).toBe(true);
+      expect(fieldBControl.enabled).toBe(true);
+
+      // Break the condition
+      component.form.get('field_a')?.setValue('hide');
+      await fixture.whenStable();
+      fixture.detectChanges();
+      expect(component.fieldVisibility['field_b']).toBe(false);
+      expect(fieldBControl.disabled).toBe(true);
+    });
+
+    it('should make a field required when its validation rule condition is met', async () => {
+      formConfig.formRules = [
+        {
+          id: 'req1',
+          name: 'Require C if A is "require"',
+          context: 'validation',
+          targetFields: ['field_c'],
+          effect: {
+            condition: 'field_a == "require"',
+          },
+        },
+      ] as any;
+      component.config = formConfig;
+      (component as any).buildFormFromConfig();
+      const fieldCControl = component.form.get('field_c')!;
+
+      // Initially, the condition is false, so field_c should not be required
+      component.form.get('field_a')?.setValue('dont_require');
+      await fixture.whenStable();
+      fixture.detectChanges();
+      expect(fieldCControl.hasValidator(Validators.required)).toBe(false);
+
+      // Meet the condition
+      component.form.get('field_a')?.setValue('require');
+      await fixture.whenStable();
+      fixture.detectChanges();
+      expect(fieldCControl.hasValidator(Validators.required)).toBe(true);
+    });
+
+    it('should make a field optional when its validation rule condition is not met', async () => {
+      formConfig.formRules = [
+        {
+          id: 'req1',
+          name: 'Require C if A is "require"',
+          context: 'validation',
+          targetFields: ['field_c'],
+          effect: {
+            condition: 'field_a == "require"',
+          },
+        },
+      ] as any;
+      component.config = formConfig;
+      (component as any).buildFormFromConfig();
+      const fieldCControl = component.form.get('field_c')!;
+
+      // Start with the condition met
+      component.form.get('field_a')?.setValue('require');
+      await fixture.whenStable();
+      fixture.detectChanges();
+      expect(fieldCControl.hasValidator(Validators.required)).toBe(true);
+
+      // Break the condition
+      component.form.get('field_a')?.setValue('dont_require');
+      await fixture.whenStable();
+      fixture.detectChanges();
+      expect(fieldCControl.hasValidator(Validators.required)).toBe(false);
+    });
+
+    it('should correctly initialize field states on form load', async () => {
+      formConfig.formRules = [
+        {
+          id: 'vis1',
+          name: 'Show B if A is "show"',
+          context: 'visibility',
+          targetFields: ['field_b'],
+          effect: {
+            condition: 'field_a == "show"',
+          },
+        },
+        {
+          id: 'req1',
+          name: 'Require C if A is "show"',
+          context: 'validation',
+          targetFields: ['field_c'],
+          effect: {
+            condition: 'field_a == "show"',
+          },
+        },
+      ] as any;
+      component.config = formConfig;
+
+      // Set initial value before building the form to simulate loading data
+      const initialData = { field_a: 'show', field_b: '', field_c: '' };
+      component.form = new FormGroup({
+        field_a: new FormControl(initialData.field_a),
+        field_b: new FormControl(initialData.field_b),
+        field_c: new FormControl(initialData.field_c),
+      });
+
+      (component as any).buildFormFromConfig();
+
+      // Manually trigger rule evaluation as it would happen on init
+      (component as any).evaluateAndApplyRules();
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      // Check initial state
+      expect(component.fieldVisibility['field_b']).toBe(true);
+      expect(component.form.get('field_b')?.enabled).toBe(true);
+      expect(component.form.get('field_c')?.hasValidator(Validators.required)).toBe(true);
+    });
   });
 });

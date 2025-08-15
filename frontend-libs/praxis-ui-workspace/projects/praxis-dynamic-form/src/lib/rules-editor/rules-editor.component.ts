@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { FormConfig } from '@praxis/core';
+import { FormConfig, FormLayoutRule } from '@praxis/core';
 
 @Component({
   selector: 'praxis-rules-editor',
@@ -18,7 +18,24 @@ import { FormConfig } from '@praxis/core';
           matInput
           [value]="rulesAsString"
           (input)="onRulesChange($any($event.target).value ?? '')"
-          rows="10"
+          rows="15"
+          placeholder="Exemplo:
+[
+  {
+    \&quot;id\&quot;: \&quot;rule1\&quot;,
+    \&quot;name\&quot;: \&quot;Mostra campo B se campo A for 'valor'\&quot;,
+    \&quot;context\&quot;: \&quot;visibility\&quot;,
+    \&quot;targetFields\&quot;: [\&quot;campoB\&quot;],
+    \&quot;effect\&quot;: {
+      \&quot;condition\&quot;: {
+        \&quot;type\&quot;: \&quot;field\&quot;,
+        \&quot;field\&quot;: \&quot;campoA\&quot;,
+        \&quot;operator\&quot;: \&quot;eq\&quot;,
+        \&quot;value\&quot;: \&quot;valor\&quot;
+      }
+    }
+  }
+]"
         ></textarea>
       </mat-form-field>
       <mat-error *ngIf="parsingError">
@@ -47,13 +64,25 @@ export class RulesEditorComponent implements OnInit {
   parsingError: string | null = null;
 
   ngOnInit(): void {
-    this.rulesAsString = JSON.stringify(this.config.formRules || {}, null, 2);
+    // Correctly handle formRules as an array, defaulting to an empty array.
+    this.rulesAsString = JSON.stringify(this.config.formRules || [], null, 2);
   }
 
   onRulesChange(jsonString: string): void {
     this.rulesAsString = jsonString;
     try {
-      const rules = JSON.parse(jsonString);
+      // Allow empty string to mean "no rules"
+      if (jsonString.trim() === '') {
+        this.parsingError = null;
+        const newConfig = {
+          ...this.config,
+          formRules: [],
+        };
+        this.configChange.emit(newConfig);
+        return;
+      }
+
+      const rules: FormLayoutRule[] = JSON.parse(jsonString);
       this.parsingError = null;
       const newConfig = {
         ...this.config,

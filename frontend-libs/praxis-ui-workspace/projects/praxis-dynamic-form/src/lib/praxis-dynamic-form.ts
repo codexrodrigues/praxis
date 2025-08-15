@@ -26,7 +26,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 
 import { Subject, firstValueFrom } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
+import { debounceTime, takeUntil } from 'rxjs/operators';
 import {
   GenericCrudService,
   FieldMetadata,
@@ -57,6 +57,7 @@ import {
 } from '@praxis/core';
 import { FormLayoutService } from './services/form-layout.service';
 import { FormContextService } from './services/form-context.service';
+import { FormRulesService } from './services/form-rules.service';
 import { CONFIG_STORAGE, ConfigStorage } from '@praxis/core';
 import { PraxisDynamicFormConfigEditor } from './praxis-dynamic-form-config-editor';
 import { SettingsPanelService } from '@praxis/settings-panel';
@@ -171,20 +172,22 @@ import { normalizeFormConfig } from './utils/normalize-form-config';
                   track $index;
                   let colIndex = $index
                 ) {
-                  <div
-                    class="form-column"
-                    [class.layout-editable]="effectiveEditModeEnabled"
-                    [attr.data-column-index]="colIndex"
-                    [attr.data-row-index]="rowIndex"
-                    [attr.data-section-id]="section.id"
-                  >
-                    <ng-container
-                      dynamicFieldLoader
-                      [fields]="getColumnFields(column)"
-                      [formGroup]="form"
+                  @if (isColumnVisible(column)) {
+                    <div
+                      class="form-column"
+                      [class.layout-editable]="effectiveEditModeEnabled"
+                      [attr.data-column-index]="colIndex"
+                      [attr.data-row-index]="rowIndex"
+                      [attr.data-section-id]="section.id"
                     >
-                    </ng-container>
-                  </div>
+                      <ng-container
+                        dynamicFieldLoader
+                        [fields]="getColumnFields(column)"
+                        [formGroup]="form"
+                      >
+                      </ng-container>
+                    </div>
+                  }
                 }
               </div>
             }
@@ -528,6 +531,7 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   private _userHasToggledEditMode: boolean = false;
 
   form!: FormGroup;
+  fieldVisibility: { [fieldName: string]: boolean } = {};
   private pendingEntityId: string | number | null = null;
   private loadedEntityId: string | number | null = null;
   private loadedEntityData: Record<string, any> | null = null;
@@ -540,6 +544,7 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
     private cdr: ChangeDetectorRef,
     private layoutService: FormLayoutService,
     private contextService: FormContextService,
+    private rulesService: FormRulesService,
     private settingsPanel: SettingsPanelService,
     @Inject(CONFIG_STORAGE) private configStorage: ConfigStorage,
   ) {
@@ -849,10 +854,14 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   private buildFormFromConfig(): void {
     const controls: any = {};
     const fieldMetadata = this.config.fieldMetadata || [];
+    this.fieldVisibility = {}; // Reset visibility state
     let field: FieldMetadata | undefined;
 
     try {
       for (field of fieldMetadata) {
+        // All fields are visible by default unless a rule hides them
+        this.fieldVisibility[field.name] = true;
+
         const validators: Array<
           (control: AbstractControl) => ValidationErrors | null
         > = [];
@@ -998,11 +1007,16 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
     this.contextService.setAvailableFields(fieldMetadata);
     if (this.config.formRules) {
       this.contextService.setFormRules(this.config.formRules);
+      // Perform initial rule evaluation
+      this.evaluateAndApplyRules();
     }
 
     this.form.valueChanges
-      .pipe(takeUntil(this.destroy$))
+      .pipe(debounceTime(50), takeUntil(this.destroy$))
       .subscribe((values) => {
+        // Re-evaluate rules on every value change
+        this.evaluateAndApplyRules();
+
         this.valueChange.emit({
           formData: values,
           changedFields: Object.keys(values),
@@ -1021,6 +1035,47 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
     console.debug('[PDF] buildForm:done', {
       fields: this.config.fieldMetadata?.length,
     });
+  }
+
+  private evaluateAndApplyRules(): void {
+    if (!this.config.formRules || !this.form) {
+      return;
+    }
+
+    const result = this.rulesService.applyRules(this.form, this.config.formRules);
+
+    // Apply visibility rules and enable/disable controls
+    for (const fieldName in result.visibility) {
+      if (Object.prototype.hasOwnProperty.call(result.visibility, fieldName)) {
+        const isVisible = result.visibility[fieldName];
+        this.fieldVisibility[fieldName] = isVisible;
+        const control = this.form.get(fieldName);
+        if (control) {
+          if (isVisible && control.disabled) {
+            control.enable({ emitEvent: false });
+          } else if (!isVisible && control.enabled) {
+            control.disable({ emitEvent: false });
+          }
+        }
+      }
+    }
+
+    // Apply required rules
+    for (const fieldName in result.required) {
+      if (Object.prototype.hasOwnProperty.call(result.required, fieldName)) {
+        const control = this.form.get(fieldName);
+        if (control) {
+          const isRequired = result.required[fieldName];
+          if (isRequired && !control.hasValidator(Validators.required)) {
+            control.addValidators(Validators.required);
+          } else if (!isRequired && control.hasValidator(Validators.required)) {
+            control.removeValidators(Validators.required);
+          }
+          control.updateValueAndValidity({ emitEvent: false }); // Avoid infinite loop
+        }
+      }
+    }
+    this.cdr.detectChanges();
   }
 
   /**
@@ -1111,7 +1166,14 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
 
   getColumnFields(column: { fields: string[] }): FieldMetadata[] {
     const fieldMetadata = this.config.fieldMetadata || [];
-    return fieldMetadata.filter((f) => column.fields.includes(f.name));
+    return fieldMetadata.filter(
+      (f) => column.fields.includes(f.name) && this.fieldVisibility[f.name]
+    );
+  }
+
+  isColumnVisible(column: FormColumn): boolean {
+    // A column is visible if at least one of its fields is visible.
+    return column.fields.some((fieldName) => this.fieldVisibility[fieldName]);
   }
 
   onSubmit(): void {
