@@ -6,6 +6,8 @@ import { TableDefaultsProvider } from '../services/table-defaults.provider';
 import { DataFormattingService } from '../data-formatter/data-formatting.service';
 import { SettingsPanelService } from '@praxis/settings-panel';
 import { GenericCrudService, ConfigStorage } from '@praxis/core';
+import { FilterConfigService } from '../services/filter-config.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 describe('PraxisTable openTableSettings', () => {
   it('should persist config on save and load defaults on reset', () => {
@@ -18,8 +20,18 @@ describe('PraxisTable openTableSettings', () => {
     } as any;
     const configStorage = {
       saveConfig: jasmine.createSpy('saveConfig'),
-    } as ConfigStorage;
+      loadConfig: () => undefined,
+      clearConfig: () => {},
+    } as unknown as ConfigStorage;
+    const filterConfig = {
+      save: jasmine.createSpy('save'),
+      load: () => undefined,
+    } as unknown as FilterConfigService;
     const defaults = createDefaultTableConfig();
+    defaults.behavior!.filtering!.advancedFilters = {
+      enabled: true,
+      settings: { quickField: 'id' },
+    } as any;
     const tableDefaultsProvider: TableDefaultsProvider = {
       getDefaults: jasmine.createSpy('getDefaults').and.returnValue(defaults),
     } as any;
@@ -27,6 +39,7 @@ describe('PraxisTable openTableSettings', () => {
     const crudService = {} as GenericCrudService<any>;
     const cdr = { detectChanges: () => {} } as ChangeDetectorRef;
     const formatting = {} as DataFormattingService;
+    const snackBar = {} as MatSnackBar;
 
     const table = new PraxisTable(
       crudService,
@@ -35,23 +48,35 @@ describe('PraxisTable openTableSettings', () => {
       formatting,
       configStorage,
       tableDefaultsProvider,
+      snackBar,
+      filterConfig,
     );
     table.tableId = 'myTable';
     table.config = createDefaultTableConfig();
-    spyOn(table as any, 'applyTableConfig');
 
     table.openTableSettings();
 
-    const newConfig: TableConfig = { columns: [] } as TableConfig;
+    const newConfig = {
+      columns: [],
+      behavior: {
+        filtering: {
+          advancedFilters: { settings: { quickField: 'name' } },
+        },
+      },
+    } as unknown as TableConfig;
     saved$.next(newConfig);
     expect(configStorage.saveConfig).toHaveBeenCalledWith(
       'table-config:myTable',
       newConfig,
     );
-    expect((table as any).applyTableConfig).toHaveBeenCalledWith(newConfig);
+    expect(filterConfig.save).toHaveBeenCalledWith('myTable-filter', {
+      quickField: 'name',
+    });
 
     reset$.next();
     expect(tableDefaultsProvider.getDefaults).toHaveBeenCalledWith('myTable');
-    expect((table as any).applyTableConfig).toHaveBeenCalledWith(defaults);
+    expect(filterConfig.save).toHaveBeenCalledWith('myTable-filter', {
+      quickField: 'id',
+    });
   });
 });

@@ -48,6 +48,7 @@ import { PraxisTableConfigEditor } from './praxis-table-config-editor';
 import { DataFormattingService } from './data-formatter/data-formatting.service';
 import { ColumnDataType } from './data-formatter/data-formatter-types';
 import { TableDefaultsProvider } from './services/table-defaults.provider';
+import { FilterConfigService } from './services/filter-config.service';
 import { PraxisFilter, I18n } from './praxis-filter';
 
 @Component({
@@ -294,6 +295,7 @@ export class PraxisTable
     @Inject(CONFIG_STORAGE) private configStorage: ConfigStorage,
     private tableDefaultsProvider: TableDefaultsProvider,
     private snackBar: MatSnackBar,
+    private filterConfig: FilterConfigService,
   ) {
     this.subscriptions.push(
       this.dataSubject.subscribe((data) => {
@@ -536,6 +538,9 @@ export class PraxisTable
   private applyTableConfig(cfg: TableConfig): void {
     console.debug('[PraxisTable] Applying table config', cfg);
     this.config = { ...cfg };
+    const filterSettings =
+      cfg.behavior?.filtering?.advancedFilters?.settings ?? {};
+    this.filterConfig.save(`${this.tableId}-filter`, filterSettings);
     this.showToolbar = !!(
       cfg.toolbar?.visible || cfg.behavior?.filtering?.advancedFilters?.enabled
     );
@@ -944,7 +949,8 @@ export class PraxisTable
    * Obtém configurações de i18n para o filtro baseado na configuração da tabela
    */
   getFilterI18n(): Partial<I18n> | undefined {
-    const placeholder = this.config.behavior?.filtering?.advancedFilters?.settings?.placeholder;
+    const placeholder =
+      this.config.behavior?.filtering?.advancedFilters?.settings?.placeholder;
     return placeholder ? { searchPlaceholder: placeholder } : undefined;
   }
 
