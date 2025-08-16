@@ -68,60 +68,124 @@ import { PraxisFilter, I18n } from './praxis-filter';
     PraxisFilter,
   ],
   template: `
-    <praxis-table-toolbar
-      *ngIf="showToolbar"
-      [config]="config"
-      (toolbarAction)="onToolbarAction($event)"
-    >
-      <praxis-filter
-        *ngIf="
-          resourcePath &&
-          config.behavior?.filtering?.advancedFilters?.enabled &&
-          !projectedFilter
-        "
-        advancedFilter
-        [resourcePath]="resourcePath"
-        [formId]="tableId + '-filter'"
-        [quickField]="
-          config.behavior?.filtering?.advancedFilters?.settings?.quickField
-        "
-        [alwaysVisibleFields]="
-          config.behavior?.filtering?.advancedFilters?.settings
-            ?.alwaysVisibleFields
-        "
-        [allowSaveTags]="
-          config.behavior?.filtering?.advancedFilters?.settings?.allowSaveTags
-        "
-        [changeDebounceMs]="
-          config.behavior?.filtering?.advancedFilters?.settings
-            ?.changeDebounceMs ?? 300
-        "
-        [i18n]="
-          config.behavior?.filtering?.advancedFilters?.settings?.placeholder
-            ? {
-                searchPlaceholder:
-                  config.behavior?.filtering?.advancedFilters?.settings
-                    ?.placeholder,
-              }
-            : undefined
-        "
-        [mode]="
-          config.behavior?.filtering?.advancedFilters?.settings?.mode ?? 'auto'
-        "
-        (submit)="onAdvancedFilterSubmit($event)"
-        (clear)="onAdvancedFilterClear()"
-      ></praxis-filter>
-      <ng-content select="[advancedFilter]" />
-      <ng-content select="[toolbar]" />
-    </praxis-table-toolbar>
-    <button
-      mat-icon-button
-      *ngIf="editModeEnabled"
-      (click)="openTableSettings()"
-      style="float:right;"
-    >
-      <mat-icon>settings</mat-icon>
-    </button>
+    <ng-container *ngIf="toolbarV2; else legacyHeader">
+      <div class="praxis-table-header" *ngIf="showToolbar || editModeEnabled">
+        <praxis-table-toolbar
+          *ngIf="showToolbar"
+          [config]="config"
+          (toolbarAction)="onToolbarAction($event)"
+        >
+          <praxis-filter
+            *ngIf="
+              resourcePath &&
+              config.behavior?.filtering?.advancedFilters?.enabled &&
+              !projectedFilter
+            "
+            advancedFilter
+            [resourcePath]="resourcePath"
+            [formId]="tableId + '-filter'"
+            [quickField]="
+              config.behavior?.filtering?.advancedFilters?.settings?.quickField
+            "
+            [alwaysVisibleFields]="
+              config.behavior?.filtering?.advancedFilters?.settings
+                ?.alwaysVisibleFields
+            "
+            [allowSaveTags]="
+              config.behavior?.filtering?.advancedFilters?.settings
+                ?.allowSaveTags
+            "
+            [changeDebounceMs]="
+              config.behavior?.filtering?.advancedFilters?.settings
+                ?.changeDebounceMs ?? 300
+            "
+            [i18n]="
+              config.behavior?.filtering?.advancedFilters?.settings?.placeholder
+                ? {
+                    searchPlaceholder:
+                      config.behavior?.filtering?.advancedFilters?.settings
+                        ?.placeholder,
+                  }
+                : undefined
+            "
+            [mode]="
+              config.behavior?.filtering?.advancedFilters?.settings?.mode ??
+              'auto'
+            "
+            (submit)="onAdvancedFilterSubmit($event)"
+            (clear)="onAdvancedFilterClear()"
+          ></praxis-filter>
+          <ng-content select="[advancedFilter]" />
+          <ng-content select="[toolbar]" />
+        </praxis-table-toolbar>
+        <button
+          mat-icon-button
+          *ngIf="editModeEnabled"
+          (click)="openTableSettings()"
+          class="settings-button"
+          aria-label="Configurações"
+        >
+          <mat-icon>settings</mat-icon>
+        </button>
+      </div>
+    </ng-container>
+    <ng-template #legacyHeader>
+      <praxis-table-toolbar
+        *ngIf="showToolbar"
+        [config]="config"
+        (toolbarAction)="onToolbarAction($event)"
+      >
+        <praxis-filter
+          *ngIf="
+            resourcePath &&
+            config.behavior?.filtering?.advancedFilters?.enabled &&
+            !projectedFilter
+          "
+          advancedFilter
+          [resourcePath]="resourcePath"
+          [formId]="tableId + '-filter'"
+          [quickField]="
+            config.behavior?.filtering?.advancedFilters?.settings?.quickField
+          "
+          [alwaysVisibleFields]="
+            config.behavior?.filtering?.advancedFilters?.settings
+              ?.alwaysVisibleFields
+          "
+          [allowSaveTags]="
+            config.behavior?.filtering?.advancedFilters?.settings?.allowSaveTags
+          "
+          [changeDebounceMs]="
+            config.behavior?.filtering?.advancedFilters?.settings
+              ?.changeDebounceMs ?? 300
+          "
+          [i18n]="
+            config.behavior?.filtering?.advancedFilters?.settings?.placeholder
+              ? {
+                  searchPlaceholder:
+                    config.behavior?.filtering?.advancedFilters?.settings
+                      ?.placeholder,
+                }
+              : undefined
+          "
+          [mode]="
+            config.behavior?.filtering?.advancedFilters?.settings?.mode ??
+            'auto'
+          "
+          (submit)="onAdvancedFilterSubmit($event)"
+          (clear)="onAdvancedFilterClear()"
+        ></praxis-filter>
+        <ng-content select="[advancedFilter]" />
+        <ng-content select="[toolbar]" />
+      </praxis-table-toolbar>
+      <button
+        mat-icon-button
+        *ngIf="editModeEnabled"
+        (click)="openTableSettings()"
+        style="float:right;"
+      >
+        <mat-icon>settings</mat-icon>
+      </button>
+    </ng-template>
     <table
       mat-table
       [dataSource]="dataSource"
@@ -217,6 +281,15 @@ import { PraxisFilter, I18n } from './praxis-filter';
       .spacer {
         flex: 1 1 auto;
       }
+
+      .praxis-table-header {
+        display: flex;
+        align-items: center;
+      }
+
+      .settings-button {
+        margin-left: auto;
+      }
     `,
   ],
 })
@@ -228,6 +301,8 @@ export class PraxisTable
   @Input() filterCriteria: any = {};
   /** Controls toolbar visibility */
   @Input() showToolbar = false;
+  /** Enables new toolbar layout */
+  @Input() toolbarV2 = true;
 
   /** Habilita exclusão automática */
   @Input() autoDelete = false;
