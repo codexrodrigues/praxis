@@ -83,7 +83,7 @@ import {
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="rule-editor-container">
+    <div class="rule-editor-container" [class.embedded]="embedded">
       <!-- Header Toolbar -->
       <mat-toolbar class="rule-editor-toolbar">
         <mat-toolbar-row>
@@ -429,6 +429,11 @@ import {
         overflow: hidden;
       }
 
+      .rule-editor-container.embedded {
+        height: 100%;
+        overflow: visible;
+      }
+
       .rule-editor-toolbar {
         background: var(--mdc-theme-primary);
         color: white;
@@ -448,11 +453,12 @@ import {
 
       .rule-editor-content {
         flex: 1;
-        overflow: hidden;
+        min-height: 0;
       }
 
       .sidenav-container {
         height: 100%;
+        min-height: 0;
       }
 
       .rule-editor-sidebar {
@@ -632,8 +638,9 @@ import {
       .json-viewer,
       .round-trip-tester,
       .dsl-linter {
-        height: calc(100vh - 200px);
+        height: 100%;
         padding: 16px;
+        box-sizing: border-box;
       }
 
       .round-trip-tester,
@@ -788,6 +795,7 @@ import {
 export class RuleEditorComponent implements OnInit, OnDestroy {
   @Input() config: RuleBuilderConfig | null = null;
   @Input() initialRules: any = null;
+  @Input() embedded = false;
 
   @Output() rulesChanged = new EventEmitter<any>();
   @Output() exportRequested = new EventEmitter<ExportOptions>();

@@ -1,4 +1,13 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  OnInit,
+  OnDestroy,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -13,10 +22,19 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule, MatSelectChange } from '@angular/material/select';
-import { MatSlideToggleModule, MatSlideToggleChange } from '@angular/material/slide-toggle';
+import {
+  MatSlideToggleModule,
+  MatSlideToggleChange,
+} from '@angular/material/slide-toggle';
 import { MatTabsModule } from '@angular/material/tabs';
 
-import { Subject, takeUntil, debounceTime, distinctUntilChanged, BehaviorSubject } from 'rxjs';
+import {
+  Subject,
+  takeUntil,
+  debounceTime,
+  distinctUntilChanged,
+  BehaviorSubject,
+} from 'rxjs';
 
 import { RuleBuilderService } from '../services/rule-builder.service';
 import { SpecificationBridgeService } from '../services/specification-bridge.service';
@@ -92,7 +110,7 @@ export interface DslLintRule {
     MatProgressSpinnerModule,
     MatSelectModule,
     MatSlideToggleModule,
-    MatTabsModule
+    MatTabsModule,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
@@ -104,65 +122,77 @@ export interface DslLintRule {
             <mat-icon>rule</mat-icon>
             DSL Linter
           </span>
-          
+
           <span class="toolbar-spacer"></span>
-          
+
           <!-- Stats Summary -->
           <div class="stats-summary">
-            <mat-chip 
+            <mat-chip
               [class]="stats.totalErrors > 0 ? 'error-chip' : 'success-chip'"
               [matBadge]="stats.totalErrors"
               [matBadgeHidden]="stats.totalErrors === 0"
               matBadgeColor="warn"
-              matTooltip="Errors">
+              matTooltip="Errors"
+            >
               <mat-icon>error</mat-icon>
               {{ stats.totalErrors }}
             </mat-chip>
-            
-            <mat-chip 
-              [class]="stats.totalWarnings > 0 ? 'warning-chip' : 'neutral-chip'"
+
+            <mat-chip
+              [class]="
+                stats.totalWarnings > 0 ? 'warning-chip' : 'neutral-chip'
+              "
               [matBadge]="stats.totalWarnings"
               [matBadgeHidden]="stats.totalWarnings === 0"
               matBadgeColor="accent"
-              matTooltip="Warnings">
+              matTooltip="Warnings"
+            >
               <mat-icon>warning</mat-icon>
               {{ stats.totalWarnings }}
             </mat-chip>
-            
-            <mat-chip 
+
+            <mat-chip
               class="info-chip"
               [matBadge]="stats.totalInfos + stats.totalHints"
               [matBadgeHidden]="stats.totalInfos + stats.totalHints === 0"
               matBadgeColor="primary"
-              matTooltip="Info & Hints">
+              matTooltip="Info & Hints"
+            >
               <mat-icon>info</mat-icon>
               {{ stats.totalInfos + stats.totalHints }}
             </mat-chip>
           </div>
-          
+
           <!-- Action Buttons -->
-          <button mat-icon-button 
-                  (click)="runLinting()"
-                  [disabled]="isLinting"
-                  matTooltip="Run Lint Check">
+          <button
+            mat-icon-button
+            (click)="runLinting()"
+            [disabled]="isLinting"
+            matTooltip="Run Lint Check"
+          >
             <mat-icon *ngIf="!isLinting">refresh</mat-icon>
-            <mat-progress-spinner 
+            <mat-progress-spinner
               *ngIf="isLinting"
               diameter="20"
-              mode="indeterminate">
+              mode="indeterminate"
+            >
             </mat-progress-spinner>
           </button>
-          
-          <button mat-icon-button 
-                  [color]="autoLint ? 'primary' : ''"
-                  (click)="toggleAutoLint()"
-                  matTooltip="Toggle Auto-Lint">
+
+          <button
+            mat-icon-button
+            [color]="autoLint ? 'primary' : ''"
+            (click)="toggleAutoLint()"
+            matTooltip="Toggle Auto-Lint"
+          >
             <mat-icon>auto_fix_high</mat-icon>
           </button>
-          
-          <button mat-icon-button 
-                  (click)="openLinterSettings()"
-                  matTooltip="Linter Settings">
+
+          <button
+            mat-icon-button
+            (click)="openLinterSettings()"
+            matTooltip="Linter Settings"
+          >
             <mat-icon>settings</mat-icon>
           </button>
         </mat-toolbar-row>
@@ -178,9 +208,11 @@ export interface DslLintRule {
               <div class="filter-controls">
                 <mat-form-field appearance="outline" class="filter-field">
                   <mat-label>Filter by Severity</mat-label>
-                  <mat-select [value]="selectedSeverities"
-                             (selectionChange)="onSeverityFilterChange($event)"
-                             multiple>
+                  <mat-select
+                    [value]="selectedSeverities"
+                    (selectionChange)="onSeverityFilterChange($event)"
+                    multiple
+                  >
                     <mat-option value="error">
                       <mat-icon class="severity-icon error">error</mat-icon>
                       Errors
@@ -199,12 +231,14 @@ export interface DslLintRule {
                     </mat-option>
                   </mat-select>
                 </mat-form-field>
-                
+
                 <mat-form-field appearance="outline" class="filter-field">
                   <mat-label>Filter by Category</mat-label>
-                  <mat-select [value]="selectedCategories"
-                             (selectionChange)="onCategoryFilterChange($event)"
-                             multiple>
+                  <mat-select
+                    [value]="selectedCategories"
+                    (selectionChange)="onCategoryFilterChange($event)"
+                    multiple
+                  >
                     <mat-option value="syntax">Syntax</mat-option>
                     <mat-option value="semantic">Semantic</mat-option>
                     <mat-option value="style">Style</mat-option>
@@ -216,11 +250,11 @@ export interface DslLintRule {
 
               <!-- Issues List -->
               <div class="issues-list" *ngIf="filteredErrors.length > 0">
-                <mat-expansion-panel 
+                <mat-expansion-panel
                   *ngFor="let error of filteredErrors; trackBy: trackByErrorId"
                   class="issue-panel"
-                  [class]="'severity-' + error.severity">
-                  
+                  [class]="'severity-' + error.severity"
+                >
                   <mat-expansion-panel-header>
                     <mat-panel-title>
                       <mat-icon [class]="'severity-icon ' + error.severity">
@@ -229,22 +263,34 @@ export interface DslLintRule {
                       <span class="error-message">{{ error.message }}</span>
                     </mat-panel-title>
                     <mat-panel-description>
-                      <mat-chip size="small" class="category-chip">{{ error.category }}</mat-chip>
-                      <span class="location">Line {{ error.line }}:{{ error.column }}</span>
+                      <mat-chip size="small" class="category-chip">{{
+                        error.category
+                      }}</mat-chip>
+                      <span class="location"
+                        >Line {{ error.line }}:{{ error.column }}</span
+                      >
                     </mat-panel-description>
                   </mat-expansion-panel-header>
-                  
+
                   <div class="issue-details">
                     <div class="issue-info">
                       <div class="info-row">
                         <strong>Code:</strong> {{ error.code }}
                       </div>
                       <div class="info-row">
-                        <strong>Location:</strong> Line {{ error.line }}, Column {{ error.column }}
+                        <strong>Location:</strong> Line {{ error.line }}, Column
+                        {{ error.column }}
                       </div>
-                      <div class="info-row" *ngIf="error.tags && error.tags.length > 0">
+                      <div
+                        class="info-row"
+                        *ngIf="error.tags && error.tags.length > 0"
+                      >
                         <strong>Tags:</strong>
-                        <mat-chip *ngFor="let tag of error.tags" size="small" class="tag-chip">
+                        <mat-chip
+                          *ngFor="let tag of error.tags"
+                          size="small"
+                          class="tag-chip"
+                        >
                           {{ tag }}
                         </mat-chip>
                       </div>
@@ -252,25 +298,28 @@ export interface DslLintRule {
                         <strong>Suggestion:</strong> {{ error.suggestion }}
                       </div>
                     </div>
-                    
+
                     <div class="issue-actions">
-                      <button mat-button 
-                              (click)="navigateToError(error)"
-                              color="primary">
+                      <button
+                        mat-button
+                        (click)="navigateToError(error)"
+                        color="primary"
+                      >
                         <mat-icon>my_location</mat-icon>
                         Go to Location
                       </button>
-                      
-                      <button mat-button 
-                              *ngIf="error.quickFix"
-                              (click)="applyQuickFix(error)"
-                              color="accent">
+
+                      <button
+                        mat-button
+                        *ngIf="error.quickFix"
+                        (click)="applyQuickFix(error)"
+                        color="accent"
+                      >
                         <mat-icon>build</mat-icon>
                         {{ error.quickFix.title }}
                       </button>
-                      
-                      <button mat-button 
-                              (click)="ignoreError(error)">
+
+                      <button mat-button (click)="ignoreError(error)">
                         <mat-icon>visibility_off</mat-icon>
                         Ignore
                       </button>
@@ -278,13 +327,18 @@ export interface DslLintRule {
                   </div>
                 </mat-expansion-panel>
               </div>
-              
+
               <!-- No Issues Message -->
               <div *ngIf="filteredErrors.length === 0" class="no-issues">
                 <mat-icon class="no-issues-icon">check_circle</mat-icon>
                 <h3>No Issues Found</h3>
-                <p *ngIf="allErrors.length === 0">Your DSL is clean! No linting issues detected.</p>
-                <p *ngIf="allErrors.length > 0">All issues are filtered out. Adjust your filters to see hidden issues.</p>
+                <p *ngIf="allErrors.length === 0">
+                  Your DSL is clean! No linting issues detected.
+                </p>
+                <p *ngIf="allErrors.length > 0">
+                  All issues are filtered out. Adjust your filters to see hidden
+                  issues.
+                </p>
               </div>
             </div>
           </mat-tab>
@@ -301,25 +355,35 @@ export interface DslLintRule {
                   <mat-card-content>
                     <div class="metric-item">
                       <span class="metric-label">Complexity Score:</span>
-                      <span class="metric-value" 
-                            [class]="getComplexityClass(stats.complexity)">
+                      <span
+                        class="metric-value"
+                        [class]="getComplexityClass(stats.complexity)"
+                      >
                         {{ stats.complexity }}/100
                       </span>
                     </div>
                     <div class="metric-item">
                       <span class="metric-label">Maintainability:</span>
-                      <span class="metric-value"
-                            [class]="getMaintainabilityClass(stats.maintainabilityIndex)">
+                      <span
+                        class="metric-value"
+                        [class]="
+                          getMaintainabilityClass(stats.maintainabilityIndex)
+                        "
+                      >
                         {{ stats.maintainabilityIndex }}/100
                       </span>
                     </div>
                     <div class="metric-item">
                       <span class="metric-label">Last Lint:</span>
-                      <span class="metric-value">{{ stats.lastLintTime | date:'medium' }}</span>
+                      <span class="metric-value">{{
+                        stats.lastLintTime | date: 'medium'
+                      }}</span>
                     </div>
                     <div class="metric-item">
                       <span class="metric-label">Duration:</span>
-                      <span class="metric-value">{{ stats.lintDuration }}ms</span>
+                      <span class="metric-value"
+                        >{{ stats.lintDuration }}ms</span
+                      >
                     </div>
                   </mat-card-content>
                 </mat-card>
@@ -331,13 +395,17 @@ export interface DslLintRule {
                   </mat-card-header>
                   <mat-card-content>
                     <div class="distribution-chart">
-                      <div class="chart-bar" *ngFor="let category of getIssueDistribution()">
+                      <div
+                        class="chart-bar"
+                        *ngFor="let category of getIssueDistribution()"
+                      >
                         <div class="bar-label">{{ category.name }}</div>
                         <div class="bar-container">
-                          <div class="bar-fill" 
-                               [style.width.%]="category.percentage"
-                               [class]="'bar-' + category.severity">
-                          </div>
+                          <div
+                            class="bar-fill"
+                            [style.width.%]="category.percentage"
+                            [class]="'bar-' + category.severity"
+                          ></div>
                           <span class="bar-value">{{ category.count }}</span>
                         </div>
                       </div>
@@ -352,9 +420,14 @@ export interface DslLintRule {
                   </mat-card-header>
                   <mat-card-content>
                     <div class="common-issues">
-                      <div *ngFor="let issue of getMostCommonIssues()" class="common-issue-item">
+                      <div
+                        *ngFor="let issue of getMostCommonIssues()"
+                        class="common-issue-item"
+                      >
                         <div class="issue-code">{{ issue.code }}</div>
-                        <div class="issue-count">{{ issue.count }} occurrences</div>
+                        <div class="issue-count">
+                          {{ issue.count }} occurrences
+                        </div>
                       </div>
                     </div>
                   </mat-card-content>
@@ -368,43 +441,52 @@ export interface DslLintRule {
             <div class="tab-content">
               <!-- Rule Categories -->
               <div class="rules-content">
-                <mat-expansion-panel 
-                  *ngFor="let category of getRuleCategories()" 
-                  class="rule-category-panel">
-                  
+                <mat-expansion-panel
+                  *ngFor="let category of getRuleCategories()"
+                  class="rule-category-panel"
+                >
                   <mat-expansion-panel-header>
                     <mat-panel-title>
                       {{ category.name }} ({{ category.rules.length }})
                     </mat-panel-title>
                     <mat-panel-description>
-                      {{ category.enabledCount }}/{{ category.rules.length }} enabled
+                      {{ category.enabledCount }}/{{
+                        category.rules.length
+                      }}
+                      enabled
                     </mat-panel-description>
                   </mat-expansion-panel-header>
-                  
+
                   <div class="category-rules">
                     <div *ngFor="let rule of category.rules" class="rule-item">
                       <div class="rule-header">
                         <mat-slide-toggle
                           [checked]="rule.enabled"
-                          (change)="toggleRule(rule, $event)">
+                          (change)="toggleRule(rule, $event)"
+                        >
                         </mat-slide-toggle>
-                        
+
                         <div class="rule-info">
                           <div class="rule-name">{{ rule.name }}</div>
-                          <div class="rule-description">{{ rule.description }}</div>
+                          <div class="rule-description">
+                            {{ rule.description }}
+                          </div>
                         </div>
-                        
-                        <mat-chip 
-                          size="small" 
-                          [class]="'severity-chip ' + rule.severity">
+
+                        <mat-chip
+                          size="small"
+                          [class]="'severity-chip ' + rule.severity"
+                        >
                           {{ rule.severity }}
                         </mat-chip>
                       </div>
-                      
+
                       <div *ngIf="rule.configurable" class="rule-config">
-                        <button mat-button 
-                                size="small"
-                                (click)="configureRule(rule)">
+                        <button
+                          mat-button
+                          size="small"
+                          (click)="configureRule(rule)"
+                        >
                           <mat-icon>settings</mat-icon>
                           Configure
                         </button>
@@ -419,402 +501,404 @@ export interface DslLintRule {
       </div>
     </div>
   `,
-  styles: [`
-    .dsl-linter-container {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      overflow: hidden;
-    }
-
-    .linter-toolbar {
-      background: var(--mdc-theme-surface-variant);
-      color: var(--mdc-theme-on-surface-variant);
-      flex-shrink: 0;
-    }
-
-    .toolbar-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-weight: 500;
-    }
-
-    .toolbar-spacer {
-      flex: 1;
-    }
-
-    .stats-summary {
-      display: flex;
-      gap: 8px;
-      margin-right: 16px;
-    }
-
-    .stats-summary mat-chip {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-weight: 500;
-    }
-
-    .error-chip {
-      background: var(--mdc-theme-error-container);
-      color: var(--mdc-theme-on-error-container);
-    }
-
-    .warning-chip {
-      background: var(--mdc-theme-warning-container);
-      color: var(--mdc-theme-on-warning-container);
-    }
-
-    .info-chip {
-      background: var(--mdc-theme-info-container);
-      color: var(--mdc-theme-on-info-container);
-    }
-
-    .success-chip {
-      background: var(--mdc-theme-tertiary-container);
-      color: var(--mdc-theme-on-tertiary-container);
-    }
-
-    .neutral-chip {
-      background: var(--mdc-theme-surface-variant);
-      color: var(--mdc-theme-on-surface-variant);
-    }
-
-    .linter-content {
-      flex: 1;
-      overflow: hidden;
-    }
-
-    .tab-content {
-      padding: 16px;
-      height: calc(100vh - 200px);
-      overflow-y: auto;
-    }
-
-    .filter-controls {
-      display: flex;
-      gap: 16px;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
-    }
-
-    .filter-field {
-      min-width: 200px;
-    }
-
-    .severity-icon {
-      font-size: 16px;
-      width: 16px;
-      height: 16px;
-      margin-right: 8px;
-    }
-
-    .severity-icon.error {
-      color: var(--mdc-theme-error);
-    }
-
-    .severity-icon.warning {
-      color: var(--mdc-theme-warning);
-    }
-
-    .severity-icon.info {
-      color: var(--mdc-theme-info);
-    }
-
-    .severity-icon.hint {
-      color: var(--mdc-theme-primary);
-    }
-
-    .issues-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .issue-panel {
-      border-left: 4px solid transparent;
-    }
-
-    .issue-panel.severity-error {
-      border-left-color: var(--mdc-theme-error);
-    }
-
-    .issue-panel.severity-warning {
-      border-left-color: var(--mdc-theme-warning);
-    }
-
-    .issue-panel.severity-info {
-      border-left-color: var(--mdc-theme-info);
-    }
-
-    .issue-panel.severity-hint {
-      border-left-color: var(--mdc-theme-primary);
-    }
-
-    .error-message {
-      font-weight: 500;
-      margin-left: 8px;
-    }
-
-    .category-chip {
-      background: var(--mdc-theme-secondary-container);
-      color: var(--mdc-theme-on-secondary-container);
-      margin-right: 8px;
-    }
-
-    .location {
-      font-family: 'Courier New', monospace;
-      font-size: 12px;
-      opacity: 0.7;
-    }
-
-    .issue-details {
-      padding: 16px 0;
-      border-top: 1px solid var(--mdc-theme-outline);
-    }
-
-    .issue-info {
-      margin-bottom: 16px;
-    }
-
-    .info-row {
-      margin-bottom: 8px;
-      font-size: 14px;
-    }
-
-    .tag-chip {
-      background: var(--mdc-theme-surface-variant);
-      color: var(--mdc-theme-on-surface-variant);
-      margin-left: 4px;
-    }
-
-    .issue-actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .no-issues {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 48px;
-      text-align: center;
-      color: var(--mdc-theme-on-surface-variant);
-    }
-
-    .no-issues-icon {
-      font-size: 64px;
-      width: 64px;
-      height: 64px;
-      color: var(--mdc-theme-tertiary);
-      margin-bottom: 16px;
-    }
-
-    .analytics-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 16px;
-    }
-
-    .analytics-card {
-      height: fit-content;
-    }
-
-    .metric-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 0;
-      border-bottom: 1px solid var(--mdc-theme-outline-variant);
-    }
-
-    .metric-item:last-child {
-      border-bottom: none;
-    }
-
-    .metric-label {
-      font-weight: 500;
-    }
-
-    .metric-value {
-      font-weight: 600;
-    }
-
-    .metric-value.excellent {
-      color: var(--mdc-theme-tertiary);
-    }
-
-    .metric-value.good {
-      color: var(--mdc-theme-primary);
-    }
-
-    .metric-value.fair {
-      color: var(--mdc-theme-warning);
-    }
-
-    .metric-value.poor {
-      color: var(--mdc-theme-error);
-    }
-
-    .distribution-chart {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .chart-bar {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .bar-label {
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--mdc-theme-on-surface-variant);
-    }
-
-    .bar-container {
-      position: relative;
-      height: 24px;
-      background: var(--mdc-theme-surface-variant);
-      border-radius: 4px;
-      overflow: hidden;
-    }
-
-    .bar-fill {
-      height: 100%;
-      transition: width 0.3s ease;
-    }
-
-    .bar-fill.bar-error {
-      background: var(--mdc-theme-error);
-    }
-
-    .bar-fill.bar-warning {
-      background: var(--mdc-theme-warning);
-    }
-
-    .bar-fill.bar-info {
-      background: var(--mdc-theme-info);
-    }
-
-    .bar-fill.bar-hint {
-      background: var(--mdc-theme-primary);
-    }
-
-    .bar-value {
-      position: absolute;
-      right: 8px;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--mdc-theme-on-surface);
-    }
-
-    .common-issues {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .common-issue-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 12px;
-      background: var(--mdc-theme-surface-variant);
-      border-radius: 4px;
-    }
-
-    .issue-code {
-      font-family: 'Courier New', monospace;
-      font-weight: 500;
-    }
-
-    .issue-count {
-      font-size: 12px;
-      color: var(--mdc-theme-on-surface-variant);
-    }
-
-    .rules-content {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .rule-category-panel {
-      border: 1px solid var(--mdc-theme-outline-variant);
-    }
-
-    .category-rules {
-      padding: 16px;
-    }
-
-    .rule-item {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      padding: 12px;
-      border: 1px solid var(--mdc-theme-outline-variant);
-      border-radius: 4px;
-      margin-bottom: 8px;
-    }
-
-    .rule-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .rule-info {
-      flex: 1;
-    }
-
-    .rule-name {
-      font-weight: 500;
-      margin-bottom: 4px;
-    }
-
-    .rule-description {
-      font-size: 13px;
-      color: var(--mdc-theme-on-surface-variant);
-    }
-
-    .severity-chip {
-      font-size: 11px;
-      min-height: 20px;
-    }
-
-    .severity-chip.error {
-      background: var(--mdc-theme-error-container);
-      color: var(--mdc-theme-on-error-container);
-    }
-
-    .severity-chip.warning {
-      background: var(--mdc-theme-warning-container);
-      color: var(--mdc-theme-on-warning-container);
-    }
-
-    .severity-chip.info {
-      background: var(--mdc-theme-info-container);
-      color: var(--mdc-theme-on-info-container);
-    }
-
-    .severity-chip.hint {
-      background: var(--mdc-theme-primary-container);
-      color: var(--mdc-theme-on-primary-container);
-    }
-
-    .rule-config {
-      padding-left: 44px;
-    }
-  `]
+  styles: [
+    `
+      .dsl-linter-container {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
+      }
+
+      .linter-toolbar {
+        background: var(--mdc-theme-surface-variant);
+        color: var(--mdc-theme-on-surface-variant);
+        flex-shrink: 0;
+      }
+
+      .toolbar-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+      }
+
+      .toolbar-spacer {
+        flex: 1;
+      }
+
+      .stats-summary {
+        display: flex;
+        gap: 8px;
+        margin-right: 16px;
+      }
+
+      .stats-summary mat-chip {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        font-weight: 500;
+      }
+
+      .error-chip {
+        background: var(--mdc-theme-error-container);
+        color: var(--mdc-theme-on-error-container);
+      }
+
+      .warning-chip {
+        background: var(--mdc-theme-warning-container);
+        color: var(--mdc-theme-on-warning-container);
+      }
+
+      .info-chip {
+        background: var(--mdc-theme-info-container);
+        color: var(--mdc-theme-on-info-container);
+      }
+
+      .success-chip {
+        background: var(--mdc-theme-tertiary-container);
+        color: var(--mdc-theme-on-tertiary-container);
+      }
+
+      .neutral-chip {
+        background: var(--mdc-theme-surface-variant);
+        color: var(--mdc-theme-on-surface-variant);
+      }
+
+      .linter-content {
+        flex: 1;
+        min-height: 0;
+      }
+
+      .tab-content {
+        padding: 16px;
+        height: 100%;
+        overflow-y: auto;
+      }
+
+      .filter-controls {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+      }
+
+      .filter-field {
+        min-width: 200px;
+      }
+
+      .severity-icon {
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+        margin-right: 8px;
+      }
+
+      .severity-icon.error {
+        color: var(--mdc-theme-error);
+      }
+
+      .severity-icon.warning {
+        color: var(--mdc-theme-warning);
+      }
+
+      .severity-icon.info {
+        color: var(--mdc-theme-info);
+      }
+
+      .severity-icon.hint {
+        color: var(--mdc-theme-primary);
+      }
+
+      .issues-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .issue-panel {
+        border-left: 4px solid transparent;
+      }
+
+      .issue-panel.severity-error {
+        border-left-color: var(--mdc-theme-error);
+      }
+
+      .issue-panel.severity-warning {
+        border-left-color: var(--mdc-theme-warning);
+      }
+
+      .issue-panel.severity-info {
+        border-left-color: var(--mdc-theme-info);
+      }
+
+      .issue-panel.severity-hint {
+        border-left-color: var(--mdc-theme-primary);
+      }
+
+      .error-message {
+        font-weight: 500;
+        margin-left: 8px;
+      }
+
+      .category-chip {
+        background: var(--mdc-theme-secondary-container);
+        color: var(--mdc-theme-on-secondary-container);
+        margin-right: 8px;
+      }
+
+      .location {
+        font-family: 'Courier New', monospace;
+        font-size: 12px;
+        opacity: 0.7;
+      }
+
+      .issue-details {
+        padding: 16px 0;
+        border-top: 1px solid var(--mdc-theme-outline);
+      }
+
+      .issue-info {
+        margin-bottom: 16px;
+      }
+
+      .info-row {
+        margin-bottom: 8px;
+        font-size: 14px;
+      }
+
+      .tag-chip {
+        background: var(--mdc-theme-surface-variant);
+        color: var(--mdc-theme-on-surface-variant);
+        margin-left: 4px;
+      }
+
+      .issue-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .no-issues {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 48px;
+        text-align: center;
+        color: var(--mdc-theme-on-surface-variant);
+      }
+
+      .no-issues-icon {
+        font-size: 64px;
+        width: 64px;
+        height: 64px;
+        color: var(--mdc-theme-tertiary);
+        margin-bottom: 16px;
+      }
+
+      .analytics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 16px;
+      }
+
+      .analytics-card {
+        height: fit-content;
+      }
+
+      .metric-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 0;
+        border-bottom: 1px solid var(--mdc-theme-outline-variant);
+      }
+
+      .metric-item:last-child {
+        border-bottom: none;
+      }
+
+      .metric-label {
+        font-weight: 500;
+      }
+
+      .metric-value {
+        font-weight: 600;
+      }
+
+      .metric-value.excellent {
+        color: var(--mdc-theme-tertiary);
+      }
+
+      .metric-value.good {
+        color: var(--mdc-theme-primary);
+      }
+
+      .metric-value.fair {
+        color: var(--mdc-theme-warning);
+      }
+
+      .metric-value.poor {
+        color: var(--mdc-theme-error);
+      }
+
+      .distribution-chart {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .chart-bar {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .bar-label {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--mdc-theme-on-surface-variant);
+      }
+
+      .bar-container {
+        position: relative;
+        height: 24px;
+        background: var(--mdc-theme-surface-variant);
+        border-radius: 4px;
+        overflow: hidden;
+      }
+
+      .bar-fill {
+        height: 100%;
+        transition: width 0.3s ease;
+      }
+
+      .bar-fill.bar-error {
+        background: var(--mdc-theme-error);
+      }
+
+      .bar-fill.bar-warning {
+        background: var(--mdc-theme-warning);
+      }
+
+      .bar-fill.bar-info {
+        background: var(--mdc-theme-info);
+      }
+
+      .bar-fill.bar-hint {
+        background: var(--mdc-theme-primary);
+      }
+
+      .bar-value {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--mdc-theme-on-surface);
+      }
+
+      .common-issues {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .common-issue-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 12px;
+        background: var(--mdc-theme-surface-variant);
+        border-radius: 4px;
+      }
+
+      .issue-code {
+        font-family: 'Courier New', monospace;
+        font-weight: 500;
+      }
+
+      .issue-count {
+        font-size: 12px;
+        color: var(--mdc-theme-on-surface-variant);
+      }
+
+      .rules-content {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .rule-category-panel {
+        border: 1px solid var(--mdc-theme-outline-variant);
+      }
+
+      .category-rules {
+        padding: 16px;
+      }
+
+      .rule-item {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 12px;
+        border: 1px solid var(--mdc-theme-outline-variant);
+        border-radius: 4px;
+        margin-bottom: 8px;
+      }
+
+      .rule-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .rule-info {
+        flex: 1;
+      }
+
+      .rule-name {
+        font-weight: 500;
+        margin-bottom: 4px;
+      }
+
+      .rule-description {
+        font-size: 13px;
+        color: var(--mdc-theme-on-surface-variant);
+      }
+
+      .severity-chip {
+        font-size: 11px;
+        min-height: 20px;
+      }
+
+      .severity-chip.error {
+        background: var(--mdc-theme-error-container);
+        color: var(--mdc-theme-on-error-container);
+      }
+
+      .severity-chip.warning {
+        background: var(--mdc-theme-warning-container);
+        color: var(--mdc-theme-on-warning-container);
+      }
+
+      .severity-chip.info {
+        background: var(--mdc-theme-info-container);
+        color: var(--mdc-theme-on-info-container);
+      }
+
+      .severity-chip.hint {
+        background: var(--mdc-theme-primary-container);
+        color: var(--mdc-theme-on-primary-container);
+      }
+
+      .rule-config {
+        padding-left: 44px;
+      }
+    `,
+  ],
 })
 export class DslLinterComponent implements OnInit, OnDestroy {
   @Input() dsl: string = '';
@@ -822,8 +906,14 @@ export class DslLinterComponent implements OnInit, OnDestroy {
   @Input() lintDelay: number = 1000;
 
   @Output() errorSelected = new EventEmitter<DslLintError>();
-  @Output() quickFixApplied = new EventEmitter<{ error: DslLintError; fix: DslQuickFix }>();
-  @Output() ruleToggled = new EventEmitter<{ rule: DslLintRule; enabled: boolean }>();
+  @Output() quickFixApplied = new EventEmitter<{
+    error: DslLintError;
+    fix: DslQuickFix;
+  }>();
+  @Output() ruleToggled = new EventEmitter<{
+    rule: DslLintRule;
+    enabled: boolean;
+  }>();
 
   private destroy$ = new Subject<void>();
   private lintSubject = new BehaviorSubject<string>('');
@@ -831,12 +921,18 @@ export class DslLinterComponent implements OnInit, OnDestroy {
   // Component state
   isLinting = false;
   activeTabIndex = 0;
-  
+
   allErrors: DslLintError[] = [];
   filteredErrors: DslLintError[] = [];
   selectedSeverities: string[] = ['error', 'warning', 'info', 'hint'];
-  selectedCategories: string[] = ['syntax', 'semantic', 'style', 'performance', 'best-practice'];
-  
+  selectedCategories: string[] = [
+    'syntax',
+    'semantic',
+    'style',
+    'performance',
+    'best-practice',
+  ];
+
   stats: DslLintStats = {
     totalErrors: 0,
     totalWarnings: 0,
@@ -845,7 +941,7 @@ export class DslLinterComponent implements OnInit, OnDestroy {
     complexity: 0,
     maintainabilityIndex: 100,
     lastLintTime: new Date(),
-    lintDuration: 0
+    lintDuration: 0,
   };
 
   lintRules: DslLintRule[] = [
@@ -857,7 +953,7 @@ export class DslLinterComponent implements OnInit, OnDestroy {
       category: 'syntax',
       severity: 'error',
       enabled: true,
-      configurable: false
+      configurable: false,
     },
     {
       id: 'syntax-002',
@@ -866,7 +962,7 @@ export class DslLinterComponent implements OnInit, OnDestroy {
       category: 'syntax',
       severity: 'error',
       enabled: true,
-      configurable: false
+      configurable: false,
     },
     {
       id: 'syntax-003',
@@ -875,9 +971,9 @@ export class DslLinterComponent implements OnInit, OnDestroy {
       category: 'syntax',
       severity: 'error',
       enabled: true,
-      configurable: false
+      configurable: false,
     },
-    
+
     // Semantic Rules
     {
       id: 'semantic-001',
@@ -886,7 +982,7 @@ export class DslLinterComponent implements OnInit, OnDestroy {
       category: 'semantic',
       severity: 'error',
       enabled: true,
-      configurable: false
+      configurable: false,
     },
     {
       id: 'semantic-002',
@@ -895,7 +991,7 @@ export class DslLinterComponent implements OnInit, OnDestroy {
       category: 'semantic',
       severity: 'warning',
       enabled: true,
-      configurable: true
+      configurable: true,
     },
     {
       id: 'semantic-003',
@@ -904,9 +1000,9 @@ export class DslLinterComponent implements OnInit, OnDestroy {
       category: 'semantic',
       severity: 'warning',
       enabled: true,
-      configurable: false
+      configurable: false,
     },
-    
+
     // Style Rules
     {
       id: 'style-001',
@@ -915,7 +1011,7 @@ export class DslLinterComponent implements OnInit, OnDestroy {
       category: 'style',
       severity: 'info',
       enabled: true,
-      configurable: true
+      configurable: true,
     },
     {
       id: 'style-002',
@@ -925,7 +1021,7 @@ export class DslLinterComponent implements OnInit, OnDestroy {
       severity: 'info',
       enabled: false,
       configurable: true,
-      config: { maxLength: 120 }
+      config: { maxLength: 120 },
     },
     {
       id: 'style-003',
@@ -934,9 +1030,9 @@ export class DslLinterComponent implements OnInit, OnDestroy {
       category: 'style',
       severity: 'hint',
       enabled: true,
-      configurable: false
+      configurable: false,
     },
-    
+
     // Performance Rules
     {
       id: 'performance-001',
@@ -946,7 +1042,7 @@ export class DslLinterComponent implements OnInit, OnDestroy {
       severity: 'warning',
       enabled: true,
       configurable: true,
-      config: { maxComplexity: 10 }
+      config: { maxComplexity: 10 },
     },
     {
       id: 'performance-002',
@@ -955,9 +1051,9 @@ export class DslLinterComponent implements OnInit, OnDestroy {
       category: 'performance',
       severity: 'info',
       enabled: true,
-      configurable: false
+      configurable: false,
     },
-    
+
     // Best Practice Rules
     {
       id: 'best-practice-001',
@@ -966,7 +1062,7 @@ export class DslLinterComponent implements OnInit, OnDestroy {
       category: 'best-practice',
       severity: 'hint',
       enabled: true,
-      configurable: true
+      configurable: true,
     },
     {
       id: 'best-practice-002',
@@ -976,7 +1072,7 @@ export class DslLinterComponent implements OnInit, OnDestroy {
       severity: 'info',
       enabled: true,
       configurable: true,
-      config: { maxDepth: 5 }
+      config: { maxDepth: 5 },
     },
     {
       id: 'best-practice-003',
@@ -985,14 +1081,14 @@ export class DslLinterComponent implements OnInit, OnDestroy {
       category: 'best-practice',
       severity: 'hint',
       enabled: false,
-      configurable: false
-    }
+      configurable: false,
+    },
   ];
 
   constructor(
     private ruleBuilderService: RuleBuilderService,
     private specificationBridge: SpecificationBridgeService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -1007,20 +1103,22 @@ export class DslLinterComponent implements OnInit, OnDestroy {
 
   private setupSubscriptions(): void {
     // Subscribe to DSL changes for auto-linting
-    this.lintSubject.pipe(
-      debounceTime(this.lintDelay),
-      distinctUntilChanged(),
-      takeUntil(this.destroy$)
-    ).subscribe(dsl => {
-      if (this.autoLint && dsl) {
-        this.performLinting(dsl);
-      }
-    });
+    this.lintSubject
+      .pipe(
+        debounceTime(this.lintDelay),
+        distinctUntilChanged(),
+        takeUntil(this.destroy$),
+      )
+      .subscribe((dsl) => {
+        if (this.autoLint && dsl) {
+          this.performLinting(dsl);
+        }
+      });
 
     // Subscribe to rule builder state changes
     this.ruleBuilderService.state$
       .pipe(takeUntil(this.destroy$))
-      .subscribe(state => {
+      .subscribe((state) => {
         if (state.currentDSL && state.currentDSL !== this.dsl) {
           this.dsl = state.currentDSL;
           this.triggerLinting();
@@ -1054,11 +1152,10 @@ export class DslLinterComponent implements OnInit, OnDestroy {
     try {
       // Simulate linting process with actual DSL analysis
       const errors = await this.analyzeDsl(dsl);
-      
+
       this.allErrors = errors;
       this.applyFilters();
       this.updateStats(errors, performance.now() - startTime);
-      
     } catch (error) {
       console.error('Linting failed:', error);
     } finally {
@@ -1070,29 +1167,29 @@ export class DslLinterComponent implements OnInit, OnDestroy {
   private async analyzeDsl(dsl: string): Promise<DslLintError[]> {
     const errors: DslLintError[] = [];
     const lines = dsl.split('\n');
-    
+
     // Simulate comprehensive DSL analysis
     for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
       const line = lines[lineIndex];
       const lineNumber = lineIndex + 1;
-      
+
       // Check syntax rules
       errors.push(...this.checkSyntaxRules(line, lineNumber));
-      
+
       // Check semantic rules
       errors.push(...this.checkSemanticRules(line, lineNumber, lines));
-      
+
       // Check style rules
       errors.push(...this.checkStyleRules(line, lineNumber));
-      
+
       // Check performance rules
       errors.push(...this.checkPerformanceRules(line, lineNumber));
-      
+
       // Check best practice rules
       errors.push(...this.checkBestPracticeRules(line, lineNumber));
     }
 
-    return errors.filter(error => this.isRuleEnabled(error.code));
+    return errors.filter((error) => this.isRuleEnabled(error.code));
   }
 
   private checkSyntaxRules(line: string, lineNumber: number): DslLintError[] {
@@ -1111,20 +1208,23 @@ export class DslLinterComponent implements OnInit, OnDestroy {
         code: 'syntax-002',
         message: 'Unmatched parentheses in expression',
         category: 'syntax',
-        suggestion: 'Ensure all opening parentheses have matching closing parentheses',
+        suggestion:
+          'Ensure all opening parentheses have matching closing parentheses',
         quickFix: {
           title: 'Add missing parenthesis',
           description: 'Automatically add the missing closing parenthesis',
-          edits: [{
-            range: {
-              startLine: lineNumber,
-              startColumn: line.length,
-              endLine: lineNumber,
-              endColumn: line.length
+          edits: [
+            {
+              range: {
+                startLine: lineNumber,
+                startColumn: line.length,
+                endLine: lineNumber,
+                endColumn: line.length,
+              },
+              newText: ')',
             },
-            newText: ')'
-          }]
-        }
+          ],
+        },
       });
     }
 
@@ -1143,7 +1243,8 @@ export class DslLinterComponent implements OnInit, OnDestroy {
           code: 'syntax-003',
           message: 'Invalid field reference syntax',
           category: 'syntax',
-          suggestion: 'Field references should contain valid field names without spaces'
+          suggestion:
+            'Field references should contain valid field names without spaces',
         });
       }
     }
@@ -1151,7 +1252,11 @@ export class DslLinterComponent implements OnInit, OnDestroy {
     return errors;
   }
 
-  private checkSemanticRules(line: string, lineNumber: number, allLines: string[]): DslLintError[] {
+  private checkSemanticRules(
+    line: string,
+    lineNumber: number,
+    allLines: string[],
+  ): DslLintError[] {
     const errors: DslLintError[] = [];
 
     // Check for undefined fields (simplified)
@@ -1170,7 +1275,8 @@ export class DslLinterComponent implements OnInit, OnDestroy {
           code: 'semantic-001',
           message: `Undefined field: ${fieldName}`,
           category: 'semantic',
-          suggestion: 'Ensure the field is defined in your schema or fix the field name'
+          suggestion:
+            'Ensure the field is defined in your schema or fix the field name',
         });
       }
     }
@@ -1196,16 +1302,18 @@ export class DslLinterComponent implements OnInit, OnDestroy {
         quickFix: {
           title: 'Remove trailing whitespace',
           description: 'Automatically remove trailing spaces and tabs',
-          edits: [{
-            range: {
-              startLine: lineNumber,
-              startColumn: line.trimEnd().length + 1,
-              endLine: lineNumber,
-              endColumn: line.length + 1
+          edits: [
+            {
+              range: {
+                startLine: lineNumber,
+                startColumn: line.trimEnd().length + 1,
+                endLine: lineNumber,
+                endColumn: line.length + 1,
+              },
+              newText: '',
             },
-            newText: ''
-          }]
-        }
+          ],
+        },
       });
     }
 
@@ -1221,20 +1329,24 @@ export class DslLinterComponent implements OnInit, OnDestroy {
         code: 'style-002',
         message: `Line exceeds maximum length of ${maxLength} characters`,
         category: 'style',
-        suggestion: 'Consider breaking long lines for better readability'
+        suggestion: 'Consider breaking long lines for better readability',
       });
     }
 
     return errors;
   }
 
-  private checkPerformanceRules(line: string, lineNumber: number): DslLintError[] {
+  private checkPerformanceRules(
+    line: string,
+    lineNumber: number,
+  ): DslLintError[] {
     const errors: DslLintError[] = [];
 
     // Check expression complexity (simplified)
     const operators = (line.match(/&&|\|\||==|!=|>=|<=|>|</g) || []).length;
-    const maxComplexity = this.getRuleConfig('performance-001')?.maxComplexity || 10;
-    
+    const maxComplexity =
+      this.getRuleConfig('performance-001')?.maxComplexity || 10;
+
     if (operators > maxComplexity) {
       errors.push({
         id: `performance-${lineNumber}-1`,
@@ -1245,14 +1357,18 @@ export class DslLinterComponent implements OnInit, OnDestroy {
         code: 'performance-001',
         message: `Expression complexity (${operators}) exceeds threshold (${maxComplexity})`,
         category: 'performance',
-        suggestion: 'Consider breaking complex expressions into smaller, more readable parts'
+        suggestion:
+          'Consider breaking complex expressions into smaller, more readable parts',
       });
     }
 
     return errors;
   }
 
-  private checkBestPracticeRules(line: string, lineNumber: number): DslLintError[] {
+  private checkBestPracticeRules(
+    line: string,
+    lineNumber: number,
+  ): DslLintError[] {
     const errors: DslLintError[] = [];
 
     // Check for magic numbers
@@ -1270,7 +1386,7 @@ export class DslLinterComponent implements OnInit, OnDestroy {
           code: 'best-practice-001',
           message: `Consider using a named constant instead of magic number: ${number}`,
           category: 'best-practice',
-          suggestion: 'Define meaningful constants for numeric values'
+          suggestion: 'Define meaningful constants for numeric values',
         });
       }
     }
@@ -1279,34 +1395,34 @@ export class DslLinterComponent implements OnInit, OnDestroy {
   }
 
   private isRuleEnabled(ruleCode: string): boolean {
-    const rule = this.lintRules.find(r => r.id === ruleCode);
+    const rule = this.lintRules.find((r) => r.id === ruleCode);
     return rule?.enabled ?? false;
   }
 
   private getRuleConfig(ruleCode: string): any {
-    const rule = this.lintRules.find(r => r.id === ruleCode);
+    const rule = this.lintRules.find((r) => r.id === ruleCode);
     return rule?.config;
   }
 
   private updateStats(errors: DslLintError[], duration: number): void {
     this.stats = {
-      totalErrors: errors.filter(e => e.severity === 'error').length,
-      totalWarnings: errors.filter(e => e.severity === 'warning').length,
-      totalInfos: errors.filter(e => e.severity === 'info').length,
-      totalHints: errors.filter(e => e.severity === 'hint').length,
+      totalErrors: errors.filter((e) => e.severity === 'error').length,
+      totalWarnings: errors.filter((e) => e.severity === 'warning').length,
+      totalInfos: errors.filter((e) => e.severity === 'info').length,
+      totalHints: errors.filter((e) => e.severity === 'hint').length,
       complexity: this.calculateComplexity(errors),
       maintainabilityIndex: this.calculateMaintainabilityIndex(errors),
       lastLintTime: new Date(),
-      lintDuration: Math.round(duration)
+      lintDuration: Math.round(duration),
     };
   }
 
   private calculateComplexity(errors: DslLintError[]): number {
     const complexityFactors = {
-      'error': 10,
-      'warning': 5,
-      'info': 2,
-      'hint': 1
+      error: 10,
+      warning: 5,
+      info: 2,
+      hint: 1,
     };
 
     const totalPenalty = errors.reduce((sum, error) => {
@@ -1317,10 +1433,10 @@ export class DslLinterComponent implements OnInit, OnDestroy {
   }
 
   private calculateMaintainabilityIndex(errors: DslLintError[]): number {
-    const criticalErrors = errors.filter(e => e.severity === 'error').length;
-    const warnings = errors.filter(e => e.severity === 'warning').length;
-    
-    const penalty = (criticalErrors * 15) + (warnings * 5);
+    const criticalErrors = errors.filter((e) => e.severity === 'error').length;
+    const warnings = errors.filter((e) => e.severity === 'warning').length;
+
+    const penalty = criticalErrors * 15 + warnings * 5;
     return Math.min(100, Math.max(0, 100 - penalty));
   }
 
@@ -1342,9 +1458,10 @@ export class DslLinterComponent implements OnInit, OnDestroy {
   }
 
   private applyFilters(): void {
-    this.filteredErrors = this.allErrors.filter(error => 
-      this.selectedSeverities.includes(error.severity) &&
-      this.selectedCategories.includes(error.category)
+    this.filteredErrors = this.allErrors.filter(
+      (error) =>
+        this.selectedSeverities.includes(error.severity) &&
+        this.selectedCategories.includes(error.category),
     );
     this.cdr.detectChanges();
   }
@@ -1355,10 +1472,10 @@ export class DslLinterComponent implements OnInit, OnDestroy {
 
   getSeverityIcon(severity: string): string {
     const icons: Record<string, string> = {
-      'error': 'error',
-      'warning': 'warning',
-      'info': 'info',
-      'hint': 'lightbulb'
+      error: 'error',
+      warning: 'warning',
+      info: 'info',
+      hint: 'lightbulb',
     };
     return icons[severity] || 'help';
   }
@@ -1380,23 +1497,27 @@ export class DslLinterComponent implements OnInit, OnDestroy {
   getIssueDistribution(): any[] {
     const distribution = [
       { name: 'Errors', severity: 'error', count: this.stats.totalErrors },
-      { name: 'Warnings', severity: 'warning', count: this.stats.totalWarnings },
+      {
+        name: 'Warnings',
+        severity: 'warning',
+        count: this.stats.totalWarnings,
+      },
       { name: 'Info', severity: 'info', count: this.stats.totalInfos },
-      { name: 'Hints', severity: 'hint', count: this.stats.totalHints }
+      { name: 'Hints', severity: 'hint', count: this.stats.totalHints },
     ];
 
     const total = distribution.reduce((sum, item) => sum + item.count, 0);
-    
-    return distribution.map(item => ({
+
+    return distribution.map((item) => ({
       ...item,
-      percentage: total > 0 ? (item.count / total) * 100 : 0
+      percentage: total > 0 ? (item.count / total) * 100 : 0,
     }));
   }
 
   getMostCommonIssues(): any[] {
     const codeCount = new Map<string, number>();
-    
-    this.allErrors.forEach(error => {
+
+    this.allErrors.forEach((error) => {
       codeCount.set(error.code, (codeCount.get(error.code) || 0) + 1);
     });
 
@@ -1408,9 +1529,10 @@ export class DslLinterComponent implements OnInit, OnDestroy {
 
   getRuleCategories(): any[] {
     const categories = new Map<string, DslLintRule[]>();
-    
-    this.lintRules.forEach(rule => {
-      const categoryName = rule.category.charAt(0).toUpperCase() + rule.category.slice(1);
+
+    this.lintRules.forEach((rule) => {
+      const categoryName =
+        rule.category.charAt(0).toUpperCase() + rule.category.slice(1);
       if (!categories.has(categoryName)) {
         categories.set(categoryName, []);
       }
@@ -1420,7 +1542,7 @@ export class DslLinterComponent implements OnInit, OnDestroy {
     return Array.from(categories.entries()).map(([name, rules]) => ({
       name,
       rules,
-      enabledCount: rules.filter(rule => rule.enabled).length
+      enabledCount: rules.filter((rule) => rule.enabled).length,
     }));
   }
 
@@ -1432,13 +1554,13 @@ export class DslLinterComponent implements OnInit, OnDestroy {
     if (error.quickFix) {
       this.quickFixApplied.emit({ error, fix: error.quickFix });
       // Remove the error after applying the fix
-      this.allErrors = this.allErrors.filter(e => e.id !== error.id);
+      this.allErrors = this.allErrors.filter((e) => e.id !== error.id);
       this.applyFilters();
     }
   }
 
   ignoreError(error: DslLintError): void {
-    this.allErrors = this.allErrors.filter(e => e.id !== error.id);
+    this.allErrors = this.allErrors.filter((e) => e.id !== error.id);
     this.applyFilters();
   }
 

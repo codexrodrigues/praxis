@@ -5,11 +5,13 @@ A comprehensive Angular library for building visual rule editors with support fo
 ## Features
 
 ### 🎯 **Core Components**
+
 - **ExpressionEditorComponent**: Advanced DSL expression editor with syntax highlighting and autocomplete
 - **ContextVariableManagerComponent**: Complete context variable management system
 - **SpecificationBridgeService**: Bidirectional conversion between visual rules and DSL expressions
 
 ### ⚡ **Advanced Capabilities**
+
 - **Mini-DSL Support**: Full DSL parsing, validation, and round-trip conversion
 - **Context Variables**: Dynamic variable resolution with scoped contexts
 - **Real-time Validation**: Live syntax checking with performance metrics
@@ -27,34 +29,25 @@ npm install praxis-visual-builder
 ### Basic Expression Editor
 
 ```typescript
-import { ExpressionEditorComponent } from 'praxis-visual-builder';
+import { ExpressionEditorComponent } from "praxis-visual-builder";
 
 @Component({
-  template: `
-    <praxis-expression-editor
-      [fieldSchemas]="fieldSchemas"
-      [contextVariables]="contextVariables"
-      [(expression)]="expression"
-      (validationChange)="onValidationChange($event)">
-    </praxis-expression-editor>
-  `
+  template: ` <praxis-expression-editor [fieldSchemas]="fieldSchemas" [contextVariables]="contextVariables" [(expression)]="expression" (validationChange)="onValidationChange($event)"> </praxis-expression-editor> `,
 })
 export class MyComponent {
   fieldSchemas = [
-    { name: 'age', type: 'number', label: 'Age' },
-    { name: 'name', type: 'string', label: 'Name' },
-    { name: 'active', type: 'boolean', label: 'Active' }
+    { name: "age", type: "number", label: "Age" },
+    { name: "name", type: "string", label: "Name" },
+    { name: "active", type: "boolean", label: "Active" },
   ];
 
-  contextVariables = [
-    { name: 'user.minAge', type: 'number', scope: 'user', example: '18' }
-  ];
+  contextVariables = [{ name: "user.minAge", type: "number", scope: "user", example: "18" }];
 
-  expression = 'age > ${user.minAge} && active == true';
+  expression = "age > ${user.minAge} && active == true";
 
   onValidationChange(result: ExpressionValidationResult) {
-    console.log('Expression valid:', result.isValid);
-    console.log('Issues:', result.issues);
+    console.log("Expression valid:", result.isValid);
+    console.log("Issues:", result.issues);
   }
 }
 ```
@@ -62,27 +55,41 @@ export class MyComponent {
 ### Context Variable Management
 
 ```typescript
-import { ContextVariableManagerComponent } from 'praxis-visual-builder';
+import { ContextVariableManagerComponent } from "praxis-visual-builder";
 
 @Component({
-  template: `
-    <praxis-context-variable-manager
-      [(contextVariables)]="contextVariables"
-      [allowedScopes]="allowedScopes"
-      (variableAdd)="onVariableAdd($event)"
-      (variableUpdate)="onVariableUpdate($event)">
-    </praxis-context-variable-manager>
-  `
+  template: ` <praxis-context-variable-manager [(contextVariables)]="contextVariables" [allowedScopes]="allowedScopes" (variableAdd)="onVariableAdd($event)" (variableUpdate)="onVariableUpdate($event)"> </praxis-context-variable-manager> `,
 })
 export class VariableManagementComponent {
   contextVariables: EnhancedContextVariable[] = [];
-  allowedScopes = ['user', 'session', 'global'];
+  allowedScopes = ["user", "session", "global"];
 
   onVariableAdd(variable: EnhancedContextVariable) {
-    console.log('New variable added:', variable);
+    console.log("New variable added:", variable);
   }
 }
 ```
+
+### Visual Rule Editor in Embedded Mode
+
+```typescript
+import { RuleEditorComponent } from "praxis-visual-builder";
+
+@Component({
+  template: ` <praxis-rule-editor [config]="builderConfig" [embedded]="true" (rulesChanged)="onRulesChanged($event)"> </praxis-rule-editor> `,
+})
+export class EmbeddedRuleEditor {
+  builderConfig = {
+    /* ... */
+  };
+
+  onRulesChanged(rules: any) {
+    console.log("Updated rules:", rules);
+  }
+}
+```
+
+`embedded` mode allows the editor to fit within existing layouts without spawning nested scrollbars, making it suitable for corporate dashboards and configuration panels where space is constrained.
 
 ## Mini-DSL Language Guide
 
@@ -91,6 +98,7 @@ export class VariableManagementComponent {
 The mini-DSL supports a rich expression language for building validation rules and conditions.
 
 #### Field References
+
 ```dsl
 age > 18
 name == "John Doe"
@@ -99,7 +107,9 @@ score >= 80
 ```
 
 #### Context Variables
+
 Context variables are referenced using `${scope.variable}` syntax:
+
 ```dsl
 age > ${user.minAge}
 department == "${user.department}"
@@ -109,6 +119,7 @@ level >= ${policy.requiredLevel}
 #### Operators
 
 **Comparison Operators:**
+
 ```dsl
 age == 25        # Equality
 age != 30        # Inequality
@@ -119,6 +130,7 @@ age <= 64        # Less than or equal
 ```
 
 **Logical Operators:**
+
 ```dsl
 age > 18 && active == true           # AND
 priority == "high" || urgent == true # OR
@@ -128,12 +140,14 @@ qualified == true => approved == true # IMPLIES
 ```
 
 **Membership Operators:**
+
 ```dsl
 category in ["tech", "science", "math"]     # IN (array membership)
 role not in ["guest", "anonymous"]          # NOT IN
 ```
 
 **Null Checks:**
+
 ```dsl
 description != null      # Not null
 optional == null        # Is null
@@ -142,6 +156,7 @@ optional == null        # Is null
 #### Functions
 
 **String Functions:**
+
 ```dsl
 contains(tags, "important")           # Check if string/array contains value
 startsWith(email, "admin")           # Check if string starts with value
@@ -152,6 +167,7 @@ lower(name) == "john"               # Convert to lowercase
 ```
 
 **Collection Functions:**
+
 ```dsl
 atLeast(2, [condition1, condition2, condition3])  # At least N conditions true
 exactly(1, [optionA, optionB, optionC])          # Exactly N conditions true
@@ -162,6 +178,7 @@ maxLength(array, 10)                             # Maximum array length
 ```
 
 **Conditional Functions:**
+
 ```dsl
 requiredIf(field, condition)         # Field required if condition true
 visibleIf(field, condition)          # Field visible if condition true
@@ -170,6 +187,7 @@ readonlyIf(field, condition)         # Field readonly if condition true
 ```
 
 **Optional Handling:**
+
 ```dsl
 ifDefined(optionalField, condition)   # Apply condition only if field defined
 ifNotNull(field, condition)          # Apply condition only if field not null
@@ -180,23 +198,26 @@ withDefault(field, defaultValue, condition) # Use default if field undefined
 ### Complex Expressions
 
 #### Nested Conditions
+
 ```dsl
-((age >= 18 && age <= 65) || experience > 10) && 
-(department == "Engineering" || department == "Product") && 
+((age >= 18 && age <= 65) || experience > 10) &&
+(department == "Engineering" || department == "Product") &&
 !(archived == true || deleted == true)
 ```
 
 #### Mixed Context and Fields
+
 ```dsl
-salary >= ${policy.minSalary} && 
-salary <= ${policy.maxSalary} && 
+salary >= ${policy.minSalary} &&
+salary <= ${policy.maxSalary} &&
 location in ${user.allowedLocations} &&
 startDate >= "${session.currentDate}"
 ```
 
 #### Function Composition
+
 ```dsl
-contains(upper(department), "ENG") && 
+contains(upper(department), "ENG") &&
 length(trim(description)) > ${config.minDescLength} &&
 endsWith(lower(email), "@company.com")
 ```
@@ -208,48 +229,57 @@ Context variables provide dynamic values that can be resolved at runtime based o
 #### Scopes
 
 **User Scope** (`user.*`):
+
 - User-specific values (preferences, profile data)
 - Example: `${user.department}`, `${user.role}`, `${user.level}`
 
 **Session Scope** (`session.*`):
+
 - Session-specific values (temporary data, current state)
 - Example: `${session.currentDate}`, `${session.userId}`, `${session.locale}`
 
 **Environment Scope** (`env.*`):
+
 - Environment configuration (debug flags, feature toggles)
 - Example: `${env.debug}`, `${env.features.newUI}`, `${env.apiVersion}`
 
 **Global Scope** (`global.*`):
+
 - Application-wide constants (policies, configurations)
 - Example: `${global.minAge}`, `${global.maxFileSize}`, `${global.supportedFormats}`
 
 #### Variable Types
 
 **String Variables:**
+
 ```dsl
 name == "${user.fullName}"
 department == "${user.department}"
 ```
 
 **Number Variables:**
+
 ```dsl
 age > ${user.minAge}
 salary >= ${policy.baseSalary}
 ```
 
 **Boolean Variables:**
+
 ```dsl
 active == ${user.isActive}
 debug == ${env.debugMode}
 ```
 
 **Array Variables:**
+
 ```dsl
 category in ${user.allowedCategories}
 format in ${global.supportedFormats}
 ```
 
 **Date Variables:**
+
 ```dsl
 createdDate >= "${session.startDate}"
 expirationDate <= "${policy.maxExpirationDate}"
@@ -258,6 +288,7 @@ expirationDate <= "${policy.maxExpirationDate}"
 ### Validation and Error Handling
 
 #### Syntax Errors
+
 The DSL parser provides detailed error messages for syntax issues:
 
 ```typescript
@@ -270,12 +301,14 @@ The DSL parser provides detailed error messages for syntax issues:
 ```
 
 #### Field Validation
+
 ```typescript
 // Unknown field warnings:
 // "unknownField == 'test'" -> "Unknown field: unknownField. Did you mean 'knownField'?"
 ```
 
 #### Context Variable Validation
+
 ```typescript
 // Missing context variable warnings:
 // "age > ${missing.variable}" -> "Unknown context variable: missing.variable"
@@ -283,9 +316,10 @@ The DSL parser provides detailed error messages for syntax issues:
 ```
 
 #### Performance Warnings
+
 ```typescript
 // Complex expression warnings:
-// For expressions with >50 operators: 
+// For expressions with >50 operators:
 // "Expression complexity is high (67 operators). Consider breaking into smaller expressions."
 ```
 
@@ -294,6 +328,7 @@ The DSL parser provides detailed error messages for syntax issues:
 ### ExpressionEditorComponent
 
 #### Inputs
+
 ```typescript
 @Input() expression: string = '';                    // Current DSL expression
 @Input() fieldSchemas: FieldSchema[] = [];          // Available fields for autocomplete
@@ -304,6 +339,7 @@ The DSL parser provides detailed error messages for syntax issues:
 ```
 
 #### Outputs
+
 ```typescript
 @Output() expressionChange = new EventEmitter<string>();              // Expression changes
 @Output() validationChange = new EventEmitter<ExpressionValidationResult>(); // Validation updates
@@ -312,6 +348,7 @@ The DSL parser provides detailed error messages for syntax issues:
 ```
 
 #### Methods
+
 ```typescript
 // Get autocomplete suggestions
 getSuggestions(text: string, position: number): Promise<DslSuggestion[]>
@@ -332,6 +369,7 @@ clearExpression(): void
 ### ContextVariableManagerComponent
 
 #### Inputs
+
 ```typescript
 @Input() contextVariables: EnhancedContextVariable[] = [];  // Current variables
 @Input() allowedScopes: ContextScope[] = [];               // Allowed variable scopes
@@ -341,6 +379,7 @@ clearExpression(): void
 ```
 
 #### Outputs
+
 ```typescript
 @Output() contextVariablesChange = new EventEmitter<EnhancedContextVariable[]>(); // Variables updated
 @Output() variableAdd = new EventEmitter<EnhancedContextVariable>();             // Variable added
@@ -350,6 +389,7 @@ clearExpression(): void
 ```
 
 #### Methods
+
 ```typescript
 // Add new variable
 addVariable(variable: Partial<EnhancedContextVariable>): void
@@ -376,6 +416,7 @@ isValidVariableName(name: string): boolean
 ### SpecificationBridgeService
 
 #### DSL Expression Methods
+
 ```typescript
 // Parse DSL expression to specification
 parseDslExpression<T>(expression: string, config?: DslParsingConfig): DslParsingResult<T>
@@ -397,6 +438,7 @@ validateContextTokens(template: string, variables: ContextVariable[]): Validatio
 ```
 
 #### Rule Node Conversion Methods
+
 ```typescript
 // Convert rule node to specification
 ruleNodeToSpecification<T>(node: RuleNode): Specification<T>
@@ -412,6 +454,7 @@ validateRoundTrip<T>(node: RuleNode): RoundTripValidationResult
 ```
 
 #### Context Provider Methods
+
 ```typescript
 // Update context provider
 updateContextProvider(provider: ContextProvider): void
@@ -457,7 +500,7 @@ customRegistry.register('dateAdd', {
 ### Custom Context Provider
 
 ```typescript
-import { ContextProvider } from '@praxis/specification';
+import { ContextProvider } from "@praxis/specification";
 
 class DatabaseContextProvider implements ContextProvider {
   private cache = new Map<string, any>();
@@ -496,39 +539,32 @@ this.bridgeService.updateContextProvider(provider);
   template: `
     <form [formGroup]="ruleForm">
       <!-- Visual Rule Builder -->
-      <praxis-expression-editor
-        formControlName="expression"
-        [fieldSchemas]="formFieldSchemas"
-        [contextVariables]="availableVariables">
-      </praxis-expression-editor>
+      <praxis-expression-editor formControlName="expression" [fieldSchemas]="formFieldSchemas" [contextVariables]="availableVariables"> </praxis-expression-editor>
 
       <!-- Context Variable Management -->
-      <praxis-context-variable-manager
-        [(contextVariables)]="availableVariables"
-        [allowedScopes]="['user', 'session']">
-      </praxis-context-variable-manager>
+      <praxis-context-variable-manager [(contextVariables)]="availableVariables" [allowedScopes]="['user', 'session']"> </praxis-context-variable-manager>
 
       <!-- Generated Rule Preview -->
       <pre>{{ generatedRule | json }}</pre>
     </form>
-  `
+  `,
 })
 export class RuleBuilderFormComponent {
   ruleForm = this.fb.group({
-    expression: ['', Validators.required],
+    expression: ["", Validators.required],
     metadata: this.fb.group({
-      name: ['', Validators.required],
-      description: [''],
-      priority: [1]
-    })
+      name: ["", Validators.required],
+      description: [""],
+      priority: [1],
+    }),
   });
 
   get generatedRule() {
-    const expression = this.ruleForm.get('expression')?.value;
+    const expression = this.ruleForm.get("expression")?.value;
     if (!expression) return null;
 
     const parseResult = this.bridgeService.parseDslExpression(expression, {
-      knownFields: this.formFieldSchemas.map(f => f.name)
+      knownFields: this.formFieldSchemas.map((f) => f.name),
     });
 
     return parseResult.success ? parseResult.specification?.toJSON() : null;
@@ -541,18 +577,17 @@ export class RuleBuilderFormComponent {
 ### Optimization Tips
 
 1. **Field Schema Management**:
+
    ```typescript
    // ✅ Good: Reuse field schema objects
-   const fieldSchemas = useMemo(() => 
-     fields.map(f => ({ name: f.name, type: f.type, label: f.label })), 
-     [fields]
-   );
+   const fieldSchemas = useMemo(() => fields.map((f) => ({ name: f.name, type: f.type, label: f.label })), [fields]);
 
    // ❌ Avoid: Creating new objects on every render
-   const fieldSchemas = fields.map(f => ({ name: f.name, type: f.type }));
+   const fieldSchemas = fields.map((f) => ({ name: f.name, type: f.type }));
    ```
 
 2. **Expression Validation**:
+
    ```typescript
    // ✅ Good: Debounce validation
    const debouncedValidation = useMemo(
@@ -579,6 +614,7 @@ This command will compile your project, and the build artifacts will be placed i
 Once the project is built, you can publish your library by following these steps:
 
 1. Navigate to the `dist` directory:
+
    ```bash
    cd dist/praxis-visual-builder
    ```
