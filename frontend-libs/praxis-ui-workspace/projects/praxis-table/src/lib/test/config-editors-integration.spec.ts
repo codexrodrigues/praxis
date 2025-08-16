@@ -219,6 +219,25 @@ describe('Config Editors Integration Tests - Unified Architecture', () => {
           ?.settings,
       ).toEqual(newSettings);
     });
+
+    it('should mark editor as dirty when filter settings change', () => {
+      const config: TableConfig = {
+        columns: [{ field: 'name', header: 'Name', type: 'string' }],
+        behavior: {
+          filtering: { enabled: true, strategy: 'client', debounceTime: 300 },
+        },
+      };
+
+      (mainEditorComponent as any).panelData = config;
+      mainEditorComponent.ngOnInit();
+
+      expect(mainEditorComponent.canSave).toBeFalse();
+
+      const newSettings: FilterConfig = { quickField: 'name' };
+      mainEditorComponent.onFilterSettingsChange(newSettings);
+
+      expect(mainEditorComponent.canSave).toBeTrue();
+    });
   });
 
   describe('Advanced filter and toolbar interaction', () => {
