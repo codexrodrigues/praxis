@@ -66,7 +66,9 @@ export class RuleBuilderService {
     this.config = config;
     this.dslValidator = new DslValidator({
       knownFields: Object.keys(config.fieldSchemas || {}),
-      knownFunctions: config.customFunctions?.map((f) => (f as any)?.name).filter(Boolean) || [],
+      knownFunctions:
+        config.customFunctions?.map((f) => (f as any)?.name).filter(Boolean) ||
+        [],
       enablePerformanceWarnings: true,
     });
 
@@ -429,11 +431,26 @@ export class RuleBuilderService {
 
       switch (options.format) {
         case 'json':
+          if (!content || content.trim().length === 0) {
+            return;
+          }
           const json = JSON.parse(content);
+          if (
+            json == null ||
+            (Array.isArray(json) && json.length === 0) ||
+            (typeof json === 'object' &&
+              !Array.isArray(json) &&
+              Object.keys(json).length === 0)
+          ) {
+            return;
+          }
           specification = SpecificationFactory.fromJSON(json);
           break;
 
         case 'dsl':
+          if (!content || content.trim().length === 0) {
+            return;
+          }
           specification = this.dslParser.parse(content);
           break;
 
@@ -818,7 +835,11 @@ export class RuleBuilderService {
       if (node.children && node.children.length > 0) {
         // Check if children are RuleNode objects or string IDs
         const firstChild = node.children[0] as any;
-        if (typeof firstChild === 'object' && firstChild && 'id' in firstChild) {
+        if (
+          typeof firstChild === 'object' &&
+          firstChild &&
+          'id' in firstChild
+        ) {
           // Children are RuleNode objects, need to flatten them
           (node.children as any[]).forEach((child: any) => {
             if (child && typeof child === 'object' && child.id) {
