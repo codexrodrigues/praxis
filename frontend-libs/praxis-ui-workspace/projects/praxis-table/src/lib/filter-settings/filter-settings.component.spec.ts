@@ -158,7 +158,7 @@ describe('FilterSettingsComponent', () => {
     expect(saveBtn.disabled).toBeFalse();
   });
 
-  it('should validate fields against metadata before saving', () => {
+  it('should retain fields even if not present in metadata', () => {
     const fixture = TestBed.createComponent(FilterSettingsComponent);
     const component = fixture.componentInstance;
     component.metadata = metadata;
@@ -173,8 +173,8 @@ describe('FilterSettingsComponent', () => {
     });
 
     const result = component.getSettingsValue();
-    expect(result.quickField).toBeUndefined();
-    expect(result.alwaysVisibleFields).toEqual(['status']);
+    expect(result.quickField).toBe('invalid');
+    expect(result.alwaysVisibleFields).toEqual(['status', 'other']);
   });
 
   it('should omit default values from emitted settings', () => {
