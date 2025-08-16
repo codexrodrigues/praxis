@@ -4,6 +4,7 @@ import {
   ChangeDetectorRef,
   Component,
   ContentChild,
+  ElementRef,
   EventEmitter,
   Inject,
   Input,
@@ -25,6 +26,7 @@ import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { SelectionModel } from '@angular/cdk/collections';
@@ -51,6 +53,26 @@ import { TableDefaultsProvider } from './services/table-defaults.provider';
 import { FilterConfigService } from './services/filter-config.service';
 import { PraxisFilter, I18n } from './praxis-filter';
 
+export interface RowActionConfig {
+  action: string;
+  icon: string;
+  label?: string;
+  priority?: number;
+  alwaysInline?: boolean;
+  visible?: (row: any) => boolean;
+  disabled?: (row: any) => boolean;
+  autoDelete?: boolean;
+}
+
+export interface RowActionsBehavior {
+  enabled: boolean;
+  maxInline:
+    | number
+    | { xs: number; sm: number; md: number; lg: number }
+    | 'auto';
+  autoStrategy?: 'measure' | 'breakpoint';
+}
+
 @Component({
   selector: 'praxis-table',
   standalone: true,
@@ -62,6 +84,7 @@ import { PraxisFilter, I18n } from './praxis-filter';
     MatSortModule,
     MatIconModule,
     MatMenuModule,
+    MatTooltipModule,
     MatSnackBarModule,
     MatCheckboxModule,
     PraxisTableToolbar,
@@ -242,16 +265,51 @@ import { PraxisFilter, I18n } from './praxis-filter';
         *ngIf="config.actions?.row?.enabled"
         matColumnDef="_actions"
       >
-        <th mat-header-cell *matHeaderCellDef></th>
-        <td mat-cell *matCellDef="let element">
-          <ng-container *ngFor="let action of config.actions?.row?.actions">
+        <th mat-header-cell *matHeaderCellDef #actionsHeaderCell></th>
+        <td
+          mat-cell
+          *matCellDef="let row"
+          class="px-actions-cell"
+          [class.dense]="dense"
+        >
+          <!-- Ações inline -->
+          <ng-container
+            *ngFor="let a of getInlineRowActions(row); trackBy: trackAction"
+          >
             <button
               mat-icon-button
-              (click)="onRowAction(action.action, element, $event)"
+              [disabled]="isActionDisabled(a, row)"
+              (click)="onRowAction(a.action, row, $event)"
+              [matTooltip]="a.label || a.action"
+              aria-label="{{ a.label || a.action }}"
             >
-              <mat-icon>{{ action.icon }}</mat-icon>
+              <mat-icon>{{ a.icon }}</mat-icon>
             </button>
           </ng-container>
+
+          <!-- Menu de overflow -->
+          <button
+            mat-icon-button
+            *ngIf="hasOverflowRowActions(row)"
+            [matMenuTriggerFor]="rowMoreMenu"
+            aria-label="Mais ações"
+          >
+            <mat-icon>more_vert</mat-icon>
+          </button>
+          <mat-menu #rowMoreMenu="matMenu" xPosition="before">
+            <ng-container
+              *ngFor="let a of getOverflowRowActions(row); trackBy: trackAction"
+            >
+              <button
+                mat-menu-item
+                (click)="onRowAction(a.action, row, $event)"
+                [disabled]="isActionDisabled(a, row)"
+              >
+                <mat-icon matMenuIcon>{{ a.icon }}</mat-icon>
+                <span>{{ a.label || a.action }}</span>
+              </button>
+            </ng-container>
+          </mat-menu>
         </td>
       </ng-container>
 
@@ -276,6 +334,19 @@ import { PraxisFilter, I18n } from './praxis-filter';
     `
       table {
         width: 100%;
+      }
+
+      .px-actions-cell {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 8px;
+        padding-inline: 8px;
+        white-space: nowrap;
+      }
+
+      .px-actions-cell.dense {
+        gap: 4px;
       }
 
       .spacer {
@@ -310,6 +381,9 @@ export class PraxisTable
   /** Enable edit mode */
   @Input() editModeEnabled = false;
 
+  /** Dense mode reduces cell padding */
+  @Input() dense = false;
+
   /** Identifier used for settings storage */
   @Input() tableId = 'default';
 
@@ -331,6 +405,7 @@ export class PraxisTable
 
   @ViewChild(MatPaginator) paginator?: MatPaginator;
   @ViewChild(MatSort) sort?: MatSort;
+  @ViewChild('actionsHeaderCell') actionsHeaderCell?: ElementRef<HTMLElement>;
 
   @ContentChild(PraxisFilter) projectedFilter?: PraxisFilter;
 
@@ -342,6 +417,9 @@ export class PraxisTable
   private pageIndex = 0;
   private pageSize = 5;
   private sortState: Sort = { active: '', direction: '' };
+  private breakpoints = { xs: 0, sm: 600, md: 960, lg: 1280 };
+  private measuredInline = 0;
+  private resizeObserver?: ResizeObserver;
 
   toggleRow(row: any): void {
     this.selection.toggle(row);
@@ -360,6 +438,120 @@ export class PraxisTable
     const numRows = this.dataSource.data.length;
     return numSelected === numRows;
   }
+  private isOverflowEnabled(): boolean {
+    return this.config.actions?.row?.behavior?.enabled !== false;
+  }
+
+  private getMaxInline(): number {
+    if (!this.isOverflowEnabled()) {
+      return Number.MAX_SAFE_INTEGER;
+    }
+    const behavior = this.config.actions?.row?.behavior;
+    const defaults = { xs: 1, sm: 2, md: 3, lg: 4 };
+    const maxInline = behavior?.maxInline ?? defaults;
+    if (maxInline === 'auto') {
+      if (behavior?.autoStrategy === 'measure') {
+        return this.measuredInline || this.getBreakpointMaxInline(defaults);
+      }
+      return this.getBreakpointMaxInline(defaults);
+    }
+    if (typeof maxInline === 'number') {
+      return maxInline;
+    }
+    return this.getBreakpointMaxInline(maxInline);
+  }
+
+  private getBreakpointMaxInline(b: {
+    xs: number;
+    sm: number;
+    md: number;
+    lg: number;
+  }): number {
+    const w = window.innerWidth;
+    if (w >= this.breakpoints.lg) {
+      return b.lg;
+    }
+    if (w >= this.breakpoints.md) {
+      return b.md;
+    }
+    if (w >= this.breakpoints.sm) {
+      return b.sm;
+    }
+    return b.xs;
+  }
+
+  private sortByPriority(actions: any[]): any[] {
+    return [...actions].sort(
+      (a, b) => (a.priority ?? 100) - (b.priority ?? 100),
+    );
+  }
+
+  isActionVisible(a: any, row: any): boolean {
+    return typeof a.visible === 'function'
+      ? !!a.visible(row)
+      : a.visible !== false;
+  }
+
+  isActionDisabled(a: any, row: any): boolean {
+    return typeof a.disabled === 'function' ? !!a.disabled(row) : !!a.disabled;
+  }
+
+  trackAction = (_: number, a: any) => a.action;
+
+  getInlineRowActions(row: any): any[] {
+    const actions = this.sortByPriority(
+      this.config.actions?.row?.actions ?? [],
+    ).filter((a) => this.isActionVisible(a, row));
+    const fixed = actions.filter((a) => a.alwaysInline);
+    const remaining = actions.filter((a) => !a.alwaysInline);
+    if (!this.isOverflowEnabled()) {
+      return [...fixed, ...remaining];
+    }
+    const max = Math.max(0, this.getMaxInline() - fixed.length);
+    return [...fixed, ...remaining.slice(0, max)];
+  }
+
+  getOverflowRowActions(row: any): any[] {
+    if (!this.isOverflowEnabled()) {
+      return [];
+    }
+    const actions = this.sortByPriority(
+      this.config.actions?.row?.actions ?? [],
+    ).filter((a) => this.isActionVisible(a, row));
+
+    const inline = this.getInlineRowActions(row).map((a) => a.action);
+    return actions.filter((a) => !inline.includes(a.action));
+  }
+
+  hasOverflowRowActions(row: any): boolean {
+    return (
+      this.isOverflowEnabled() && this.getOverflowRowActions(row).length > 0
+    );
+  }
+
+  private updateMeasuredInline(): void {
+    if (!this.actionsHeaderCell) {
+      return;
+    }
+    const width = this.actionsHeaderCell.nativeElement.offsetWidth;
+    const iconWidth = this.dense ? 40 : 48;
+    this.measuredInline = Math.floor(width / iconWidth);
+  }
+
+  private setupResizeObserver(): void {
+    if (
+      this.config.actions?.row?.behavior?.maxInline === 'auto' &&
+      this.config.actions.row.behavior?.autoStrategy === 'measure' &&
+      this.actionsHeaderCell
+    ) {
+      this.resizeObserver = new ResizeObserver(() =>
+        this.updateMeasuredInline(),
+      );
+      this.resizeObserver.observe(this.actionsHeaderCell.nativeElement);
+      this.updateMeasuredInline();
+    }
+  }
+
   private subscriptions: Subscription[] = [];
 
   constructor(
@@ -434,6 +626,7 @@ export class PraxisTable
 
   ngAfterViewInit(): void {
     this.applyDataSourceSettings();
+    this.setupResizeObserver();
   }
 
   onPageChange(event: PageEvent): void {
@@ -1030,6 +1223,7 @@ export class PraxisTable
   }
 
   ngOnDestroy(): void {
+    this.resizeObserver?.disconnect();
     // Clean up subscriptions to prevent memory leaks
     this.subscriptions.forEach((sub) => sub.unsubscribe());
     this.subscriptions = [];
