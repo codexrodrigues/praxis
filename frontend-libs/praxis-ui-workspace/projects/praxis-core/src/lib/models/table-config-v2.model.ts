@@ -251,6 +251,12 @@ export interface FilteringConfig {
       placeholder?: string;
       /** Exibir opções avançadas por padrão */
       showAdvanced?: boolean;
+      /** Permitir salvar tags/atalhos de filtro */
+      allowSaveTags?: boolean;
+      /** Debounce de alterações para auto-aplicar filtros (ms) */
+      changeDebounceMs?: number;
+      /** Modo de exibição do componente de filtro */
+      mode?: 'auto' | 'filter' | 'card';
     };
   };
 

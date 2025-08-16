@@ -15,130 +15,175 @@ import { FunctionRegistry } from '../registry/function-registry';
 import { TransformRegistry } from '../registry/transform-registry';
 import { ContextProvider } from '../context/context-provider';
 import { SpecificationMetadata } from '../specification/specification-metadata';
-import { 
-  RequiredIfSpecification, 
-  VisibleIfSpecification, 
-  DisabledIfSpecification, 
-  ReadonlyIfSpecification 
+import {
+  RequiredIfSpecification,
+  VisibleIfSpecification,
+  DisabledIfSpecification,
+  ReadonlyIfSpecification
 } from '../specification/conditional-validators';
-import { 
-  ForEachSpecification, 
-  UniqueBySpecification, 
-  MinLengthSpecification, 
-  MaxLengthSpecification 
+import {
+  ForEachSpecification,
+  UniqueBySpecification,
+  MinLengthSpecification,
+  MaxLengthSpecification
 } from '../specification/collection-specifications';
-import { 
-  IfDefinedSpecification, 
-  IfNotNullSpecification, 
-  IfExistsSpecification, 
-  WithDefaultSpecification 
+import {
+  IfDefinedSpecification,
+  IfNotNullSpecification,
+  IfExistsSpecification,
+  WithDefaultSpecification
 } from '../specification/optional-specifications';
 import { FormSpecification } from '../specification/form-specification';
 
 export class SpecificationFactory {
-  
+
   static fromJSON<T extends object = any>(json: any): Specification<T> {
+    // Robustez: validar entrada e inferir quando possível
+    if (json == null) {
+      throw new Error('Invalid specification JSON: null/undefined');
+    }
+
+    if (Array.isArray(json)) {
+      const specs = json.map((specJson) => SpecificationFactory.fromJSON<T>(specJson));
+      return new AndSpecification<T>(specs);
+    }
+
+    if (typeof json !== 'object') {
+      throw new Error(`Invalid specification JSON: expected object/array, got ${typeof json}`);
+    }
+
+    // Inferência quando 'type' está ausente
+    if (!json.type) {
+      if (Array.isArray(json.specs)) {
+        const specs = json.specs.map((specJson: any) => SpecificationFactory.fromJSON<T>(specJson));
+        return new AndSpecification<T>(specs);
+      }
+
+      if ('field' in json && 'operator' in json) {
+        return FieldSpecification.fromJSON<T>({ type: 'field', ...json });
+      }
+
+      if ('antecedent' in json && 'consequent' in json) {
+        const antecedent = SpecificationFactory.fromJSON<T>(json.antecedent);
+        const consequent = SpecificationFactory.fromJSON<T>(json.consequent);
+        return new ImpliesSpecification<T>(antecedent, consequent);
+      }
+
+      if ('spec' in json) {
+        const notSpec = SpecificationFactory.fromJSON<T>(json.spec);
+        return new NotSpecification<T>(notSpec);
+      }
+
+      if ('itemSpecification' in json && 'arrayField' in json) {
+        const itemSpec = SpecificationFactory.fromJSON(json.itemSpecification);
+        return new ForEachSpecification<T>(json.arrayField as keyof T, itemSpec, json.metadata);
+      }
+
+      // Se não for possível inferir, manter erro claro
+      throw new Error('Unknown specification type: undefined');
+    }
+
     switch (json.type) {
       case 'field':
         return FieldSpecification.fromJSON<T>(json);
-      
+
       case 'and':
-        const andSpecs = json.specs.map((specJson: any) => 
+        const andSpecs = json.specs.map((specJson: any) =>
           SpecificationFactory.fromJSON<T>(specJson)
         );
         return new AndSpecification<T>(andSpecs);
-      
+
       case 'or':
-        const orSpecs = json.specs.map((specJson: any) => 
+        const orSpecs = json.specs.map((specJson: any) =>
           SpecificationFactory.fromJSON<T>(specJson)
         );
         return new OrSpecification<T>(orSpecs);
-      
+
       case 'not':
         const notSpec = SpecificationFactory.fromJSON<T>(json.spec);
         return new NotSpecification<T>(notSpec);
-      
+
       case 'xor':
-        const xorSpecs = json.specs.map((specJson: any) => 
+        const xorSpecs = json.specs.map((specJson: any) =>
           SpecificationFactory.fromJSON<T>(specJson)
         );
         return new XorSpecification<T>(xorSpecs);
-      
+
       case 'implies':
         const antecedent = SpecificationFactory.fromJSON<T>(json.antecedent);
         const consequent = SpecificationFactory.fromJSON<T>(json.consequent);
         return new ImpliesSpecification<T>(antecedent, consequent);
-      
+
       case 'function':
         return FunctionSpecification.fromJSON<T>(json);
-      
+
       case 'atLeast':
-        const atLeastSpecs = json.specs.map((specJson: any) => 
+        const atLeastSpecs = json.specs.map((specJson: any) =>
           SpecificationFactory.fromJSON<T>(specJson)
         );
         return new AtLeastSpecification<T>(json.minimum, atLeastSpecs);
-      
+
       case 'exactly':
-        const exactlySpecs = json.specs.map((specJson: any) => 
+        const exactlySpecs = json.specs.map((specJson: any) =>
           SpecificationFactory.fromJSON<T>(specJson)
         );
         return new ExactlySpecification<T>(json.exact, exactlySpecs);
-      
+
       case 'fieldToField':
         return FieldToFieldSpecification.fromJSON<T>(json);
-      
+
       case 'contextual':
         return ContextualSpecification.fromJSON<T>(json);
-      
+
       case 'requiredIf':
         const requiredCondition = SpecificationFactory.fromJSON<T>(json.condition);
         return new RequiredIfSpecification<T>(json.field as keyof T, requiredCondition, json.metadata);
-      
+
       case 'visibleIf':
         const visibleCondition = SpecificationFactory.fromJSON<T>(json.condition);
         return new VisibleIfSpecification<T>(json.field as keyof T, visibleCondition, json.metadata);
-      
+
       case 'disabledIf':
         const disabledCondition = SpecificationFactory.fromJSON<T>(json.condition);
         return new DisabledIfSpecification<T>(json.field as keyof T, disabledCondition, json.metadata);
-      
+
       case 'readonlyIf':
         const readonlyCondition = SpecificationFactory.fromJSON<T>(json.condition);
         return new ReadonlyIfSpecification<T>(json.field as keyof T, readonlyCondition, json.metadata);
-      
+
       case 'forEach':
         const itemSpec = SpecificationFactory.fromJSON(json.itemSpecification);
         return new ForEachSpecification<T>(json.arrayField as keyof T, itemSpec, json.metadata);
-      
+
       case 'uniqueBy':
         return UniqueBySpecification.fromJSON<T>(json);
-      
+
       case 'minLength':
         return MinLengthSpecification.fromJSON<T>(json);
-      
+
       case 'maxLength':
         return MaxLengthSpecification.fromJSON<T>(json);
-      
+
       case 'ifDefined':
         const ifDefinedSpec = SpecificationFactory.fromJSON<T>(json.specification);
         return new IfDefinedSpecification<T>(json.field as keyof T, ifDefinedSpec, json.metadata);
-      
+
       case 'ifNotNull':
         const ifNotNullSpec = SpecificationFactory.fromJSON<T>(json.specification);
         return new IfNotNullSpecification<T>(json.field as keyof T, ifNotNullSpec, json.metadata);
-      
+
       case 'ifExists':
         const ifExistsSpec = SpecificationFactory.fromJSON<T>(json.specification);
         return new IfExistsSpecification<T>(json.field as keyof T, ifExistsSpec, json.metadata);
-      
+
       case 'withDefault':
         const withDefaultSpec = SpecificationFactory.fromJSON<T>(json.specification);
         return new WithDefaultSpecification<T>(json.field as keyof T, json.defaultValue, withDefaultSpec, json.metadata);
-      
+
       case 'form':
         // Form specifications require special reconstruction
         throw new Error('FormSpecification.fromJSON not yet implemented');
-      
+
       default:
         throw new Error(`Unknown specification type: ${json.type}`);
     }
@@ -181,8 +226,8 @@ export class SpecificationFactory {
   }
 
   static fieldToField<T extends object = any>(
-    fieldA: keyof T, 
-    operator: ComparisonOperator, 
+    fieldA: keyof T,
+    operator: ComparisonOperator,
     fieldB: keyof T,
     transformA?: string[],
     transformB?: string[],
@@ -230,32 +275,32 @@ export class SpecificationFactory {
 
   // Phase 2: Conditional validators
   static requiredIf<T extends object = any>(
-    field: keyof T, 
-    condition: Specification<T>, 
+    field: keyof T,
+    condition: Specification<T>,
     metadata?: SpecificationMetadata
   ): RequiredIfSpecification<T> {
     return new RequiredIfSpecification<T>(field, condition, metadata);
   }
 
   static visibleIf<T extends object = any>(
-    field: keyof T, 
-    condition: Specification<T>, 
+    field: keyof T,
+    condition: Specification<T>,
     metadata?: SpecificationMetadata
   ): VisibleIfSpecification<T> {
     return new VisibleIfSpecification<T>(field, condition, metadata);
   }
 
   static disabledIf<T extends object = any>(
-    field: keyof T, 
-    condition: Specification<T>, 
+    field: keyof T,
+    condition: Specification<T>,
     metadata?: SpecificationMetadata
   ): DisabledIfSpecification<T> {
     return new DisabledIfSpecification<T>(field, condition, metadata);
   }
 
   static readonlyIf<T extends object = any>(
-    field: keyof T, 
-    condition: Specification<T>, 
+    field: keyof T,
+    condition: Specification<T>,
     metadata?: SpecificationMetadata
   ): ReadonlyIfSpecification<T> {
     return new ReadonlyIfSpecification<T>(field, condition, metadata);
@@ -263,32 +308,32 @@ export class SpecificationFactory {
 
   // Phase 2: Collection specifications
   static forEach<T extends object = any, TItem extends object = any>(
-    arrayField: keyof T, 
-    itemSpecification: Specification<TItem>, 
+    arrayField: keyof T,
+    itemSpecification: Specification<TItem>,
     metadata?: SpecificationMetadata
   ): ForEachSpecification<T, TItem> {
     return new ForEachSpecification<T, TItem>(arrayField, itemSpecification, metadata);
   }
 
   static uniqueBy<T extends object = any>(
-    arrayField: keyof T, 
-    keySelector: string | ((item: any) => any), 
+    arrayField: keyof T,
+    keySelector: string | ((item: any) => any),
     metadata?: SpecificationMetadata
   ): UniqueBySpecification<T> {
     return new UniqueBySpecification<T>(arrayField, keySelector, metadata);
   }
 
   static minLength<T extends object = any>(
-    arrayField: keyof T, 
-    minLength: number, 
+    arrayField: keyof T,
+    minLength: number,
     metadata?: SpecificationMetadata
   ): MinLengthSpecification<T> {
     return new MinLengthSpecification<T>(arrayField, minLength, metadata);
   }
 
   static maxLength<T extends object = any>(
-    arrayField: keyof T, 
-    maxLength: number, 
+    arrayField: keyof T,
+    maxLength: number,
     metadata?: SpecificationMetadata
   ): MaxLengthSpecification<T> {
     return new MaxLengthSpecification<T>(arrayField, maxLength, metadata);
@@ -296,33 +341,33 @@ export class SpecificationFactory {
 
   // Phase 2: Optional field handling
   static ifDefined<T extends object = any>(
-    field: keyof T, 
-    specification: Specification<T>, 
+    field: keyof T,
+    specification: Specification<T>,
     metadata?: SpecificationMetadata
   ): IfDefinedSpecification<T> {
     return new IfDefinedSpecification<T>(field, specification, metadata);
   }
 
   static ifNotNull<T extends object = any>(
-    field: keyof T, 
-    specification: Specification<T>, 
+    field: keyof T,
+    specification: Specification<T>,
     metadata?: SpecificationMetadata
   ): IfNotNullSpecification<T> {
     return new IfNotNullSpecification<T>(field, specification, metadata);
   }
 
   static ifExists<T extends object = any>(
-    field: keyof T, 
-    specification: Specification<T>, 
+    field: keyof T,
+    specification: Specification<T>,
     metadata?: SpecificationMetadata
   ): IfExistsSpecification<T> {
     return new IfExistsSpecification<T>(field, specification, metadata);
   }
 
   static withDefault<T extends object = any>(
-    field: keyof T, 
-    defaultValue: any, 
-    specification: Specification<T>, 
+    field: keyof T,
+    defaultValue: any,
+    specification: Specification<T>,
     metadata?: SpecificationMetadata
   ): WithDefaultSpecification<T> {
     return new WithDefaultSpecification<T>(field, defaultValue, specification, metadata);
@@ -335,9 +380,9 @@ export class SpecificationFactory {
 
   // Phase 2: Enhanced field specifications with metadata
   static fieldWithMetadata<T extends object = any>(
-    field: keyof T, 
-    operator: ComparisonOperator, 
-    value: any, 
+    field: keyof T,
+    operator: ComparisonOperator,
+    value: any,
     metadata: SpecificationMetadata
   ): FieldSpecification<T> {
     return new FieldSpecification<T>(field, operator, value, metadata);
@@ -345,16 +390,16 @@ export class SpecificationFactory {
 
   // Convenience methods with metadata support
   static equalsWithMetadata<T extends object = any>(
-    field: keyof T, 
-    value: any, 
+    field: keyof T,
+    value: any,
     metadata: SpecificationMetadata
   ): FieldSpecification<T> {
     return new FieldSpecification<T>(field, ComparisonOperator.EQUALS, value, metadata);
   }
 
   static greaterThanWithMetadata<T extends object = any>(
-    field: keyof T, 
-    value: any, 
+    field: keyof T,
+    value: any,
     metadata: SpecificationMetadata
   ): FieldSpecification<T> {
     return new FieldSpecification<T>(field, ComparisonOperator.GREATER_THAN, value, metadata);

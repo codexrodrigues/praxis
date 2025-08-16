@@ -231,10 +231,10 @@ import { normalizeFormConfig } from './utils/normalize-form-config';
                 <button
                   [type]="button.type || 'button'"
                   [ngClass]="{
-                    'mat-raised-button': button.variant === 'raised' || !button.variant,
-                    'mat-stroked-button': button.variant === 'stroked',
-                    'mat-flat-button': button.variant === 'flat',
-                    'mat-fab': button.variant === 'fab'
+                    'mat-raised-button': (typeof button.variant === 'string' && button.variant === 'raised') || !button.variant,
+                    'mat-stroked-button': typeof button.variant === 'string' && button.variant === 'stroked',
+                    'mat-flat-button': typeof button.variant === 'string' && button.variant === 'flat',
+                    'mat-fab': typeof button.variant === 'string' && button.variant === 'fab'
                   }"
                   mat-button
                   [color]="button.color"
@@ -262,10 +262,10 @@ import { normalizeFormConfig } from './utils/normalize-form-config';
                 <button
                   [type]="button.type || 'button'"
                   [ngClass]="{
-                    'mat-raised-button': button.variant === 'raised' || !button.variant,
-                    'mat-stroked-button': button.variant === 'stroked',
-                    'mat-flat-button': button.variant === 'flat',
-                    'mat-fab': button.variant === 'fab'
+                    'mat-raised-button': (typeof button.variant === 'string' && button.variant === 'raised') || !button.variant,
+                    'mat-stroked-button': typeof button.variant === 'string' && button.variant === 'stroked',
+                    'mat-flat-button': typeof button.variant === 'string' && button.variant === 'flat',
+                    'mat-fab': typeof button.variant === 'string' && button.variant === 'fab'
                   }"
                   mat-button
                   [color]="button.color"

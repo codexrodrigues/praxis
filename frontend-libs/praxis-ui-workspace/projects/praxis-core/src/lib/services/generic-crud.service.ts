@@ -11,6 +11,7 @@ import {
   toArray,
   tap,
   takeUntil,
+  shareReplay,
 } from 'rxjs/operators';
 
 import { RestApiResponse } from '../models/rest-api-response.model';
@@ -25,7 +26,6 @@ import {
   ApiUrlConfig,
   ApiUrlEntry,
   buildApiUrl,
-  buildHeaders,
 } from '../tokens/api-url.token';
 import { composeHeadersWithVersion } from '../helpers/version.helper';
 import { SchemaNormalizerService } from './schema-normalizer.service';
@@ -133,6 +133,9 @@ export class GenericCrudService<T> {
   private _schemaUrl: string | null = null;
   private configured = false;
 
+  // Cache para schemas de filtro (compartilha observáveis para chamadas simultâneas)
+  private _filterSchemaCache = new Map<string, import('rxjs').Observable<FieldDefinition[]>>();
+
   private ensureConfigured(): void {
     if (!this.configured) {
       throw new Error(GenericCrudService.ERROR_MESSAGES.unconfiguredService);
@@ -239,6 +242,7 @@ export class GenericCrudService<T> {
    * @param operation - A operação CRUD a ser executada (getAll, getById, create, update, delete, filter, schema)
    * @param id - Identificador opcional para operações que exigem ID (getById, update, delete)
    * @param parentPath - Caminho do recurso pai opcional para recursos aninhados (ex: 'clientes/123')
+   * @param endpointKey - Chave de endpoint (quando houver múltiplas bases configuradas)
    * @returns A URL completa para a requisição à API
    * @throws Error quando o ID é obrigatório mas não fornecido, ou quando o serviço não está configurado
    */
@@ -333,9 +337,7 @@ export class GenericCrudService<T> {
       case 'schema':
         return `${resourceUrl}/schemas`;
       default:
-        // Should not be reached due to keyof EndpointConfig
-        const exhaustiveCheck: never = operation;
-        throw new Error(`Unknown operation: ${exhaustiveCheck}`);
+        throw new Error(`Unknown operation: ${operation as string}`);
     }
   }
 
@@ -828,5 +830,86 @@ export class GenericCrudService<T> {
     return this.http
       .request<R>(method, url, { body, params })
       .pipe(catchError(this.handleError));
+  }
+
+  /**
+   * Obtém o schema do DTO de filtro do endpoint POST /{resource}/filter.
+   *
+   * - Deriva automaticamente o path correto usando schemaUrl() para preservar prefixos (ex.: /api, contextPath, grupos OpenAPI)
+   * - Define operation='post' e schemaType='request' para obter o corpo do filtro
+   * - Suporta cache por chave (endpointKey + path + params), compartilhando a mesma resposta entre assinantes simultâneos
+   *
+   * @param options Parâmetros opcionais
+   *  - path: caminho a ser enviado ao /schemas/filtered; por padrão, usa `${schemaUrl().replace(/\/schemas$/, '')}/filter`
+   *  - includeInternalSchemas: se true, expande $ref internos (custo maior)
+   *  - endpointKey: chave de endpoint (caso esteja alternando entre múltiplas bases)
+   *  - cache: habilita/desabilita cache; padrão true
+   */
+  public getFilterSchema(options?: {
+    path?: string;
+    includeInternalSchemas?: boolean;
+    endpointKey?: ApiEndpoint;
+    cache?: boolean;
+  }): import('rxjs').Observable<FieldDefinition[]> {
+    this.ensureConfigured();
+
+    // Seleciona endpoint base (se diferente)
+    if (options?.endpointKey && options.endpointKey !== this.currentEndpointKey) {
+      // Não reconfigura o serviço, apenas usa a chave como parte da cacheKey
+    }
+
+    // Deriva path base do schema preservando prefixos
+    const basePath = (this.schemaUrl() || '').replace(/\/+$/, '').replace(/\/schemas$/, '');
+    const requestedPath = options?.path;
+    let path = (requestedPath && requestedPath.trim()) || (basePath ? `${basePath}/filter` : '');
+
+    if (!path) {
+      // Fallback final: construir a partir do recurso configurado (sem domínio), preservando '/api' se presente
+      // getEndpointUrl('filter') retorna URL absoluta; convertemos para apenas pathname
+      try {
+        const url = new URL(this.getEndpointUrl('filter'));
+        path = url.pathname;
+      } catch {
+        // Se falhar, usa concatenação simples
+        path = `/${this.resourcePath.replace(/^\/+|\/+$/g, '')}/filter`;
+      }
+    }
+
+    // Normaliza sufixo /filter
+    if (!/\/filter$/.test(path)) {
+      path = `${path.replace(/\/+$/, '')}/filter`;
+    }
+
+    const includeInternal = !!options?.includeInternalSchemas;
+    const cacheEnabled = options?.cache !== false;
+    const cacheKey = `${options?.endpointKey ?? this.currentEndpointKey}|${path}|post|request|${includeInternal ? '1' : '0'}`;
+
+    if (cacheEnabled) {
+      const cached = this._filterSchemaCache.get(cacheKey);
+      if (cached) {
+        return cached;
+      }
+    }
+
+    const request$ = this.getFilteredSchema({
+      path,
+      operation: 'post',
+      schemaType: 'request',
+      includeInternalSchemas: includeInternal,
+    }).pipe(
+      shareReplay(1),
+      catchError((err) => {
+        if (cacheEnabled) {
+          this._filterSchemaCache.delete(cacheKey);
+        }
+        return throwError(() => err);
+      }),
+    );
+
+    if (cacheEnabled) {
+      this._filterSchemaCache.set(cacheKey, request$);
+    }
+
+    return request$;
   }
 }

@@ -347,6 +347,7 @@ export class PraxisFilter implements OnInit, OnChanges {
   @Output() modeChange = new EventEmitter<'filter' | 'card'>();
   @Output() requestSearch = this.submit;
   @Output() tagsChange = new EventEmitter<FilterTag[]>();
+  @Output() settingsChange = new EventEmitter<FilterConfig>();
 
   quickControl = new FormControl<string>('', { nonNullable: true });
   quickForm = new FormGroup<Record<string, FormControl<unknown>>>({});
@@ -589,11 +590,14 @@ export class PraxisFilter implements OnInit, OnChanges {
       };
 
       const validateConfig = (cfg: FilterConfig): FilterConfig => {
-        const names = new Set(this.schemaMetas?.map((m) => m.name));
-        const quickField =
-          cfg.quickField && names.has(cfg.quickField)
-            ? cfg.quickField
-            : undefined;
+        // Se o schema ainda não foi carregado, não invalide o quickField nem os alwaysVisibleFields
+        if (!this.schemaMetas || this.schemaMetas.length === 0) {
+          return { ...cfg };
+        }
+        const names = new Set(this.schemaMetas.map((m) => m.name));
+        const quickField = cfg.quickField && names.has(cfg.quickField)
+          ? cfg.quickField
+          : undefined;
         const alwaysVisibleFields = cfg.alwaysVisibleFields?.filter((f) =>
           names.has(f),
         );
@@ -607,6 +611,7 @@ export class PraxisFilter implements OnInit, OnChanges {
       ref.applied$.pipe(take(1)).subscribe((cfg: FilterConfig) => {
         const safe = validateConfig(cfg);
         applyChanges(safe);
+        this.settingsChange.emit(safe);
         persistConfig(safe, 'Configurações aplicadas');
         ref.close('save');
       });
@@ -614,6 +619,7 @@ export class PraxisFilter implements OnInit, OnChanges {
       ref.saved$.pipe(take(1)).subscribe((cfg: FilterConfig) => {
         const safe = validateConfig(cfg);
         applyChanges(safe);
+        this.settingsChange.emit(safe);
         persistConfig(safe, 'Configurações salvas');
       });
     } catch (err) {
@@ -699,11 +705,7 @@ export class PraxisFilter implements OnInit, OnChanges {
 
   private advancedForm?: FormGroup<Record<string, any>>;
 
-  private getFilterSchemaPath(): string {
-    const base = (this.resourcePath ?? '').replace(/\/+$/, '');
-    const normalized = base.startsWith('/') ? base : `/${base}`;
-    return `${normalized}/filter`;
-  }
+  // getFilterSchemaPath não é mais necessário, pois o serviço deriva o path via schemaUrl()
 
   loadSchema(): void {
     if (this.schemaMetas) {
@@ -714,22 +716,15 @@ export class PraxisFilter implements OnInit, OnChanges {
     this.schemaLoading = true;
     this.schemaError = false;
     this.crud
-      .getFilteredSchema({
-        path: this.getFilterSchemaPath(),
-        operation: 'post',
-        schemaType: 'request',
-      })
+      .getFilterSchema()
       .pipe(
         catchError((err) => {
           console.error('PFILTER:schema:load:error', err);
-          return this.crud.getSchema().pipe(
-            catchError((err2) => {
-              console.error('PFILTER:schema:load:error', err2);
-              this.schemaLoading = false;
-              this.schemaError = true;
-              return of([]);
-            }),
-          );
+          setTimeout(() => {
+            this.schemaLoading = false;
+            this.schemaError = true;
+          });
+          return of([]);
         }),
         map((defs) => mapFieldDefinitionsToMetadata(defs)),
         take(1),
@@ -738,9 +733,11 @@ export class PraxisFilter implements OnInit, OnChanges {
         if (this.schemaError) {
           return;
         }
-        this.schemaLoading = false;
-        this.schemaMetas = metas;
-        this.applySchemaMetas();
+        setTimeout(() => {
+          this.schemaLoading = false;
+          this.schemaMetas = metas;
+          this.applySchemaMetas();
+        });
       });
   }
 

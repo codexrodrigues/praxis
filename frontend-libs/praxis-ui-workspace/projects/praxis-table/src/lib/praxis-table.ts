@@ -48,7 +48,7 @@ import { PraxisTableConfigEditor } from './praxis-table-config-editor';
 import { DataFormattingService } from './data-formatter/data-formatting.service';
 import { ColumnDataType } from './data-formatter/data-formatter-types';
 import { TableDefaultsProvider } from './services/table-defaults.provider';
-import { PraxisFilter } from './praxis-filter';
+import { PraxisFilter, I18n } from './praxis-filter';
 
 @Component({
   selector: 'praxis-table',
@@ -99,8 +99,8 @@ import { PraxisFilter } from './praxis-filter';
           config.behavior?.filtering?.advancedFilters?.settings?.placeholder
             ? {
                 searchPlaceholder:
-                  config.behavior.filtering.advancedFilters.settings
-                    .placeholder,
+                  config.behavior?.filtering?.advancedFilters?.settings
+                    ?.placeholder,
               }
             : undefined
         "
@@ -938,6 +938,14 @@ export class PraxisTable
       default:
         return false;
     }
+  }
+
+  /**
+   * Obtém configurações de i18n para o filtro baseado na configuração da tabela
+   */
+  getFilterI18n(): Partial<I18n> | undefined {
+    const placeholder = this.config.behavior?.filtering?.advancedFilters?.settings?.placeholder;
+    return placeholder ? { searchPlaceholder: placeholder } : undefined;
   }
 
   ngOnDestroy(): void {
