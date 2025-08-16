@@ -12,6 +12,7 @@ export * from './lib/data-formatter/data-formatter-types';
 export * from './lib/data-formatter/data-formatting.service';
 export * from './lib/data-formatter/data-formatter.component';
 export * from './lib/services/table-defaults.provider';
+export * from './lib/utils/action-utils';
 
 // Editor components
 export * from './lib/behavior-config-editor/behavior-config-editor.component';
