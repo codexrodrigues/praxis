@@ -74,14 +74,15 @@ import { getActionId } from './utils/action-utils';
         display: block;
       }
       .praxis-toolbar {
-        border-radius: 10px;
-        background: var(--surface, #333);
-        box-shadow: var(--elevation-shadow);
+        border-radius: 12px 12px 0 0;
+        background: transparent;
+        box-shadow: none;
         padding-inline: 8px;
-        min-height: 52px;
+        min-height: 56px;
         display: flex;
         align-items: center;
         gap: 8px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
       }
       .spacer {
         flex: 1 1 auto;

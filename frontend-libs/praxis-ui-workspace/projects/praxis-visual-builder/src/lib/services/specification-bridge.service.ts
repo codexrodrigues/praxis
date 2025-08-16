@@ -853,33 +853,71 @@ export class SpecificationBridgeService {
 
     const config = node.config as ConditionalValidatorConfig;
 
-    if (!config.targetField || !config.condition) {
-      throw new Error(
-        'Conditional validator requires targetField and condition',
-      );
+    if (!config.targetField) {
+      throw new Error('Conditional validator requires targetField');
     }
 
-    // Convert the condition node to a specification
-    const conditionSpec = this.ruleNodeToSpecification<T>(config.condition);
+    // Aceita tanto 'condition' única quanto 'conditions' (lista)
+    let conditionSpec: Specification<T> | null = null;
 
-    // Apply inverse if specified
-    const finalConditionSpec = config.inverse
+    // Helper para transformar uma condição simples em Specification
+    const toSpecFromCondition = (c: any): Specification<T> => {
+      // Se já vier como RuleNode, converte via bridge
+      if (c && typeof c === 'object' && 'type' in c && 'id' in c) {
+        return this.ruleNodeToSpecification<T>(c as RuleNode);
+      }
+      // Se for um config simples de fieldCondition, embrulha em RuleNode temporário
+      if (c && typeof c === 'object' && c.type === 'fieldCondition') {
+        const tempNode: RuleNode = {
+          id: this.generateNodeId(),
+          type: 'fieldCondition' as any,
+          config: c,
+        } as any;
+        return this.createFieldSpecification<T>(tempNode);
+      }
+      // Caso não reconhecido
+      throw new Error('Unsupported condition format');
+    };
+
+    if ((config as any).condition) {
+      try {
+        conditionSpec = toSpecFromCondition((config as any).condition);
+      } catch {
+        conditionSpec = null;
+      }
+    } else if (config.conditions && config.conditions.length > 0) {
+      const specs = config.conditions.map((c: any) => toSpecFromCondition(c));
+      const op = (config.logicOperator || 'and').toLowerCase();
+      switch (op) {
+        case 'and':
+          conditionSpec = SpecificationFactory.and<T>(...specs);
+          break;
+        case 'or':
+          conditionSpec = SpecificationFactory.or<T>(...specs);
+          break;
+        case 'not':
+          conditionSpec = specs.length === 1 ? SpecificationFactory.not<T>(specs[0]) : SpecificationFactory.and<T>(...specs);
+          break;
+        case 'xor':
+          conditionSpec = SpecificationFactory.xor<T>(...specs);
+          break;
+        default:
+          conditionSpec = SpecificationFactory.and<T>(...specs);
+      }
+    }
+
+    // Aplicar inversão, se solicitado
+    const finalConditionSpec = config.inverse && conditionSpec
       ? SpecificationFactory.not<T>(conditionSpec)
       : conditionSpec;
 
     const targetField = config.targetField as keyof T;
     const metadata = config.metadata;
 
-    // Create the appropriate conditional validator specification
-    // Note: Using generic factory methods - specific conditional validator factory methods
-    // should be implemented in @praxis/specification when available
+    // Placeholder genérico até haver suporte nativo no @praxis/specification
     let spec: Specification<T>;
-
     switch (config.validatorType) {
       case 'requiredIf':
-        // Create a generic specification for requiredIf
-        // This is a placeholder implementation - will be replaced when
-        // @praxis/specification adds native support for conditional validators
         spec = SpecificationFactory.field<T>(
           targetField,
           ComparisonOperator.EQUALS,
@@ -888,7 +926,6 @@ export class SpecificationBridgeService {
         break;
 
       case 'visibleIf':
-        // Placeholder implementation for visibleIf
         spec = SpecificationFactory.field<T>(
           targetField,
           ComparisonOperator.EQUALS,
@@ -897,7 +934,6 @@ export class SpecificationBridgeService {
         break;
 
       case 'disabledIf':
-        // Placeholder implementation for disabledIf
         spec = SpecificationFactory.field<T>(
           targetField,
           ComparisonOperator.EQUALS,
@@ -906,7 +942,6 @@ export class SpecificationBridgeService {
         break;
 
       case 'readonlyIf':
-        // Placeholder implementation for readonlyIf
         spec = SpecificationFactory.field<T>(
           targetField,
           ComparisonOperator.EQUALS,

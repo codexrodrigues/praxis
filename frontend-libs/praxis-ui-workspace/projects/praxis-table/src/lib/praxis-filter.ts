@@ -10,6 +10,8 @@ import {
   DestroyRef,
   TemplateRef,
   ViewChild,
+  ChangeDetectorRef,
+  AfterViewInit,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
@@ -96,52 +98,15 @@ const DEFAULT_I18N: I18n = {
       <mat-progress-bar *ngIf="saving" mode="indeterminate"></mat-progress-bar>
       <div class="praxis-filter-bar">
         <div class="quick-field" *ngIf="quickFieldMeta; else fallbackQuick">
-          <ng-container
-            dynamicFieldLoader
-            [fields]="[quickFieldMeta]"
-            [formGroup]="quickForm"
-          ></ng-container>
-          <button
-            #advancedBtn="cdkOverlayOrigin"
-            cdkOverlayOrigin
-            mat-icon-button
-            type="button"
-            [matBadge]="activeFiltersCount"
-            matBadgeOverlap="false"
-            [matBadgeHidden]="!activeFiltersCount"
-            [color]="activeFiltersCount ? 'primary' : undefined"
-            (click)="toggleAdvanced()"
-            [attr.aria-label]="i18nLabels.advanced"
-          >
-            <mat-icon>tune</mat-icon>
-          </button>
-        </div>
-        <ng-template #fallbackQuick>
-          <mat-form-field appearance="outline" class="quick-field">
-            <mat-label>{{ i18nLabels.searchPlaceholder }}</mat-label>
-            <mat-icon matPrefix>search</mat-icon>
-            <input
-              matInput
-              [formControl]="quickControl"
-              [attr.aria-label]="i18nLabels.searchPlaceholder"
-              (keydown.enter)="onSubmit()"
-              (keydown.escape)="onQuickClear()"
-            />
+          <!-- Âncora do overlay envolve o campo e o botão, garantindo alinhamento ao campo -->
+          <div class="filter-anchor" #anchorRef="cdkOverlayOrigin" cdkOverlayOrigin>
+            <ng-container
+              dynamicFieldLoader
+              [fields]="[quickFieldMeta]"
+              [formGroup]="quickForm"
+            ></ng-container>
             <button
               mat-icon-button
-              matSuffix
-              type="button"
-              *ngIf="quickControl.value"
-              (click)="onQuickClear()"
-              [attr.aria-label]="i18nLabels.clear"
-            >
-              <mat-icon>close</mat-icon>
-            </button>
-            <button
-              #advancedBtn="cdkOverlayOrigin"
-              cdkOverlayOrigin
-              mat-icon-button
-              matSuffix
               type="button"
               [matBadge]="activeFiltersCount"
               matBadgeOverlap="false"
@@ -152,6 +117,44 @@ const DEFAULT_I18N: I18n = {
             >
               <mat-icon>tune</mat-icon>
             </button>
+          </div>
+        </div>
+        <ng-template #fallbackQuick>
+          <mat-form-field appearance="outline" class="quick-field">
+            <mat-label>{{ i18nLabels.searchPlaceholder }}</mat-label>
+            <mat-icon matPrefix>search</mat-icon>
+            <div class="filter-anchor" #anchorRef="cdkOverlayOrigin" cdkOverlayOrigin>
+              <input
+                matInput
+                [formControl]="quickControl"
+                [attr.aria-label]="i18nLabels.searchPlaceholder"
+                (keydown.enter)="onSubmit()"
+                (keydown.escape)="onQuickClear()"
+              />
+              <button
+                mat-icon-button
+                matSuffix
+                type="button"
+                *ngIf="quickControl.value"
+                (click)="onQuickClear()"
+                [attr.aria-label]="i18nLabels.clear"
+              >
+                <mat-icon>close</mat-icon>
+              </button>
+              <button
+                mat-icon-button
+                matSuffix
+                type="button"
+                [matBadge]="activeFiltersCount"
+                matBadgeOverlap="false"
+                [matBadgeHidden]="!activeFiltersCount"
+                [color]="activeFiltersCount ? 'primary' : undefined"
+                (click)="toggleAdvanced()"
+                [attr.aria-label]="i18nLabels.advanced"
+              >
+                <mat-icon>tune</mat-icon>
+              </button>
+            </div>
             <mat-hint *ngIf="quickField" class="fallback-hint">
               {{ i18nLabels.quickFieldNotFound }}
             </mat-hint>
@@ -208,47 +211,53 @@ const DEFAULT_I18N: I18n = {
           </mat-chip>
         </mat-chip-set>
       </div>
-      <ng-template
-        cdkConnectedOverlay
-        [cdkConnectedOverlayOrigin]="advancedBtn!"
-        [cdkConnectedOverlayOpen]="advancedOpen"
-        [cdkConnectedOverlayHasBackdrop]="true"
-        [cdkConnectedOverlayPositions]="overlayPositions"
-        cdkConnectedOverlayBackdropClass="praxis-overlay-backdrop"
-        cdkConnectedOverlayPanelClass="praxis-filter-overlay"
-        (backdropClick)="toggleAdvanced()"
-        (detach)="onOverlayDetach()"
-      >
-        <div
-          class="praxis-filter-advanced"
-          cdkTrapFocus
-          cdkTrapFocusAutoCapture
-          (keydown.escape)="toggleAdvanced()"
+      <!-- Cria o overlay apenas quando overlayOrigin existir para evitar erros e ExpressionChanged -->
+      <ng-container *ngIf="overlayOrigin">
+        <ng-template
+          cdkConnectedOverlay
+          [cdkConnectedOverlayOrigin]="overlayOrigin!"
+          [cdkConnectedOverlayOpen]="advancedOpen"
+          [cdkConnectedOverlayHasBackdrop]="true"
+          [cdkConnectedOverlayPositions]="overlayPositions"
+          [cdkConnectedOverlayFlexibleDimensions]="true"
+          [cdkConnectedOverlayPush]="true"
+          [cdkConnectedOverlayOffsetY]="8"
+          cdkConnectedOverlayBackdropClass="praxis-overlay-backdrop"
+          cdkConnectedOverlayPanelClass="praxis-filter-overlay"
+          (backdropClick)="toggleAdvanced()"
+          (detach)="onOverlayDetach()"
         >
-          <mat-progress-bar
-            *ngIf="schemaLoading"
-            mode="indeterminate"
-          ></mat-progress-bar>
-          <p *ngIf="schemaError" class="schema-error">
-            Erro ao carregar filtros.
-            <button mat-button type="button" (click)="loadSchema()">
-              Tentar novamente
-            </button>
-          </p>
-          <praxis-dynamic-form
-            *ngIf="!schemaLoading && !schemaError && advancedConfig"
-            [formId]="formId"
-            [resourcePath]="resourcePath"
-            [mode]="'edit'"
-            [config]="advancedConfig"
-            (formReady)="onAdvancedReady($event)"
-            (valueChange)="onAdvancedChange($event)"
-          ></praxis-dynamic-form>
-          <p *ngIf="!schemaLoading && !schemaError && !advancedConfig">
-            {{ i18nLabels.noData }}
-          </p>
-        </div>
-      </ng-template>
+          <div
+            class="praxis-filter-advanced"
+            cdkTrapFocus
+            cdkTrapFocusAutoCapture
+            (keydown.escape)="toggleAdvanced()"
+          >
+            <mat-progress-bar
+              *ngIf="schemaLoading"
+              mode="indeterminate"
+            ></mat-progress-bar>
+            <p *ngIf="schemaError" class="schema-error">
+              Erro ao carregar filtros.
+              <button mat-button type="button" (click)="loadSchema()">
+                Tentar novamente
+              </button>
+            </p>
+            <praxis-dynamic-form
+              *ngIf="!schemaLoading && !schemaError && advancedConfig"
+              [formId]="formId"
+              [resourcePath]="resourcePath"
+              [mode]="'edit'"
+              [config]="advancedConfig"
+              (formReady)="onAdvancedReady($event)"
+              (valueChange)="onAdvancedChange($event)"
+            ></praxis-dynamic-form>
+            <p *ngIf="!schemaLoading && !schemaError && !advancedConfig">
+              {{ i18nLabels.noData }}
+            </p>
+          </div>
+        </ng-template>
+      </ng-container>
     </ng-container>
     <ng-template #summaryCard>
       <div class="praxis-filter-card" (keydown.escape)="onClear()">
@@ -306,6 +315,12 @@ const DEFAULT_I18N: I18n = {
         flex: 1 1 200px;
         min-width: 200px;
       }
+      .filter-anchor {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        width: 100%;
+      }
       .always-fields {
         display: flex;
         flex-wrap: wrap;
@@ -328,18 +343,28 @@ const DEFAULT_I18N: I18n = {
       .praxis-filter-overlay {
         border-radius: 14px;
         background: var(--surface, #2b2b2b);
-        box-shadow: var(--elevation-shadow, 0 8px 24px rgba(0, 0, 0, 0.28));
+        box-shadow: var(--elevation-shadow, 0 12px 32px rgba(0, 0, 0, 0.32));
         padding: 16px;
         min-width: 360px;
         max-width: min(800px, 90vw);
         max-height: min(80vh, 720px);
         overflow: auto;
-        transition:
-          transform 0.18s ease,
-          opacity 0.18s ease;
+        animation: praxis-overlay-in 160ms ease;
+        will-change: transform, opacity;
+      }
+      @keyframes praxis-overlay-in {
+        from {
+          opacity: 0;
+          transform: translateY(4px) scale(0.98);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
       }
       :host ::ng-deep .praxis-overlay-backdrop {
         background: rgba(0, 0, 0, 0.32);
+        backdrop-filter: blur(1px);
       }
       .fallback-hint {
         color: #666;
@@ -372,7 +397,7 @@ const DEFAULT_I18N: I18n = {
     `,
   ],
 })
-export class PraxisFilter implements OnInit, OnChanges {
+export class PraxisFilter implements OnInit, OnChanges, AfterViewInit {
   @Input({ required: true }) resourcePath!: string;
   @Input({ required: true }) formId!: string;
   @Input() mode: 'auto' | 'filter' | 'card' = 'auto';
@@ -425,8 +450,9 @@ export class PraxisFilter implements OnInit, OnChanges {
   i18nLabels: I18n = DEFAULT_I18N;
   private placeholder?: string;
   private configKey!: string;
-  @ViewChild('advancedBtn', { read: CdkOverlayOrigin })
-  advancedBtn?: CdkOverlayOrigin;
+  @ViewChild('anchorRef', { read: CdkOverlayOrigin })
+  anchorRef?: CdkOverlayOrigin;
+  overlayOrigin?: CdkOverlayOrigin;
   overlayPositions: ConnectedPosition[] = [
     {
       originX: 'start',
@@ -449,12 +475,15 @@ export class PraxisFilter implements OnInit, OnChanges {
     private filterConfig: FilterConfigService,
     private settingsPanel: SettingsPanelService,
     private snackBar: MatSnackBar,
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
     this.crud.configure(this.resourcePath);
     this.configKey = this.persistenceKey ?? this.formId;
     const cfg = this.filterConfig.load(this.configKey);
+    // Guardar preferências de abertura avançada para aplicar após resolver o modo
+    const cfgShowAdvanced = cfg?.showAdvanced;
     if (cfg) {
       if (!this.quickField && cfg.quickField) {
         this.quickField = cfg.quickField;
@@ -465,9 +494,7 @@ export class PraxisFilter implements OnInit, OnChanges {
       if (!this.i18n?.searchPlaceholder && cfg.placeholder) {
         this.placeholder = cfg.placeholder;
       }
-      if (cfg.showAdvanced !== undefined) {
-        this.advancedOpen = cfg.showAdvanced;
-      }
+      // Resolver mode antes de mexer em advancedOpen
       if (this.mode === 'auto' && cfg.mode) {
         this.mode = cfg.mode;
       }
@@ -508,7 +535,13 @@ export class PraxisFilter implements OnInit, OnChanges {
       }
     }
     this.activeFiltersCount = Object.keys(this.dto).length;
+    // Avaliar o modo primeiro
     this.evaluateMode();
+    // Só então aplicar a preferência de advancedOpen conforme o modo efetivo
+    if (cfgShowAdvanced !== undefined) {
+      this.advancedOpen = this.modeState === 'filter' && !!cfgShowAdvanced;
+    }
+
     this.quickControl.valueChanges
       .pipe(
         debounceTime(this.changeDebounceMs),
@@ -543,6 +576,12 @@ export class PraxisFilter implements OnInit, OnChanges {
         this.persist();
       });
     this.loadSchema();
+  }
+
+  ngAfterViewInit(): void {
+    // Set overlayOrigin after view initialization to avoid ExpressionChangedAfterItHasBeenCheckedError
+    this.overlayOrigin = this.anchorRef;
+    this.cdr.detectChanges();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -601,14 +640,14 @@ export class PraxisFilter implements OnInit, OnChanges {
   toggleAdvanced(): void {
     this.advancedOpen = !this.advancedOpen;
     if (!this.advancedOpen) {
-      this.advancedBtn?.elementRef.nativeElement.focus();
+      this.anchorRef?.elementRef.nativeElement.focus();
     }
     this.saveConfig();
   }
 
   onOverlayDetach(): void {
     this.advancedOpen = false;
-    this.advancedBtn?.elementRef.nativeElement.focus();
+    this.anchorRef?.elementRef.nativeElement.focus();
     this.saveConfig();
   }
 

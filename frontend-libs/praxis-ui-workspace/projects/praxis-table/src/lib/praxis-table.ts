@@ -126,15 +126,7 @@ export interface RowActionsBehavior {
               config.behavior?.filtering?.advancedFilters?.settings
                 ?.changeDebounceMs ?? 300
             "
-            [i18n]="
-              config.behavior?.filtering?.advancedFilters?.settings?.placeholder
-                ? {
-                    searchPlaceholder:
-                      config.behavior?.filtering?.advancedFilters?.settings
-                        ?.placeholder,
-                  }
-                : undefined
-            "
+            [i18n]="getFilterI18n()"
             [mode]="
               config.behavior?.filtering?.advancedFilters?.settings?.mode ??
               'auto'
@@ -185,15 +177,7 @@ export interface RowActionsBehavior {
             config.behavior?.filtering?.advancedFilters?.settings
               ?.changeDebounceMs ?? 300
           "
-          [i18n]="
-            config.behavior?.filtering?.advancedFilters?.settings?.placeholder
-              ? {
-                  searchPlaceholder:
-                    config.behavior?.filtering?.advancedFilters?.settings
-                      ?.placeholder,
-                }
-              : undefined
-          "
+          [i18n]="getFilterI18n()"
           [mode]="
             config.behavior?.filtering?.advancedFilters?.settings?.mode ??
             'auto'
@@ -313,7 +297,7 @@ export interface RowActionsBehavior {
                 (click)="onRowAction(getActionId(a), row, $event)"
                 [disabled]="isActionDisabled(a, row)"
               >
-                <mat-icon matMenuIcon>{{ a.icon }}</mat-icon>
+                <mat-icon>{{ a.icon }}</mat-icon>
                 <span>{{ a.label || getActionId(a) }}</span>
               </button>
             </ng-container>
@@ -350,12 +334,12 @@ export interface RowActionsBehavior {
         justify-content: flex-end;
         height: 100%;
         padding-inline: 12px;
-        gap: var(--actions-gap, 8px);
+        gap: 8px;
         white-space: nowrap;
       }
 
       .praxis-actions-cell.dense {
-        --actions-gap: 6px;
+        gap: 6px;
       }
 
       .praxis-icon-btn {
@@ -390,7 +374,7 @@ export interface RowActionsBehavior {
       }
 
       .praxis-icon-btn.destructive mat-icon {
-        color: var(--error, #ff6b6b);
+        color: #ff6b6b;
       }
 
       .mat-mdc-tooltip.praxis-tooltip {
@@ -598,9 +582,10 @@ export class PraxisTable
   }
 
   private setupResizeObserver(): void {
+    const behavior = this.config.actions?.row?.behavior;
     if (
-      this.config.actions?.row?.behavior?.maxInline === 'auto' &&
-      this.config.actions.row.behavior?.autoStrategy === 'measure' &&
+      behavior?.maxInline === 'auto' &&
+      behavior?.autoStrategy === 'measure' &&
       this.actionsHeaderCell
     ) {
       this.resizeObserver = new ResizeObserver(() =>
@@ -704,46 +689,81 @@ export class PraxisTable
   }
 
   onRowClicked(row: any, index: number): void {
+    console.debug('[PraxisTable] onRowClicked', { index, rowId: row?.id });
     this.rowClick.emit({ row, index });
   }
 
   onRowAction(action: string, row: any, event: Event): void {
+    console.debug('[PraxisTable] onRowAction: click received', {
+      action,
+      rowId: row?.id,
+      target: (event?.target as HTMLElement)?.tagName,
+    });
     event.stopPropagation();
-    (event.target as HTMLElement).blur();
+    (event.target as HTMLElement).blur?.();
+
     const cfg = this.config.actions?.row?.actions.find(
       (a) => this.getActionId(a) === action,
     );
-    if (action === 'delete' && (this.autoDelete || cfg?.autoDelete)) {
-      this.beforeDelete.emit(row);
+    const cfgAutoDelete = cfg?.autoDelete;
+    const willAutoDelete = action === 'delete' && !!(this.autoDelete || cfgAutoDelete);
+    console.debug('[PraxisTable] onRowAction: resolved config', {
+      foundConfig: !!cfg,
+      cfgAutoDelete,
+      inputAutoDelete: this.autoDelete,
+      willAutoDelete,
+    });
+
+    if (willAutoDelete) {
+      try {
+        this.beforeDelete.emit(row);
+        console.debug('[PraxisTable] onRowAction: beforeDelete emitted', { rowId: row?.id });
+      } catch (e) {
+        console.warn('[PraxisTable] onRowAction: beforeDelete emit error', e);
+      }
+
       this.snackBar.open(
         this.config.messages?.actions?.progress?.delete || 'Removendo...',
       );
+      console.debug('[PraxisTable] onRowAction: calling crudService.delete', { id: row?.id });
       this.crudService.delete(row.id).subscribe({
         next: () => {
+          console.debug('[PraxisTable] onRowAction: delete success', { id: row?.id });
           this.snackBar.open(
-            this.config.messages?.actions?.success?.delete ||
-              'Registro removido',
+            this.config.messages?.actions?.success?.delete || 'Registro removido',
             undefined,
             { duration: 3000 },
           );
-          this.afterDelete.emit(row);
+          try {
+            this.afterDelete.emit(row);
+            console.debug('[PraxisTable] onRowAction: afterDelete emitted', { id: row?.id });
+          } catch (e) {
+            console.warn('[PraxisTable] onRowAction: afterDelete emit error', e);
+          }
           this.fetchData();
         },
         error: (error) => {
+          console.error('[PraxisTable] onRowAction: delete error', { id: row?.id, error });
           this.snackBar.open(
             this.config.messages?.actions?.errors?.delete || 'Erro ao remover',
             undefined,
             { duration: 3000 },
           );
-          this.deleteError.emit({ row, error });
+          try {
+            this.deleteError.emit({ row, error });
+          } catch (e) {
+            console.warn('[PraxisTable] onRowAction: deleteError emit error', e);
+          }
         },
       });
     } else {
+      console.debug('[PraxisTable] onRowAction: emitting rowAction', { action, rowId: row?.id });
       this.rowAction.emit({ action, row });
     }
   }
 
   onToolbarAction(event: { action: string }): void {
+    console.debug('[PraxisTable] onToolbarAction received', event);
     const bulk = this.config.actions?.bulk?.actions.find(
       (a) => this.getActionId(a) === event.action,
     );
@@ -751,21 +771,21 @@ export class PraxisTable
       if (event.action === 'delete' && (this.autoDelete || bulk.autoDelete)) {
         const rows = this.selection.selected.slice();
         const ids = rows.map((r) => r.id);
+        console.debug('[PraxisTable] onToolbarAction: bulk delete requested', { count: rows.length, ids });
         this.beforeBulkDelete.emit(rows);
         const progress = (e: BatchDeleteProgress) => {
           this.snackBar.open(
-            (this.config.messages?.actions?.progress?.deleteMultiple ||
-              'Removendo...') + ` ${e.index}/${e.total}`,
+            (this.config.messages?.actions?.progress?.deleteMultiple || 'Removendo...') + ` ${e.index}/${e.total}`,
             undefined,
             { duration: 1000 },
           );
         };
         this.crudService.deleteMany(ids, { progress }).subscribe({
           next: (result: BatchDeleteResult) => {
+            console.debug('[PraxisTable] onToolbarAction: bulk delete result', result);
             if (result.errors.length) {
               this.snackBar.open(
-                this.config.messages?.actions?.errors?.delete ||
-                  'Erro ao remover',
+                this.config.messages?.actions?.errors?.delete || 'Erro ao remover',
                 undefined,
                 { duration: 3000 },
               );
@@ -773,14 +793,10 @@ export class PraxisTable
               const failedRows = rows.filter((r) => failedIds.has(r.id));
               this.selection.clear();
               failedRows.forEach((r) => this.selection.select(r));
-              this.bulkDeleteError.emit({
-                rows: failedRows,
-                error: result.errors,
-              });
+              this.bulkDeleteError.emit({ rows: failedRows, error: result.errors });
             } else {
               this.snackBar.open(
-                this.config.messages?.actions?.success?.delete ||
-                  'Registros removidos',
+                this.config.messages?.actions?.success?.delete || 'Registros removidos',
                 undefined,
                 { duration: 3000 },
               );
@@ -790,9 +806,9 @@ export class PraxisTable
             this.fetchData();
           },
           error: (error) => {
+            console.error('[PraxisTable] onToolbarAction: bulk delete error', error);
             this.snackBar.open(
-              this.config.messages?.actions?.errors?.delete ||
-                'Erro ao remover',
+              this.config.messages?.actions?.errors?.delete || 'Erro ao remover',
               undefined,
               { duration: 3000 },
             );
@@ -800,12 +816,11 @@ export class PraxisTable
           },
         });
       } else {
-        this.bulkAction.emit({
-          action: event.action,
-          rows: this.selection.selected,
-        });
+        console.debug('[PraxisTable] onToolbarAction: emitting bulkAction', { action: event.action, selected: this.selection.selected.length });
+        this.bulkAction.emit({ action: event.action, rows: this.selection.selected });
       }
     } else {
+      console.debug('[PraxisTable] onToolbarAction: emitting toolbarAction', event);
       this.toolbarAction.emit(event);
     }
   }

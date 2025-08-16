@@ -9,9 +9,9 @@ import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-
 
 import { Subject, takeUntil } from 'rxjs';
 
-import { 
-  RuleBuilderState, 
-  RuleNode, 
+import {
+  RuleBuilderState,
+  RuleNode,
   RuleNodeType,
   RuleNodeConfig
 } from '../models/rule-builder.model';
@@ -33,20 +33,20 @@ import { RuleNodeComponent } from './rule-node.component';
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="rule-canvas" 
-         (drop)="onDrop($event)" 
+    <div class="rule-canvas"
+         (drop)="onDrop($event)"
          (dragover)="onDragOver($event)"
          (dragenter)="onDragEnter($event)"
          (dragleave)="onDragLeave($event)">
-      
+
       <!-- Empty State -->
       <div *ngIf="isEmpty" class="empty-state">
         <div class="empty-state-content">
           <mat-icon class="empty-icon">rule</mat-icon>
           <h3>Start Building Rules</h3>
           <p>Drag fields from the sidebar or click the button below to create your first rule</p>
-          
-          <button mat-raised-button 
+
+          <button mat-raised-button
                   color="primary"
                   (click)="addFirstRule()">
             <mat-icon>add</mat-icon>
@@ -57,7 +57,7 @@ import { RuleNodeComponent } from './rule-node.component';
 
       <!-- Rule Tree -->
       <div *ngIf="!isEmpty" class="rule-tree">
-        <div *ngFor="let nodeId of state?.rootNodes; trackBy: trackByNodeId" 
+        <div *ngFor="let nodeId of state?.rootNodes; trackBy: trackByNodeId"
              class="root-rule-container">
           <praxis-rule-node
             [node]="getNode(nodeId)"
@@ -71,7 +71,7 @@ import { RuleNodeComponent } from './rule-node.component';
             (childAdded)="addChildNode(nodeId, $event)"
             (childMoved)="moveChildNode($event)">
           </praxis-rule-node>
-          
+
           <!-- Connector for multiple root rules -->
           <div *ngIf="!isLastRootNode(nodeId)" class="root-connector">
             <div class="connector-line"></div>
@@ -89,15 +89,15 @@ import { RuleNodeComponent } from './rule-node.component';
       </div>
 
       <!-- Floating Add Menu -->
-      <div class="floating-add-menu" 
+      <div class="floating-add-menu"
            [class.expanded]="showAddMenu">
-        <button mat-fab 
+        <button mat-fab
                 color="primary"
                 (click)="toggleAddMenu()"
                 class="main-add-button">
           <mat-icon>{{ showAddMenu ? 'close' : 'add' }}</mat-icon>
         </button>
-        
+
         <div *ngIf="showAddMenu" class="add-menu-options">
           <button *ngFor="let option of addMenuOptions"
                   mat-mini-fab
@@ -293,7 +293,7 @@ import { RuleNodeComponent } from './rule-node.component';
       .rule-canvas {
         padding: 16px;
       }
-      
+
       .floating-add-menu {
         bottom: 16px;
         right: 16px;
@@ -304,7 +304,7 @@ import { RuleNodeComponent } from './rule-node.component';
 export class RuleCanvasComponent implements OnInit, OnDestroy {
   @Input() state: RuleBuilderState | null = null;
   @Input() fieldSchemas: Record<string, FieldSchema> = {};
-  
+
   @Output() nodeSelected = new EventEmitter<string>();
   @Output() nodeAdded = new EventEmitter<{ type: RuleNodeType; parentId?: string; config?: RuleNodeConfig }>();
   @Output() nodeUpdated = new EventEmitter<{ nodeId: string; updates: Partial<RuleNode> }>();
@@ -314,12 +314,13 @@ export class RuleCanvasComponent implements OnInit, OnDestroy {
 
   isDragOver = false;
   showAddMenu = false;
-  
+
   addMenuOptions = [
     { type: RuleNodeType.FIELD_CONDITION, icon: 'compare_arrows', label: 'Field Condition', color: 'primary' },
     { type: RuleNodeType.AND_GROUP, icon: 'join_inner', label: 'AND Group', color: 'accent' },
     { type: RuleNodeType.OR_GROUP, icon: 'join_full', label: 'OR Group', color: 'warn' },
     { type: RuleNodeType.REQUIRED_IF, icon: 'star', label: 'Required If', color: 'primary' },
+    { type: RuleNodeType.VISIBLE_IF, icon: 'visibility', label: 'Visible If', color: 'accent' },
     { type: RuleNodeType.FOR_EACH, icon: 'repeat', label: 'For Each', color: 'accent' }
   ];
 
@@ -406,7 +407,7 @@ export class RuleCanvasComponent implements OnInit, OnDestroy {
 
     const canvas = event.currentTarget as Element;
     const related = event.relatedTarget as Element;
-    
+
     if (!canvas.contains(related)) {
       this.isDragOver = false;
     }
