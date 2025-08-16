@@ -19,6 +19,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatBadgeModule } from '@angular/material/badge';
 import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import {
   GenericCrudService,
@@ -78,6 +79,7 @@ const DEFAULT_I18N: I18n = {
     MatButtonModule,
     MatChipsModule,
     MatIconModule,
+    MatBadgeModule,
     MatProgressBarModule,
     MatSnackBarModule,
     DynamicFieldLoaderDirective,
@@ -95,10 +97,25 @@ const DEFAULT_I18N: I18n = {
             [fields]="[quickFieldMeta]"
             [formGroup]="quickForm"
           ></ng-container>
+          <button
+            #advancedBtn="cdkOverlayOrigin"
+            cdkOverlayOrigin
+            mat-icon-button
+            type="button"
+            [matBadge]="activeFiltersCount"
+            matBadgeOverlap="false"
+            [matBadgeHidden]="!activeFiltersCount"
+            [color]="activeFiltersCount ? 'primary' : undefined"
+            (click)="toggleAdvanced()"
+            aria-label="{{ i18nLabels.advanced }}"
+          >
+            <mat-icon>tune</mat-icon>
+          </button>
         </div>
         <ng-template #fallbackQuick>
           <mat-form-field appearance="outline" class="quick-field">
             <mat-label>{{ i18nLabels.searchPlaceholder }}</mat-label>
+            <mat-icon matPrefix>search</mat-icon>
             <input
               matInput
               [formControl]="quickControl"
@@ -106,6 +123,31 @@ const DEFAULT_I18N: I18n = {
               (keydown.enter)="onSubmit()"
               (keydown.escape)="onQuickClear()"
             />
+            <button
+              mat-icon-button
+              matSuffix
+              type="button"
+              *ngIf="quickControl.value"
+              (click)="onQuickClear()"
+              aria-label="{{ i18nLabels.clear }}"
+            >
+              <mat-icon>close</mat-icon>
+            </button>
+            <button
+              #advancedBtn="cdkOverlayOrigin"
+              cdkOverlayOrigin
+              mat-icon-button
+              matSuffix
+              type="button"
+              [matBadge]="activeFiltersCount"
+              matBadgeOverlap="false"
+              [matBadgeHidden]="!activeFiltersCount"
+              [color]="activeFiltersCount ? 'primary' : undefined"
+              (click)="toggleAdvanced()"
+              aria-label="{{ i18nLabels.advanced }}"
+            >
+              <mat-icon>tune</mat-icon>
+            </button>
             <mat-hint *ngIf="quickField" class="fallback-hint">
               {{ i18nLabels.quickFieldNotFound }}
             </mat-hint>
@@ -120,15 +162,6 @@ const DEFAULT_I18N: I18n = {
         </div>
         <button mat-raised-button color="primary" (click)="onSubmit()">
           {{ i18nLabels.apply }}
-        </button>
-        <button
-          #advancedBtn="cdkOverlayOrigin"
-          cdkOverlayOrigin
-          mat-button
-          type="button"
-          (click)="toggleAdvanced()"
-        >
-          {{ advancedOpen ? i18nLabels.edit : i18nLabels.advanced }}
         </button>
         <button mat-button type="button" (click)="onClear()">
           {{ i18nLabels.clear }}
@@ -365,6 +398,7 @@ export class PraxisFilter implements OnInit, OnChanges {
   private dto: Record<string, any> = {};
   modeState: 'filter' | 'card' = 'filter';
   advancedOpen = false;
+  activeFiltersCount = 0;
   saving = false;
   i18nLabels: I18n = DEFAULT_I18N;
   private placeholder?: string;
@@ -437,6 +471,7 @@ export class PraxisFilter implements OnInit, OnChanges {
         this.quickControl.setValue(this.value[this.quickField]);
       }
     }
+    this.activeFiltersCount = Object.keys(this.dto).length;
     this.evaluateMode();
     this.quickControl.valueChanges
       .pipe(
@@ -507,6 +542,7 @@ export class PraxisFilter implements OnInit, OnChanges {
 
   onSubmit(): void {
     this.syncFormsToDto();
+    this.activeFiltersCount = Object.keys(this.dto).length;
     this.submit.emit({ ...this.dto });
     this.persist();
   }
@@ -516,6 +552,7 @@ export class PraxisFilter implements OnInit, OnChanges {
     this.alwaysForm.reset(undefined, { emitEvent: false });
     this.advancedForm?.reset(undefined, { emitEvent: false });
     this.dto = {};
+    this.activeFiltersCount = 0;
     this.clear.emit();
     this.change.emit({});
     this.clearPersisted();
@@ -595,9 +632,10 @@ export class PraxisFilter implements OnInit, OnChanges {
           return { ...cfg };
         }
         const names = new Set(this.schemaMetas.map((m) => m.name));
-        const quickField = cfg.quickField && names.has(cfg.quickField)
-          ? cfg.quickField
-          : undefined;
+        const quickField =
+          cfg.quickField && names.has(cfg.quickField)
+            ? cfg.quickField
+            : undefined;
         const alwaysVisibleFields = cfg.alwaysVisibleFields?.filter((f) =>
           names.has(f),
         );

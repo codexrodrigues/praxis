@@ -138,6 +138,27 @@ describe('PraxisFilter', () => {
     expect(submitSpy).toHaveBeenCalledWith({ q: 'abc' });
   });
 
+  it('should update activeFiltersCount on submit', () => {
+    createComponent('q');
+    component.quickControl.setValue('abc');
+    component.onSubmit();
+    expect(component.activeFiltersCount).toBe(1);
+  });
+
+  it('should reset activeFiltersCount on clear', () => {
+    createComponent('q');
+    component.quickControl.setValue('abc');
+    component.onSubmit();
+    expect(component.activeFiltersCount).toBe(1);
+    component.onClear();
+    expect(component.activeFiltersCount).toBe(0);
+  });
+
+  it('should initialize activeFiltersCount from initial value', () => {
+    createComponent('q', [], undefined, { q: 'v1', x: 1 });
+    expect(component.activeFiltersCount).toBe(2);
+  });
+
   it('should emit change respecting changeDebounceMs', fakeAsync(() => {
     createComponent();
     const spy = jasmine.createSpy('change');
