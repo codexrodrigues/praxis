@@ -496,6 +496,7 @@ export class PraxisFilter implements OnInit, OnChanges {
   }
 
   onSubmit(): void {
+    this.syncFormsToDto();
     this.submit.emit({ ...this.dto });
     this.persist();
   }
@@ -795,6 +796,30 @@ export class PraxisFilter implements OnInit, OnChanges {
       ...(this.placeholder ? { searchPlaceholder: this.placeholder } : {}),
       ...this.i18n,
     };
+  }
+
+  private syncFormsToDto(): void {
+    if (this.quickField) {
+      const val = this.quickControl.value;
+      if (val === undefined || val === null || val === '') {
+        delete this.dto[this.quickField];
+      } else {
+        this.dto[this.quickField] = val;
+      }
+    }
+    [this.alwaysForm, this.advancedForm].forEach((form) => {
+      if (form) {
+        const raw = form.getRawValue();
+        Object.keys(raw).forEach((key) => {
+          const value = (raw as any)[key];
+          if (value === undefined || value === null || value === '') {
+            delete this.dto[key];
+          } else {
+            this.dto[key] = value;
+          }
+        });
+      }
+    });
   }
 
   private persist(): void {

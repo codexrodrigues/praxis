@@ -129,6 +129,15 @@ describe('PraxisFilter', () => {
     expect(spy).toHaveBeenCalled();
   });
 
+  it('should submit latest quick field value without waiting for debounce', () => {
+    createComponent('q');
+    const submitSpy = jasmine.createSpy('submit');
+    component.submit.subscribe(submitSpy);
+    component.quickControl.setValue('abc');
+    component.onSubmit();
+    expect(submitSpy).toHaveBeenCalledWith({ q: 'abc' });
+  });
+
   it('should emit change respecting changeDebounceMs', fakeAsync(() => {
     createComponent();
     const spy = jasmine.createSpy('change');
