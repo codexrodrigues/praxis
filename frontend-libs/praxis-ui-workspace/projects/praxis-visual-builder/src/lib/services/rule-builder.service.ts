@@ -66,7 +66,9 @@ export class RuleBuilderService {
     this.config = config;
     this.dslValidator = new DslValidator({
       knownFields: Object.keys(config.fieldSchemas || {}),
-      knownFunctions: config.customFunctions?.map((f) => (f as any)?.name).filter(Boolean) || [],
+      knownFunctions:
+        config.customFunctions?.map((f) => (f as any)?.name).filter(Boolean) ||
+        [],
       enablePerformanceWarnings: true,
     });
 
@@ -421,7 +423,15 @@ export class RuleBuilderService {
   }
 
   /**
-   * Import rules from external source
+   * Import rules from external source.
+   *
+   * Empty strings or structures with no data are ignored to preserve the
+   * current state. When parsing JSON, the specification type must be
+   * present otherwise an error is thrown, ensuring business rules are
+   * explicit and valid.
+   *
+   * @throws Error when the specification type is missing or the format is
+   * unsupported.
    */
   import(content: string, options: ImportOptions): void {
     try {
@@ -429,11 +439,29 @@ export class RuleBuilderService {
 
       switch (options.format) {
         case 'json':
+          if (!content || content.trim().length === 0) {
+            return;
+          }
           const json = JSON.parse(content);
+          if (
+            json == null ||
+            (Array.isArray(json) && json.length === 0) ||
+            (typeof json === 'object' &&
+              !Array.isArray(json) &&
+              Object.keys(json).length === 0)
+          ) {
+            return;
+          }
+          if (typeof json === 'object' && (json as any).type == null) {
+            throw new Error('Missing specification type');
+          }
           specification = SpecificationFactory.fromJSON(json);
           break;
 
         case 'dsl':
+          if (!content || content.trim().length === 0) {
+            return;
+          }
           specification = this.dslParser.parse(content);
           break;
 
@@ -818,7 +846,11 @@ export class RuleBuilderService {
       if (node.children && node.children.length > 0) {
         // Check if children are RuleNode objects or string IDs
         const firstChild = node.children[0] as any;
-        if (typeof firstChild === 'object' && firstChild && 'id' in firstChild) {
+        if (
+          typeof firstChild === 'object' &&
+          firstChild &&
+          'id' in firstChild
+        ) {
           // Children are RuleNode objects, need to flatten them
           (node.children as any[]).forEach((child: any) => {
             if (child && typeof child === 'object' && child.id) {
