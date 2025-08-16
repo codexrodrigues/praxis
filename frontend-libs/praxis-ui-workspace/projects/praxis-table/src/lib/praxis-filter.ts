@@ -107,7 +107,7 @@ const DEFAULT_I18N: I18n = {
             [matBadgeHidden]="!activeFiltersCount"
             [color]="activeFiltersCount ? 'primary' : undefined"
             (click)="toggleAdvanced()"
-            aria-label="{{ i18nLabels.advanced }}"
+            [attr.aria-label]="i18nLabels.advanced"
           >
             <mat-icon>tune</mat-icon>
           </button>
@@ -129,7 +129,7 @@ const DEFAULT_I18N: I18n = {
               type="button"
               *ngIf="quickControl.value"
               (click)="onQuickClear()"
-              aria-label="{{ i18nLabels.clear }}"
+              [attr.aria-label]="i18nLabels.clear"
             >
               <mat-icon>close</mat-icon>
             </button>
@@ -144,7 +144,7 @@ const DEFAULT_I18N: I18n = {
               [matBadgeHidden]="!activeFiltersCount"
               [color]="activeFiltersCount ? 'primary' : undefined"
               (click)="toggleAdvanced()"
-              aria-label="{{ i18nLabels.advanced }}"
+              [attr.aria-label]="i18nLabels.advanced"
             >
               <mat-icon>tune</mat-icon>
             </button>
@@ -206,7 +206,7 @@ const DEFAULT_I18N: I18n = {
       </div>
       <ng-template
         cdkConnectedOverlay
-        [cdkConnectedOverlayOrigin]="advancedBtn"
+        [cdkConnectedOverlayOrigin]="advancedBtn!"
         [cdkConnectedOverlayOpen]="advancedOpen"
         [cdkConnectedOverlayHasBackdrop]="true"
         (backdropClick)="toggleAdvanced()"
@@ -380,7 +380,6 @@ export class PraxisFilter implements OnInit, OnChanges {
   @Output() modeChange = new EventEmitter<'filter' | 'card'>();
   @Output() requestSearch = this.submit;
   @Output() tagsChange = new EventEmitter<FilterTag[]>();
-  @Output() settingsChange = new EventEmitter<FilterConfig>();
 
   quickControl = new FormControl<string>('', { nonNullable: true });
   quickForm = new FormGroup<Record<string, FormControl<unknown>>>({});
@@ -649,7 +648,6 @@ export class PraxisFilter implements OnInit, OnChanges {
       ref.applied$.pipe(take(1)).subscribe((cfg: FilterConfig) => {
         const safe = validateConfig(cfg);
         applyChanges(safe);
-        this.settingsChange.emit(safe);
         persistConfig(safe, 'Configurações aplicadas');
         ref.close('save');
       });
@@ -657,7 +655,6 @@ export class PraxisFilter implements OnInit, OnChanges {
       ref.saved$.pipe(take(1)).subscribe((cfg: FilterConfig) => {
         const safe = validateConfig(cfg);
         applyChanges(safe);
-        this.settingsChange.emit(safe);
         persistConfig(safe, 'Configurações salvas');
       });
     } catch (err) {

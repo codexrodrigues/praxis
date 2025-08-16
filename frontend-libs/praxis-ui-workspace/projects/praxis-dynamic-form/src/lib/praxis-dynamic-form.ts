@@ -87,500 +87,494 @@ import { normalizeFormConfig } from './utils/normalize-form-config';
     MatMenuModule,
   ],
   template: `
-    @if (isLoading) {
-      <!-- Loading State -->
-      <div class="form-loading">
-        <mat-progress-spinner diameter="40"></mat-progress-spinner>
-        <p>Carregando formulário...</p>
-      </div>
-    } @else if (initializationStatus === 'error') {
-      <!-- Error State -->
-      <div class="form-error">
-        <mat-icon color="warn">error</mat-icon>
-        <h3>{{ getErrorTitle() }}</h3>
-        <p>{{ currentErrorMessage }}</p>
-        @if (isRecoverable) {
-          <button mat-stroked-button (click)="retryInitialization()">
-            <mat-icon>refresh</mat-icon>
-            Tentar Novamente
-          </button>
-        }
-        <button mat-button (click)="showDetailedError()" class="show-details">
-          Ver Detalhes Técnicos
-        </button>
-      </div>
-    } @else if (initializationStatus === 'success') {
-      <!-- Configuration Controls -->
-      @if (shouldShowConfigControls) {
-        <div class="form-config-controls">
-          <button
-            type="button"
-            mat-icon-button
-            (click)="toggleEditMode()"
-            [matTooltip]="
-              effectiveEditModeEnabled
-                ? 'Desabilitar customização do formulário'
-                : 'Habilitar customização do formulário'
-            "
-            class="layout-customize-toggle"
-            [class.active]="effectiveEditModeEnabled"
-            [attr.aria-label]="
-              effectiveEditModeEnabled
-                ? 'Sair do modo de customização de layout'
-                : 'Entrar no modo de customização de layout'
-            "
-          >
-            <mat-icon>{{
-              effectiveEditModeEnabled ? 'design_services' : 'tune'
-            }}</mat-icon>
-          </button>
+@if (isLoading) {
+  <!-- Loading State -->
+  <div class="form-loading">
+    <mat-progress-spinner diameter="40"></mat-progress-spinner>
+    <p>Carregando formulário...</p>
+  </div>
+} @else if (initializationStatus === 'error') {
+  <!-- Error State -->
+  <div class="form-error">
+    <mat-icon color="warn">error</mat-icon>
+    <h3>{{ getErrorTitle() }}</h3>
+  <p>{{ currentErrorMessage }}</p>
+@if (isRecoverable) {
+    <button mat-stroked-button (click)="retryInitialization()">
+      <mat-icon>refresh</mat-icon>
+    Tentar Novamente
+    </button>
+  }
+  <button mat-button (click)="showDetailedError()" class="show-details">
+    Ver Detalhes Técnicos
+  </button>
+  </div>
+} @else if (initializationStatus === 'success') {
+  <!-- Configuration Controls -->
+@if (shouldShowConfigControls) {
+    <div class="form-config-controls">
+    <button
+      type="button"
+    mat-icon-button
+    (click)="toggleEditMode()"
+      [matTooltip]="
+    effectiveEditModeEnabled
+      ? 'Desabilitar customização do formulário'
+      : 'Habilitar customização do formulário'
+    "
+    class="layout-customize-toggle"
+      [class.active]="effectiveEditModeEnabled"
+      [attr.aria-label]="
+    effectiveEditModeEnabled
+      ? 'Sair do modo de customização de layout'
+      : 'Entrar no modo de customização de layout'
+    "
+    >
+    <mat-icon>{{
+      effectiveEditModeEnabled ? 'design_services' : 'tune'
+    }}</mat-icon>
+    </button>
 
-          @if (effectiveEditModeEnabled) {
-            <button
-              type="button"
-              mat-icon-button
-              (click)="openConfigEditor()"
-              matTooltip="Configurar formulário"
-              [disabled]="isLoading"
-              class="config-button"
-            >
-              <mat-icon>settings</mat-icon>
-            </button>
-          }
-        </div>
-      }
-
-      <!-- Form Content -->
-      <form
-        [formGroup]="form"
-        (ngSubmit)="onSubmit()"
-        class="praxis-dynamic-form"
-        [class.layout-edit-mode]="effectiveEditModeEnabled"
-        [attr.aria-label]="'Formulário ' + (config.metadata?.version || '')"
-      >
-        @for (section of config.sections; track section.id) {
-          <div
-            class="form-section"
-            [class.layout-editable]="effectiveEditModeEnabled"
-            [attr.data-section-id]="section.id"
-          >
-            @if (section.title) {
-              <h3 class="section-title">{{ section.title }}</h3>
-            }
-            @if (section.description) {
-              <p class="section-description">{{ section.description }}</p>
-            }
-
-            @for (row of section.rows; track $index; let rowIndex = $index) {
-              <div
-                class="form-row"
-                [class.layout-editable]="effectiveEditModeEnabled"
-                [attr.data-row-index]="rowIndex"
-                [attr.data-section-id]="section.id"
-              >
-                @for (
-                  column of row.columns;
-                  track $index;
-                  let colIndex = $index
-                ) {
-                  @if (isColumnVisible(column)) {
-                    <div
-                      class="form-column"
-                      [class.layout-editable]="effectiveEditModeEnabled"
-                      [attr.data-column-index]="colIndex"
-                      [attr.data-row-index]="rowIndex"
-                      [attr.data-section-id]="section.id"
-                    >
-                      <ng-container
-                        dynamicFieldLoader
-                        [fields]="getColumnFields(column)"
-                        [formGroup]="form"
-                      >
-                      </ng-container>
-                    </div>
-                  }
-                }
-              </div>
-            }
-          </div>
-        }
-
-        <div
-          class="form-actions"
-          [class.loading]="isLoading"
-          [style.justify-content]="
-            config.actions?.position === 'justified' ||
-            config.actions?.position === 'split'
-              ? 'space-between'
-              : config.actions?.position
-          "
-          [ngClass]="{
-            ['position-' + (config.actions?.position || 'right')]: true,
-            ['orientation-' + (config.actions?.orientation || 'horizontal')]: true,
-            ['spacing-' + (config.actions?.spacing || 'normal')]: true,
-            'mobile-menu-active':
-              config.actions?.mobile?.collapseToMenu ?? false
-          }"
+  @if (effectiveEditModeEnabled) {
+      <button
+        type="button"
+      mat-icon-button
+      (click)="openConfigEditor()"
+      matTooltip="Configurar formulário"
+        [disabled]="isLoading"
+      class="config-button"
         >
-          <!-- Desktop/Normal View -->
-          <div class="desktop-actions">
-            @for (button of getActionButtons(); track button.id) {
-              @if (button.visible) {
-                <button
-                  [type]="button.type || 'button'"
-                  [ngClass]="{
-                    'mat-raised-button':
-                      (typeof button.variant === 'string' &&
-                        button.variant === 'raised') ||
-                      !button.variant,
-                    'mat-stroked-button':
-                      typeof button.variant === 'string' &&
-                      button.variant === 'stroked',
-                    'mat-flat-button':
-                      typeof button.variant === 'string' &&
-                      button.variant === 'flat',
-                    'mat-fab':
-                      typeof button.variant === 'string' &&
-                      button.variant === 'fab',
-                  }"
-                  mat-button
-                  [color]="button.color"
-                  [disabled]="
-                    button.disabled ||
-                    (button.type === 'submit' && form.invalid)
-                  "
-                  [matTooltip]="button.tooltip"
-                  (click)="onActionButtonClick(button, $event)"
-                  [attr.aria-label]="button.label"
-                >
-                  @if (button.icon) {
-                    <mat-icon>{{ button.icon }}</mat-icon>
-                  }
-                  <span>{{ button.label }}</span>
-                </button>
-              }
-            }
-          </div>
-
-          <!-- Mobile Collapsed View -->
-          @if (config.actions?.mobile?.collapseToMenu) {
-            <div class="mobile-actions">
-              @for (button of getVisibleButtons(); track button.id) {
-                <button
-                  [type]="button.type || 'button'"
-                  [ngClass]="{
-                    'mat-raised-button':
-                      (typeof button.variant === 'string' &&
-                        button.variant === 'raised') ||
-                      !button.variant,
-                    'mat-stroked-button':
-                      typeof button.variant === 'string' &&
-                      button.variant === 'stroked',
-                    'mat-flat-button':
-                      typeof button.variant === 'string' &&
-                      button.variant === 'flat',
-                    'mat-fab':
-                      typeof button.variant === 'string' &&
-                      button.variant === 'fab',
-                  }"
-                  mat-button
-                  [color]="button.color"
-                  [disabled]="
-                    button.disabled ||
-                    (button.type === 'submit' && form.invalid)
-                  "
-                  [matTooltip]="button.tooltip"
-                  (click)="onActionButtonClick(button, $event)"
-                  [attr.aria-label]="button.label"
-                >
-                  @if (button.icon) {
-                    <mat-icon>{{ button.icon }}</mat-icon>
-                  }
-                  <span>{{ button.label }}</span>
-                </button>
-              }
-              @if (getCollapsedButtons().length > 0) {
-                <button
-                  mat-icon-button
-                  [matMenuTriggerFor]="actionsMenu"
-                  aria-label="More actions"
-                >
-                  <mat-icon>more_vert</mat-icon>
-                </button>
-                <mat-menu #actionsMenu="matMenu">
-                  @for (button of getCollapsedButtons(); track button.id) {
-                    <button
-                      mat-menu-item
-                      (click)="onActionButtonClick(button, $event)"
-                      [disabled]="button.disabled"
-                    >
-                      @if (button.icon) {
-                        <mat-icon>{{ button.icon }}</mat-icon>
-                      }
-                      <span>{{ button.label }}</span>
-                    </button>
-                  }
-                </mat-menu>
-              }
-            </div>
-          }
-        </div>
-      </form>
+        <mat-icon>settings</mat-icon>
+        </button>
     }
-  `,
+    </div>
+  }
+
+  <!-- Form Content -->
+  <form
+    [formGroup]="form"
+  (ngSubmit)="onSubmit()"
+  class="praxis-dynamic-form"
+    [class.layout-edit-mode]="effectiveEditModeEnabled"
+    [attr.aria-label]="'Formulário ' + (config.metadata?.version || '')"
+    >
+    @for (section of config.sections; track section.id) {
+    <div
+      class="form-section"
+      [class.layout-editable]="effectiveEditModeEnabled"
+      [attr.data-section-id]="section.id"
+      >
+      @if (section.title) {
+      <h3 class="section-title">{{ section.title }}</h3>
+    }
+  @if (section.description) {
+      <p class="section-description">{{ section.description }}</p>
+    }
+
+  @for (row of section.rows; track $index; let rowIndex = $index) {
+      <div
+        class="form-row"
+        [class.layout-editable]="effectiveEditModeEnabled"
+        [attr.data-row-index]="rowIndex"
+        [attr.data-section-id]="section.id"
+        >
+        @for (
+        column of row.columns;
+      track $index;
+      let colIndex = $index
+    ) {
+      @if (isColumnVisible(column)) {
+          <div
+            class="form-column"
+            [class.layout-editable]="effectiveEditModeEnabled"
+            [attr.data-column-index]="colIndex"
+            [attr.data-row-index]="rowIndex"
+            [attr.data-section-id]="section.id"
+            >
+            <ng-container
+          dynamicFieldLoader
+            [fields]="getColumnFields(column)"
+            [formGroup]="form"
+            >
+            </ng-container>
+            </div>
+        }
+      }
+      </div>
+    }
+    </div>
+  }
+
+  <div
+    class="form-actions"
+    [class.loading]="isLoading"
+    [style.justify-content]="
+  config.actions?.position === 'justified' ||
+  config.actions?.position === 'split'
+    ? 'space-between'
+    : config.actions?.position
+  "
+    [ngClass]="formActionsClasses"
+    >
+    <!-- Desktop/Normal View -->
+  <div class="desktop-actions">
+    @for (button of getActionButtons(); track button.id) {
+  @if (button.visible) {
+      <button
+        [type]="button.type || 'button'"
+        [ngClass]="{
+      'mat-raised-button':
+      (typeof button.variant === 'string' &&
+        button.variant === 'raised') ||
+      !button.variant,
+        'mat-stroked-button':
+      typeof button.variant === 'string' &&
+      button.variant === 'stroked',
+        'mat-flat-button':
+      typeof button.variant === 'string' &&
+      button.variant === 'flat',
+        'mat-fab':
+      typeof button.variant === 'string' &&
+      button.variant === 'fab',
+    }"
+    mat-button
+      [color]="button.color"
+      [disabled]="
+    button.disabled ||
+    (button.type === 'submit' && form.invalid)
+    "
+      [matTooltip]="button.tooltip"
+    (click)="onActionButtonClick(button, $event)"
+      [attr.aria-label]="button.label"
+      >
+      @if (button.icon) {
+      <mat-icon>{{ button.icon }}</mat-icon>
+    }
+    <span>{{ button.label }}</span>
+    </button>
+  }
+}
+</div>
+
+<!-- Mobile Collapsed View -->
+@if (config.actions?.mobile?.collapseToMenu) {
+  <div class="mobile-actions">
+    @for (button of getVisibleButtons(); track button.id) {
+    <button
+      [type]="button.type || 'button'"
+      [ngClass]="{
+    'mat-raised-button':
+    (typeof button.variant === 'string' &&
+      button.variant === 'raised') ||
+    !button.variant,
+      'mat-stroked-button':
+    typeof button.variant === 'string' &&
+    button.variant === 'stroked',
+      'mat-flat-button':
+    typeof button.variant === 'string' &&
+    button.variant === 'flat',
+      'mat-fab':
+    typeof button.variant === 'string' &&
+    button.variant === 'fab',
+  }"
+  mat-button
+    [color]="button.color"
+    [disabled]="
+  button.disabled ||
+  (button.type === 'submit' && form.invalid)
+  "
+    [matTooltip]="button.tooltip"
+  (click)="onActionButtonClick(button, $event)"
+    [attr.aria-label]="button.label"
+    >
+    @if (button.icon) {
+    <mat-icon>{{ button.icon }}</mat-icon>
+  }
+  <span>{{ button.label }}</span>
+  </button>
+}
+@if (getCollapsedButtons().length > 0) {
+  <button
+    mat-icon-button
+    [matMenuTriggerFor]="actionsMenu"
+  aria-label="More actions"
+    >
+    <mat-icon>more_vert</mat-icon>
+    </button>
+    <mat-menu #actionsMenu="matMenu">
+    @for (button of getCollapsedButtons(); track button.id) {
+    <button
+      mat-menu-item
+    (click)="onActionButtonClick(button, $event)"
+      [disabled]="button.disabled"
+      >
+      @if (button.icon) {
+      <mat-icon>{{ button.icon }}</mat-icon>
+    }
+    <span>{{ button.label }}</span>
+    </button>
+  }
+  </mat-menu>
+}
+</div>
+}
+</div>
+</form>
+}
+`,
   styles: [
     `
-      :host {
-        display: block;
-        position: relative;
-      }
+:host {
+  display: block;
+  position: relative;
+}
 
-      .form-config-controls {
-        position: absolute;
-        top: 0;
-        right: 0;
-        display: flex;
-        gap: 0.5rem;
-        z-index: 100;
-        background-color: var(--md-sys-color-surface-container);
-        padding: 0.5rem;
-        border-radius: 0 0 0 8px;
-        border: 1px solid var(--md-sys-color-outline-variant);
-        border-top: none;
-        border-right: none;
-        /* Fixar largura para evitar mudança de posição */
-        min-width: 100px;
-        justify-content: flex-end;
-      }
+.form-config-controls {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  gap: 0.5rem;
+  z-index: 100;
+  background-color: var(--md-sys-color-surface-container);
+  padding: 0.5rem;
+  border-radius: 0 0 0 8px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-top: none;
+  border-right: none;
+  /* Fixar largura para evitar mudança de posição */
+  min-width: 100px;
+  justify-content: flex-end;
+}
 
-      .layout-customize-toggle {
-        transition: all 0.2s ease;
-        /* Fixar tamanho para evitar mudança de posição */
-        width: 40px;
-        height: 40px;
-        min-width: 40px;
-        min-height: 40px;
-      }
+.layout-customize-toggle {
+  transition: all 0.2s ease;
+  /* Fixar tamanho para evitar mudança de posição */
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+}
 
-      .layout-customize-toggle.active {
-        background-color: var(--md-sys-color-primary-container);
-        color: var(--md-sys-color-on-primary-container);
-        /* Remover animação que pode causar instabilidade */
-      }
+.layout-customize-toggle.active {
+  background-color: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  /* Remover animação que pode causar instabilidade */
+}
 
-      .config-button {
-        color: var(--md-sys-color-primary);
-      }
+.config-button {
+  color: var(--md-sys-color-primary);
+}
 
-      .form-loading {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 3rem;
-        text-align: center;
-        color: var(--md-sys-color-on-surface);
-        gap: 1rem;
-      }
+.form-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+  color: var(--md-sys-color-on-surface);
+  gap: 1rem;
+}
 
-      .form-loading p {
-        margin: 0;
-        font-size: 0.875rem;
-        opacity: 0.7;
-      }
+.form-loading p {
+  margin: 0;
+  font-size: 0.875rem;
+  opacity: 0.7;
+}
 
-      .form-error {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 3rem;
-        text-align: center;
-        color: var(--md-sys-color-error);
-        gap: 1rem;
-        border: 1px solid var(--md-sys-color-error);
-        border-radius: 8px;
-        background-color: var(--md-sys-color-error-container);
-        margin: 1rem;
-      }
+.form-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  text-align: center;
+  color: var(--md-sys-color-error);
+  gap: 1rem;
+  border: 1px solid var(--md-sys-color-error);
+  border-radius: 8px;
+  background-color: var(--md-sys-color-error-container);
+  margin: 1rem;
+}
 
-      .form-error h3 {
-        margin: 0;
-        color: var(--md-sys-color-on-error-container);
-      }
+.form-error h3 {
+  margin: 0;
+  color: var(--md-sys-color-on-error-container);
+}
 
-      .form-error p {
-        margin: 0;
-        color: var(--md-sys-color-on-error-container);
-        opacity: 0.8;
-      }
+.form-error p {
+  margin: 0;
+  color: var(--md-sys-color-on-error-container);
+  opacity: 0.8;
+}
 
-      .form-error button {
-        margin-top: 0.5rem;
-      }
+.form-error button {
+  margin-top: 0.5rem;
+}
 
-      .praxis-dynamic-form {
-        display: flex;
-        flex-direction: column;
-        transition: all 0.3s ease;
-      }
+.praxis-dynamic-form {
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+}
 
-      /* Layout Edit Mode - Visual Indicators */
-      .layout-edit-mode {
-        background-color: var(--md-sys-color-surface-container-low);
-        border: 2px dashed var(--md-sys-color-primary);
-        border-radius: 12px;
-        padding: 1rem;
-        position: relative;
-      }
+/* Layout Edit Mode - Visual Indicators */
+.layout-edit-mode {
+  background-color: var(--md-sys-color-surface-container-low);
+  border: 2px dashed var(--md-sys-color-primary);
+  border-radius: 12px;
+  padding: 1rem;
+  position: relative;
+}
 
-      .layout-edit-mode::before {
-        content: '🎨 Modo de Customização';
-        position: absolute;
-        top: -8px;
-        left: 16px;
-        background-color: var(--md-sys-color-primary);
-        color: var(--md-sys-color-on-primary);
-        padding: 2px 8px;
-        border-radius: 8px;
-        font-size: 0.7rem;
-        font-weight: 500;
-        z-index: 1;
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
-        /* Não interferir no layout */
-        pointer-events: none;
-      }
+.layout-edit-mode::before {
+  content: '🎨 Modo de Customização';
+  position: absolute;
+  top: -8px;
+  left: 16px;
+  background-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  z-index: 1;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  /* Não interferir no layout */
+  pointer-events: none;
+}
 
-      .form-section {
-        border: 1px solid var(--md-sys-color-outline-variant);
-        border-radius: 8px;
-        padding: 1rem;
-        background-color: var(--md-sys-color-surface-container-lowest);
-        transition: all 0.2s ease;
-        position: relative;
-      }
+.form-section {
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 8px;
+  padding: 1rem;
+  background-color: var(--md-sys-color-surface-container-lowest);
+  transition: all 0.2s ease;
+  position: relative;
+}
 
-      /* Layout Editable - Hover Effects (drag implementado futuramente) */
-      .form-section.layout-editable {
-        /* Border transparente para evitar layout shift */
-        border: 1px solid transparent;
-      }
+/* Layout Editable - Hover Effects (drag implementado futuramente) */
+.form-section.layout-editable {
+  /* Border transparente para evitar layout shift */
+  border: 1px solid transparent;
+}
 
-      .form-section.layout-editable:hover {
-        border: 1px dashed var(--md-sys-color-primary);
-        /* Remover background que pode causar expansão visual */
-      }
+.form-section.layout-editable:hover {
+  border: 1px dashed var(--md-sys-color-primary);
+  /* Remover background que pode causar expansão visual */
+}
 
-      .section-title {
-        margin: 0 0 0.5rem 0;
-        font-size: 1.125rem;
-        font-weight: 500;
-        color: var(--md-sys-color-on-surface);
-      }
+.section-title {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+}
 
-      .section-description {
-        margin: 0 0 1rem 0;
-        font-size: 0.875rem;
-        color: var(--md-sys-color-on-surface-variant);
-      }
+.section-description {
+  margin: 0 0 1rem 0;
+  font-size: 0.875rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
 
-      .form-row {
-        display: flex;
-        gap: 1rem;
-        margin-bottom: 1rem;
-        transition: all 0.2s ease;
-        border-radius: 6px;
-        position: relative;
-      }
+.form-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  transition: all 0.2s ease;
+  border-radius: 6px;
+  position: relative;
+}
 
-      .form-row:last-child {
-        margin-bottom: 0;
-      }
+.form-row:last-child {
+  margin-bottom: 0;
+}
 
-      .form-row.layout-editable {
-        position: relative;
-        /* Border transparente para evitar layout shift */
-        border: 1px solid transparent;
-        border-radius: 4px;
-        /* Remover padding para evitar expansão */
-        margin: -1px;
-      }
+.form-row.layout-editable {
+  position: relative;
+  /* Border transparente para evitar layout shift */
+  border: 1px solid transparent;
+  border-radius: 4px;
+  /* Remover padding para evitar expansão */
+  margin: -1px;
+}
 
-      .form-row.layout-editable:hover {
-        border: 1px dashed var(--md-sys-color-secondary);
-        /* Remover background que pode causar expansão visual */
-      }
+.form-row.layout-editable:hover {
+  border: 1px dashed var(--md-sys-color-secondary);
+  /* Remover background que pode causar expansão visual */
+}
 
-      .form-column {
-        flex: 1;
-        min-width: 0;
-        transition: all 0.2s ease;
-        border-radius: 4px;
-        position: relative;
-      }
+.form-column {
+  flex: 1;
+  min-width: 0;
+  transition: all 0.2s ease;
+  border-radius: 4px;
+  position: relative;
+}
 
-      .form-column.layout-editable {
-        position: relative;
-        /* Border transparente para evitar layout shift */
-        border: 1px solid transparent;
-        border-radius: 4px;
-        /* Remover padding para evitar expansão */
-        margin: -1px;
-      }
+.form-column.layout-editable {
+  position: relative;
+  /* Border transparente para evitar layout shift */
+  border: 1px solid transparent;
+  border-radius: 4px;
+  /* Remover padding para evitar expansão */
+  margin: -1px;
+}
 
-      .form-column.layout-editable:hover {
-        border: 1px dashed var(--md-sys-color-tertiary);
-        /* Remover background que pode causar expansão visual */
-      }
+.form-column.layout-editable:hover {
+  border: 1px dashed var(--md-sys-color-tertiary);
+  /* Remover background que pode causar expansão visual */
+}
 
-      .form-actions {
-        display: flex;
-        justify-content: flex-end;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 1rem;
-        border-top: 1px solid var(--md-sys-color-outline-variant);
-        background-color: var(--md-sys-color-surface-container-lowest);
-        position: sticky;
-        bottom: 0;
-        z-index: 1;
-      }
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  background-color: var(--md-sys-color-surface-container-lowest);
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+}
 
-      .form-actions.loading {
-        pointer-events: none;
-        opacity: 0.7;
-      }
+.form-actions.loading {
+  pointer-events: none;
+  opacity: 0.7;
+}
 
-      .mobile-actions {
-        display: none;
-      }
+.mobile-actions {
+  display: none;
+}
 
-      @media (max-width: 768px) {
-        .form-row {
-          flex-direction: column;
-          gap: 0.5rem;
-        }
+@media (max-width: 768px) {
+.form-row {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
 
-        .form-section {
-          padding: 1rem;
-        }
+.form-section {
+    padding: 1rem;
+  }
 
-        .form-actions {
-          padding: 0.75rem;
-        }
+.form-actions {
+    padding: 0.75rem;
+  }
 
-        .form-actions.mobile-menu-active {
-          .desktop-actions {
-            display: none;
-          }
-          .mobile-actions {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-          }
-        }
-      }
-    `,
+.form-actions.mobile-menu-active {
+  .desktop-actions {
+      display: none;
+    }
+  .mobile-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+  }
+}
+`,
   ],
 })
 export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
@@ -699,6 +693,15 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
     // Sempre mostrar em contexto corporativo (quando tem formId)
     // editModeEnabled é independente do mode do formulário
     return !!this.formId;
+  }
+
+  get formActionsClasses(): { [key: string]: boolean } {
+    return {
+      ['position-' + (this.config.actions?.position || 'right')]: true,
+      ['orientation-' + (this.config.actions?.orientation || 'horizontal')]: true,
+      ['spacing-' + (this.config.actions?.spacing || 'normal')]: true,
+      'mobile-menu-active': this.config.actions?.mobile?.collapseToMenu ?? false
+    };
   }
 
   ngOnInit(): void {

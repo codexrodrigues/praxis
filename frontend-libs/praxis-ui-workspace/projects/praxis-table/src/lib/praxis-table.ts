@@ -281,7 +281,7 @@ export interface RowActionsBehavior {
               [disabled]="isActionDisabled(a, row)"
               (click)="onRowAction(a.action, row, $event)"
               [matTooltip]="a.label || a.action"
-              aria-label="{{ a.label || a.action }}"
+              [attr.aria-label]="a.label || a.action"
             >
               <mat-icon>{{ a.icon }}</mat-icon>
             </button>
@@ -458,7 +458,14 @@ export class PraxisTable
     if (typeof maxInline === 'number') {
       return maxInline;
     }
-    return this.getBreakpointMaxInline(maxInline);
+    // Merge with defaults to ensure all properties are defined
+    const breakpointConfig = {
+      xs: maxInline.xs ?? defaults.xs,
+      sm: maxInline.sm ?? defaults.sm,
+      md: maxInline.md ?? defaults.md,
+      lg: maxInline.lg ?? defaults.lg
+    };
+    return this.getBreakpointMaxInline(breakpointConfig);
   }
 
   private getBreakpointMaxInline(b: {

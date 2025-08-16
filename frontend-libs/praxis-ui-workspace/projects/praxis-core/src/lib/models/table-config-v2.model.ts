@@ -797,6 +797,16 @@ export interface RowActionsConfig {
 
   /** Número máximo de ações visíveis */
   maxVisibleActions?: number;
+
+  /** Comportamento de overflow de ações */
+  behavior?: {
+    /** Habilitar comportamento de overflow */
+    enabled?: boolean;
+    /** Número máximo de ações inline */
+    maxInline?: number | 'auto' | { xs?: number; sm?: number; md?: number; lg?: number };
+    /** Estratégia para auto determinar número de ações inline */
+    autoStrategy?: 'measure' | 'breakpoints';
+  };
 }
 
 export interface RowAction {
