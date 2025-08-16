@@ -269,7 +269,7 @@ export interface RowActionsBehavior {
         <td
           mat-cell
           *matCellDef="let row"
-          class="px-actions-cell"
+          class="praxis-actions-cell"
           [class.dense]="dense"
         >
           <!-- Ações inline -->
@@ -278,9 +278,12 @@ export interface RowActionsBehavior {
           >
             <button
               mat-icon-button
+              class="praxis-icon-btn"
               [disabled]="isActionDisabled(a, row)"
               (click)="onRowAction(a.action, row, $event)"
               [matTooltip]="a.label || a.action"
+              matTooltipPosition="above"
+              matTooltipClass="praxis-tooltip"
               [attr.aria-label]="a.label || a.action"
             >
               <mat-icon>{{ a.icon }}</mat-icon>
@@ -290,6 +293,7 @@ export interface RowActionsBehavior {
           <!-- Menu de overflow -->
           <button
             mat-icon-button
+            class="praxis-icon-btn"
             *ngIf="hasOverflowRowActions(row)"
             [matMenuTriggerFor]="rowMoreMenu"
             aria-label="Mais ações"
@@ -336,17 +340,58 @@ export interface RowActionsBehavior {
         width: 100%;
       }
 
-      .px-actions-cell {
+      .praxis-actions-cell {
         display: flex;
-        justify-content: flex-end;
         align-items: center;
-        gap: 8px;
-        padding-inline: 8px;
+        justify-content: flex-end;
+        height: 100%;
+        padding-inline: 12px;
+        gap: var(--actions-gap, 8px);
         white-space: nowrap;
       }
 
-      .px-actions-cell.dense {
-        gap: 4px;
+      .praxis-actions-cell.dense {
+        --actions-gap: 6px;
+      }
+
+      .praxis-icon-btn {
+        width: 40px;
+        height: 40px;
+        border: 0;
+        background: transparent;
+        padding: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9999px;
+        cursor: pointer;
+        --mat-icon-button-state-layer-size: 40px;
+      }
+
+      .praxis-icon-btn:hover {
+        background: var(--surface-2, rgba(255, 255, 255, 0.06));
+      }
+
+      .praxis-icon-btn:focus-visible {
+        outline: 2px solid var(--primary, #48a1ff);
+        outline-offset: 2px;
+      }
+
+      .praxis-icon-btn mat-icon,
+      .praxis-icon-btn .mat-icon {
+        font-size: 22px;
+        width: 22px;
+        height: 22px;
+        line-height: 22px;
+      }
+
+      .praxis-icon-btn.destructive mat-icon {
+        color: var(--error, #ff6b6b);
+      }
+
+      .mat-mdc-tooltip.praxis-tooltip {
+        margin-top: -8px;
+        margin-bottom: 8px;
       }
 
       .spacer {
