@@ -81,6 +81,32 @@ import { PraxisFilter } from './praxis-filter';
         advancedFilter
         [resourcePath]="resourcePath"
         [formId]="tableId + '-filter'"
+        [quickField]="
+          config.behavior?.filtering?.advancedFilters?.settings?.quickField
+        "
+        [alwaysVisibleFields]="
+          config.behavior?.filtering?.advancedFilters?.settings
+            ?.alwaysVisibleFields
+        "
+        [allowSaveTags]="
+          config.behavior?.filtering?.advancedFilters?.settings?.allowSaveTags
+        "
+        [changeDebounceMs]="
+          config.behavior?.filtering?.advancedFilters?.settings
+            ?.changeDebounceMs ?? 300
+        "
+        [i18n]="
+          config.behavior?.filtering?.advancedFilters?.settings?.placeholder
+            ? {
+                searchPlaceholder:
+                  config.behavior.filtering.advancedFilters.settings
+                    .placeholder,
+              }
+            : undefined
+        "
+        [mode]="
+          config.behavior?.filtering?.advancedFilters?.settings?.mode ?? 'auto'
+        "
         (submit)="onAdvancedFilterSubmit($event)"
         (clear)="onAdvancedFilterClear()"
       ></praxis-filter>

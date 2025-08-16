@@ -1,7 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
+import { By } from '@angular/platform-browser';
 import { of } from 'rxjs';
 import { PraxisTable } from '../praxis-table';
+import { PraxisFilter } from '../praxis-filter';
 import {
   TableConfig,
   TableConfigService,
@@ -93,5 +95,16 @@ describe('PraxisTable advanced filter integration', () => {
     setConfig(false);
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('praxis-filter')).toBeFalsy();
+  });
+
+  it('should pass quickField setting to PraxisFilter', () => {
+    setConfig(true);
+    component.config.behavior!.filtering!.advancedFilters!.settings = {
+      quickField: 'name',
+    };
+    fixture.detectChanges();
+    const filter = fixture.debugElement.query(By.directive(PraxisFilter))
+      .componentInstance as PraxisFilter;
+    expect(filter.quickField).toBe('name');
   });
 });
