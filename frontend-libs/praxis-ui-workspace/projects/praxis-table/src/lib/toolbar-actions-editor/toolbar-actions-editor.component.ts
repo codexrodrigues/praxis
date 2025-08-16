@@ -61,6 +61,7 @@ export interface RowAction {
   color?: 'primary' | 'accent' | 'warn';
   tooltip?: string;
   requiresConfirmation?: boolean;
+  autoDelete?: boolean;
   separator?: boolean;
   conditional?: string; // Expressão para mostrar/ocultar
 }
@@ -73,6 +74,7 @@ export interface BulkAction {
   color?: 'primary' | 'accent' | 'warn';
   tooltip?: string;
   requiresConfirmation?: boolean;
+  autoDelete?: boolean;
   minSelections?: number;
   maxSelections?: number;
 }
@@ -538,6 +540,16 @@ export interface ToolbarActionsChange {
                       </mat-slide-toggle>
 
                       <mat-slide-toggle
+                        *ngIf="action.action === 'delete'"
+                        [(ngModel)]="action.autoDelete"
+                        (ngModelChange)="updateRowActions()"
+                        [ngModelOptions]="{ standalone: true }"
+                        class="toggle-field"
+                      >
+                        Excluir automaticamente
+                      </mat-slide-toggle>
+
+                      <mat-slide-toggle
                         [(ngModel)]="action.separator"
                         (ngModelChange)="updateRowActions()"
                         [ngModelOptions]="{ standalone: true }"
@@ -729,6 +741,16 @@ export interface ToolbarActionsChange {
                         class="toggle-field"
                       >
                         Requer confirmação
+                      </mat-slide-toggle>
+
+                      <mat-slide-toggle
+                        *ngIf="action.action === 'delete'"
+                        [(ngModel)]="action.autoDelete"
+                        (ngModelChange)="updateBulkActions()"
+                        [ngModelOptions]="{ standalone: true }"
+                        class="toggle-field"
+                      >
+                        Excluir automaticamente
                       </mat-slide-toggle>
                     </div>
                   </div>
@@ -1280,6 +1302,7 @@ export class ToolbarActionsEditorComponent
       label: 'Nova Ação',
       icon: 'edit',
       action: 'editRow',
+      autoDelete: false,
     };
 
     this.rowActions.push(newAction);
@@ -1304,6 +1327,11 @@ export class ToolbarActionsEditorComponent
   }
 
   updateRowActions(): void {
+    this.rowActions.forEach((a) => {
+      if (a.action !== 'delete') {
+        a.autoDelete = false;
+      }
+    });
     const values = this.toolbarForm.value;
     this.updateConfig(values);
   }
@@ -1314,7 +1342,8 @@ export class ToolbarActionsEditorComponent
       id: `bulk-action-${Date.now()}`,
       label: 'Nova Ação em Lote',
       icon: 'delete',
-      action: 'bulkDelete',
+      action: 'delete',
+      autoDelete: false,
       minSelections: 1,
     };
 
@@ -1340,6 +1369,11 @@ export class ToolbarActionsEditorComponent
   }
 
   updateBulkActions(): void {
+    this.bulkActions.forEach((a) => {
+      if (a.action !== 'delete') {
+        a.autoDelete = false;
+      }
+    });
     const values = this.toolbarForm.value;
     this.updateConfig(values);
   }
