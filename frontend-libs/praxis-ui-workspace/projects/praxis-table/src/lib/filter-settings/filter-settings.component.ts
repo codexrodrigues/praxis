@@ -107,14 +107,8 @@ export class FilterSettingsComponent implements OnChanges {
 
   getSettingsValue(): FilterConfig {
     const value = this.form.getRawValue();
-    const names = new Set(this.metadata.map((m) => m.name));
-    const quickField =
-      value.quickField && names.has(value.quickField)
-        ? value.quickField
-        : undefined;
-    const alwaysVisibleFields = value.alwaysVisibleFields.filter((f) =>
-      names.has(f),
-    );
+    const quickField = value.quickField || undefined;
+    const alwaysVisibleFields = value.alwaysVisibleFields;
     return {
       quickField,
       alwaysVisibleFields: alwaysVisibleFields.length
