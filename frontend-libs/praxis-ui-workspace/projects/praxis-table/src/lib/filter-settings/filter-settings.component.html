@@ -31,5 +31,37 @@
         >
       </div>
     </mat-tab>
+    <mat-tab label="Behavior">
+      <div class="options">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Mode</mat-label>
+          <mat-select formControlName="mode">
+            <mat-option value="auto">Auto</mat-option>
+            <mat-option value="filter">Filter</mat-option>
+            <mat-option value="card">Card</mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-checkbox formControlName="allowSaveTags"
+          >Allow Save Tags</mat-checkbox
+        >
+      </div>
+    </mat-tab>
+    <mat-tab label="Advanced">
+      <div class="options">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Change Debounce (ms)</mat-label>
+          <input
+            matInput
+            type="number"
+            formControlName="changeDebounceMs"
+            min="100"
+            max="1000"
+          />
+          <mat-error *ngIf="form.controls.changeDebounceMs.invalid">
+            Value must be between 100 and 1000
+          </mat-error>
+        </mat-form-field>
+      </div>
+    </mat-tab>
   </mat-tab-group>
 </form>

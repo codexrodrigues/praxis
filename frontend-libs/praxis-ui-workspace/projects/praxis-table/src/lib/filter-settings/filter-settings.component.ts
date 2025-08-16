@@ -13,6 +13,7 @@ import {
   FormControl,
   FormGroup,
   ReactiveFormsModule,
+  Validators,
 } from '@angular/forms';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -23,6 +24,7 @@ import { FieldMetadata } from '@praxis/core';
 import { FilterConfig } from '../services/filter-config.service';
 import { Observable } from 'rxjs';
 import { map, startWith } from 'rxjs/operators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'filter-settings',
@@ -50,6 +52,9 @@ export class FilterSettingsComponent implements OnChanges {
     alwaysVisibleFields: FormControl<string[]>;
     placeholder: FormControl<string>;
     showAdvanced: FormControl<boolean>;
+    mode: FormControl<'auto' | 'filter' | 'card'>;
+    changeDebounceMs: FormControl<number>;
+    allowSaveTags: FormControl<boolean>;
   }>;
 
   /**
@@ -65,6 +70,11 @@ export class FilterSettingsComponent implements OnChanges {
       alwaysVisibleFields: this.fb.nonNullable.control<string[]>([]),
       placeholder: this.fb.nonNullable.control(''),
       showAdvanced: this.fb.nonNullable.control(false),
+      mode: this.fb.nonNullable.control<'auto' | 'filter' | 'card'>('auto'),
+      changeDebounceMs: this.fb.nonNullable.control(300, {
+        validators: [Validators.min(100), Validators.max(1000)],
+      }),
+      allowSaveTags: this.fb.nonNullable.control(false),
     });
 
     this.canSave$ = this.form.valueChanges.pipe(
@@ -73,7 +83,10 @@ export class FilterSettingsComponent implements OnChanges {
     );
 
     this.form.valueChanges
-      .pipe(map(() => this.getSettingsValue()))
+      .pipe(
+        map(() => this.getSettingsValue()),
+        takeUntilDestroyed(),
+      )
       .subscribe((cfg) => this.settingsChange.emit(cfg));
   }
 
@@ -85,6 +98,9 @@ export class FilterSettingsComponent implements OnChanges {
         alwaysVisibleFields: this.settings.alwaysVisibleFields ?? [],
         placeholder: this.settings.placeholder ?? '',
         showAdvanced: this.settings.showAdvanced ?? false,
+        mode: this.settings.mode ?? 'auto',
+        changeDebounceMs: this.clampDebounce(this.settings.changeDebounceMs),
+        allowSaveTags: this.settings.allowSaveTags ?? false,
       });
     }
   }
@@ -106,6 +122,10 @@ export class FilterSettingsComponent implements OnChanges {
         : undefined,
       placeholder: value.placeholder || undefined,
       showAdvanced: value.showAdvanced ?? undefined,
+      mode: value.mode !== 'auto' ? value.mode : undefined,
+      changeDebounceMs:
+        value.changeDebounceMs !== 300 ? value.changeDebounceMs : undefined,
+      allowSaveTags: value.allowSaveTags ? true : undefined,
     };
   }
 
@@ -115,6 +135,16 @@ export class FilterSettingsComponent implements OnChanges {
       alwaysVisibleFields: this.initialSettings.alwaysVisibleFields ?? [],
       placeholder: this.initialSettings.placeholder ?? '',
       showAdvanced: this.initialSettings.showAdvanced ?? false,
+      mode: this.initialSettings.mode ?? 'auto',
+      changeDebounceMs: this.clampDebounce(
+        this.initialSettings.changeDebounceMs,
+      ),
+      allowSaveTags: this.initialSettings.allowSaveTags ?? false,
     });
+  }
+
+  private clampDebounce(value?: number): number {
+    const v = value ?? 300;
+    return Math.min(1000, Math.max(100, v));
   }
 }
