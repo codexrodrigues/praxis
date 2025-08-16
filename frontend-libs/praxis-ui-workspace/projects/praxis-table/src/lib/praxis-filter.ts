@@ -37,7 +37,11 @@ import { FilterSettingsComponent } from './filter-settings/filter-settings.compo
 import { SettingsPanelService } from '@praxis/settings-panel';
 import { DynamicFieldLoaderDirective } from '@praxis/dynamic-fields';
 import { PraxisDynamicForm } from '@praxis/dynamic-form';
-import { OverlayModule, CdkOverlayOrigin } from '@angular/cdk/overlay';
+import {
+  OverlayModule,
+  CdkOverlayOrigin,
+  ConnectedPosition,
+} from '@angular/cdk/overlay';
 import { CdkTrapFocus } from '@angular/cdk/a11y';
 import { Subject, of } from 'rxjs';
 import { catchError, debounceTime, map, take, takeUntil } from 'rxjs/operators';
@@ -209,6 +213,9 @@ const DEFAULT_I18N: I18n = {
         [cdkConnectedOverlayOrigin]="advancedBtn!"
         [cdkConnectedOverlayOpen]="advancedOpen"
         [cdkConnectedOverlayHasBackdrop]="true"
+        [cdkConnectedOverlayPositions]="overlayPositions"
+        cdkConnectedOverlayBackdropClass="praxis-overlay-backdrop"
+        cdkConnectedOverlayPanelClass="praxis-filter-overlay"
         (backdropClick)="toggleAdvanced()"
         (detach)="onOverlayDetach()"
       >
@@ -316,7 +323,23 @@ const DEFAULT_I18N: I18n = {
         gap: 4px;
       }
       .praxis-filter-advanced {
-        margin-top: 16px;
+        display: block;
+      }
+      .praxis-filter-overlay {
+        border-radius: 14px;
+        background: var(--surface, #2b2b2b);
+        box-shadow: var(--elevation-shadow, 0 8px 24px rgba(0, 0, 0, 0.28));
+        padding: 16px;
+        min-width: 360px;
+        max-width: min(800px, 90vw);
+        max-height: min(80vh, 720px);
+        overflow: auto;
+        transition:
+          transform 0.18s ease,
+          opacity 0.18s ease;
+      }
+      :host ::ng-deep .praxis-overlay-backdrop {
+        background: rgba(0, 0, 0, 0.32);
       }
       .fallback-hint {
         color: #666;
@@ -404,6 +427,20 @@ export class PraxisFilter implements OnInit, OnChanges {
   private configKey!: string;
   @ViewChild('advancedBtn', { read: CdkOverlayOrigin })
   advancedBtn?: CdkOverlayOrigin;
+  overlayPositions: ConnectedPosition[] = [
+    {
+      originX: 'start',
+      originY: 'bottom',
+      overlayX: 'start',
+      overlayY: 'top',
+    },
+    {
+      originX: 'start',
+      originY: 'top',
+      overlayX: 'start',
+      overlayY: 'bottom',
+    },
+  ];
 
   constructor(
     private crud: GenericCrudService<any>,
