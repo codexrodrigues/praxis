@@ -52,9 +52,13 @@ import { ColumnDataType } from './data-formatter/data-formatter-types';
 import { TableDefaultsProvider } from './services/table-defaults.provider';
 import { FilterConfigService } from './services/filter-config.service';
 import { PraxisFilter, I18n } from './praxis-filter';
+import { getActionId, ActionLike } from './utils/action-utils';
 
-export interface RowActionConfig {
-  action: string;
+export interface RowActionConfig extends ActionLike {
+  /**
+   * Identifier of the action. Historically this property was named `id`
+   * in some configurations, so both `action` and `id` are supported.
+   */
   icon: string;
   label?: string;
   priority?: number;
@@ -280,11 +284,11 @@ export interface RowActionsBehavior {
               mat-icon-button
               class="praxis-icon-btn"
               [disabled]="isActionDisabled(a, row)"
-              (click)="onRowAction(a.action, row, $event)"
-              [matTooltip]="a.label || a.action"
+              (click)="onRowAction(getActionId(a), row, $event)"
+              [matTooltip]="a.label || getActionId(a)"
               matTooltipPosition="above"
               matTooltipClass="praxis-tooltip"
-              [attr.aria-label]="a.label || a.action"
+              [attr.aria-label]="a.label || getActionId(a)"
             >
               <mat-icon>{{ a.icon }}</mat-icon>
             </button>
@@ -306,11 +310,11 @@ export interface RowActionsBehavior {
             >
               <button
                 mat-menu-item
-                (click)="onRowAction(a.action, row, $event)"
+                (click)="onRowAction(getActionId(a), row, $event)"
                 [disabled]="isActionDisabled(a, row)"
               >
                 <mat-icon matMenuIcon>{{ a.icon }}</mat-icon>
-                <span>{{ a.label || a.action }}</span>
+                <span>{{ a.label || getActionId(a) }}</span>
               </button>
             </ng-container>
           </mat-menu>
@@ -465,6 +469,7 @@ export class PraxisTable
   private breakpoints = { xs: 0, sm: 600, md: 960, lg: 1280 };
   private measuredInline = 0;
   private resizeObserver?: ResizeObserver;
+  readonly getActionId = getActionId;
 
   toggleRow(row: any): void {
     this.selection.toggle(row);
@@ -508,7 +513,7 @@ export class PraxisTable
       xs: maxInline.xs ?? defaults.xs,
       sm: maxInline.sm ?? defaults.sm,
       md: maxInline.md ?? defaults.md,
-      lg: maxInline.lg ?? defaults.lg
+      lg: maxInline.lg ?? defaults.lg,
     };
     return this.getBreakpointMaxInline(breakpointConfig);
   }
@@ -548,7 +553,7 @@ export class PraxisTable
     return typeof a.disabled === 'function' ? !!a.disabled(row) : !!a.disabled;
   }
 
-  trackAction = (_: number, a: any) => a.action;
+  trackAction = (_: number, a: RowActionConfig) => this.getActionId(a);
 
   getInlineRowActions(row: any): any[] {
     const actions = this.sortByPriority(
@@ -571,8 +576,10 @@ export class PraxisTable
       this.config.actions?.row?.actions ?? [],
     ).filter((a) => this.isActionVisible(a, row));
 
-    const inline = this.getInlineRowActions(row).map((a) => a.action);
-    return actions.filter((a) => !inline.includes(a.action));
+    const inline = this.getInlineRowActions(row).map((a) =>
+      this.getActionId(a),
+    );
+    return actions.filter((a) => !inline.includes(this.getActionId(a)));
   }
 
   hasOverflowRowActions(row: any): boolean {
@@ -704,7 +711,7 @@ export class PraxisTable
     event.stopPropagation();
     (event.target as HTMLElement).blur();
     const cfg = this.config.actions?.row?.actions.find(
-      (a) => a.action === action,
+      (a) => this.getActionId(a) === action,
     );
     if (action === 'delete' && (this.autoDelete || cfg?.autoDelete)) {
       this.beforeDelete.emit(row);
@@ -738,7 +745,7 @@ export class PraxisTable
 
   onToolbarAction(event: { action: string }): void {
     const bulk = this.config.actions?.bulk?.actions.find(
-      (a) => a.action === event.action,
+      (a) => this.getActionId(a) === event.action,
     );
     if (bulk) {
       if (event.action === 'delete' && (this.autoDelete || bulk.autoDelete)) {

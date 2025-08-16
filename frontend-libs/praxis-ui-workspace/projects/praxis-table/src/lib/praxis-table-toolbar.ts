@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { TableConfig } from '@praxis/core';
+import { getActionId } from './utils/action-utils';
 
 @Component({
   selector: 'praxis-table-toolbar',
@@ -23,7 +24,7 @@ import { TableConfig } from '@praxis/core';
         <button
           mat-button
           [color]="action.color || 'primary'"
-          (click)="emitToolbarAction($event, action.action)"
+          (click)="emitToolbarAction($event, getActionId(action))"
         >
           <mat-icon *ngIf="action.icon">{{ action.icon }}</mat-icon>
           {{ action.label }}
@@ -34,7 +35,7 @@ import { TableConfig } from '@praxis/core';
           mat-button
           [color]="action.color"
           [disabled]="action.disabled"
-          (click)="emitToolbarAction($event, action.action)"
+          (click)="emitToolbarAction($event, getActionId(action))"
         >
           <mat-icon *ngIf="action.icon">{{ action.icon }}</mat-icon>
           {{ action.label }}
@@ -45,7 +46,7 @@ import { TableConfig } from '@praxis/core';
           mat-button
           *ngFor="let action of config?.actions?.bulk?.actions"
           [color]="action.color || 'primary'"
-          (click)="emitToolbarAction($event, action.action)"
+          (click)="emitToolbarAction($event, getActionId(action))"
         >
           <mat-icon *ngIf="action.icon">{{ action.icon }}</mat-icon>
           {{ action.label }}
@@ -91,6 +92,8 @@ import { TableConfig } from '@praxis/core';
 export class PraxisTableToolbar {
   @Input() config?: TableConfig;
   @Output() toolbarAction = new EventEmitter<{ action: string }>();
+
+  readonly getActionId = getActionId;
 
   emitToolbarAction(event: Event, action: string): void {
     (event.target as HTMLElement).blur();
