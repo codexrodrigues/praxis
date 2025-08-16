@@ -72,6 +72,16 @@ import { TableConfig } from '@praxis/core';
       :host {
         display: block;
       }
+      .praxis-toolbar {
+        border-radius: 10px;
+        background: var(--surface, #333);
+        box-shadow: var(--elevation-shadow);
+        padding-inline: 8px;
+        min-height: 52px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
       .spacer {
         flex: 1 1 auto;
       }
