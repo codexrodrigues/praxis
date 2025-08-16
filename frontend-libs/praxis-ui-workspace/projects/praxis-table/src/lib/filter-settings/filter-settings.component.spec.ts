@@ -74,6 +74,9 @@ describe('FilterSettingsComponent', () => {
     alwaysVisibleFields: ['status'],
     placeholder: 'Search',
     showAdvanced: false,
+    mode: 'filter',
+    changeDebounceMs: 400,
+    allowSaveTags: true,
   };
 
   beforeEach(async () => {
@@ -102,6 +105,8 @@ describe('FilterSettingsComponent', () => {
     expect(text).toContain('Quick Field');
     expect(text).toContain('Always Visible');
     expect(text).toContain('Options');
+    expect(text).toContain('Behavior');
+    expect(text).toContain('Advanced');
   });
 
   it('should emit settings value on apply', () => {
@@ -126,6 +131,9 @@ describe('FilterSettingsComponent', () => {
       alwaysVisibleFields: ['status'],
       placeholder: 'Buscar',
       showAdvanced: false,
+      mode: 'filter',
+      changeDebounceMs: 400,
+      allowSaveTags: true,
     });
   });
 
@@ -169,6 +177,34 @@ describe('FilterSettingsComponent', () => {
     expect(result.alwaysVisibleFields).toEqual(['status']);
   });
 
+  it('should omit default values from emitted settings', () => {
+    const fixture = TestBed.createComponent(FilterSettingsComponent);
+    const component = fixture.componentInstance;
+    component.metadata = metadata;
+    component.settings = {};
+    component.ngOnChanges({
+      settings: new SimpleChange(null, {}, true),
+    });
+
+    const result = component.getSettingsValue();
+    expect(result.mode).toBeUndefined();
+    expect(result.changeDebounceMs).toBeUndefined();
+    expect(result.allowSaveTags).toBeUndefined();
+  });
+
+  it('should mark changeDebounceMs invalid when out of range', () => {
+    const fixture = TestBed.createComponent(FilterSettingsComponent);
+    const component = fixture.componentInstance;
+    component.metadata = metadata;
+    component.settings = {};
+    component.ngOnChanges({
+      settings: new SimpleChange(null, {}, true),
+    });
+
+    component.form.patchValue({ changeDebounceMs: 50 });
+    expect(component.form.controls.changeDebounceMs.invalid).toBeTrue();
+  });
+
   it('should emit settingsChange on form updates', () => {
     const fixture = TestBed.createComponent(FilterSettingsComponent);
     const component = fixture.componentInstance;
@@ -186,6 +222,9 @@ describe('FilterSettingsComponent', () => {
       alwaysVisibleFields: ['status'],
       placeholder: 'Novo',
       showAdvanced: false,
+      mode: 'filter',
+      changeDebounceMs: 400,
+      allowSaveTags: true,
     });
   });
 });

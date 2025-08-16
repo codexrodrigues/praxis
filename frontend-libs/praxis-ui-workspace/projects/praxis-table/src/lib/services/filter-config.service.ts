@@ -6,6 +6,9 @@ export type FilterConfig = {
   alwaysVisibleFields?: string[];
   placeholder?: string;
   showAdvanced?: boolean;
+  mode?: 'auto' | 'filter' | 'card';
+  changeDebounceMs?: number;
+  allowSaveTags?: boolean;
 };
 
 @Injectable({ providedIn: 'root' })
@@ -18,7 +21,9 @@ export class FilterConfigService {
    * Load a persisted filter configuration for the given key.
    */
   load(key: string): FilterConfig | undefined {
-    return this.storage.loadConfig<FilterConfig>(this.PREFIX + key) ?? undefined;
+    return (
+      this.storage.loadConfig<FilterConfig>(this.PREFIX + key) ?? undefined
+    );
   }
 
   /**
