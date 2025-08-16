@@ -4,13 +4,13 @@ import 'zone.js/testing';
 import { getTestBed } from '@angular/core/testing';
 import {
   BrowserDynamicTestingModule,
-  platformBrowserDynamicTesting
+  platformBrowserDynamicTesting,
 } from '@angular/platform-browser-dynamic/testing';
 
 // Configure the test environment
 getTestBed().initTestEnvironment(
   BrowserDynamicTestingModule,
-  platformBrowserDynamicTesting()
+  platformBrowserDynamicTesting(),
 );
 
 // Global test configuration
@@ -21,12 +21,12 @@ beforeEach(() => {
 
 // Mock performance API if not available
 if (typeof performance === 'undefined') {
-  (global as any).performance = {
+  (globalThis as any).performance = {
     now: () => Date.now(),
     mark: () => {},
     measure: () => {},
     getEntriesByType: () => [],
-    getEntriesByName: () => []
+    getEntriesByName: () => [],
   };
 }
 
@@ -45,19 +45,19 @@ afterAll(() => {
 });
 
 // Global test utilities
-(global as any).testUtils = {
+(globalThis as any).testUtils = {
   // Helper to wait for async operations
-  waitFor: (ms: number) => new Promise(resolve => setTimeout(resolve, ms)),
-  
+  waitFor: (ms: number) => new Promise((resolve) => setTimeout(resolve, ms)),
+
   // Helper to create mock field schemas
-  createMockFieldSchemas: (count: number) => 
+  createMockFieldSchemas: (count: number) =>
     Array.from({ length: count }, (_, i) => ({
       name: `field${i}`,
       type: ['string', 'number', 'boolean', 'date'][i % 4],
       label: `Field ${i}`,
-      description: `Test field ${i}`
+      description: `Test field ${i}`,
     })),
-  
+
   // Helper to create mock context variables
   createMockContextVariables: (count: number) =>
     Array.from({ length: count }, (_, i) => ({
@@ -66,11 +66,13 @@ afterAll(() => {
       type: ['string', 'number', 'boolean', 'date'][i % 4] as any,
       scope: ['user', 'session', 'env', 'global'][i % 4] as any,
       description: `Test variable ${i}`,
-      example: `value${i}`
+      example: `value${i}`,
     })),
-  
+
   // Helper to generate test expressions
-  generateTestExpression: (complexity: 'simple' | 'medium' | 'complex' = 'simple') => {
+  generateTestExpression: (
+    complexity: 'simple' | 'medium' | 'complex' = 'simple',
+  ) => {
     switch (complexity) {
       case 'simple':
         return 'age > 18';
@@ -81,7 +83,7 @@ afterAll(() => {
       default:
         return 'age > 18';
     }
-  }
+  },
 };
 
 // Custom matchers for better test assertions
@@ -89,51 +91,52 @@ beforeEach(() => {
   jasmine.addMatchers({
     toBeValidExpression: () => ({
       compare: (actual: any) => {
-        const isValid = actual && 
-          typeof actual === 'object' && 
-          actual.hasOwnProperty('isValid') && 
+        const isValid =
+          actual &&
+          typeof actual === 'object' &&
+          actual.hasOwnProperty('isValid') &&
           actual.isValid === true &&
           Array.isArray(actual.issues);
-        
+
         return {
           pass: isValid,
-          message: isValid 
+          message: isValid
             ? `Expected expression to be invalid`
-            : `Expected expression to be valid, but got: ${JSON.stringify(actual)}`
+            : `Expected expression to be valid, but got: ${JSON.stringify(actual)}`,
         };
-      }
+      },
     }),
-    
+
     toHaveValidationIssues: () => ({
       compare: (actual: any, expectedCount?: number) => {
-        const hasIssues = actual && 
-          Array.isArray(actual.issues) && 
-          actual.issues.length > 0;
-        
-        const countMatches = expectedCount === undefined || 
-          actual.issues.length === expectedCount;
-        
+        const hasIssues =
+          actual && Array.isArray(actual.issues) && actual.issues.length > 0;
+
+        const countMatches =
+          expectedCount === undefined || actual.issues.length === expectedCount;
+
         return {
           pass: hasIssues && countMatches,
-          message: hasIssues && countMatches
-            ? `Expected no validation issues or different count`
-            : `Expected validation issues${expectedCount ? ` (count: ${expectedCount})` : ''}, but got: ${actual.issues?.length || 0}`
+          message:
+            hasIssues && countMatches
+              ? `Expected no validation issues or different count`
+              : `Expected validation issues${expectedCount ? ` (count: ${expectedCount})` : ''}, but got: ${actual.issues?.length || 0}`,
         };
-      }
+      },
     }),
-    
+
     toCompleteWithinTime: () => ({
       compare: (actualTime: number, expectedMaxTime: number) => {
         const withinTime = actualTime <= expectedMaxTime;
-        
+
         return {
           pass: withinTime,
           message: withinTime
             ? `Expected operation to take longer than ${expectedMaxTime}ms`
-            : `Expected operation to complete within ${expectedMaxTime}ms, but took ${actualTime}ms`
+            : `Expected operation to complete within ${expectedMaxTime}ms, but took ${actualTime}ms`,
         };
-      }
-    })
+      },
+    }),
   });
 });
 
@@ -154,11 +157,13 @@ declare global {
       toCompleteWithinTime(expectedMaxTime: number): boolean;
     }
   }
-  
+
   var testUtils: {
     waitFor: (ms: number) => Promise<void>;
     createMockFieldSchemas: (count: number) => any[];
     createMockContextVariables: (count: number) => any[];
-    generateTestExpression: (complexity?: 'simple' | 'medium' | 'complex') => string;
+    generateTestExpression: (
+      complexity?: 'simple' | 'medium' | 'complex',
+    ) => string;
   };
 }
