@@ -907,12 +907,21 @@ export class RuleEditorComponent implements OnInit, OnDestroy {
 
   private importInitialRules(): void {
     try {
-      this.ruleBuilderService.import(
-        typeof this.initialRules === 'string'
-          ? this.initialRules
-          : JSON.stringify(this.initialRules),
-        { format: 'json' },
-      );
+      let content: string;
+      let format: 'json' | 'dsl' = 'json';
+
+      if (typeof this.initialRules === 'string') {
+        content = this.initialRules;
+        const trimmed = content.trim();
+        // Heurística simples para detectar JSON vs DSL
+        if (!(trimmed.startsWith('{') || trimmed.startsWith('['))) {
+          format = 'dsl';
+        }
+      } else {
+        content = JSON.stringify(this.initialRules);
+      }
+
+      this.ruleBuilderService.import(content, { format });
     } catch (error) {
       console.error('Failed to import initial rules:', error);
       this.snackBar.open('Failed to import initial rules', 'Close', {

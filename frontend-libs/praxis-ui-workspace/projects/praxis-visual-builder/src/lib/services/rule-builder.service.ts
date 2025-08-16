@@ -435,10 +435,10 @@ export class RuleBuilderService {
    */
   import(content: string, options: ImportOptions): void {
     try {
-      let specification: Specification<any>;
+      let specification: Specification<any> | null = null;
 
       switch (options.format) {
-        case 'json':
+        case 'json': {
           if (!content || content.trim().length === 0) {
             return;
           }
@@ -452,11 +452,51 @@ export class RuleBuilderService {
           ) {
             return;
           }
-          if (typeof json === 'object' && (json as any).type == null) {
-            throw new Error('Missing specification type');
+
+          // Se for o estado do builder (nodes/rootNodes), aplica diretamente
+          if (this.isBuilderState(json)) {
+            const state = this.getInitialState();
+            this.updateState({
+              ...state,
+              nodes: json.nodes,
+              rootNodes: json.rootNodes,
+              isDirty: true,
+            });
+            this.saveSnapshot('Imported rules');
+            this.validateRules();
+            return;
           }
-          specification = SpecificationFactory.fromJSON(json);
-          break;
+
+          // Se for um array de especificações, combina com AND
+          if (Array.isArray(json)) {
+            const specs = json
+              .map((item) => this.normalizeSpecJson(item))
+              .filter((j): j is any => !!j)
+              .map((j) => SpecificationFactory.fromJSON(j));
+
+            if (specs.length === 0) return;
+            specification = specs.length === 1 ? specs[0] : SpecificationFactory.and(...specs);
+            break;
+          }
+
+          // Objeto único: tenta normalizar ou usar dsl embutido
+          if (typeof json === 'object' && json) {
+            if (typeof (json as any).dsl === 'string' && (json as any).dsl.trim()) {
+              specification = this.dslParser.parse((json as any).dsl);
+              break;
+            }
+
+            const normalized = this.normalizeSpecJson(json);
+            if (!normalized) {
+              throw new Error('Missing specification type');
+            }
+            specification = SpecificationFactory.fromJSON(normalized);
+            break;
+          }
+
+          // Tipo inesperado
+          throw new Error('Unsupported JSON structure for import');
+        }
 
         case 'dsl':
           if (!content || content.trim().length === 0) {
@@ -904,5 +944,57 @@ export class RuleBuilderService {
   ): string {
     // Implementation for form config export
     return `// Form config export not yet implemented`;
+  }
+
+  private normalizeSpecJson(input: any): any | null {
+    if (!input || typeof input !== 'object') return null;
+    if ((input as any).type) return input;
+
+    // Inferência básica de tipos de especificação comuns
+    // Campo simples: { field, operator, value }
+    if ((input as any).field && (input as any).operator !== undefined) {
+      return { type: 'field', ...input };
+    }
+
+    // Grupo booleano: { operator: 'and' | 'or' | 'xor', specs: [...] }
+    if (
+      Array.isArray((input as any).specs) &&
+      typeof (input as any).operator === 'string'
+    ) {
+      return { type: (input as any).operator, ...input };
+    }
+
+    // NOT: { spec: {...} }
+    if ((input as any).spec && !(input as any).specs) {
+      return { type: 'not', ...input };
+    }
+
+    // IMPLIES: { antecedent, consequent }
+    if ((input as any).antecedent && (input as any).consequent) {
+      return { type: 'implies', ...input };
+    }
+
+    // fieldToField: { fieldA, fieldB, operator }
+    if ((input as any).fieldA && (input as any).fieldB && (input as any).operator) {
+      return { type: 'fieldToField', ...input };
+    }
+
+    // Cardinalidade: { minimum, specs } => atLeast; { exact, specs } => exactly
+    if (Array.isArray((input as any).specs)) {
+      if ((input as any).minimum != null) return { type: 'atLeast', ...input };
+      if ((input as any).exact != null) return { type: 'exactly', ...input };
+    }
+
+    return null;
+  }
+
+  private isBuilderState(json: any): json is { nodes: Record<string, RuleNode>; rootNodes: string[] } {
+    return (
+      json &&
+      typeof json === 'object' &&
+      !Array.isArray(json) &&
+      typeof (json as any).nodes === 'object' &&
+      Array.isArray((json as any).rootNodes)
+    );
   }
 }
