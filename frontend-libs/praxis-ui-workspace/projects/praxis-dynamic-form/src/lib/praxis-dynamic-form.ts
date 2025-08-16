@@ -214,15 +214,13 @@ import { normalizeFormConfig } from './utils/normalize-form-config';
               ? 'space-between'
               : config.actions?.position
           "
-          [ngClass]="[
-            'position-' + (config.actions?.position || 'right'),
-            'orientation-' + (config.actions?.orientation || 'horizontal'),
-            'spacing-' + (config.actions?.spacing || 'normal'),
-            {
-              'mobile-menu-active':
-                config.actions?.mobile?.collapseToMenu ?? false
-            }
-          ]"
+          [ngClass]="{
+            ['position-' + (config.actions?.position || 'right')]: true,
+            ['orientation-' + (config.actions?.orientation || 'horizontal')]: true,
+            ['spacing-' + (config.actions?.spacing || 'normal')]: true,
+            'mobile-menu-active':
+              config.actions?.mobile?.collapseToMenu ?? false
+          }"
         >
           <!-- Desktop/Normal View -->
           <div class="desktop-actions">
@@ -231,10 +229,19 @@ import { normalizeFormConfig } from './utils/normalize-form-config';
                 <button
                   [type]="button.type || 'button'"
                   [ngClass]="{
-                    'mat-raised-button': (typeof button.variant === 'string' && button.variant === 'raised') || !button.variant,
-                    'mat-stroked-button': typeof button.variant === 'string' && button.variant === 'stroked',
-                    'mat-flat-button': typeof button.variant === 'string' && button.variant === 'flat',
-                    'mat-fab': typeof button.variant === 'string' && button.variant === 'fab'
+                    'mat-raised-button':
+                      (typeof button.variant === 'string' &&
+                        button.variant === 'raised') ||
+                      !button.variant,
+                    'mat-stroked-button':
+                      typeof button.variant === 'string' &&
+                      button.variant === 'stroked',
+                    'mat-flat-button':
+                      typeof button.variant === 'string' &&
+                      button.variant === 'flat',
+                    'mat-fab':
+                      typeof button.variant === 'string' &&
+                      button.variant === 'fab',
                   }"
                   mat-button
                   [color]="button.color"
@@ -262,10 +269,19 @@ import { normalizeFormConfig } from './utils/normalize-form-config';
                 <button
                   [type]="button.type || 'button'"
                   [ngClass]="{
-                    'mat-raised-button': (typeof button.variant === 'string' && button.variant === 'raised') || !button.variant,
-                    'mat-stroked-button': typeof button.variant === 'string' && button.variant === 'stroked',
-                    'mat-flat-button': typeof button.variant === 'string' && button.variant === 'flat',
-                    'mat-fab': typeof button.variant === 'string' && button.variant === 'fab'
+                    'mat-raised-button':
+                      (typeof button.variant === 'string' &&
+                        button.variant === 'raised') ||
+                      !button.variant,
+                    'mat-stroked-button':
+                      typeof button.variant === 'string' &&
+                      button.variant === 'stroked',
+                    'mat-flat-button':
+                      typeof button.variant === 'string' &&
+                      button.variant === 'flat',
+                    'mat-fab':
+                      typeof button.variant === 'string' &&
+                      button.variant === 'fab',
                   }"
                   mat-button
                   [color]="button.color"
@@ -621,7 +637,8 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   @Output() initializationError = new EventEmitter<FormInitializationError>();
   @Output() editModeEnabledChange = new EventEmitter<boolean>();
   @Output() customAction = new EventEmitter<FormCustomActionEvent>();
-  @Output() actionConfirmation = new EventEmitter<FormActionConfirmationEvent>();
+  @Output() actionConfirmation =
+    new EventEmitter<FormActionConfirmationEvent>();
 
   // Estado interno para UX
   isLoading = false;
@@ -1153,7 +1170,10 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
       return;
     }
 
-    const result = this.rulesService.applyRules(this.form, this.config.formRules);
+    const result = this.rulesService.applyRules(
+      this.form,
+      this.config.formRules,
+    );
 
     // Apply visibility rules and enable/disable controls
     for (const fieldName in result.visibility) {
@@ -1293,7 +1313,7 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
   getColumnFields(column: { fields: string[] }): FieldMetadata[] {
     const fieldMetadata = this.config.fieldMetadata || [];
     return fieldMetadata.filter(
-      (f) => column.fields.includes(f.name) && this.fieldVisibility[f.name]
+      (f) => column.fields.includes(f.name) && this.fieldVisibility[f.name],
     );
   }
 
@@ -1408,12 +1428,17 @@ export class PraxisDynamicForm implements OnInit, OnChanges, OnDestroy {
         message: message,
         confirmText: 'Confirmar',
         cancelText: 'Cancelar',
-        type: actionId === 'cancel' || actionId === 'reset' ? 'warning' : 'info',
+        type:
+          actionId === 'cancel' || actionId === 'reset' ? 'warning' : 'info',
       },
     });
 
     dialogRef.afterClosed().subscribe((confirmed) => {
-      this.actionConfirmation.emit({ actionId, message, confirmed: !!confirmed });
+      this.actionConfirmation.emit({
+        actionId,
+        message,
+        confirmed: !!confirmed,
+      });
       if (confirmed) {
         onConfirm();
       }

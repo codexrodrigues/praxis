@@ -124,6 +124,18 @@ describe('PraxisDynamicForm', () => {
     expect(button).toBeTruthy();
   });
 
+  it('aplica classes padrão de ações quando nenhuma configuração é fornecida', async () => {
+    crudService.getSchema.and.returnValue(of([]));
+    component.resourcePath = 'usuarios';
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const el: HTMLElement =
+      fixture.nativeElement.querySelector('.form-actions');
+    expect(el.classList.contains('position-right')).toBeTrue();
+    expect(el.classList.contains('orientation-horizontal')).toBeTrue();
+    expect(el.classList.contains('spacing-normal')).toBeTrue();
+  });
+
   it('emite formReady após construir o formulário', async () => {
     const schema = [{ name: 'nome', controlType: 'input' }];
     crudService.getSchema.and.returnValue(of(schema as any));
@@ -344,9 +356,21 @@ describe('PraxisDynamicForm', () => {
           },
         ],
         fieldMetadata: [
-          { name: 'field_a', label: 'Field A', controlType: FieldControlType.INPUT },
-          { name: 'field_b', label: 'Field B', controlType: FieldControlType.INPUT },
-          { name: 'field_c', label: 'Field C', controlType: FieldControlType.INPUT },
+          {
+            name: 'field_a',
+            label: 'Field A',
+            controlType: FieldControlType.INPUT,
+          },
+          {
+            name: 'field_b',
+            label: 'Field B',
+            controlType: FieldControlType.INPUT,
+          },
+          {
+            name: 'field_c',
+            label: 'Field C',
+            controlType: FieldControlType.INPUT,
+          },
         ],
         formRules: [], // Rules will be added in each test
       };
@@ -512,7 +536,9 @@ describe('PraxisDynamicForm', () => {
       // Check initial state
       expect(component.fieldVisibility['field_b']).toBe(true);
       expect(component.form.get('field_b')?.enabled).toBe(true);
-      expect(component.form.get('field_c')?.hasValidator(Validators.required)).toBe(true);
+      expect(
+        component.form.get('field_c')?.hasValidator(Validators.required),
+      ).toBe(true);
     });
   });
 });
