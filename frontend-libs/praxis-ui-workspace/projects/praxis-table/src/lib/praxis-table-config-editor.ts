@@ -181,7 +181,7 @@ export class PraxisTableConfigEditor
 
       // Validar configuração recebida
       if (!config || typeof config !== 'object') {
-        // TODO: Implement proper error logging service
+        console.error('PTABLE:config:invalid', config);
         this.showError('Erro ao carregar configuração');
         return;
       }
@@ -212,8 +212,7 @@ export class PraxisTableConfigEditor
       // updateCanSaveState deve mostrar que não há mudanças após a normalização inicial
       this.updateCanSaveState();
     } catch (error) {
-      // TODO: Implement proper error logging service
-      console.error('[PraxisTableConfigEditor] ngOnInit error', error);
+      console.error('PTABLE:config:init:error', error);
       this.showError('Erro ao inicializar editor');
     }
   }

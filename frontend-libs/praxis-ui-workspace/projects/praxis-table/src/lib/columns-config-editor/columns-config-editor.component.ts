@@ -41,8 +41,6 @@ import {
 import { ValueMappingEditorComponent } from '../value-mapping-editor/value-mapping-editor.component';
 import { DataFormatterComponent } from '../data-formatter/data-formatter.component';
 import { ColumnDataType } from '../data-formatter/data-formatter-types';
-// import { TableRuleEngineService, ConditionalStyle, ValidationResult } from '../integration/table-rule-engine.service';
-// import { FieldSchemaAdapter } from '../integration/field-schema-adapter.service';
 
 export interface ColumnChange {
   type: 'add' | 'remove' | 'update' | 'reorder' | 'global';

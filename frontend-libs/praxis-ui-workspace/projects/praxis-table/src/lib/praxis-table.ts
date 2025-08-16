@@ -51,7 +51,7 @@ import { DataFormattingService } from './data-formatter/data-formatting.service'
 import { ColumnDataType } from './data-formatter/data-formatter-types';
 import { TableDefaultsProvider } from './services/table-defaults.provider';
 import { FilterConfigService } from './services/filter-config.service';
-import { PraxisFilter, I18n } from './praxis-filter';
+import { PraxisFilter, I18n } from './components/praxis-filter';
 import { getActionId, ActionLike } from './utils/action-utils';
 
 export interface RowActionConfig extends ActionLike {
@@ -1117,7 +1117,7 @@ export class PraxisTable
         );
         value = evaluationFunction(rowData);
       } catch (error) {
-        // TODO: Implement proper error logging service
+        console.error('PTABLE:formula:error', error, column);
         return `[Formula Error]`;
       }
     } else {
@@ -1143,7 +1143,7 @@ export class PraxisTable
           column.format,
         );
       } catch (error) {
-        // TODO: Implement proper error logging service
+        console.error('PTABLE:format:error', error, { value, column });
       }
     }
 
@@ -1212,7 +1212,7 @@ export class PraxisTable
         return current && current[key] !== undefined ? current[key] : null;
       }, obj);
     } catch (error) {
-      // TODO: Implement proper error logging service
+      console.error('PTABLE:property:access:error', error, { obj, path });
       return null;
     }
   }

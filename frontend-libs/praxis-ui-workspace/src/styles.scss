@@ -2,6 +2,8 @@
  * 2) src/styles.scss
  * ============================= */
 @use "theme-dark" as *;
+@import '@angular/cdk/overlay-prebuilt.css';
+
 
 :root {
   --pfx-gap: 16px;
@@ -279,6 +281,19 @@ mat-form-field {
   text-transform: none;
   line-height: 1.25;
 }
+
+.cdk-overlay-pane.praxis-filter-overlay {
+  background: var(--surface, #2b2b2b);
+  border-radius: 12px;
+  box-shadow: var(--elevation-shadow, 0 12px 32px rgba(0,0,0,.35));
+  overflow: auto;
+}
+.cdk-overlay-backdrop.praxis-overlay-backdrop {
+  //background: rgba(0,0,0,.48);
+  //backdrop-filter: blur(1px);
+}
+
+
 
 /* Small responsive tweak */
 @media (max-width: 599px) {
