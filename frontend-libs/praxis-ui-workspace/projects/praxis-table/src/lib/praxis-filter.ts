@@ -397,6 +397,15 @@ export class PraxisFilter implements OnInit, OnChanges {
       if (cfg.showAdvanced !== undefined) {
         this.advancedOpen = cfg.showAdvanced;
       }
+      if (this.mode === 'auto' && cfg.mode) {
+        this.mode = cfg.mode;
+      }
+      if (this.allowSaveTags === undefined && cfg.allowSaveTags !== undefined) {
+        this.allowSaveTags = cfg.allowSaveTags;
+      }
+      if (this.changeDebounceMs === 300 && cfg.changeDebounceMs !== undefined) {
+        this.changeDebounceMs = cfg.changeDebounceMs;
+      }
     }
     this.mergeI18n();
     if (this.allowSaveTags && this.persistenceKey) {
@@ -538,6 +547,9 @@ export class PraxisFilter implements OnInit, OnChanges {
           alwaysVisibleFields: this.alwaysVisibleFields,
           placeholder: this.placeholder,
           showAdvanced: this.advancedOpen,
+          mode: this.mode,
+          allowSaveTags: this.allowSaveTags,
+          changeDebounceMs: this.changeDebounceMs,
         },
       };
 
@@ -552,8 +564,13 @@ export class PraxisFilter implements OnInit, OnChanges {
         this.alwaysVisibleFields = cfg.alwaysVisibleFields ?? [];
         this.placeholder = cfg.placeholder;
         this.advancedOpen = cfg.showAdvanced ?? false;
+        this.mode = cfg.mode ?? 'auto';
+        this.allowSaveTags = cfg.allowSaveTags;
+        this.changeDebounceMs = cfg.changeDebounceMs ?? 300;
         this.mergeI18n();
         this.applySchemaMetas();
+        this.updateDisplayedTags();
+        this.evaluateMode();
       };
 
       const persistConfig = (cfg: FilterConfig, message: string): void => {
@@ -840,6 +857,10 @@ export class PraxisFilter implements OnInit, OnChanges {
       alwaysVisibleFields: this.alwaysVisibleFields,
       placeholder: this.placeholder,
       showAdvanced: this.advancedOpen,
+      mode: this.mode !== 'auto' ? this.mode : undefined,
+      changeDebounceMs:
+        this.changeDebounceMs !== 300 ? this.changeDebounceMs : undefined,
+      allowSaveTags: this.allowSaveTags ? true : undefined,
     };
     this.filterConfig.save(this.configKey, config);
   }

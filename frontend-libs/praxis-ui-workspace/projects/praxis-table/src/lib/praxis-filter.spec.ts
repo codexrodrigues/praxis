@@ -539,6 +539,9 @@ describe('PraxisFilter', () => {
       alwaysVisibleFields: ['cpf'],
       placeholder: 'Buscar',
       showAdvanced: true,
+      mode: 'card',
+      allowSaveTags: true,
+      changeDebounceMs: 400,
     };
     applied$.next(newConfig);
 
@@ -546,16 +549,43 @@ describe('PraxisFilter', () => {
     expect(component.alwaysVisibleFields).toEqual(['cpf']);
     expect(component.placeholder).toBe('Buscar');
     expect(component.advancedOpen).toBeTrue();
+    expect(component.mode).toBe('card');
+    expect(component.allowSaveTags).toBeTrue();
+    expect(component.changeDebounceMs).toBe(400);
     expect(ref.close).toHaveBeenCalled();
 
-    const savedConfig: FilterConfig = { quickField: 'id' };
+    const savedConfig: FilterConfig = { quickField: 'id', mode: 'filter' };
     saved$.next(savedConfig);
-    expect(configService.save).toHaveBeenCalledWith('f1', {
-      quickField: 'id',
-      alwaysVisibleFields: [],
-      placeholder: undefined,
-      showAdvanced: false,
+    expect(configService.save).toHaveBeenCalledWith(
+      'f1',
+      jasmine.objectContaining({
+        quickField: 'id',
+        mode: 'filter',
+      }),
+    );
+  });
+
+  it('should load mode from saved configuration', () => {
+    storage.loadConfig.and.callFake((key: string) => {
+      if (key === 'filter-config:f1') {
+        return { mode: 'card' } as FilterConfig;
+      }
+      return undefined;
     });
+    createComponent();
+    expect(component.mode).toBe('card');
+    expect(component.modeState).toBe('card');
+  });
+
+  it('should include mode when saving config', () => {
+    createComponent();
+    const saveSpy = spyOn(configService, 'save');
+    component.mode = 'card';
+    (component as any).saveConfig();
+    expect(saveSpy).toHaveBeenCalledWith(
+      'f1',
+      jasmine.objectContaining({ mode: 'card' }),
+    );
   });
 
   it('should open advanced filter as overlay, close with ESC and restore focus', fakeAsync(() => {
