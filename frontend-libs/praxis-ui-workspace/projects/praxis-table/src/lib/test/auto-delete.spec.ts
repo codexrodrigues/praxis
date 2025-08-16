@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 import { of } from 'rxjs';
+import { MatDialog } from '@angular/material/dialog';
 import { PraxisTable } from '../praxis-table';
 import {
   TableConfig,
@@ -17,6 +18,7 @@ describe('PraxisTable auto delete', () => {
   let crud: jasmine.SpyObj<GenericCrudService<any>>;
   let storage: jasmine.SpyObj<ConfigStorage>;
   let settingsPanel: jasmine.SpyObj<SettingsPanelService>;
+  let dialog: jasmine.SpyObj<MatDialog>;
 
   beforeEach(async () => {
     crud = jasmine.createSpyObj('GenericCrudService', [
@@ -47,6 +49,8 @@ describe('PraxisTable auto delete', () => {
       'clearConfig',
     ]);
     settingsPanel = jasmine.createSpyObj('SettingsPanelService', ['open']);
+    dialog = jasmine.createSpyObj('MatDialog', ['open']);
+    dialog.open.and.returnValue({ afterClosed: () => of(true) } as any);
 
     await TestBed.configureTestingModule({
       imports: [PraxisTable, NoopAnimationsModule],
@@ -54,6 +58,7 @@ describe('PraxisTable auto delete', () => {
         { provide: GenericCrudService, useValue: crud },
         { provide: CONFIG_STORAGE, useValue: storage },
         { provide: SettingsPanelService, useValue: settingsPanel },
+        { provide: MatDialog, useValue: dialog },
       ],
     }).compileComponents();
 
@@ -111,6 +116,48 @@ describe('PraxisTable auto delete', () => {
     const row = { id: 1 };
     component.onRowAction('delete', row, new Event('click'));
     expect(crud.delete).toHaveBeenCalledWith(1);
+  });
+
+  it('should bypass confirmation when autoDelete is enabled', () => {
+    const config = createConfig();
+    const rowAction = config.actions!.row!.actions[0] as any;
+    rowAction.requiresConfirmation = true;
+    component.config = config;
+    fixture.detectChanges();
+    const row = { id: 1 };
+    component.onRowAction('delete', row, new Event('click'));
+    expect(dialog.open).not.toHaveBeenCalled();
+    expect(crud.delete).toHaveBeenCalledWith(1);
+  });
+
+  it('should delete row after confirmation when required', () => {
+    component.autoDelete = false;
+    const config = createConfig();
+    const rowAction = config.actions!.row!.actions[0] as any;
+    rowAction.autoDelete = false;
+    rowAction.requiresConfirmation = true;
+    component.config = config;
+    dialog.open.and.returnValue({ afterClosed: () => of(true) } as any);
+    fixture.detectChanges();
+    const row = { id: 1 };
+    component.onRowAction('delete', row, new Event('click'));
+    expect(dialog.open).toHaveBeenCalled();
+    expect(crud.delete).toHaveBeenCalledWith(1);
+  });
+
+  it('should not delete row when confirmation is canceled', () => {
+    component.autoDelete = false;
+    const config = createConfig();
+    const rowAction = config.actions!.row!.actions[0] as any;
+    rowAction.autoDelete = false;
+    rowAction.requiresConfirmation = true;
+    component.config = config;
+    dialog.open.and.returnValue({ afterClosed: () => of(false) } as any);
+    fixture.detectChanges();
+    const row = { id: 1 };
+    component.onRowAction('delete', row, new Event('click'));
+    expect(dialog.open).toHaveBeenCalled();
+    expect(crud.delete).not.toHaveBeenCalled();
   });
 
   it('should automatically delete selected rows', () => {

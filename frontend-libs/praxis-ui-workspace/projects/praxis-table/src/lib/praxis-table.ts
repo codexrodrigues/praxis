@@ -29,9 +29,14 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { SelectionModel } from '@angular/cdk/collections';
-import { BehaviorSubject, take, Subscription } from 'rxjs';
+import { BehaviorSubject, take, Subscription, filter } from 'rxjs';
 import { SettingsPanelService } from '@praxis/settings-panel';
+import {
+  ConfirmDialogComponent,
+  ConfirmDialogData,
+} from '@praxis/dynamic-fields';
 import {
   ColumnDefinition,
   FieldDefinition,
@@ -66,6 +71,7 @@ export interface RowActionConfig extends ActionLike {
   visible?: (row: any) => boolean;
   disabled?: (row: any) => boolean;
   autoDelete?: boolean;
+  requiresConfirmation?: boolean;
 }
 
 export interface RowActionsBehavior {
@@ -89,6 +95,7 @@ export interface RowActionsBehavior {
     MatIconModule,
     MatMenuModule,
     MatTooltipModule,
+    MatDialogModule,
     MatSnackBarModule,
     MatCheckboxModule,
     PraxisTableToolbar,
@@ -606,6 +613,7 @@ export class PraxisTable
     @Inject(CONFIG_STORAGE) private configStorage: ConfigStorage,
     private tableDefaultsProvider: TableDefaultsProvider,
     private snackBar: MatSnackBar,
+    private dialog: MatDialog,
     private filterConfig: FilterConfigService,
   ) {
     this.subscriptions.push(
@@ -706,18 +714,26 @@ export class PraxisTable
       (a) => this.getActionId(a) === action,
     );
     const cfgAutoDelete = cfg?.autoDelete;
-    const willAutoDelete = action === 'delete' && !!(this.autoDelete || cfgAutoDelete);
+    const requiresConfirmation = cfg?.requiresConfirmation;
+    const willAutoDelete =
+      action === 'delete' && !!(this.autoDelete || cfgAutoDelete);
+    const needsConfirmation =
+      action === 'delete' && !!requiresConfirmation && !willAutoDelete;
     console.debug('[PraxisTable] onRowAction: resolved config', {
       foundConfig: !!cfg,
       cfgAutoDelete,
       inputAutoDelete: this.autoDelete,
       willAutoDelete,
+      requiresConfirmation,
+      needsConfirmation,
     });
 
-    if (willAutoDelete) {
+    const executeDelete = () => {
       try {
         this.beforeDelete.emit(row);
-        console.debug('[PraxisTable] onRowAction: beforeDelete emitted', { rowId: row?.id });
+        console.debug('[PraxisTable] onRowAction: beforeDelete emitted', {
+          rowId: row?.id,
+        });
       } catch (e) {
         console.warn('[PraxisTable] onRowAction: beforeDelete emit error', e);
       }
@@ -725,25 +741,38 @@ export class PraxisTable
       this.snackBar.open(
         this.config.messages?.actions?.progress?.delete || 'Removendo...',
       );
-      console.debug('[PraxisTable] onRowAction: calling crudService.delete', { id: row?.id });
+      console.debug('[PraxisTable] onRowAction: calling crudService.delete', {
+        id: row?.id,
+      });
       this.crudService.delete(row.id).subscribe({
         next: () => {
-          console.debug('[PraxisTable] onRowAction: delete success', { id: row?.id });
+          console.debug('[PraxisTable] onRowAction: delete success', {
+            id: row?.id,
+          });
           this.snackBar.open(
-            this.config.messages?.actions?.success?.delete || 'Registro removido',
+            this.config.messages?.actions?.success?.delete ||
+              'Registro removido',
             undefined,
             { duration: 3000 },
           );
           try {
             this.afterDelete.emit(row);
-            console.debug('[PraxisTable] onRowAction: afterDelete emitted', { id: row?.id });
+            console.debug('[PraxisTable] onRowAction: afterDelete emitted', {
+              id: row?.id,
+            });
           } catch (e) {
-            console.warn('[PraxisTable] onRowAction: afterDelete emit error', e);
+            console.warn(
+              '[PraxisTable] onRowAction: afterDelete emit error',
+              e,
+            );
           }
           this.fetchData();
         },
         error: (error) => {
-          console.error('[PraxisTable] onRowAction: delete error', { id: row?.id, error });
+          console.error('[PraxisTable] onRowAction: delete error', {
+            id: row?.id,
+            error,
+          });
           this.snackBar.open(
             this.config.messages?.actions?.errors?.delete || 'Erro ao remover',
             undefined,
@@ -752,12 +781,38 @@ export class PraxisTable
           try {
             this.deleteError.emit({ row, error });
           } catch (e) {
-            console.warn('[PraxisTable] onRowAction: deleteError emit error', e);
+            console.warn(
+              '[PraxisTable] onRowAction: deleteError emit error',
+              e,
+            );
           }
         },
       });
+    };
+
+    if (willAutoDelete) {
+      executeDelete();
+    } else if (needsConfirmation) {
+      const dialogData: ConfirmDialogData = {
+        title: 'Confirmação',
+        message:
+          this.config.messages?.actions?.confirmations?.delete ||
+          'Confirmar exclusão?',
+        confirmText: 'Confirmar',
+        cancelText: 'Cancelar',
+        type: 'warning',
+        icon: 'warning',
+      };
+      this.dialog
+        .open(ConfirmDialogComponent, { data: dialogData })
+        .afterClosed()
+        .pipe(filter((confirmed) => confirmed))
+        .subscribe(() => executeDelete());
     } else {
-      console.debug('[PraxisTable] onRowAction: emitting rowAction', { action, rowId: row?.id });
+      console.debug('[PraxisTable] onRowAction: emitting rowAction', {
+        action,
+        rowId: row?.id,
+      });
       this.rowAction.emit({ action, row });
     }
   }
@@ -771,21 +826,29 @@ export class PraxisTable
       if (event.action === 'delete' && (this.autoDelete || bulk.autoDelete)) {
         const rows = this.selection.selected.slice();
         const ids = rows.map((r) => r.id);
-        console.debug('[PraxisTable] onToolbarAction: bulk delete requested', { count: rows.length, ids });
+        console.debug('[PraxisTable] onToolbarAction: bulk delete requested', {
+          count: rows.length,
+          ids,
+        });
         this.beforeBulkDelete.emit(rows);
         const progress = (e: BatchDeleteProgress) => {
           this.snackBar.open(
-            (this.config.messages?.actions?.progress?.deleteMultiple || 'Removendo...') + ` ${e.index}/${e.total}`,
+            (this.config.messages?.actions?.progress?.deleteMultiple ||
+              'Removendo...') + ` ${e.index}/${e.total}`,
             undefined,
             { duration: 1000 },
           );
         };
         this.crudService.deleteMany(ids, { progress }).subscribe({
           next: (result: BatchDeleteResult) => {
-            console.debug('[PraxisTable] onToolbarAction: bulk delete result', result);
+            console.debug(
+              '[PraxisTable] onToolbarAction: bulk delete result',
+              result,
+            );
             if (result.errors.length) {
               this.snackBar.open(
-                this.config.messages?.actions?.errors?.delete || 'Erro ao remover',
+                this.config.messages?.actions?.errors?.delete ||
+                  'Erro ao remover',
                 undefined,
                 { duration: 3000 },
               );
@@ -793,10 +856,14 @@ export class PraxisTable
               const failedRows = rows.filter((r) => failedIds.has(r.id));
               this.selection.clear();
               failedRows.forEach((r) => this.selection.select(r));
-              this.bulkDeleteError.emit({ rows: failedRows, error: result.errors });
+              this.bulkDeleteError.emit({
+                rows: failedRows,
+                error: result.errors,
+              });
             } else {
               this.snackBar.open(
-                this.config.messages?.actions?.success?.delete || 'Registros removidos',
+                this.config.messages?.actions?.success?.delete ||
+                  'Registros removidos',
                 undefined,
                 { duration: 3000 },
               );
@@ -806,9 +873,13 @@ export class PraxisTable
             this.fetchData();
           },
           error: (error) => {
-            console.error('[PraxisTable] onToolbarAction: bulk delete error', error);
+            console.error(
+              '[PraxisTable] onToolbarAction: bulk delete error',
+              error,
+            );
             this.snackBar.open(
-              this.config.messages?.actions?.errors?.delete || 'Erro ao remover',
+              this.config.messages?.actions?.errors?.delete ||
+                'Erro ao remover',
               undefined,
               { duration: 3000 },
             );
@@ -816,11 +887,20 @@ export class PraxisTable
           },
         });
       } else {
-        console.debug('[PraxisTable] onToolbarAction: emitting bulkAction', { action: event.action, selected: this.selection.selected.length });
-        this.bulkAction.emit({ action: event.action, rows: this.selection.selected });
+        console.debug('[PraxisTable] onToolbarAction: emitting bulkAction', {
+          action: event.action,
+          selected: this.selection.selected.length,
+        });
+        this.bulkAction.emit({
+          action: event.action,
+          rows: this.selection.selected,
+        });
       }
     } else {
-      console.debug('[PraxisTable] onToolbarAction: emitting toolbarAction', event);
+      console.debug(
+        '[PraxisTable] onToolbarAction: emitting toolbarAction',
+        event,
+      );
       this.toolbarAction.emit(event);
     }
   }
