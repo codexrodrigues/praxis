@@ -423,7 +423,15 @@ export class RuleBuilderService {
   }
 
   /**
-   * Import rules from external source
+   * Import rules from external source.
+   *
+   * Empty strings or structures with no data are ignored to preserve the
+   * current state. When parsing JSON, the specification type must be
+   * present otherwise an error is thrown, ensuring business rules are
+   * explicit and valid.
+   *
+   * @throws Error when the specification type is missing or the format is
+   * unsupported.
    */
   import(content: string, options: ImportOptions): void {
     try {
@@ -443,6 +451,9 @@ export class RuleBuilderService {
               Object.keys(json).length === 0)
           ) {
             return;
+          }
+          if (typeof json === 'object' && (json as any).type == null) {
+            throw new Error('Missing specification type');
           }
           specification = SpecificationFactory.fromJSON(json);
           break;
